@@ -1,4 +1,4 @@
-# FinancialApp app
+# Finam app
 
 ## Run the app
 
