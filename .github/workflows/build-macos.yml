@@ -1,14 +1,56 @@
-jobs:
-  build:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with: { python-version: '3.10' }
-      - name: Install Flet
-        run: pip install flet
-      - name: Build macOS App
-        run: flet build macos
+name: Finam
 
 on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv (Fast Package Manager)
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install Flet and Dependencies
+        run: |
+          uv pip install flet --system
+          # If you have a requirements.txt, uncomment the next line:
+          # uv pip install -r requirements.txt --system
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          # Flet handles most of the Flutter heavy lifting, but we need the environment
+
+      - name: Build macOS App
+        run: |
+          # The --yes flag auto-confirms Flutter SDK installation if needed
+          flet build macos --yes --verbose
+
+      - name: Package as DMG (Optional but recommended)
+        run: |
+          # This assumes your app name is 'main' or defined in pyproject.toml
+          # The output folder by default is build/macos
+          cd build/macos
+          # Simple zip of the .app bundle
+          zip -r ../../flet_macos_app.zip ./*.app
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-executable
+          path: flet_macos_app.zip
+          retention-days: 5
