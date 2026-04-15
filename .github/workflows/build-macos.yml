@@ -33,19 +33,15 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Flet handles most of the Flutter heavy lifting, but we need the environment
 
       - name: Build macOS App
         run: |
           # The --yes flag auto-confirms Flutter SDK installation if needed
-          flet build macos --yes --verbose
+          flet build macos --build-version 0.0.1 --module-name main --yes
 
       - name: Package as DMG (Optional but recommended)
         run: |
-          # This assumes your app name is 'main' or defined in pyproject.toml
-          # The output folder by default is build/macos
           cd build/macos
-          # Simple zip of the .app bundle
           zip -r ../../flet_macos_app.zip ./*.app
 
       - name: Upload Artifact
