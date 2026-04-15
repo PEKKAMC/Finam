@@ -41,22 +41,26 @@ jobs:
 
       - name: Isolate and Package
         run: |
-          # 1. Create a clean staging area outside your project folder
-          mkdir ../staging
+          # 1. Create staging area
+          mkdir -p staging_area
           
-          # 2. Find the .app and move ONLY it to the staging area
-          # Flet puts the final result in dist/macos/
-          mv dist/macos/*.app ../staging/
+          # 2. Debug: List files to see where the app actually is
+          echo "Checking for build outputs..."
+          ls -R
           
-          # 3. Zip ONLY what is in the staging folder
-          cd ../staging
+          # 3. Try to find the .app file in dist/ OR build/ and move it
+          # This search is more flexible
+          find . -name "*.app" -maxdepth 3 -exec cp -R {} staging_area/ \;
+          
+          # 4. Check if we actually found anything
+          if [ -z "$(ls -A staging_area)" ]; then
+             echo "ERROR: No .app bundle was found! Check the 'Build macOS App' logs above."
+             exit 1
+          fi
+          
+          # 5. Zip the staging area
+          cd staging_area
           zip -r ../flet_macos_final.zip .
           
-          # 4. Verify size in logs (so you can see it in GitHub)
+          # 6. Verify final size
           du -sh ../flet_macos_final.zip
-
-          - name: Upload Artifact
-            uses: actions/upload-artifact@v4
-            with:
-              name: macos-app
-              path: flet_macos_final.zip
