@@ -1,0 +1,2 @@
+recursive-include src/assets *
+include src/user_data.db

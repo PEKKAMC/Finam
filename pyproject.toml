@@ -1,0 +1,44 @@
+[project]
+name = "financial-app"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Flet developer", email = "you@example.com" }
+]
+dependencies = [
+    "flet>=0.84.0",
+    "flet-charts>=0.84.0"
+]
+
+[dependency-groups]
+dev = [
+    "flet-cli>=0.84.0",
+    "flet-desktop>=0.84.0",
+    "flet-web>=0.84.0",
+]
+
+[tool.flet]
+org = "com.mycompany"
+product = "financial-app"
+company = "Flet"
+copyright = "Copyright (C) 2023-2026 by Flet"
+
+[tool.flet.app]
+path = ""
+assets = "assets"
+
+[tool.setuptools]
+include-package-data = true
+package = ["src"]
+
+[project.scripts]
+run-app = "main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+"*" = ["assets/**", "*.db", "*.png", "*.json"]
