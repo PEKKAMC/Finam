@@ -10,7 +10,7 @@ on:
 jobs:
   build-macos:
     runs-on: macos-latest
-    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -39,14 +39,24 @@ jobs:
           # The --yes flag auto-confirms Flutter SDK installation if needed
           flet build macos --build-version 0.0.1 --module-name main --yes --arch arm64 --exclude venv .venv .git build dist __pycache__
 
-      - name: Package as DMG (Optional but recommended)
+      - name: Isolate and Package
         run: |
-          cd build/macos
-          zip -r ../../flet_macos_app.zip ./*.app
+          # 1. Create a clean staging area outside your project folder
+          mkdir ../staging
+          
+          # 2. Find the .app and move ONLY it to the staging area
+          # Flet puts the final result in dist/macos/
+          mv dist/macos/*.app ../staging/
+          
+          # 3. Zip ONLY what is in the staging folder
+          cd ../staging
+          zip -r ../flet_macos_final.zip .
+          
+          # 4. Verify size in logs (so you can see it in GitHub)
+          du -sh ../flet_macos_final.zip
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-executable
-          path: flet_macos_app.zip
-          retention-days: 5
+          - name: Upload Artifact
+            uses: actions/upload-artifact@v4
+            with:
+              name: macos-app
+              path: flet_macos_final.zip
