@@ -28,6 +28,16 @@ copyright = "Copyright (C) 2023-2026 by Flet"
 [tool.flet.app]
 path = ""
 assets = "assets"
+exclude = [
+    "venv",
+    ".venv",
+    ".git",
+    "build",
+    "dist",
+    "__pycache__",
+    "*.db",
+    "tests"
+]
 
 [tool.setuptools]
 include-package-data = true

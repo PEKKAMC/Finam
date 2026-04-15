@@ -37,7 +37,7 @@ jobs:
       - name: Build macOS App
         run: |
           # The --yes flag auto-confirms Flutter SDK installation if needed
-          flet build windows --build-version 0.0.1 --module-name main --yes
+          flet build macos --build-version 0.0.1 --module-name main --arch arm64 --yes --exclude venv .venv .git build dist __pycache__
 
       - name: Package as DMG (Optional but recommended)
         run: |
