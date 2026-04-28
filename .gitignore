@@ -164,3 +164,6 @@ storage/
 
 # Intellij Idea
 .idea/
+
+# Databse File
+src/user_data.db

@@ -1,7 +1,6 @@
 import src.database as db
 import flet as ft
 
-from src.pages.add_saving import get_add_saving_view
 from src.utils import get_language
 from src.pages.home import get_home_view
 from src.pages.login import get_login_view
@@ -18,7 +17,7 @@ async def main(page: ft.Page) -> None:
 
     page.title = "Finam"
     page.padding = 0
-    page.window.resizable = False # SWITCH TO FALSE WHEN DONE WITH TESTING
+    page.window.resizable = False
     page.window.width = 650
     page.window.height = 1000
     page.bgcolor = ft.Colors.WHITE
@@ -35,8 +34,6 @@ async def main(page: ft.Page) -> None:
             page.views.append(get_lessons_view(page, lang, user_state))
         elif page.route == "/saving":
             page.views.append(get_savings_view(page, lang, user_state))
-        elif page.route == "/add_saving":
-            page.views.append(get_add_saving_view(page, lang, user_state))
 
 
         page.update()

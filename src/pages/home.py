@@ -10,7 +10,10 @@ def get_home_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
 
     username = ft.Text(
         value=user_state.get("current_user", "Unknown"),
-        size=20, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER, color=ft.Colors.BLACK
+        size=20,
+        weight=ft.FontWeight.BOLD,
+        text_align=ft.TextAlign.CENTER,
+        color=ft.Colors.BLACK
     )
 
     char_image = ft.Image(src="/character.png", border_radius=10)
@@ -30,18 +33,41 @@ def get_home_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
             inner_card.aspect_ratio = aspect_ratio
         return ft.Container(content=inner_card, expand=expand, alignment=ft.Alignment.CENTER)
 
-    obj_char = ft.Container(
-        content=ft.Container(
-            content=char_image, bgcolor=ft.Colors.WHITE,
-            shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK)),
-            border_radius=10, alignment=ft.Alignment.CENTER, padding=10, aspect_ratio=1.0
-        ),
-        expand=1, alignment=ft.Alignment.CENTER,
-    )
-
     chat_text = ft.Text(
         value=random.choice(lang["home.greeting_messages"]),
-        size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_GREY_900, text_align=ft.TextAlign.CENTER
+        size=20,
+        weight=ft.FontWeight.BOLD,
+        color=ft.Colors.BLUE_GREY_900,
+        text_align=ft.TextAlign.CENTER,
+    )
+
+    def randomize_greeting_text(e):
+        current_text = chat_text.value
+        greetings = lang["home.greeting_messages"]
+
+        if len(greetings) > 1:
+            new_text = random.choice(greetings)
+
+            while new_text == current_text:
+                new_text = random.choice(greetings)
+
+            chat_text.value = new_text
+            chat_text.update()
+
+    obj_char = ft.Container(
+        content=ft.Container(
+            content=char_image,
+            bgcolor=ft.Colors.WHITE,
+            shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK)),
+            border_radius=10,
+            alignment=ft.Alignment.CENTER,
+            padding=10,
+            aspect_ratio=1.0
+        ),
+        expand=1,
+        alignment=ft.Alignment.CENTER,
+        on_click=randomize_greeting_text,
+        ink=True,
     )
 
     obj_chatbox = ft.Container(
@@ -135,8 +161,9 @@ def get_home_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
 
     total_income = float(sum(d["income"] for d in chart_data))
     total_expense = float(sum(d["expense"] for d in chart_data))
-    saved_amount = total_income - total_expense
-    savings_goal = 200
+    saving_percent = 0.5
+    saved_amount = (total_income - total_expense) * saving_percent
+    savings_goal = 400
     saving_ratio = max(0.0, min(saved_amount / savings_goal, 1.0))
     percent_val = int(saving_ratio * 100)
 
@@ -168,8 +195,11 @@ def get_home_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
         bgcolor=ft.Colors.WHITE, border_radius=15, padding=20,
         shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK)),
         expand=1,
-        aspect_ratio=1.0
+        aspect_ratio=1.0,
+        on_click = lambda e: page.go("/saving"),
+        ink=True
     )
+
     obj_recent_lesson = create_object("", is_square=True)
 
     center_container = ft.Container(

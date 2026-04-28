@@ -55,10 +55,6 @@ class SideMenu(ft.Container):
                 content=ft.Text(self.lang["generic.change_user"], color=ft.Colors.WHITE, size=20),
                 on_click=self.change_user,
             ),
-            #ft.Container(
-            #    content=ft.Text("temp", color=ft.Colors.WHITE, size=20),
-            #    on_click=navigate_to("/add_saving"),
-            #)
         ])
 
     def get_menu_width(self) -> int:
