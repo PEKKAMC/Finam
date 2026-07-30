@@ -1,0 +1,407 @@
+{
+  "lesson_id": 2,
+  "title": "Bài 2: Tài sản và Tiêu sản",
+  "subtitle": "Giống nhau tiếng \"sản\" nhưng một thằng tày còn một thằng iếu",
+  "cover_image": "images/lesson_2/cover.png",
+  "content": [
+    {
+      "elements": [
+        {
+          "type": "text",
+          "content": "Tài sản và tiêu sản là gì? {pause:2}Tài sản có thể hiểu là thứ tự động bỏ thêm tiền vào túi của bạn. Tiêu sản là thứ liên tục lấy tiền ra khỏi túi của bạn.",
+          "x": 47.20703125,
+          "y": 71.5703125,
+          "timer_in": "0.3",
+          "timer_out": "",
+          "entrance": 2,
+          "exit": 0,
+          "width": "450",
+          "duration_in": "7.5",
+          "size": "19"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image12.jpg",
+          "x": 54.51171875,
+          "y": 214.3203125,
+          "timer_in": "0.3",
+          "timer_out": "2.5",
+          "entrance": 3,
+          "exit": 1,
+          "scale": "1.3"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image27.jpg",
+          "x": -42.78515625,
+          "y": 194.5390625,
+          "timer_in": "2.3",
+          "timer_out": "5",
+          "entrance": 1,
+          "exit": 0,
+          "scale": "2"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image14.png",
+          "x": -44.5546875,
+          "y": 176.125,
+          "timer_in": "5",
+          "timer_out": "7.3",
+          "entrance": 3,
+          "exit": 0,
+          "scale": "2"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image52.jpg",
+          "x": 67.1640625,
+          "y": 230.30859375,
+          "timer_in": "7.5",
+          "timer_out": "",
+          "entrance": 1,
+          "exit": 0,
+          "scale": "1.3"
+        },
+        {
+          "type": "audio",
+          "content": "D:\\financial-app\\assets\\audio\\Slide 1 bài 2.mp3",
+          "timer_in": "2"
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": "text",
+          "content": "Nghe có vẻ phức tạp đúng không ? \nGiờ hãy thử tượng tượng như này. Bạn mua 1 chiếc điện thoại Iphone 30 promax đời mới nhất. Ngay sau khi bạn bóc chiếc điện thoại ra khỏi hộp, nó đã mất 20% giá trị ban đầu. Rồi bạn sẽ phải trả tiền mạng, tiền điện hay tiền sửa chữa cho caí điện thoại đó. Tất cả những thứ này là tiêu sản. \n",
+          "x": 31.3515625,
+          "y": 28.5625,
+          "timer_in": "0.1",
+          "timer_out": "18",
+          "entrance": 2,
+          "exit": 1,
+          "width": "480",
+          "duration_in": "17.5",
+          "duration_out": "0.2"
+        },
+        {
+          "type": "text",
+          "content": "Nhưng nếu bạn mua một chiếc máy tính để có thể làm thêm công việc hay kiếm tiền, đây chính là tài sản. Chiếc máy đóng vai trò như 1 công cụ sản xuất như một cái máy in tiền. \nHay nếu bạn mua 1 chiếc xe xịn để có thể ra oai với bạn bè. Đây là tiêu sản. Bạn sẽ phải bỏ ra nhiều tiền xăng hơn, nhiều tiền bảo trì hơn. \n",
+          "x": 31.234375,
+          "y": 28.91796875,
+          "timer_in": "18.5",
+          "timer_out": "37",
+          "entrance": 2,
+          "exit": 0,
+          "width": "480",
+          "duration_in": "17"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image58.png",
+          "x": 0.0,
+          "y": 245.1875,
+          "timer_in": "3.2",
+          "timer_out": "18",
+          "entrance": 3,
+          "exit": 1,
+          "scale": "0.8"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image57.png",
+          "x": 231.84765625,
+          "y": 297.5390625,
+          "timer_in": "10.87",
+          "timer_out": "18",
+          "entrance": 2,
+          "exit": 1,
+          "scale": "1.0"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image53.png",
+          "x": 22.2265625,
+          "y": 237.1640625,
+          "timer_in": "11.5",
+          "timer_out": "18",
+          "entrance": 3,
+          "exit": 1,
+          "scale": "0.85"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image11.png",
+          "x": 244.640625,
+          "y": 253.125,
+          "timer_in": "12.1",
+          "timer_out": "18",
+          "entrance": 1,
+          "exit": 1,
+          "scale": "1.0"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image46.png",
+          "x": 112.921875,
+          "y": 177.13671875,
+          "timer_in": "12.7",
+          "timer_out": "18",
+          "entrance": 1,
+          "exit": 1,
+          "scale": "1.0"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image36.png",
+          "x": 0.0,
+          "y": 213.67578125,
+          "timer_in": "20",
+          "timer_out": "34.8",
+          "entrance": 1,
+          "exit": 1,
+          "scale": "0.9"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image50.png",
+          "x": 262.87890625,
+          "y": 206.9765625,
+          "timer_in": "21.8",
+          "timer_out": "34.8",
+          "entrance": 1,
+          "exit": 2,
+          "scale": "1.0"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image30.png",
+          "x": 0.0,
+          "y": 210.5625,
+          "timer_in": "26.8",
+          "timer_out": "37.4",
+          "entrance": 1,
+          "exit": 2,
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image71.png",
+          "x": 71.828125,
+          "y": 223.1328125,
+          "timer_in": "28.3",
+          "timer_out": "39.5",
+          "entrance": 1,
+          "exit": 1,
+          "scale": "1.0"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image69.png",
+          "x": 0.0,
+          "y": 169.97265625,
+          "timer_in": "28.6",
+          "timer_out": "29.3",
+          "entrance": 1,
+          "exit": 2,
+          "scale": "2"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image47.png",
+          "x": 0.0,
+          "y": 170.02734375,
+          "timer_in": "29.5",
+          "timer_out": "",
+          "entrance": 3,
+          "exit": 0,
+          "scale": "1.0"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image39.png",
+          "x": 260.8984375,
+          "y": 239.67578125,
+          "timer_in": "29.8",
+          "timer_out": "",
+          "entrance": 1,
+          "exit": 0,
+          "scale": "1.0"
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": "text",
+          "content": "Tuy đã có ví dụ, vẫn có những người thấy định nghĩa của hai từ này rất mơ hồ phải không. Vậy hãy thử nhắc đến “Bẫy thu nhập” nhé.\n",
+          "x": 33.62109375,
+          "y": 50.71875,
+          "timer_in": "0.3",
+          "timer_out": "",
+          "entrance": 2,
+          "exit": 0,
+          "width": "480",
+          "duration_in": "7"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image22.png",
+          "x": 0.109375,
+          "y": 165.875,
+          "timer_in": "3",
+          "timer_out": "5",
+          "entrance": 1,
+          "exit": 1,
+          "scale": "2"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image68.png",
+          "x": 0.0,
+          "y": 153.3828125,
+          "timer_in": "5.3",
+          "timer_out": "",
+          "entrance": 3,
+          "exit": 0,
+          "scale": "2"
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": "text",
+          "content": "Một người được tăng lương từ 15 triệu đồng một tháng lên 30 triệu đồng một tháng. Có thể thấy rằng việc tăng lương làm người đó giàu lên. Và ngay sau đó, người này đã đổi lên đời chiếc điện thoại của mình. Tuy nhiên chiếc điện thoại đó khiến họ nghĩ mình đang giàu lên, nhưng thực chất không phải vậy.",
+          "x": 33.51171875,
+          "y": 35.29296875,
+          "timer_in": "0.3",
+          "timer_out": "18",
+          "entrance": 2,
+          "exit": 1,
+          "width": "480",
+          "duration_in": "15",
+          "duration_out": "0.2"
+        },
+        {
+          "type": "text",
+          "content": " Họ đang nghèo đi. Họ đã đổi tiền của mình cho một đồ vật có giá trị giảm theo thời gian. Đó chính là tiêu sản. Đây là lí do mà nhiều người lương cao nhưng ít khi thực sự giàu, vì họ dùng tiền vào tiêu sản.\n",
+          "x": 28.8125,
+          "y": 35.65625,
+          "timer_in": "18.3",
+          "timer_out": "",
+          "entrance": 2,
+          "exit": 0,
+          "width": "480"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image42.png",
+          "x": 0.0,
+          "y": 226.8828125,
+          "timer_in": "1",
+          "timer_out": "17",
+          "entrance": 1,
+          "exit": 1,
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image59.png",
+          "x": 65.45703125,
+          "y": 232.6640625,
+          "timer_in": "14.5",
+          "timer_out": "17",
+          "entrance": 1,
+          "exit": 1,
+          "scale": "1.5"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image20.png",
+          "x": 0.109375,
+          "y": 217.55859375,
+          "timer_in": "16",
+          "timer_out": "17.5",
+          "entrance": 0,
+          "exit": 0,
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image40.png",
+          "x": 0.28125,
+          "y": 182.7265625,
+          "timer_in": "18.5",
+          "timer_out": "",
+          "entrance": 1,
+          "exit": 0,
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image19.png",
+          "x": 107.05078125,
+          "y": 510.421875,
+          "timer_in": "19",
+          "timer_out": "",
+          "entrance": 3,
+          "exit": 0,
+          "scale": "1.0"
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": "text",
+          "content": "Bí mật của người giàu chính là họ dành nhiều tiền và tài sản hơn. Họ đầu tư tiền vào những thứ có thể giúp họ sinh lời và lời nhuận dồi dào. Sau đó, họ dùng phần lời nhuận khổng lồ ấy để mua những thứ xa xỉ, đó chính là tiêu sản\n",
+          "x": 33.3203125,
+          "y": 40.2265625,
+          "timer_in": "0.3",
+          "timer_out": "",
+          "entrance": 2,
+          "exit": 0,
+          "width": "480",
+          "duration_in": "12",
+          "duration_out": ""
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image64.png",
+          "x": 98.796875,
+          "y": 203.46484375,
+          "timer_in": "1.8",
+          "timer_out": "3.2",
+          "entrance": 1,
+          "exit": 1,
+          "scale": "1.0",
+          "duration_out": "0.2"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/image49.png",
+          "x": 0.0,
+          "y": 213.7109375,
+          "timer_in": "3.8",
+          "timer_out": "",
+          "entrance": 3,
+          "exit": 0,
+          "scale": "1.9"
+        },
+        {
+          "type": "image",
+          "content": "D:/financial-app/assets/images/63cff800-b653-11f0-b2a1-6f537f66f9aa.png",
+          "x": 0.0,
+          "y": 211.359375,
+          "timer_in": "5",
+          "timer_out": "",
+          "entrance": 1,
+          "exit": 0,
+          "scale": "2"
+        }
+      ]
+    }
+  ]
+}

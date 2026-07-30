@@ -1,0 +1,34 @@
+# Copyright (c) 2026 PEKKAMC
+# All rights reserved.
+# Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
+"""Global page elements - Reusable components across all pages."""
+
+from src.pages.global_components.category_selection import get_categories, CategorySelectionDialog, ExpenseInputDialog, IncomeInputDialog
+from src.pages.global_components.financial_chart import FinancialChart
+from src.pages.global_components.saving_dialog import BaseDialog, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog, ObjectiveSelectionDialog
+from src.pages.global_components.settings_button import SettingsButton
+from src.pages.global_components.side_menu import SideMenu
+from src.pages.global_components.top_navigation_bar import TopNavigationBar
+from src.pages.global_components.username import Username
+
+__all__ = [
+    "get_categories",
+    "CategorySelectionDialog",
+    "ExpenseInputDialog",
+    "IncomeInputDialog",
+    "FinancialChart",
+    "BaseDialog",
+    "CreateObjectiveDialog",
+    "QuickActionDialog",
+    "CompleteConfirmDialog",
+    "DeleteConfirmDialog",
+    "ClearHistoryDialog",
+    "GoalDetailsDialog",
+    "ObjectiveSelectionDialog",
+    "SettingsButton",
+    "SideMenu",
+    "TopNavigationBar",
+    "Username"
+]
+
