@@ -45,6 +45,12 @@ jobs:
       - name: Build AAB (App Bundle)
         run: flet build aab --build-version 0.0.1 --module-name main --yes -v
 
+      - name: Extract Mapping File & Generate Checksums
+        run: |
+          find /tmp -type f -name "mapping.txt" -exec cp {} build/apk/mapping.txt \; || echo "No mapping.txt found"
+          cd build
+          sha256sum apk/*.apk apk/mapping.txt aab/*.aab > checksums-android.txt
+
       - name: Upload Android Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -52,6 +58,8 @@ jobs:
           path: |
             build/apk/*.apk
             build/aab/*.aab
+            build/apk/mapping.txt
+            build/checksums-android.txt
 
   build-ios:
     name: Build iOS (IPA)
@@ -76,11 +84,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install flet
 
-      - name: Build IPA
+      - name: Build IPA (Generates xcarchive)
         run: flet build ipa --build-version 0.0.1 --module-name main --yes -v
 
-      - name: Upload iOS Artifact
+      - name: Convert to Sideloadable IPA & Generate Checksum
+        run: |
+          mkdir -p Payload
+          mv build/ipa/*.xcarchive/Products/Applications/*.app Payload/
+          zip -qr app-release.ipa Payload
+          
+          # Generate SHA-256 checksum (macOS uses shasum)
+          shasum -a 256 app-release.ipa > checksums-ios.txt
+
+      - name: Upload iOS Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: flet-ios-build
-          path: build/ipa/*.xcarchive
+          name: ios-release-artifacts
+          path: |
+            app-release.ipa
+            checksums-ios.txt

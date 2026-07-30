@@ -12,7 +12,7 @@ A comprehensive financial literacy application built with **Flet** and **Python*
 - 🤖 **AI Integration** - Powered by Google Generative AI for smart insights
 - 📊 **Charts & Analytics** - Visual representation of financial data
 - 🎨 **Responsive Design** - Mobile-first UI that works across all platforms
-- 🌍 **Multi-language Support** - Currently supports Vietnamese (vi) with extensibility for more languages
+- 🌍 **Multi-language Support** - Currently supports Vietnamese with extensibility for more languages
 - 🔐 **User Authentication** - Secure login system
 - 💾 **Local Database** - SQLite database for offline data persistence
 
