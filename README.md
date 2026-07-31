@@ -37,7 +37,7 @@ A comprehensive financial literacy application built with **Flet** and **Python*
 
 Because of Apple's restrictions on sideloading, you can install the iOS version using sideloading tools like [AltStore](https://altstore.io/) or [Sideloadly](https://sideloadly.io/).
 
-1. Navigate to the [Releases](../../releases) page and download the latest `.ipa` file.
+1. Navigate to the [Releases](https://github.com/PEKKAMC/Finam/releases) page and download the latest `.ipa` file.
 2. Connect your iPhone to your computer and use your preferred sideloading tool to install the `.ipa`.
 3. Once installed, trust the developer certificate on your device:
     * Go to **Settings** > **General** > **VPN & Device Management**.
