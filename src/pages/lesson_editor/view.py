@@ -9,8 +9,9 @@ import re
 
 from src.pages.global_components import SideMenu
 from src.utils import Color, Text, apply_responsive_text
-from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, EditorLogicController, safe_float, calculate_pan_position
+from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, LogicController, safe_float, calculate_pan_position
 from src.pages.lesson_editor.components import TopNavigationBar, EditorToolbar, PropertiesTabs, SlideSidebarLayout
+
 
 class LessonEditorView(ft.View):
     def __init__(self, page: ft.Page, lang: dict, user_state: dict):
@@ -18,7 +19,7 @@ class LessonEditorView(ft.View):
         self.lang = lang
         self.user_state = user_state
         self.menu = SideMenu(self._page, self.lang, self.user_state)
-        self.logic = EditorLogicController()
+        self.logic = LogicController()
 
         # Input Fields
         self.lesson_id_input = ft.TextField(label="Lesson ID", value="1", width=100, color=Color.DEFAULT_TEXT)
@@ -176,7 +177,8 @@ class LessonEditorView(ft.View):
             self.render_panes()
             self._page.update()
 
-    def handle_pan(self, e: ft.DragUpdateEvent, ctrl: ft.Container, el: dict):
+    @staticmethod
+    def handle_pan(e: ft.DragUpdateEvent, ctrl: ft.Container, el: dict):
         new_x, new_y = calculate_pan_position(el, e.local_delta.x, e.local_delta.y)
         el["x"] = new_x
         el["y"] = new_y

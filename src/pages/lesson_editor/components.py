@@ -6,6 +6,7 @@ import flet as ft
 
 from src.utils import Color, Text
 
+
 class TopNavigationBar(ft.Row):
     def __init__(self, menu_button, on_load, on_save):
         super().__init__(
@@ -20,6 +21,7 @@ class TopNavigationBar(ft.Row):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
+
 class EditorToolbar(ft.Row):
     def __init__(self, on_add_text, on_add_divider, on_add_image, on_add_audio):
         super().__init__(
@@ -31,6 +33,7 @@ class EditorToolbar(ft.Row):
             ],
             spacing=10
         )
+
 
 class PropertiesTabs(ft.Tabs):
     def __init__(self, element_properties: ft.Column, animation_pane: ft.Column, audio_pane: ft.Column):
@@ -55,6 +58,7 @@ class PropertiesTabs(ft.Tabs):
                 controls=[self.tab_bar, self.tab_view]
             )
         )
+
 
 class SlideSidebarLayout(ft.Container):
     def __init__(self, sidebar_column: ft.Column, on_add_slide, on_move_up, on_move_down, on_delete_slide):

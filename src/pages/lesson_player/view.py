@@ -264,9 +264,9 @@ class LessonPlayerView(ft.View):
 
         if self.original_route_change_event and event.name == "route_change":
             try:
-                self.original_route_change_event(event)
+                await self.original_route_change_event(event)
             except TypeError:
-                self.original_route_change_event()
+                await self.original_route_change_event()
         elif self.original_disconnect_event and event.name == "disconnect":
             try:
                 self.original_disconnect_event(event)

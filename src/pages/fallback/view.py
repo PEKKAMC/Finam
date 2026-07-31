@@ -31,8 +31,6 @@ class FallbackView(ft.View):
             )
         )
 
-        Logger.info("Rendering UI for fallback page...")
-
         super().__init__(
             route="/fallback",
             padding=0,

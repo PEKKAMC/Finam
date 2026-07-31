@@ -2,6 +2,8 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import os
+
 import flet as ft
 
 from src.database import db
@@ -11,11 +13,15 @@ from src.pages.fallback import get_fallback_view
 from src.pages.home import get_home_view
 from src.pages.login import get_login_view
 from src.pages.lesson import get_lesson_view
-from src.pages.lesson_editor import get_lesson_editor_view
 from src.pages.lesson_player import get_lesson_player_view
 from src.pages.saving import get_savings_view
 from src.pages.spending import get_spending_view
 from src.pages.purchase_scanner import get_scanner_view
+
+ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
+
+if ENABLE_EDITOR:
+    from src.pages.lesson_editor import get_lesson_editor_view
 
 async def redirect_to_fallback(page: ft.Page, lang: dict, fallback_reason: str) -> None:
     Logger.info("Redirecting to fallback page")
@@ -34,11 +40,11 @@ async def main(page: ft.Page) -> None:
     page.title = "Finam"
     page.theme = ft.Theme(
         page_transitions=ft.PageTransitionsTheme(
-            android=ft.PageTransitionTheme.CUPERTINO,
+            android=ft.PageTransitionTheme.FADE_UPWARDS,
             ios=ft.PageTransitionTheme.CUPERTINO,
-            linux=ft.PageTransitionTheme.CUPERTINO,
-            macos=ft.PageTransitionTheme.CUPERTINO,
-            windows=ft.PageTransitionTheme.CUPERTINO,
+            linux=ft.PageTransitionTheme.NONE,
+            macos=ft.PageTransitionTheme.NONE,
+            windows=ft.PageTransitionTheme.NONE,
         )
     )
     page.padding = 0
@@ -70,7 +76,7 @@ async def main(page: ft.Page) -> None:
             Logger.info(f"{username}: Redirecting to saving page")
             page.views.append(get_savings_view(page, lang, user_info))
 
-        elif troute.match("/lesson-editor"):
+        elif ENABLE_EDITOR and troute.match("/lesson-editor"):
             Logger.info(f"{username}: Redirecting to lesson editor page")
             page.views.append(get_lesson_editor_view(page, lang, user_info))
 

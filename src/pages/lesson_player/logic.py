@@ -80,6 +80,7 @@ class AudioController:
         if self.active_audio:
             self.page.run_task(self._safe_pause_task, self.active_audio)
 
+
 class LogicController:
     def __init__(self, target_lesson_filename: str = ""):
         self.target_lesson_filename = target_lesson_filename
@@ -132,6 +133,7 @@ class LogicController:
     def move_to_previous_slide(self):
         if self.has_previous_slide():
             self.current_slide_index -= 1
+
 
 class AnimationController:
     def __init__(self, page: ft.Page, audio_controller: AudioController):

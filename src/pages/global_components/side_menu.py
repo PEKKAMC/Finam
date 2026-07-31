@@ -73,7 +73,7 @@ class SideMenu(ft.Container):
             )
         ])
 
-        if os.getenv("DEV_MODE") == "1":
+        if os.getenv("ENABLE_EDITOR") == "1":
             menu_content.controls.append(
                 ft.ListTile(
                     leading=Text.SMALL("dev", color=Color.WHITE),

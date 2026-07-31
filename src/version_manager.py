@@ -6,7 +6,7 @@ from importlib.metadata import version
 
 from src.logger import Logger
 
-def get_version(package: str, dev_mode: bool, rc: int = 0) -> str:
+def get_version(package: str, rc: int = 0) -> str:
     try:
         app_version = version(package)
         nversion: list[int] = list(map(int, app_version.split('.')))
@@ -22,9 +22,6 @@ def get_version(package: str, dev_mode: bool, rc: int = 0) -> str:
         version_suffix = "-alpha"
     elif rc > 0:
         version_suffix = f"-rc{rc}"
-
-    if dev_mode:
-        version_suffix = f"{version_suffix}-dev"
 
     final_version = f"v{app_version}{version_suffix}"
     return final_version

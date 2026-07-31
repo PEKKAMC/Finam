@@ -97,7 +97,7 @@ class InterventionItem(ft.Container):
             content=ft.Column(
                 spacing=5,
                 controls=[
-                    Text.LABEL(title, weight=ft.FontWeight.BOLD, scale=0.05, min_size=12),
+                    Text.LABEL(title, weight=ft.FontWeight.BOLD),
                     Text.P(description, color=Color.SECONDARY_TEXT)
                 ]
             )

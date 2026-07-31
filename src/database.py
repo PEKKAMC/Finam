@@ -4,7 +4,6 @@
 
 from datetime import datetime
 import sqlite3
-
 from typing import List, Dict, Any, Optional
 
 from src.logger import Logger

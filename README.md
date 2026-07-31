@@ -12,7 +12,6 @@ A comprehensive financial literacy application built with **Flet** and **Python*
 - **Charts & Analytics** - Visual representation of financial data
 - **Responsive Design** - Mobile-first UI that works across all platforms
 - **Multi-language Support** - Currently supports Vietnamese with extensibility for more languages
-- **User Authentication** - Secure login system
 - **Local Database** - SQLite database for offline data persistence
 
 ## Prerequisites

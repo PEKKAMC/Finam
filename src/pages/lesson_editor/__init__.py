@@ -5,7 +5,7 @@
 """Lesson Editor page - Edit and create financial lessons."""
 
 from src.pages.lesson_editor.components import TopNavigationBar, EditorToolbar, PropertiesTabs, SlideSidebarLayout
-from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, EditorLogicController, safe_float, calculate_pan_position
+from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, LogicController, safe_float, calculate_pan_position
 from src.pages.lesson_editor.view import LessonEditorView, get_lesson_editor_view
 
 __all__ = [
@@ -17,7 +17,7 @@ __all__ = [
     "EXIT_EFFECTS",
     "ENTRANCE_IDS",
     "EXIT_IDS",
-    "EditorLogicController",
+    "LogicController",
     "safe_float",
     "calculate_pan_position",
     "LessonEditorView",

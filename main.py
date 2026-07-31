@@ -6,28 +6,30 @@ import os
 
 import flet as ft
 
-from src.app import main as app_main
+from src.app import main as app
 from src.logger import Logger
 from src.version_manager import get_version
 
-PACKAGE = "Finam"
-DEV_MODE = os.getenv("DEV_MODE") == "1"
+PACKAGE_NAME = "Finam"
 
 def main() -> int:
     try:
-        app_version = get_version(PACKAGE, DEV_MODE)
+        app_version = get_version(PACKAGE_NAME)
         assets_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets")
+
+        if os.getenv("ENABLE_EDITOR") == "1":
+            Logger.info("Lesson Editor enabled.")
 
         # START APPLICATION
         Logger.info(f"Starting Finam {app_version}...")
-        ft.run(app_main, assets_dir=assets_directory)
+        ft.run(app, assets_dir=assets_directory)
 
         # POST RUN CLEANUP
         Logger.info("Finam closed gracefully.")
         return 0
 
-    except Exception as ex:
-        Logger.critical(f"Application crashed: {ex}", exc_info=True)
+    except Exception as e:
+        Logger.critical(f"Application crashed: {e}", exc_info=True)
         return 1
 
 

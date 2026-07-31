@@ -40,7 +40,7 @@ def calculate_pan_position(el: dict, delta_x: float, delta_y: float) -> tuple[fl
 
     return new_x, new_y
 
-class EditorLogicController:
+class LogicController:
     def __init__(self):
         self.slides_data = [{"elements": []}]
         self.current_slide_index = 0
