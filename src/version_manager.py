@@ -14,16 +14,12 @@ def get_version(package: str, dev_mode: bool, rc: int = 0) -> str:
             raise RuntimeError(f"Invalid version format, must be in the format of X.Y.Z, got {app_version}")
     except Exception as e:
         Logger.error(f"Error occurred while fetching version for {package}: {e}")
-        app_version = '0.0.0'
-        nversion = [0, 0, 0]
+        return "version-undefined"
 
     version_suffix = ""
 
     if nversion[0] == 0:
-        if nversion[1] == 0:
-            version_suffix = "-alpha"
-        else:
-            version_suffix = "-beta"
+        version_suffix = "-alpha"
     elif rc > 0:
         version_suffix = f"-rc{rc}"
 
