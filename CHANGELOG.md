@@ -1,4 +1,4 @@
-**Release Date:** [To be added]
+**Release Date:** August 1, 2026
 
 > **⚠️ ALPHA WARNING: Read Before Using**
 >
