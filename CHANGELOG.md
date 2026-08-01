@@ -14,10 +14,13 @@
 *   Update README.md to represent more accurate information about the app's current state.
 *   Update build scripts to reduce unnecessary files in the build output.
 *   Rename some variables for better clarity.
-*   Fix crash when clicking analyzing purchase button.
-*   Fix lesson player return button not working, causing the app to softlock.
 *   Use correct page transition for all platforms (previously used "Cupertino", which was the default for iOS devices on all platforms).
 *   Slightly improve performance.
+
+## Bug fixes in this version
+
+*   Fix crash when clicking analyzing purchase button.
+*   Fix lesson player return button not working, causing the app to softlock.
 
 ##  Known Issues & Instability
 
