@@ -57,7 +57,7 @@ class LessonPlayerView(ft.View):
 
         if target_lesson_filename:
             current_directory = os.path.dirname(__file__)
-            project_root_directory = os.path.abspath(os.path.join(current_directory, "..", ".."))
+            project_root_directory = os.path.abspath(os.path.join(current_directory, "..", "..", ".."))
             full_target_path = os.path.join(project_root_directory, "assets", "lessons", target_lesson_filename)
             self._page.run_task(self.initialize_lesson_from_path, full_target_path)
 

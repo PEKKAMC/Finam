@@ -64,17 +64,19 @@ class AudioController:
         self.page.update()
         self.page.run_task(self._safe_play_task, self.active_audio)
 
-    async def _safe_play_task(self, audio_control):
+    @staticmethod
+    async def _safe_play_task(audio_control):
         try:
             await asyncio.wait_for(audio_control.play(), timeout=1.0)
-        except Exception:
-            pass
+        except Exception as e:
+            Logger.debug(f"Audio play failed: {e}")
 
-    async def _safe_pause_task(self, audio_control):
+    @staticmethod
+    async def _safe_pause_task(audio_control):
         try:
             await asyncio.wait_for(audio_control.pause(), timeout=0.5)
-        except Exception:
-            pass
+        except Exception as e:
+            Logger.debug(f"Audio pause failed: {e}")
 
     async def pause(self):
         if self.active_audio:
@@ -148,13 +150,15 @@ class AnimationController:
     def get_current_sequence(self):
         return self.active_sequence_identifier
 
-    def safe_convert_to_float(self, value, default_value=0.0) -> float:
+    @staticmethod
+    def safe_convert_to_float(value, default_value=0.0) -> float:
         try:
             return float(value) if value != "" else default_value
         except (ValueError, TypeError):
             return float(default_value)
 
-    def get_animation_duration(self, element_data: dict, duration_key: str, default_seconds: float = 0.5) -> int:
+    @staticmethod
+    def get_animation_duration(element_data: dict, duration_key: str, default_seconds: float = 0.5) -> int:
         duration_value = element_data.get(duration_key, "")
         if not duration_value:
             duration_value = element_data.get("duration", "")
@@ -187,8 +191,8 @@ class AnimationController:
             try:
                 if self.active_sequence_identifier == sequence_identifier and control_element and control_element.page:
                     control_element.update()
-            except Exception:
-                pass
+            except Exception as e:
+                Logger.debug(f"Page update skipped: {e}")
 
         if self.active_sequence_identifier != sequence_identifier: return
 
@@ -210,7 +214,7 @@ class AnimationController:
                 resolved_path = audio_source_path
                 if not os.path.isabs(resolved_path):
                     current_directory = os.path.dirname(__file__)
-                    project_root = os.path.abspath(os.path.join(current_directory, "..", ".."))
+                    project_root = os.path.abspath(os.path.join(current_directory, "..", "..", ".."))
                     possible_paths = [
                         os.path.join(os.getcwd(), audio_source_path),
                         os.path.join(project_root, audio_source_path),

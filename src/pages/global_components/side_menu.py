@@ -48,10 +48,6 @@ class SideMenu(ft.Container):
                 on_click=navigate_to("/lessons")
             ),
             ft.ListTile(
-                leading=ft.Icon(ft.Icons.EDIT),
-                title=Text.H4(self.lang["generic.practice"], color=Color.WHITE)
-            ),
-            ft.ListTile(
                 leading=ft.Icon(ft.Icons.SAVINGS),
                 title=Text.H4(self.lang["generic.saving"], color=Color.WHITE),
                 on_click=navigate_to("/saving")

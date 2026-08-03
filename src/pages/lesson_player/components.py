@@ -15,8 +15,14 @@ class TopNavigationMenu(ft.Row):
             icon_size=30,
             on_click=on_return_click
         )
+
         super().__init__(
-            controls=[ft.Container(content=self.return_button, alignment=ft.Alignment.CENTER)],
+            controls=[
+                ft.Container(
+                    content=self.return_button,
+                    alignment=ft.Alignment.CENTER
+                )
+            ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
@@ -24,6 +30,7 @@ class TopNavigationMenu(ft.Row):
 class SlideCanvas(ft.Container):
     def __init__(self):
         self.canvas_stack = ft.Stack(expand=True)
+
         super().__init__(
             content=self.canvas_stack,
             width=550,
@@ -48,6 +55,7 @@ class LessonHeader(ft.Row):
     def __init__(self, default_title: str):
         self.title_display = responsive_text(default_title, scale=0.08, min_size=14, max_size=21, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_GREY_900)
         self.progress_display = responsive_text("0 / 0", scale=0.04, min_size=10, max_size=15, color=ft.Colors.GREY_600)
+
         super().__init__(
             controls=[self.title_display, self.progress_display],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
@@ -62,6 +70,7 @@ class LessonControls(ft.Row):
     def __init__(self, lang: dict, on_previous_click, on_next_click):
         self.button_previous = ft.Button(lang["lesson_player.previous"], icon=ft.Icons.ARROW_BACK, on_click=on_previous_click, disabled=True)
         self.button_next = ft.Button(lang["lesson_player.next"], icon=ft.Icons.ARROW_FORWARD, on_click=on_next_click, disabled=True)
+
         super().__init__(
             controls=[self.button_previous, self.button_next],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN

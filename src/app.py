@@ -20,13 +20,16 @@ from src.pages.purchase_scanner import get_scanner_view
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
+# DEVELOPER EDITOR PAGE, ONLY INITIALIZE WHEN ENABLE_EDITOR IS SET TO TRUE
 if ENABLE_EDITOR:
     from src.pages.lesson_editor import get_lesson_editor_view
+
 
 async def redirect_to_fallback(page: ft.Page, lang: dict, fallback_reason: str) -> None:
     Logger.info("Redirecting to fallback page")
     await page.push_route("/fallback")
     page.views.append(get_fallback_view(page, lang, fallback_reason))
+
 
 async def main(page: ft.Page) -> None:
     db.initialize_database()
@@ -54,53 +57,52 @@ async def main(page: ft.Page) -> None:
 
     page.update()
 
-
     async def route_change(e: ft.RouteChangeEvent) -> ft.RouteChangeEvent:
         page.views.clear()
-        username = user_info["username"]
         troute = ft.TemplateRoute(page.route)
 
         if troute.match("/login"):
-            if username: Logger.info(f"User {username} logged out")
+            Logger.info(f"Logged out")
             page.views.append(get_login_view(page, lang, user_info))
 
         elif troute.match("/home"):
-            Logger.info(f"{username}: Redirecting to home page")
+            Logger.info(f"Redirecting to home page")
             page.views.append(get_home_view(page, lang, user_info))
 
         elif troute.match("/lessons"):
-            Logger.info(f"{username}: Redirecting to lessons page")
+            Logger.info(f"Redirecting to lessons page")
             page.views.append(get_lesson_view(page, lang, user_info))
 
         elif troute.match("/saving"):
-            Logger.info(f"{username}: Redirecting to saving page")
+            Logger.info(f"Redirecting to saving page")
             page.views.append(get_savings_view(page, lang, user_info))
-
-        elif ENABLE_EDITOR and troute.match("/lesson-editor"):
-            Logger.info(f"{username}: Redirecting to lesson editor page")
-            page.views.append(get_lesson_editor_view(page, lang, user_info))
 
         elif troute.match("/lesson-player/:lesson_id"):
             lesson_id = troute.lesson_id
-            Logger.info(f"{username}: Redirecting to {lesson_id} page")
+            Logger.info(f"Redirecting to {lesson_id} page")
             page.views.append(get_lesson_player_view(page, lang, user_info, lesson_id))
 
         elif troute.match("/lesson-player"):
-            Logger.info(f"{username}: Redirecting to lesson loader page")
+            Logger.info(f"Redirecting to lesson loader page")
             page.views.append(get_lesson_player_view(page, lang, user_info))
 
         elif troute.match("/spending"):
-            Logger.info(f"{username}: Redirecting to spending page")
+            Logger.info(f"Redirecting to spending page")
             page.views.append(get_spending_view(page, lang, user_info))
 
         elif troute.match("/purchase_scanner"):
-            Logger.info(f"{username}: Redirecting to purchase scanner page")
+            Logger.info(f"Redirecting to purchase scanner page")
             page.views.append(get_scanner_view(page, lang, user_info))
 
-        else:
-            Logger.info(f"{username}: Page not found")
+        # DEVELOPER EDITOR PAGE, ONLY AVAILABLE WHEN ENABLE_EDITOR IS SET TO TRUE
+        elif ENABLE_EDITOR and troute.match("/lesson-editor"):
+            Logger.info(f"Redirecting to lesson editor page")
+            page.views.append(get_lesson_editor_view(page, lang, user_info))
+
+        elif not troute.match("/fallback"):
+            Logger.info(f"Page not found")
             await redirect_to_fallback(page, lang, "page_not_found")
-            return e
+            page.update()
 
         page.update()
         return e
