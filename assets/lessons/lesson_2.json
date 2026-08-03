@@ -21,7 +21,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image12.jpg",
+          "content": "image12.jpg",
           "x": 54.51171875,
           "y": 214.3203125,
           "timer_in": "0.3",
@@ -32,7 +32,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image27.jpg",
+          "content": "image27.jpg",
           "x": -42.78515625,
           "y": 194.5390625,
           "timer_in": "2.3",
@@ -43,7 +43,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image14.png",
+          "content": "image14.png",
           "x": -44.5546875,
           "y": 176.125,
           "timer_in": "5",
@@ -54,7 +54,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image52.jpg",
+          "content": "image52.jpg",
           "x": 67.1640625,
           "y": 230.30859375,
           "timer_in": "7.5",
@@ -99,7 +99,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image58.png",
+          "content": "image58.png",
           "x": 0.0,
           "y": 245.1875,
           "timer_in": "3.2",
@@ -110,7 +110,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image57.png",
+          "content": "image57.png",
           "x": 231.84765625,
           "y": 297.5390625,
           "timer_in": "10.87",
@@ -121,7 +121,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image53.png",
+          "content": "image53.png",
           "x": 22.2265625,
           "y": 237.1640625,
           "timer_in": "11.5",
@@ -132,7 +132,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image11.png",
+          "content": "image11.png",
           "x": 244.640625,
           "y": 253.125,
           "timer_in": "12.1",
@@ -143,7 +143,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image46.png",
+          "content": "image46.png",
           "x": 112.921875,
           "y": 177.13671875,
           "timer_in": "12.7",
@@ -154,7 +154,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image36.png",
+          "content": "image36.png",
           "x": 0.0,
           "y": 213.67578125,
           "timer_in": "20",
@@ -165,7 +165,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image50.png",
+          "content": "image50.png",
           "x": 262.87890625,
           "y": 206.9765625,
           "timer_in": "21.8",
@@ -176,7 +176,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image30.png",
+          "content": "image30.png",
           "x": 0.0,
           "y": 210.5625,
           "timer_in": "26.8",
@@ -187,7 +187,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image71.png",
+          "content": "image71.png",
           "x": 71.828125,
           "y": 223.1328125,
           "timer_in": "28.3",
@@ -198,7 +198,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image69.png",
+          "content": "image69.png",
           "x": 0.0,
           "y": 169.97265625,
           "timer_in": "28.6",
@@ -209,7 +209,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image47.png",
+          "content": "image47.png",
           "x": 0.0,
           "y": 170.02734375,
           "timer_in": "29.5",
@@ -220,7 +220,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image39.png",
+          "content": "image39.png",
           "x": 260.8984375,
           "y": 239.67578125,
           "timer_in": "29.8",
@@ -247,7 +247,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image22.png",
+          "content": "image22.png",
           "x": 0.109375,
           "y": 165.875,
           "timer_in": "3",
@@ -258,7 +258,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image68.png",
+          "content": "image68.png",
           "x": 0.0,
           "y": 153.3828125,
           "timer_in": "5.3",
@@ -297,7 +297,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image42.png",
+          "content": "image42.png",
           "x": 0.0,
           "y": 226.8828125,
           "timer_in": "1",
@@ -308,7 +308,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image59.png",
+          "content": "image59.png",
           "x": 65.45703125,
           "y": 232.6640625,
           "timer_in": "14.5",
@@ -319,7 +319,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image20.png",
+          "content": "image20.png",
           "x": 0.109375,
           "y": 217.55859375,
           "timer_in": "16",
@@ -330,7 +330,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image40.png",
+          "content": "image40.png",
           "x": 0.28125,
           "y": 182.7265625,
           "timer_in": "18.5",
@@ -341,7 +341,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image19.png",
+          "content": "image19.png",
           "x": 107.05078125,
           "y": 510.421875,
           "timer_in": "19",
@@ -369,7 +369,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image64.png",
+          "content": "image64.png",
           "x": 98.796875,
           "y": 203.46484375,
           "timer_in": "1.8",
@@ -381,7 +381,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/image49.png",
+          "content": "image49.png",
           "x": 0.0,
           "y": 213.7109375,
           "timer_in": "3.8",
@@ -392,7 +392,7 @@
         },
         {
           "type": "image",
-          "content": "D:/financial-app/assets/images/63cff800-b653-11f0-b2a1-6f537f66f9aa.png",
+          "content": "63cff800-b653-11f0-b2a1-6f537f66f9aa.png",
           "x": 0.0,
           "y": 211.359375,
           "timer_in": "5",

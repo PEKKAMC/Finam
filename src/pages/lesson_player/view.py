@@ -140,8 +140,11 @@ class LessonPlayerView(ft.View):
                 if image_source_path:
                     if image_source_path.startswith("http"):
                         final_image_source = image_source_path
-                    elif os.path.isfile(image_source_path):
-                        final_image_source = image_source_path
+                    else:
+                        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+                        resolved_path = os.path.join(project_root, "assets", "images", image_source_path)
+                        if os.path.isfile(resolved_path):
+                            final_image_source = resolved_path
 
                 if final_image_source:
                     image_content = ft.Image(src=final_image_source, fit=ft.BoxFit.CONTAIN, width=target_width)
