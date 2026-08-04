@@ -1,6 +1,6 @@
 # Finam v0.1.3-alpha
 
-**Release Date:** August 3, 2026
+**Release Date:** August 4, 2026
 
 > **⚠️ ALPHA WARNING: Read Before Using**
 >
