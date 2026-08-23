@@ -6,7 +6,7 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.fallback.components import NotSupportedMessageBox, ReturnButton
-from src.utils import apply_responsive_text, Color, UISettings
+from src.utils import Color, UISettings
 
 Logger.info("Initializing Fallback page...")
 
@@ -67,13 +67,6 @@ class FallbackView(ft.View):
         self.main_container.width = safe_width
         self.main_container.height = safe_height
         self.message_box.resize(safe_width, safe_height)
-
-        apply_responsive_text(self.main_container, safe_width)
-
-        try:
-            apply_responsive_text(self.main_container, safe_width)
-        except Exception as ex:
-            Logger.debug(f"Skipped text resizing: {ex}")
 
         try:
             self.update()

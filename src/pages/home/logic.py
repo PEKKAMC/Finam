@@ -55,46 +55,105 @@ class LogicController:
         self.current_user = current_user
 
     def get_dashboard_data(self):
-        Logger.info("Loading chart data...")
-
+        Logger.info("Loading dashboard & chart data...")
         total_savings = db.saving.get_total_savings(self.current_user)
         total_target = db.saving.get_total_target_amount(self.current_user)
-
         now = datetime.now()
-
-        chart_date = {
-            "month": now.month,
-            "year": now.year,
-            "week": now.isocalendar().week
-        }
-
+        chart_date = {"month": now.month, "year": now.year, "week": now.isocalendar().week}
         chart_data = [{"day": i + 1, "income": 0, "expense": 0} for i in range(7)]
-        expenses = db.spending.get_user_expenses(self.current_user)
-        incomes = db.spending.get_user_incomes(self.current_user)
+
+        expenses = db.spending.get_user_expenses(self.current_user) or []
+        incomes = db.spending.get_user_incomes(self.current_user) or []
+
+        total_income = 0
+        total_expense = 0
+        category_expenses = {} # Add this dictionary to map categories
 
         try:
             for expense in expenses:
+                amount = int(expense.get("amount", 0))
+                category = expense.get("category", "Khác")
+                total_expense += amount
+
+                # Aggregate for the Pie Chart
+                category_expenses[category] = category_expenses.get(category, 0) + amount
+
                 exp_date = datetime.strptime(str(expense["date"])[:16], "%Y-%m-%d %H:%M")
-                chart_data[exp_date.weekday()]["expense"] += expense["amount"]
+                chart_data[exp_date.weekday()]["expense"] += amount
 
             for income in incomes:
+                amount = int(income.get("amount", 0))
+                total_income += amount
                 inc_date = datetime.strptime(str(income["date"])[:16], "%Y-%m-%d %H:%M")
-                chart_data[inc_date.weekday()]["income"] += income["amount"]
+                chart_data[inc_date.weekday()]["income"] += amount
 
         except Exception as e:
             Logger.error(f"Error formatting dashboard data: {e}")
 
-        return total_savings, total_target, chart_date, chart_data, "daily"
+        net_balance = total_income - total_expense
 
-    def add_income_entry(self, amount: str, category: str, note: str) -> bool:
-        amount = int(amount)
-        date = datetime.now().strftime("%Y-%m-%d %H:%M")
-        return db.spending.add_income_entry(self.current_user, amount, category, date, note)
+        metrics = {
+            "total_income": total_income,
+            "total_expense": total_expense,
+            "net_balance": net_balance,
+            "total_savings": total_savings,
+            "total_target": total_target,
+            "category_expenses": category_expenses # Export the mapped data
+        }
 
-    def add_expense_entry(self, amount: str, category: str, note: str) -> bool:
-        amount = int(amount)
+        return metrics, chart_date, chart_data, "daily"
+
+    @staticmethod
+    def get_ai_advice(net_balance: float, total_income: float, total_expense: float) -> str:
+        if total_income == 0 and total_expense == 0:
+            return "Hãy bắt đầu ghi chép các khoản thu chi hàng ngày để Finam AI phân tích sức khỏe tài chính cho bạn!"
+        if net_balance < 0:
+            return "Cảnh báo: Chi tiêu đang vượt quá thu nhập! Hãy cắt giảm các khoản mua sắm không thiết yếu."
+        return "Hãy đảm bảo bạn trích ít nhất 10-20% thu nhập hàng tháng cho quỹ tiết kiệm khẩn cấp!"
+
+    def add_income_entry(self, vals: dict) -> tuple[bool, str]:
+        amount = vals.get("amount", '0')
+        category = vals.get("category")
+        note = vals.get("note", "")
+
+        if not amount or not category:
+            Logger.warning("Amount or Category missing.")
+            return False, "Vui lòng nhập đủ số tiền và danh mục."
+
+        try:
+            amount_val = int(amount)
+            if amount_val <= 0:
+                return False, "Số tiền phải lớn hơn 0."
+        except ValueError:
+            Logger.error("Invalid amount provided")
+            return False, "Số tiền không hợp lệ. Vui lòng nhập số."
+
         date = datetime.now().strftime("%Y-%m-%d %H:%M")
-        return db.spending.add_expense_entry(self.current_user, amount, category, date, note)
+        if db.spending.add_income_entry(self.current_user, amount_val, category, date, note):
+            return True, "Thu nhập đã được thêm thành công!"
+        return False, "Đã xảy ra lỗi khi lưu thu nhập."
+
+    def add_expense_entry(self, vals: dict) -> tuple[bool, str]:
+        amount = vals.get("amount", '0')
+        category = vals.get("category")
+        note = vals.get("note", "")
+
+        if not amount or not category:
+            Logger.warning("Amount or Category missing.")
+            return False, "Vui lòng nhập đủ số tiền và danh mục."
+
+        try:
+            amount_val = int(amount)
+            if amount_val <= 0:
+                return False, "Số tiền phải lớn hơn 0."
+        except ValueError:
+            Logger.error("Invalid amount provided")
+            return False, "Số tiền không hợp lệ. Vui lòng nhập số."
+
+        date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        if db.spending.add_expense_entry(self.current_user, amount_val, category, date, note):
+            return True, "Chi tiêu đã được thêm thành công!"
+        return False, "Đã xảy ra lỗi khi lưu chi tiêu."
 
     def get_user_objectives(self):
         return db.saving.get_user_objectives(self.current_user)

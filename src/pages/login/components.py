@@ -127,7 +127,7 @@ class UserList(ft.Container):
             ft.Container(
                 content=ft.Row([
                     ft.Icon(ft.Icons.PERSON, color=Color.DEFAULT_TEXT),
-                    Text.H3(username, color=Color.DEFAULT_TEXT),
+                    Text.H2(username, color=Color.DEFAULT_TEXT),
                 ]),
                 bgcolor=Color.USER_TILE_BACKGROUND,
                 padding=10,

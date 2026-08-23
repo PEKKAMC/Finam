@@ -62,7 +62,7 @@ async def main(page: ft.Page) -> None:
         troute = ft.TemplateRoute(page.route)
 
         if troute.match("/login"):
-            Logger.info(f"Logged out")
+            if user_info["username"]: Logger.info(f"Logged out")
             page.views.append(get_login_view(page, lang, user_info))
 
         elif troute.match("/home"):

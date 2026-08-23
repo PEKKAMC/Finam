@@ -8,10 +8,9 @@ from src.utils import Color, Text
 
 
 class TopNavigationBar(ft.Row):
-    def __init__(self, menu_button, on_load, on_save):
+    def __init__(self, on_load, on_save):
         super().__init__(
             controls=[
-                ft.Container(content=menu_button, alignment=ft.Alignment.CENTER),
                 Text.LABEL("Lesson Editor", scale=0.06, min_size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_GREY_900, expand=True),
                 ft.Row([
                     ft.IconButton(ft.Icons.FOLDER_OPEN, icon_color=ft.Colors.BLUE_GREY_700, tooltip="Load JSON", on_click=on_load),

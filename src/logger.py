@@ -9,7 +9,7 @@ from datetime import datetime
 import colorlog
 
 
-def setup_logger():
+def setup_logger() -> logging.Logger:
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
     time_format = "%H:%M:%S"

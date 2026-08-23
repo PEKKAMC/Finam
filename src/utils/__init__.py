@@ -14,8 +14,7 @@ from src.utils.assets import get_asset_path, get_language, TranslationDict
 from src.utils.text import (
     Text,
     TEXT_STYLES,
-    responsive_text,
-    apply_responsive_text,
+    create_text
 )
 
 # Import from color module
@@ -32,8 +31,7 @@ __all__ = [
     # Text
     "Text",
     "TEXT_STYLES",
-    "responsive_text",
-    "apply_responsive_text",
+    "create_text",
     # Color
     "Color",
 ]

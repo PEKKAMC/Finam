@@ -5,7 +5,7 @@
 import flet as ft
 
 from src.logger import Logger
-from src.utils import UISettings, apply_responsive_text, Color
+from src.utils import UISettings, Color
 from src.pages.login.logic import LogicController
 from src.pages.login.components import LoginHeader, AddUserField, UserList, DeleteUserDialog
 
@@ -14,13 +14,13 @@ Logger.info("Initializing Login page...")
 
 
 class LoginView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_state: dict):
+    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
-        self.user_state = user_state
+        self.user_info = user_info
 
         # INITIALIZE PAGE CONTROLLER
-        self.controller = LogicController(page, lang, user_state)
+        self.controller = LogicController(page, lang, user_info)
         self.controller.set_view(self)
 
         # INITIALIZE PAGE COMPONENTS
@@ -72,11 +72,6 @@ class LoginView(ft.View):
         self.user_list.resize(safe_height)
 
         try:
-            apply_responsive_text(self.main_container, safe_width)
-        except Exception as ex:
-            Logger.debug(f"Skipped text resizing: {ex}")
-
-        try:
             self.update()
         except RuntimeError as ex:
             Logger.debug(f"Render skipped: {ex}")
@@ -84,6 +79,6 @@ class LoginView(ft.View):
         return e
 
 
-def get_login_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
-    return LoginView(page, lang, user_state)
+def get_login_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+    return LoginView(page, lang, user_info)
 

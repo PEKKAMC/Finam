@@ -13,12 +13,12 @@ from src.pages.global_components import CategorySelectionDialog, IncomeInputDial
 
 
 class LogicController:
-    def __init__(self, current_user: str, page: ft.Page, user_state: dict, refresh_callback):
+    def __init__(self, current_user: str, page: ft.Page, user_info: dict, refresh_callback):
         self.cached_expenses = None
         self.cached_incomes = None
         self.page = page
         self.current_user = current_user
-        self.user_state = user_state
+        self.user_info = user_info
         self.refresh_callback = refresh_callback
 
         self.current_chart_type = "daily"
@@ -119,7 +119,7 @@ class LogicController:
     def handle_save_expense(self):
         values = self.expense_dialog.get_values()
         amount, category, note = values["amount"], values["category"], values["note"]
-        username = self.user_state.get("current_user")
+        username = self.user_info.get("username")
 
         if not amount or not category:
             Logger.warning("Amount or Category missing.")
@@ -151,7 +151,7 @@ class LogicController:
     def handle_save_income(self):
         values = self.income_dialog.get_values()
         amount, category, note = values["amount"], values["category"], values["note"]
-        username = self.user_state.get("current_user")
+        username = self.user_info.get("username")
 
         if not amount or not category:
             Logger.warning("Amount or Category missing.")
@@ -172,7 +172,7 @@ class LogicController:
 
     def get_transaction_data(self):
         from src.pages.global_components import get_categories
-        username = self.user_state.get("current_user")
+        username = self.user_info.get("username")
         total_incomes = db.spending.get_total_income(username)
         total_expenses = db.spending.get_total_expense(username)
         current_balance = total_incomes - total_expenses

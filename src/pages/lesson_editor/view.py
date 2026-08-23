@@ -7,18 +7,18 @@ import json
 import os
 import re
 
-from src.pages.global_components import SideMenu
-from src.utils import Color, Text, apply_responsive_text
+from src.pages.global_components import Menu
+from src.utils import Color, Text
 from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, LogicController, safe_float, calculate_pan_position
 from src.pages.lesson_editor.components import TopNavigationBar, EditorToolbar, PropertiesTabs, SlideSidebarLayout
 
 
 class LessonEditorView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_state: dict):
+    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
-        self.user_state = user_state
-        self.menu = SideMenu(self._page, self.lang, self.user_state)
+        self.user_info = user_info
+        self.menu = Menu(self._page, self.lang, self.user_info)
         self.logic = LogicController()
 
         # Input Fields
@@ -45,7 +45,7 @@ class LessonEditorView(ft.View):
         self.audio_pane = ft.Column(spacing=10, scroll=ft.ScrollMode.AUTO, expand=True)
         self.properties_tabs = PropertiesTabs(self.element_properties, self.animation_pane, self.audio_pane)
 
-        self.top_nav_bar = TopNavigationBar(self.menu.menu_button, self.load_file, self.save_file)
+        self.top_nav_bar = TopNavigationBar(self.load_file, self.save_file)
         self.toolbar = EditorToolbar(self.add_element_handler, self.add_element_handler, self.add_element_handler, self.add_element_handler)
         self.slide_sidebar = SlideSidebarLayout(self.sidebar_column, self.add_slide_handler, self.move_slide_up_handler, self.move_slide_down_handler, self.delete_slide_handler)
 
@@ -72,7 +72,7 @@ class LessonEditorView(ft.View):
 
         super().__init__(
             route="/lesson-editor", padding=0, bgcolor="#FAFAF8",
-            controls=[ft.Stack(controls=[page_content, self.menu.view], expand=True)]
+            controls=[ft.Stack(controls=[page_content, self.menu], expand=True)]
         )
 
         self._page.on_resize = self.on_page_resize
@@ -378,11 +378,5 @@ class LessonEditorView(ft.View):
         self.canvas_container.width = min(550, w * 0.35)
         self.canvas_container.height = available_height * 0.75
 
-        try:
-            apply_responsive_text(self.canvas_container, int(w))
-            self._page.update()
-        except Exception:
-            pass
-
-def get_lesson_editor_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
-    return LessonEditorView(page, lang, user_state)
+def get_lesson_editor_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+    return LessonEditorView(page, lang, user_info)

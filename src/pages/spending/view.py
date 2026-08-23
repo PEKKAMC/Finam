@@ -7,15 +7,15 @@ import flet as ft
 
 from src.utils import Color, UISettings
 from src.logger import Logger
-from src.pages.global_components import SideMenu, TopNavigationBar, FinancialChart
+from src.pages.global_components import Menu, TopNavigationBar, FinancialChart
 from src.pages.spending.logic import LogicController
 from src.pages.spending.components import BalanceCard, SummaryCards, SearchBar, ChartSelector, TransactionHistoryList
 
 class SpendingView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_state: dict):
+    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
-        self.user_state = user_state
+        self.user_info = user_info
 
         self.financial_chart = None
         self.chart_selector = None
@@ -23,7 +23,7 @@ class SpendingView(ft.View):
         self.menu = None
         self.main_container = None
 
-        self.controller = LogicController(user_state["current_user"], self._page, self.user_state, self.refresh_view)
+        self.controller = LogicController(user_info["username"], self._page, self.user_info, self.refresh_view)
         self.balance_data, self.transactions = self.controller.get_transaction_data()
         self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
         self.transaction_history = TransactionHistoryList()
@@ -42,7 +42,7 @@ class SpendingView(ft.View):
         for control in self._page.overlay: control.open = False
         if len(self._page.views) > 0:
             self._page.views[-1].controls.clear()
-            self._page.views[-1].controls.extend(get_spending_view(self._page, self.lang, self.user_state).controls)
+            self._page.views[-1].controls.extend(get_spending_view(self._page, self.lang, self.user_info).controls)
         self._page.update()
 
     def change_chart_type(self, new_type: str):
@@ -67,8 +67,8 @@ class SpendingView(ft.View):
 
     def create_ui_components(self):
         Logger.info("Rendering UI for Spending page...")
-        self.menu = SideMenu(self._page, self.lang, self.user_state)
-        self.top_navigation_bar = TopNavigationBar(menu_button=self.menu.menu_button, current_user=self.user_state["current_user"])
+        self.menu = Menu(self._page, self.lang, self.user_info)
+        self.top_navigation_bar = TopNavigationBar(current_user=self.user_info["username"])
         self.financial_chart = FinancialChart(self.chart_date, self.chart_data, self.chart_type, self.lang)
         self.chart_selector = ChartSelector(self.controller.current_chart_type, self.change_chart_type)
 
@@ -93,7 +93,7 @@ class SpendingView(ft.View):
                         expand=True,
                         padding=0
                     ),
-                    self.menu.view
+                    self.menu
                 ]
             )
         ]
@@ -108,5 +108,5 @@ class SpendingView(ft.View):
         try: self.update()
         except RuntimeError: pass
 
-def get_spending_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
-    return SpendingView(page, lang, user_state)
+def get_spending_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+    return SpendingView(page, lang, user_info)

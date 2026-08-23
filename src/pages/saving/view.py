@@ -6,17 +6,17 @@ import flet as ft
 
 from src.utils import UISettings, Color, Text
 from src.logger import Logger
-from src.pages.global_components import SideMenu, TopNavigationBar, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog
+from src.pages.global_components import Menu, TopNavigationBar, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog
 from src.pages.saving.logic import LogicController
 from src.pages.saving.components import AggregateCard, ObjectiveGrid, ActivityHistoryBoard
 
 
 class SavingView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_state: dict):
+    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
-        self.user_state = user_state
-        self.controller = LogicController(user_state["current_user"])
+        self.user_info = user_info
+        self.controller = LogicController(user_info["username"])
 
         self.create_objective_dialog = CreateObjectiveDialog(self.lang, self.controller, self.refresh_view)
         self.quick_action_dialog = QuickActionDialog(self.lang, self.controller, self.refresh_view)
@@ -41,8 +41,8 @@ class SavingView(ft.View):
 
     def create_ui_components(self):
         Logger.info("Rendering UI for saving page...")
-        self.menu = SideMenu(self._page, self.lang, self.user_state)
-        self.top_navigation_bar = TopNavigationBar(menu_button=self.menu.menu_button, current_user=self.user_state["current_user"])
+        self.menu = Menu(self._page, self.lang, self.user_info)
+        self.top_navigation_bar = TopNavigationBar(current_user=self.user_info["username"])
 
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
         existing_objectives = self.controller.get_user_objectives()
@@ -103,7 +103,7 @@ class SavingView(ft.View):
                         expand=True,
                         padding=0
                     ),
-                    self.menu.view
+                    self.menu
                 ]
             )
         ]
@@ -113,7 +113,7 @@ class SavingView(ft.View):
             control.open = False
         if len(self._page.views) > 0:
             self._page.views[-1].controls.clear()
-            self._page.views[-1].controls.extend(get_savings_view(self._page, self.lang, self.user_state).controls)
+            self._page.views[-1].controls.extend(get_savings_view(self._page, self.lang, self.user_info).controls)
         self._page.update()
 
     async def trigger_export(self, e=None):
@@ -135,5 +135,5 @@ class SavingView(ft.View):
 
         return e
 
-def get_savings_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
-    return SavingView(page, lang, user_state)
+def get_savings_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+    return SavingView(page, lang, user_info)

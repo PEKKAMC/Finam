@@ -11,7 +11,7 @@ def get_version(package: str, rc: int = 0) -> str:
         app_version = version(package)
         nversion: list[int] = list(map(int, app_version.split('.')))
         if len(nversion) != 3:
-            raise RuntimeError(f"Invalid version format, must be in the format of X.Y.Z, got {app_version}")
+            raise ValueError(f"Invalid version format, must be in the format of X.Y.Z, got {app_version}")
     except Exception as e:
         Logger.error(f"Error occurred while fetching version for {package}: {e}")
         return "version-undefined"

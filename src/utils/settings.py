@@ -7,16 +7,15 @@ class DefaultSettings:
 
 
 class UISettings:
-    MAX_APP_WIDTH: int = 650
-    MAX_APP_HEIGHT: int = 1000
+    MAX_APP_WIDTH: int = 432
+    MAX_APP_HEIGHT: int = 960
     MIN_SUPPORTED_WIDTH: int = 250
     MIN_SUPPORTED_HEIGHT: int = 650
-    CARD_BORDER_RADIUS: int = 3
+    CARD_BORDER_RADIUS: int = 28
     CARD_PADDING: int = 20
-    CHART_HEIGHT: int = 320
     SHADOW_BLUR: int = 10
     SHADOW_SPREAD: int = 1
-
+    
 
 class UserSettings:
     THEME: str = "light"

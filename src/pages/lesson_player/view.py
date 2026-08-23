@@ -8,15 +8,15 @@ import re
 
 import flet as ft
 
-from src.utils import apply_responsive_text, Color, responsive_text
+from src.utils import Color, create_text
 from src.pages.lesson_player.logic import LogicController, AudioController, AnimationController, ENTRANCE_EFFECTS
 from src.pages.lesson_player.components import TopNavigationMenu, SlideCanvas, LessonHeader, LessonControls, PresentationBoard
 
 class LessonPlayerView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_state_information: dict, target_lesson_filename: str = ""):
+    def __init__(self, page: ft.Page, lang: dict, user_info_information: dict, target_lesson_filename: str = ""):
         self._page = page
         self.lang = lang
-        self.user_state_information = user_state_information
+        self.user_info_information = user_info_information
         self.is_constructing_slide = False
 
         self.audio_controller = AudioController(self._page)
@@ -67,7 +67,7 @@ class LessonPlayerView(ft.View):
         self._page.on_disconnect = self.cleanup_audio_resources
 
     def display_snackbar_message(self, message_text: str, background_color: str):
-        snackbar_control = ft.SnackBar(responsive_text(message_text, scale=0.047, min_size=12, max_size=18), bgcolor=background_color)
+        snackbar_control = ft.SnackBar(create_text(message_text, scale=0.047, min_size=12, max_size=18), bgcolor=background_color)
         self._page.overlay.append(snackbar_control)
         snackbar_control.open = True
         self._page.update()
@@ -109,9 +109,9 @@ class LessonPlayerView(ft.View):
                     scale_from_size = 0.047
 
                 if entrance_effect == "Wipe":
-                    visual_control = responsive_text("", scale=scale_from_size, min_size=9, max_size=14, color=Color.DEFAULT_TEXT, width=target_width)
+                    visual_control = create_text("", scale=scale_from_size, min_size=9, max_size=14, color=Color.DEFAULT_TEXT, width=target_width)
                 else:
-                    visual_control = responsive_text(clean_text_content, scale=scale_from_size, min_size=9, max_size=14, color=Color.DEFAULT_TEXT, width=target_width)
+                    visual_control = create_text(clean_text_content, scale=scale_from_size, min_size=9, max_size=14, color=Color.DEFAULT_TEXT, width=target_width)
 
             elif is_divider_element:
                 target_width = self.animation_controller.safe_convert_to_float(element_data.get("width"), 300.0)
@@ -294,15 +294,9 @@ class LessonPlayerView(ft.View):
             self.slide_canvas.height = max(500, safe_height_value * 0.6)
             self.presentation_board.width = safe_width_value * 0.95
             self.presentation_board.height = safe_height_value
-
-            try:
-                apply_responsive_text(self.center_alignment_container, safe_width_value)
-            except Exception:
-                pass
-
             self._page.update()
         except Exception:
             pass
 
-def get_lesson_player_view(page: ft.Page, lang: dict, user_state_information: dict, target_lesson_filename: str = None) -> ft.View:
-    return LessonPlayerView(page, lang, user_state_information, target_lesson_filename)
+def get_lesson_player_view(page: ft.Page, lang: dict, user_info_information: dict, target_lesson_filename: str = None) -> ft.View:
+    return LessonPlayerView(page, lang, user_info_information, target_lesson_filename)

@@ -22,25 +22,23 @@ class FinancialChart(ft.Container):
         from src.utils import UISettings
         super().__init__(
             expand=True,
-            height=UISettings.CHART_HEIGHT,
+            height=275,
             bgcolor=Color.WHITE,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
-            padding=UISettings.CARD_PADDING,
-            shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
+            border_radius=24,
+            padding=24,
+            shadow=ft.BoxShadow(
+                spread_radius=UISettings.SHADOW_SPREAD,
+                blur_radius=UISettings.SHADOW_BLUR,
+                color=Color.SHADOW
+            ),
             content=ft.Column(
-                spacing=10,
+                spacing=16,
                 controls=[
                     self.build_legend(),
                     ft.Container(
-                        content=ft.Stack(
-                            controls=[
-                                self.build_bar_chart(),
-                                self.build_line_chart()
-                            ],
-                            expand=True
-                        ),
+                        content=self.build_bar_chart(),
                         expand=True,
-                        padding=ft.Padding.only(top=30)
+                        padding=ft.Padding.only(top=10)
                     )
                 ]
             )
@@ -51,11 +49,11 @@ class FinancialChart(ft.Container):
 
         match self.chart_type:
             case "daily":
-                date_text = f"{self.lang["generic.week"]} {self.chart_date["week"]}, {self.chart_date["month"]}/{self.chart_date["year"]}"
+                date_text = f"{self.lang['generic.week']} {self.chart_date['week']}, {self.chart_date['month']}/{self.chart_date['year']}"
             case "weekly":
-                date_text = f"{self.chart_date["month"]}/{self.chart_date["year"]}"
+                date_text = f"{self.chart_date['month']}/{self.chart_date['year']}"
             case "monthly":
-                date_text = f"{self.chart_date["year"]}"
+                date_text = f"{self.chart_date['year']}"
             case _:
                 date_text = ""
                 Logger.error("Unknown chart type")
@@ -63,118 +61,145 @@ class FinancialChart(ft.Container):
         legend = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                ft.Row([
-                    ft.Container(width=12, height=12, bgcolor=Color.CHART_INCOME, shape=ft.BoxShape.CIRCLE),
-                    Text.SMALL(self.lang["generic.income"], color=Color.BLAND_TEXT),
-                    ft.Container(width=12, height=12, bgcolor=Color.CHART_EXPENSE, shape=ft.BoxShape.CIRCLE, margin=ft.Margin(left=10, top=0, right=0, bottom=0)),
-                    Text.SMALL(self.lang["generic.expense"], color=Color.BLAND_TEXT),
-                ]),
-                ft.Row([
-                    Text.SMALL(
-                        date_text,
-                        color=Color.DEFAULT_TEXT,
-                    )
-                ])
+                ft.Row(
+                    spacing=8,
+                    controls=[
+                        ft.Container(
+                            content=ft.Icon(ft.Icons.BAR_CHART, color="#1A4734", size=16),
+                            width=32,
+                            height=32,
+                            bgcolor="#DAF1DE",
+                            border_radius=12,
+                            alignment=ft.Alignment.CENTER
+                        ),
+                        ft.Column(
+                            spacing=2,
+                            controls=[
+                                Text.H5(self.lang["financial_chart.chart_title"], color="#1e293b"),
+                                Text.LABEL(date_text, color="#64748b")
+                            ]
+                        )
+                    ]
+                ),
+                ft.Row(
+                    spacing=12,
+                    controls=[
+                        ft.Row(
+                            spacing=4,
+                            controls=[
+                                ft.Container(width=10, height=10, bgcolor="#1A4734", border_radius=5),
+                                Text.BUTTON(self.lang["generic.income"], color="#1A4734"),
+                            ]
+                        ),
+                        ft.Row(
+                            spacing=4,
+                            controls=[
+                                ft.Container(width=10, height=10, bgcolor="#E90C00", border_radius=5),
+                                Text.BUTTON(self.lang["generic.expense"], color="#E90C00"),
+                            ]
+                        )
+                    ]
+                )
             ]
         )
 
         return legend
+
+    def _generate_y_axis_labels(self):
+        step = self.max_value / 4
+        labels = []
+        for i in range(5):
+            value = int(i * step)
+            label_str = f"{value // 1000}K"
+            labels.append(
+                fc.ChartAxisLabel(
+                    value=value,
+                    label=Text.LABEL(label_str, color="#64748b")
+                )
+            )
+        return labels
+
     def build_bar_chart(self):
         Logger.info("Building bar chart...")
-        match self.chart_type:
-            case "daily":
-                chart_label = [
-                    fc.ChartAxisLabel(
-                        value=index,
-                        label=ft.Container(
-                            Text.SMALL(f"{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][index]}", color=Color.BLAND_TEXT),
-                            padding=ft.Padding.only(top=10)
-                        )
-                    ) for index, data in enumerate(self.chart_data)
-                ]
-            case "weekly":
-                chart_label = [
-                    fc.ChartAxisLabel(
-                        value=i,
-                        label=ft.Container(
-                            Text.SMALL(f"{self.lang["generic.week"]} {d["week"]}", color=Color.BLAND_TEXT),
-                            padding=ft.Padding.only(top=10)
-                        )
-                    ) for i, d in enumerate(self.chart_data)
-                ]
-            case "monthly":
-                chart_label = [
-                    fc.ChartAxisLabel(
-                        value=i,
-                        label=ft.Container(
-                            Text.SMALL(f"{self.lang["generic.month"]} {d["month"]}", color=Color.BLAND_TEXT),
-                            padding=ft.Padding.only(top=10)
-                        )
-                    ) for i, d in enumerate(self.chart_data)
-                ]
-            case _:
-                chart_label = []
-                Logger.error("Unknown chart type")
 
-        return fc.BarChart(
-            groups=[
+        chart_label = []
+        groups = []
+        bar_size = 18
+
+        for index, data in enumerate(self.chart_data):
+            match self.chart_type:
+                case "daily":
+                    label_text = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"][index]
+                case "weekly":
+                    label_text = f"{self.lang['generic.week']} {data['week']}"
+                case "monthly":
+                    label_text = f"{self.lang['generic.month']} {data['month']}"
+                case _:
+                    label_text = ""
+                    Logger.error("Unknown chart type")
+
+            chart_label.append(
+                fc.ChartAxisLabel(
+                    value=index,
+                    label=ft.Container(
+                        Text.LABEL(label_text, color="#64748b"),
+                        padding=ft.Padding.only(top=10)
+                    )
+                )
+            )
+
+            income_value = int(data["income"])
+            expense_value = int(data["expense"])
+
+            groups.append(
                 fc.BarChartGroup(
                     x=index,
                     rods=[
                         fc.BarChartRod(
                             from_y=0,
-                            to_y=data["income"],
-                            width=4,
-                            color=Color.CHART_INCOME,
-                            bg_to_y=self.max_value,
-                            bgcolor=Color.CHART_INACTIVE,
-                            border_radius=8,
-                            tooltip=f"{self.lang['generic.income']}: {data['income']}\n{self.lang["generic.expense"]}: {data["expense"]}"
+                            to_y=income_value,
+                            width=bar_size,
+                            color="#1A4734",
+                            border_radius=6,
+                            tooltip=fc.BarChartRodTooltip(
+                                text=f"{self.lang.get('generic.income', 'Thu nhập')}: {income_value:,} đ"
+                            ),
+                        ),
+                        fc.BarChartRod(
+                            from_y=0,
+                            to_y=expense_value,
+                            width=bar_size,
+                            color="#E90C00",
+                            border_radius=6,
+                            tooltip=fc.BarChartRodTooltip(
+                                text=f"{self.lang.get('generic.expense', 'Chi tiêu')}: {expense_value:,} đ"
+                            ),
                         )
                     ]
-                ) for index, data in enumerate(self.chart_data)
-            ],
-            bottom_axis=fc.ChartAxis(
-                labels=chart_label,
-                label_size=40,
-            ),
-            horizontal_grid_lines=fc.ChartGridLines(color=ft.Colors.TRANSPARENT),
-            tooltip=fc.BarChartTooltip(bgcolor=Color.DEFAULT_TEXT),
-            max_y=self.max_value,
-            interactive=True
-        )
-
-
-    def build_line_chart(self):
-        Logger.info("Building line chart...")
-
-        return ft.TransparentPointer(fc.LineChart(
-            data_series=[
-                fc.LineChartData(
-                    color=Color.CHART_EXPENSE,
-                    stroke_width=3,
-                    curved=False,
-                    point=fc.ChartCirclePoint(
-                        radius=4,
-                        color=Color.CHART_EXPENSE,
-                        stroke_width=0
-                    ),
-                    points=[fc.LineChartDataPoint(index, data["expense"]) for index, data in enumerate(self.chart_data)]
                 )
-            ],
-            max_y=self.max_value,
-            min_y=0,
-            bottom_axis=fc.ChartAxis(
-                labels=[
-                    fc.ChartAxisLabel(
-                        value=index,
-                        label=ft.Container()
-                    ) for index in range(len(self.chart_data))
-                ],
-                label_size=40
-            ),
-            min_x=len(self.chart_data) / 240 - 1,
-            max_x=len(self.chart_data) - len(self.chart_data) / 240,
-            interactive=False
-        ))
+            )
 
+        return ft.Container(
+            content=fc.BarChart(
+                groups=groups,
+                bottom_axis=fc.ChartAxis(
+                    labels=chart_label,
+                    label_size=40,
+                ),
+                left_axis=fc.ChartAxis(
+                    labels=self._generate_y_axis_labels(),
+                    label_size=35,
+                ),
+                horizontal_grid_lines=fc.ChartGridLines(color=Color.TRANSPARENT),
+                max_y=self.max_value,
+                interactive=True,
+                tooltip=fc.BarChartTooltip(
+                    bgcolor=Color.WHITE,
+                    border_radius=8,
+                    padding=ft.Padding.all(8),
+                    border_side=ft.BorderSide(color="#E2E8F0", width=1),
+                ),
+            ),
+            expand=True,
+            padding=ft.Padding.only(top=10)
+        )

@@ -4,9 +4,9 @@
 
 import flet as ft
 
-from src.utils import apply_responsive_text, UISettings, Color
+from src.utils import UISettings, Color
 from src.logger import Logger
-from src.pages.global_components import SideMenu, TopNavigationBar
+from src.pages.global_components import Menu, TopNavigationBar
 from src.pages.purchase_scanner.logic import LogicController
 from src.pages.purchase_scanner.components import ScannerForm, ScannerResult
 
@@ -14,10 +14,10 @@ Logger.info("Initializing Purchase Scanner page...")
 
 
 class PurchaseScannerView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_state: dict):
+    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
-        self.user_state = user_state
+        self.user_info = user_info
         self.controller = LogicController()
 
         self.menu = None
@@ -45,8 +45,8 @@ class PurchaseScannerView(ft.View):
     def create_ui_components(self):
         Logger.info("Rendering UI for Purchase Scanner page...")
 
-        self.menu = SideMenu(self._page, self.lang, self.user_state)
-        self.top_navigation_bar = TopNavigationBar(menu_button=self.menu.menu_button, current_user=self.user_state["current_user"])
+        self.menu = Menu(self._page, self.lang, self.user_info)
+        self.top_navigation_bar = TopNavigationBar(menu_button=self.menu.menu_button, current_user=self.user_info["username"])
 
         self.form_card = ScannerForm(on_scan_click=self.handle_scan_click)
         self.result_card = ScannerResult()
@@ -104,14 +104,9 @@ class PurchaseScannerView(ft.View):
         self.result_card.width = card_width
 
         try:
-            apply_responsive_text(self.main_container, safe_width)
-        except Exception as e:
-            Logger.debug(f"Skipped text resizing: {e}")
-
-        try:
             self.update()
         except RuntimeError as e:
             Logger.debug(f"Skipped updating during resize: {e}")
 
-def get_scanner_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
-    return PurchaseScannerView(page, lang, user_state)
+def get_scanner_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+    return PurchaseScannerView(page, lang, user_info)

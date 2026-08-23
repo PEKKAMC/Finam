@@ -6,7 +6,7 @@ import flet as ft
 
 from src.utils import UISettings, Text
 from src.logger import Logger
-from src.pages.global_components import SideMenu
+from src.pages.global_components import Menu
 from src.pages.lesson.logic import LogicController
 from src.pages.lesson.components import MilestoneCard, StatisticsCard, CategoryTabs, LessonItemCard
 
@@ -14,11 +14,11 @@ Logger.info("Initializing Lesson page...")
 
 
 class LessonView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_state: dict):
+    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
-        self.user_state = user_state
-        self.controller = LogicController(user_state["current_user"])
+        self.user_info = user_info
+        self.controller = LogicController(user_info["username"])
 
         self.user_statistics = {}
         self.available_lessons = []
@@ -50,7 +50,7 @@ class LessonView(ft.View):
 
     def create_ui_components(self):
         Logger.info("Rendering UI for Lesson page...")
-        self.menu = SideMenu(self._page, self.lang, self.user_state)
+        self.menu = Menu(self._page, self.lang, self.user_info)
 
         search_bar = ft.TextField(
             hint_text=self.lang["lessons.search"],
@@ -68,7 +68,6 @@ class LessonView(ft.View):
 
         self.top_navigation_bar = ft.Row(
             controls=[
-                ft.Container(content=self.menu.menu_button, alignment=ft.Alignment.CENTER),
                 search_bar
             ],
             spacing=10,
@@ -136,14 +135,13 @@ class LessonView(ft.View):
                             controls=[
                                 ft.Row(
                                     alignment=ft.MainAxisAlignment.CENTER,
-                                    controls=[self.main_container]
+                                    controls=[self.main_container, self.menu]
                                 )
                             ]
                         ),
                         expand=True,
                         padding=0
                     ),
-                    self.menu.view
                 ]
             )
         ]
@@ -167,16 +165,10 @@ class LessonView(ft.View):
                 card.content.controls[0].width = lesson_card_width * 0.5
 
         try:
-            from src.utils import apply_responsive_text
-            apply_responsive_text(self.main_container, safe_width)
-        except Exception as e:
-            Logger.debug(f"Skipped text resizing: {e}")
-
-        try:
             self.update()
         except RuntimeError as e:
             Logger.debug(f"Skipped updating during resize: {e}")
 
 
-def get_lesson_view(page: ft.Page, lang: dict, user_state: dict) -> ft.View:
-    return LessonView(page, lang, user_state)
+def get_lesson_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+    return LessonView(page, lang, user_info)

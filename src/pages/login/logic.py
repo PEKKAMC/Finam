@@ -9,10 +9,10 @@ from src.logger import Logger
 
 
 class LogicController:
-    def __init__(self, page: ft.Page, lang: dict, user_state: dict):
+    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
-        self.user_state = user_state
+        self.user_info = user_info
         self.view = None
 
     def set_view(self, view):
@@ -37,7 +37,7 @@ class LogicController:
         Logger.info(f"Deleted user: {username}")
 
     def login_user(self, username: str):
-        self.user_state["current_user"] = username
+        self.user_info["username"] = username
         self._page.go("/home")
 
     def handle_add_user(self, input_username: str):
