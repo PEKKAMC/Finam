@@ -16,38 +16,47 @@ class Menu(ft.Container):
         self.lang = lang
         self.user_info = user_info
 
-        # Navigation Bar Controls
         self.nav_items = [
-            self.build_nav_item(ft.Icons.HOME_ROUNDED, self.lang["generic.home"], self.navigate_to("/home")),
-            self.build_nav_item(ft.Icons.MENU_BOOK_ROUNDED, self.lang["generic.lesson"], self.navigate_to("/lessons")),
-            self.build_nav_item(ft.Icons.SAVINGS_ROUNDED, self.lang["generic.saving"], self.navigate_to("/saving")),
-            self.build_nav_item(ft.Icons.ACCOUNT_BALANCE_WALLET_ROUNDED, self.lang["generic.spending"], self.navigate_to("/spending")),
-            self.build_nav_item(ft.Icons.AUTO_AWESOME_ROUNDED, self.lang["generic.purchase_scanner"], self.navigate_to("/purchase_scanner")),
-            self.build_nav_item(ft.Icons.LOGOUT_ROUNDED, self.lang["generic.change_user"], self.change_user)
+            self.build_nav_item(ft.Icons.HOME_ROUNDED, self.lang.get("generic.home", "Home"), self.navigate_to("/home"), is_active=True),
+            self.build_nav_item(ft.Icons.MENU_BOOK_ROUNDED, self.lang.get("generic.lesson", "Lesson"), self.navigate_to("/lessons"), is_active=False),
+            self.build_nav_item(ft.Icons.SAVINGS_ROUNDED, self.lang.get("generic.saving", "Savings"), self.navigate_to("/saving"), is_active=False),
+            self.build_nav_item(ft.Icons.ACCOUNT_BALANCE_WALLET_ROUNDED, self.lang.get("generic.spending", "Spending"), self.navigate_to("/spending"), is_active=False),
+            self.build_nav_item(ft.Icons.AUTO_AWESOME_ROUNDED, self.lang.get("generic.purchase_scanner", "Scanner"), self.navigate_to("/purchase_scanner"), is_active=False),
+            self.build_nav_item(ft.Icons.LOGOUT_ROUNDED, self.lang.get("generic.change_user", "Log out"), self.change_user, is_active=False),
         ]
 
         if os.getenv("ENABLE_EDITOR") == "1":
             self.nav_items.append(
-                self.build_nav_item(ft.Icons.EDIT_NOTE_ROUNDED, "editor", self.navigate_to("/lesson-editor"))
+                self.build_nav_item(ft.Icons.EDIT_NOTE_ROUNDED, "editor", self.navigate_to("/lesson-editor"), is_active=False)
             )
 
-        self.main_container = ft.Container(
-            content=ft.Row(
-                controls=self.nav_items,
-                alignment=ft.MainAxisAlignment.SPACE_AROUND
-            ),
-            height=75,
+        nav_row = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=8,
+            controls=self.nav_items,
+        )
+
+        self.navigation_bar = ft.Container(
+            width=360,
+            height=72,
             bgcolor=Color.WHITE,
-            border=ft.Border.only(top=ft.BorderSide(1, Color.DEFAULT_BORDER)),
-            padding=8,
-            shadow=ft.BoxShadow(spread_radius=0, blur_radius=15, color=Color.SHADOW)
+            border_radius=20,
+            padding=ft.Padding(10, 10, 10, 10),
+            shadow=ft.BoxShadow(blur_radius=10, spread_radius=1, color=Color.SHADOW),
+            content=nav_row,
         )
 
         super().__init__(
+            content=self.navigation_bar,
             padding=0,
-            bgcolor=Color.MENU_BACKGROUND,
-            content=self.main_container,
-            bottom=0
+            bgcolor=Color.TRANSPARENT,
+            bottom=0,
+            left=0,
+            right=0,
+            width=420,
+            height=86,
+            alignment=ft.Alignment.CENTER,
         )
 
     def navigate_to(self, route: str):
@@ -62,31 +71,30 @@ class Menu(ft.Container):
         return e
 
     @staticmethod
-    def build_nav_item(icon: ft.IconData, title_text: str, on_click: Callable):
+    def build_nav_item(icon: ft.IconData, title_text: str, on_click: Callable, is_active: bool):
+        active_bg = Color.LIGHT_ACCENT if is_active else Color.TRANSPARENT
+        active_text = Color.PRIMARY_TEXT if is_active else Color.SECONDARY_TEXT
+        active_icon = Color.PRIMARY if is_active else Color.SECONDARY_TEXT
+
         return ft.Container(
-            expand=True,
-            padding=ft.Padding(4, 6, 4, 6),
-            border_radius=10,
+            width=52,
+            height=52,
+            border_radius=16,
             ink=True,
             on_click=on_click,
+            bgcolor=active_bg,
+            alignment=ft.Alignment.CENTER,
             content=ft.Column(
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=2,
+                spacing=4,
                 controls=[
-                    ft.Icon(
-                        icon,
-                        color=Color.SUBTITLE_TEXT,
-                        size=20
-                    ),
-                    Text.SMALL(
-                        title_text,
-                        color=Color.SUBTITLE_TEXT,
-                        overflow=ft.TextOverflow.ELLIPSIS
-                    )
-                ]
-            )
+                    ft.Icon(icon, size=20, color=active_icon),
+                    Text.SMALL(title_text, color=active_text),
+                ],
+            ),
         )
 
     def resize(self, page_width: int):
-        self.main_container.width = page_width
+        self.width = max(page_width, 0)
+        self.navigation_bar.width = min(max(page_width - 24, 320), 420)

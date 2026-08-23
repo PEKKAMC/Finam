@@ -19,7 +19,7 @@ class LogicController:
 
         if total_target > 0:
             progress_value = min(total_savings / total_target, 1.0)
-            percentage = f"{(float(progress_value) * 100):.2f}%"
+            percentage = f"{(int(progress_value * 100))}%"
         else:
             progress_value = 1.0
             percentage = "100%"

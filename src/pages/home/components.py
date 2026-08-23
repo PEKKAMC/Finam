@@ -7,6 +7,7 @@ from collections.abc import Callable
 import flet as ft
 import flet_charts as fc
 
+from src.database import db
 from src.utils import Color, Text, UISettings
 
 
@@ -263,11 +264,14 @@ class SavingsProgressCard(ft.Container):
             )
         else:
             for obj in objectives[:3]:
-                title = obj.get("title", self.lang["home.default_goal_title"])
-                cur = float(obj.get("current_amount", 0))
-                tgt = float(obj.get("target_amount", 1))
-                pct = min(1.0, cur / tgt) if tgt > 0 else 1.0
+                objective_id, title, reason, target_amount, completed_at = obj
+
+                cur = float(db.saving.get_objective_progress(objective_id))
+                tgt = float(target_amount) if target_amount > 0 else 1.0
+
+                pct = min(1.0, cur / tgt)
                 pct_str = f"{int(pct * 100)}%"
+                display_title = title if title else self.lang["home.default_goal_title"]
 
                 items.append(
                     ft.Container(
@@ -281,7 +285,7 @@ class SavingsProgressCard(ft.Container):
                                 ft.Row(
                                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                                     controls=[
-                                        Text.LABEL(title, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD),
+                                        Text.LABEL(display_title, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD),
                                         ft.Container(
                                             content=Text.SMALL(pct_str, color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
                                             bgcolor=Color.PRIMARY,
@@ -349,11 +353,21 @@ class SavingsProgressCard(ft.Container):
         )
 
 class ExpensePieChartCard(ft.Container):
-    def __init__(self, page: ft.Page, category_data: dict):
+    def __init__(self, page: ft.Page, category_data: dict, lang: dict):
         self._page = page
         self.category_data = category_data
+        self.lang = lang
 
-        pie_colors = ['#E90C00', '#1A4734', '#D97706', '#2563EB', '#EC4899', '#805AD5', '#0284C7', '#0D9488']
+        pie_colors = [
+            Color.EXPENSE_ACTION_BACKGROUND,
+            Color.PRIMARY,
+            Color.GOAL_HEADER_ICON_COLOR,
+            Color.LESSON_ICON_COLOR,
+            Color.SAVINGS_VALUE_TEXT,
+            Color.PROGRESS_ACTIVE,
+            Color.PRIMARY_ACTION,
+            Color.CHART_INCOME,
+        ]
 
         header = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -365,16 +379,16 @@ class ExpensePieChartCard(ft.Container):
                             width=32,
                             height=32,
                             border_radius=10,
-                            bgcolor="#FEE2E2",
+                            bgcolor=Color.DANGER_SOFT if hasattr(Color, 'DANGER_SOFT') else Color.DIALOG_BACKGROUND,
                             alignment=ft.Alignment.CENTER,
-                            content=ft.Icon(ft.Icons.PIE_CHART, color="#E90C00", size=18)
+                            content=ft.Icon(ft.Icons.PIE_CHART, color=Color.EXPENSE_ACTION_BACKGROUND, size=18)
                         ),
-                        Text.H4("Cơ Cấu Chi Tiêu", color=Color.DEFAULT_TEXT)
+                        Text.H4(self.lang["home.expense_breakdown"], color=Color.DEFAULT_TEXT)
                     ]
                 ),
                 ft.TextButton(
                     content=ft.Row([
-                        Text.SMALL("Xem chi tiết", color=Color.PRIMARY, weight=ft.FontWeight.BOLD),
+                        Text.SMALL(self.lang["home.view_details"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD),
                         ft.Icon(ft.Icons.ARROW_FORWARD, color=Color.PRIMARY, size=14)
                     ], tight=True),
                     on_click=lambda e: self._page.go("/spending")
@@ -389,8 +403,8 @@ class ExpensePieChartCard(ft.Container):
                 content=ft.Column(
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     controls=[
-                        ft.Icon(ft.Icons.ERROR_OUTLINE, color="#CBD5E1", size=32),
-                        Text.SMALL("Chưa có dữ liệu chi tiêu trong hệ thống.", color="#94A3B8")
+                        ft.Icon(ft.Icons.ERROR_OUTLINE, color=Color.DEFAULT_BORDER, size=32),
+                        Text.SMALL(self.lang["home.no_expense_data"], color=Color.BLAND_TEXT)
                     ]
                 )
             )
@@ -513,7 +527,7 @@ class FeaturedLessonCard(ft.Container):
                                 border_radius=6
                             ),
                             Text.P(self.lang["home.featured_lesson_title"], color=Color.WHITE, weight=ft.FontWeight.BOLD),
-                            Text.SMALL(self.lang["home.featured_lesson_desc"], color="#9E9E9E")
+                            Text.SMALL(self.lang["home.featured_lesson_desc"], color=Color.BLAND_TEXT)
                         ]
                     ),
                     ft.Button(

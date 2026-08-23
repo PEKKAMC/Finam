@@ -17,4 +17,3 @@ __all__ = [
     "LoginView",
     "get_login_view"
 ]
-

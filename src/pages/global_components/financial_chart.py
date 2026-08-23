@@ -8,6 +8,8 @@ import flet_charts as fc
 from src.utils import Color, Text
 from src.logger import Logger
 
+Logger.info("Building financial chart...")
+
 
 class FinancialChart(ft.Container):
     def __init__(self, chart_date: dict, chart_data: list, chart_type: str, lang: dict):
@@ -45,8 +47,6 @@ class FinancialChart(ft.Container):
         )
 
     def build_legend(self):
-        Logger.info("Building chart legend...")
-
         match self.chart_type:
             case "daily":
                 date_text = f"{self.lang['generic.week']} {self.chart_date['week']}, {self.chart_date['month']}/{self.chart_date['year']}"
@@ -65,18 +65,18 @@ class FinancialChart(ft.Container):
                     spacing=8,
                     controls=[
                         ft.Container(
-                            content=ft.Icon(ft.Icons.BAR_CHART, color="#1A4734", size=16),
+                            content=ft.Icon(ft.Icons.BAR_CHART, color=Color.PRIMARY, size=16),
                             width=32,
                             height=32,
-                            bgcolor="#DAF1DE",
+                            bgcolor=Color.LIGHT_ACCENT,
                             border_radius=12,
                             alignment=ft.Alignment.CENTER
                         ),
                         ft.Column(
                             spacing=2,
                             controls=[
-                                Text.H5(self.lang["financial_chart.chart_title"], color="#1e293b"),
-                                Text.LABEL(date_text, color="#64748b")
+                                Text.H5(self.lang["financial_chart.chart_title"], color=Color.DEFAULT_TEXT),
+                                Text.LABEL(date_text, color=Color.SECONDARY_TEXT)
                             ]
                         )
                     ]
@@ -87,15 +87,15 @@ class FinancialChart(ft.Container):
                         ft.Row(
                             spacing=4,
                             controls=[
-                                ft.Container(width=10, height=10, bgcolor="#1A4734", border_radius=5),
-                                Text.BUTTON(self.lang["generic.income"], color="#1A4734"),
+                                ft.Container(width=10, height=10, bgcolor=Color.PRIMARY, border_radius=5),
+                                Text.BUTTON(self.lang["generic.income"], color=Color.PRIMARY),
                             ]
                         ),
                         ft.Row(
                             spacing=4,
                             controls=[
-                                ft.Container(width=10, height=10, bgcolor="#E90C00", border_radius=5),
-                                Text.BUTTON(self.lang["generic.expense"], color="#E90C00"),
+                                ft.Container(width=10, height=10, bgcolor=Color.EXPENSE_ACTION_BACKGROUND, border_radius=5),
+                                Text.BUTTON(self.lang["generic.expense"], color=Color.EXPENSE_ACTION_BACKGROUND),
                             ]
                         )
                     ]
@@ -114,14 +114,12 @@ class FinancialChart(ft.Container):
             labels.append(
                 fc.ChartAxisLabel(
                     value=value,
-                    label=Text.LABEL(label_str, color="#64748b")
+                    label=Text.LABEL(label_str, color=Color.SECONDARY_TEXT)
                 )
             )
         return labels
 
     def build_bar_chart(self):
-        Logger.info("Building bar chart...")
-
         chart_label = []
         groups = []
         bar_size = 18
@@ -142,7 +140,7 @@ class FinancialChart(ft.Container):
                 fc.ChartAxisLabel(
                     value=index,
                     label=ft.Container(
-                        Text.LABEL(label_text, color="#64748b"),
+                        Text.LABEL(label_text, color=Color.SECONDARY_TEXT),
                         padding=ft.Padding.only(top=10)
                     )
                 )
@@ -159,7 +157,7 @@ class FinancialChart(ft.Container):
                             from_y=0,
                             to_y=income_value,
                             width=bar_size,
-                            color="#1A4734",
+                            color=Color.PRIMARY,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
                                 text=f"{self.lang.get('generic.income', 'Thu nhập')}: {income_value:,} đ"
@@ -169,7 +167,7 @@ class FinancialChart(ft.Container):
                             from_y=0,
                             to_y=expense_value,
                             width=bar_size,
-                            color="#E90C00",
+                            color=Color.EXPENSE_ACTION_BACKGROUND,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
                                 text=f"{self.lang.get('generic.expense', 'Chi tiêu')}: {expense_value:,} đ"
@@ -197,7 +195,7 @@ class FinancialChart(ft.Container):
                     bgcolor=Color.WHITE,
                     border_radius=8,
                     padding=ft.Padding.all(8),
-                    border_side=ft.BorderSide(color="#E2E8F0", width=1),
+                    border_side=ft.BorderSide(color=Color.DEFAULT_BORDER, width=1),
                 ),
             ),
             expand=True,

@@ -213,7 +213,7 @@ class HomeView(ft.View):
 
         self.financial_chart = FinancialChart(self.chart_date, self.chart_data, self.chart_type, self.lang)
         self.savings_progress_card = SavingsProgressCard(self._page, self.objectives, self.lang)
-        self.expense_pie_chart = ExpensePieChartCard(page=self._page, category_data=self.metrics["category_expenses"])
+        self.expense_pie_chart = ExpensePieChartCard(page=self._page, category_data=self.metrics["category_expenses"], lang=self.lang)
         self.featured_lesson_card = FeaturedLessonCard(self._page, self.lang)
 
         # INITIALIZE MAIN CONTAINER
@@ -230,8 +230,8 @@ class HomeView(ft.View):
                             controls=[
                                 self.balance_card,
                                 self.financial_chart,
-                                self.savings_progress_card,
                                 self.expense_pie_chart,
+                                self.savings_progress_card,
                                 self.featured_lesson_card
                             ]
                         )
@@ -240,7 +240,7 @@ class HomeView(ft.View):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin.only(top=58, bottom=67)
+            margin=ft.Margin(left=16, top=84, right=16, bottom=90)
         )
 
         super().__init__(
@@ -285,7 +285,8 @@ class HomeView(ft.View):
     def on_page_resize(self, e=None):
         page_width, page_height = self.get_safe_page_size()
 
-        self.main_container.width = page_width
+        self.main_container.width = max(page_width - 32, 320)
+        self.main_container.margin = ft.Margin(left=16, top=84, right=16, bottom=90)
         self.dialogs.action_dialog.resize(int(page_width * 0.5), int(page_width * 0.4), int(page_height * 0.1))
         self.menu.resize(page_width)
         self.top_navigation_bar.resize(page_width)

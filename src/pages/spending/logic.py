@@ -56,7 +56,6 @@ class LogicController:
         self.page.update()
 
     def get_dashboard_data(self):
-        Logger.info(f"Loading chart data for {self.current_chart_type}...")
         now = datetime.now()
         iso_year, iso_week, iso_day = now.isocalendar()
 
@@ -135,8 +134,8 @@ class LogicController:
                 self.page.snack_bar = ft.SnackBar(Text.LABEL("Expense added successfully!"))
                 self.page.snack_bar.open = True
                 self.page.update()
-        except ValueError:
-            Logger.error("Invalid amount provided")
+        except ValueError as e:
+            Logger.error(f"Invalid amount provided: {e}")
 
     def open_income_dialog(self):
         if self.income_dialog not in self.page.overlay:
@@ -167,8 +166,8 @@ class LogicController:
                 self.page.snack_bar = ft.SnackBar(Text.LABEL("Income added successfully!"))
                 self.page.snack_bar.open = True
                 self.page.update()
-        except ValueError:
-            Logger.error("Invalid amount provided")
+        except ValueError as e:
+            Logger.error(f"Invalid amount provided: {e}")
 
     def get_transaction_data(self):
         from src.pages.global_components import get_categories
@@ -222,3 +221,18 @@ class LogicController:
             })
 
         return balance_data, transactions
+
+    def delete_transaction(self, transaction_id):
+        """Deletes an expense or income entry by ID."""
+        username = self.user_info.get("username")
+        try:
+            # Attempt to delete from both tables or handle based on ID type
+            success = db.spending.delete_entry(username, transaction_id)
+            if success:
+                if self.refresh_callback:
+                    self.refresh_callback()
+                self.page.snack_bar = ft.SnackBar(Text.LABEL("Xóa giao dịch thành công!"))
+                self.page.snack_bar.open = True
+                self.page.update()
+        except Exception as e:
+            Logger.error(f"Error deleting transaction: {e}")

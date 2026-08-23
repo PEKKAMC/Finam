@@ -6,14 +6,11 @@
 
 from src.pages.lesson.view import LessonView, get_lesson_view
 from src.pages.lesson.logic import LogicController
-from src.pages.lesson.components import MilestoneCard, StatisticsCard, CategoryTabs, LessonItemCard
+from src.pages.lesson.components import LessonItemCard
 
 __all__ = [
     "LessonView",
     "get_lesson_view",
     "LogicController",
-    "MilestoneCard",
-    "StatisticsCard",
-    "CategoryTabs",
     "LessonItemCard"
 ]

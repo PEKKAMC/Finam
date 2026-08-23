@@ -29,7 +29,7 @@ class LogicController:
             db.users.add_user(input_username)
             Logger.info(f"Created user: {input_username}")
             return True, ""
-        return False, self.lang["login.user_already_exists"]
+        return False, self.lang.get("login.user_already_exists", "Tên người dùng đã tồn tại")
 
     @staticmethod
     def delete_user(username: str):
@@ -47,7 +47,7 @@ class LogicController:
         success, error_msg = self.add_user(input_username)
         if success:
             self.view.add_form.clear()
-            self.view.user_list.refresh(self.get_all_users())
+            self.view.user_list.refresh(self.get_all_users(), self.user_info.get("username", ""))
         else:
             self.view.add_form.show_error(error_msg)
 
@@ -56,5 +56,4 @@ class LogicController:
 
     def handle_delete_confirm(self, username: str):
         self.delete_user(username)
-        self.view.user_list.refresh(self.get_all_users())
-
+        self.view.user_list.refresh(self.get_all_users(), self.user_info.get("username", ""))

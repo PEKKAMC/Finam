@@ -4,175 +4,113 @@
 
 import flet as ft
 
-from src.utils import Text
+from src.utils import Color, Text
 
-class MilestoneCard(ft.Container):
-    def __init__(self, lang: dict, user_statistics: dict):
-        super().__init__(
-            expand=2,
-            bgcolor="#287b35",
-            border_radius=15,
-            height=200,
-            padding=20,
-            content=ft.Column(
-                spacing=15,
-                controls=[
-                    Text.H2(lang["lessons.previous_lesson_head"], color=ft.Colors.WHITE),
-                    Text.P(lang["lessons.previous_lesson"], color=ft.Colors.WHITE_70),
-                    ft.Container(height=10),
-                    ft.Column(
-                        spacing=5,
-                        controls=[
-                            ft.Row(
-                                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                controls=[
-                                    Text.LABEL(lang["lessons.overall_completion"], color=ft.Colors.BLACK_87),
-                                    ft.Row(
-                                        controls=[
-                                            Text.LABEL(f"{user_statistics['completion_percentage']}%", color=ft.Colors.WHITE),
-                                            ft.Container(width=20),
-                                        ],
-                                        alignment=ft.MainAxisAlignment.END,
-                                        vertical_alignment=ft.CrossAxisAlignment.CENTER
-                                    )
-                                ]
-                            ),
-                            ft.ProgressBar(
-                                value=user_statistics["completion_decimal"],
-                                color=ft.Colors.WHITE,
-                                bgcolor=ft.Colors.WHITE_30,
-                                height=6
-                            )
-                        ]
-                    )
-                ]
-            )
-        )
-
-class StatisticsCard(ft.Container):
-    def __init__(self, lang: dict, user_statistics: dict):
-        super().__init__(
-            expand=1,
-            bgcolor="#E8F0E6",
-            border_radius=15,
-            height=200,
-            padding=15,
-            content=ft.Column(
-                alignment=ft.MainAxisAlignment.CENTER,
-                spacing=25,
-                controls=[
-                    ft.Row(
-                        spacing=15,
-                        controls=[
-                            ft.Container(
-                                content=ft.Icon(ft.Icons.TIMER, color=ft.Colors.BLUE_800, size=20),
-                                bgcolor="#D1E4FA", padding=10, border_radius=10
-                            ),
-                            ft.Column(
-                                spacing=0,
-                                controls=[
-                                    Text.SMALL(lang["lessons.learning_time"], color=ft.Colors.GREY_600),
-                                    Text.H3(f"{user_statistics['learning_hours']} {lang['generic.hours']}", color=ft.Colors.BLUE_GREY_900)
-                                ]
-                            )
-                        ]
-                    ),
-                    ft.Row(
-                        spacing=15,
-                        controls=[
-                            ft.Container(
-                                content=ft.Icon(ft.Icons.VERIFIED, color=ft.Colors.GREEN_800, size=20),
-                                bgcolor="#CDE5D0",
-                                padding=10,
-                                border_radius=10
-                            ),
-                            ft.Column(
-                                spacing=0,
-                                controls=[
-                                    Text.SMALL(lang["lessons.certificates"], color=ft.Colors.GREY_600),
-                                    Text.H3(str(user_statistics["certificates_earned"]), color=ft.Colors.BLUE_GREY_900)
-                                ]
-                            )
-                        ]
-                    )
-                ]
-            )
-        )
-
-class CategoryTabs(ft.Row):
-    def __init__(self, categories: list):
-        super().__init__(spacing=10)
-        self.controls = [
-            ft.Container(
-                content=Text.P(
-                    category,
-                    color=ft.Colors.WHITE if category == categories[0] else ft.Colors.BLUE_GREY_600,
-                    weight=ft.FontWeight.BOLD
-                ),
-                bgcolor=ft.Colors.GREEN_800 if category == categories[0] else ft.Colors.GREY_200,
-                padding=ft.Padding.symmetric(horizontal=16, vertical=8),
-                border_radius=20,
-            ) for category in categories
-        ]
 
 class LessonItemCard(ft.Container):
-    def __init__(self, page: ft.Page, title: str, subtitle: str, cover_image: str, is_completed: bool, route: str):
-        text_content = ft.Container(
-            padding=ft.Padding.only(left=20, top=20, bottom=20, right=270),
-            content=ft.Column(
-                alignment=ft.MainAxisAlignment.START,
-                controls=[
-                    ft.Row(
+    def __init__(self, page: ft.Page, title: str, subtitle: str, cover_image: str, is_completed: bool, route: str, duration: int = 15):
+        top_badges = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            controls=[
+                ft.Container(
+                    content=Text.SMALL(f"{duration} phút", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                    bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
+                    padding=ft.Padding(10, 4, 10, 4),
+                    border_radius=12,
+                    border=ft.Border.all(1, ft.Colors.with_opacity(0.3, Color.PRIMARY))
+                ),
+                *(
+                    [
+                        ft.Container(
+                            content=ft.Row(
+                                spacing=4,
+                                controls=[
+                                    ft.Icon(ft.Icons.CHECK_CIRCLE, color=Color.WHITE, size=14),
+                                    Text.SMALL("Đã học", color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                                ],
+                                tight=True
+                            ),
+                            bgcolor=ft.Colors.EMERALD_600 if hasattr(ft.Colors, 'EMERALD_600') else "#059669",
+                            padding=ft.Padding(8, 4, 8, 4),
+                            border_radius=12
+                        )
+                    ] if is_completed else []
+                )
+            ]
+        )
+
+        cover_stack = ft.Stack(
+            controls=[
+                ft.Image(
+                    src=cover_image.strip() if cover_image else "",
+                    fit=ft.BoxFit.COVER,
+                    width=float("inf"),
+                    height=176
+                ),
+                ft.Container(
+                    gradient=ft.LinearGradient(
+                        begin=ft.Alignment.TOP_CENTER,
+                        end=ft.Alignment.BOTTOM_CENTER,
+                        colors=["rgba(2, 6, 23, 0.2)", "rgba(2, 6, 23, 0.9)"]
+                    ),
+                    padding=12,
+                    content=ft.Column(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         controls=[
-                            Text.H3(
-                                title,
-                                color=ft.Colors.GREY_700 if is_completed else ft.Colors.BLACK_87,
-                                expand=True
-                            ),
-                            ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.GREEN_500, visible=is_completed)
+                            top_badges,
+                            Text.H4(title, color=Color.WHITE, weight=ft.FontWeight.BOLD)
                         ]
-                    ),
-                    Text.P(subtitle, color=ft.Colors.GREY_800),
+                    )
+                )
+            ]
+        )
+
+        cover_container = ft.Container(
+            height=176,
+            bgcolor=Color.DARK_SURFACE,
+            content=cover_stack,
+            clip_behavior=ft.ClipBehavior.HARD_EDGE
+        )
+
+        content_panel = ft.Container(
+            padding=16,
+            content=ft.Column(
+                spacing=12,
+                controls=[
+                    Text.SMALL(subtitle, color=Color.SECONDARY_TEXT),
+                    ft.Divider(height=1, color=Color.INPUT_BORDER),
+                    ft.Button(
+                        content=ft.Row(
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=6,
+                            controls=[
+                                ft.Icon(ft.Icons.PLAY_ARROW_ROUNDED, color=Color.LIGHT_ACCENT, size=18),
+                                Text.LABEL("Ôn Lại Bài Học" if is_completed else "Bắt Đầu Học", color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                            ],
+                            tight=True
+                        ),
+                        bgcolor=Color.PRIMARY,
+                        on_click=lambda e: page.go(route),
+                        style=ft.ButtonStyle(
+                            shape=ft.RoundedRectangleBorder(radius=16),
+                            padding=12
+                        )
+                    )
                 ]
             )
         )
 
-        card_stack = ft.Stack()
-
-        if cover_image:
-            cover_image = cover_image.strip()
-            image_layer = ft.Container(
-                right=0,
-                top=0,
-                bottom=0,
-                width=250,
-                content=ft.ShaderMask(
-                    content=ft.Image(
-                        src=cover_image,
-                        fit=ft.BoxFit.COVER,
-                    ),
-                    blend_mode=ft.BlendMode.DST_IN,
-                    shader=ft.LinearGradient(
-                        begin=ft.Alignment.TOP_LEFT,
-                        end=ft.Alignment.BOTTOM_RIGHT,
-                        colors=[ft.Colors.TRANSPARENT, ft.Colors.BLACK],
-                        stops=[0.0, 0.6]
-                    )
-                )
-            )
-            card_stack.controls.append(image_layer)
-
-        card_stack.controls.append(text_content)
-
         super().__init__(
-            width=500,
-            bgcolor=ft.Colors.WHITE,
-            border_radius=12,
-            border=ft.Border.all(1, ft.Colors.GREY_500 if is_completed else ft.Colors.GREY_400),
+            bgcolor=Color.WHITE,
+            border_radius=24,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
             ink=True,
             on_click=lambda event: page.go(route),
-            content=card_stack,
+            content=ft.Column(
+                spacing=0,
+                controls=[cover_container, content_panel]
+            ),
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
-            padding=0
+            padding=0,
+            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW)
         )

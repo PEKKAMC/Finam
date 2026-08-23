@@ -4,11 +4,11 @@
 
 import flet as ft
 
-from src.utils import UISettings, Text
+from src.utils import UISettings, Text, Color
 from src.logger import Logger
-from src.pages.global_components import Menu
+from src.pages.global_components import Menu, TopNavigationBar
 from src.pages.lesson.logic import LogicController
-from src.pages.lesson.components import MilestoneCard, StatisticsCard, CategoryTabs, LessonItemCard
+from src.pages.lesson.components import LessonItemCard
 
 Logger.info("Initializing Lesson page...")
 
@@ -20,14 +20,11 @@ class LessonView(ft.View):
         self.user_info = user_info
         self.controller = LogicController(user_info["username"])
 
-        self.user_statistics = {}
         self.available_lessons = []
-
         self.main_container = None
         self.menu = None
-        self.header_text = None
         self.top_navigation_bar = None
-        self.lesson_components = []
+        self.lesson_grid_responsive = None
 
         self.load_data()
 
@@ -43,56 +40,104 @@ class LessonView(ft.View):
 
     def load_data(self):
         """Fetches data from the controller before rendering the UI."""
-
-        Logger.info("Loading lesson and statistics data...")
-        self.user_statistics = self.controller.get_user_statistics()
+        Logger.info("Loading lesson data...")
         self.available_lessons = self.controller.load_available_lessons()
 
     def create_ui_components(self):
         Logger.info("Rendering UI for Lesson page...")
         self.menu = Menu(self._page, self.lang, self.user_info)
+        self.top_navigation_bar = TopNavigationBar(current_user=self.user_info["username"])
 
-        search_bar = ft.TextField(
-            hint_text=self.lang["lessons.search"],
-            color=ft.Colors.GREY_900,
-            prefix_icon=ft.Icons.SEARCH,
-            border_radius=10,
-            filled=True,
-            bgcolor=ft.Colors.GREY_50,
-            border_color=ft.Colors.TRANSPARENT,
-            height=40,
-            expand=True,
-            content_padding=10,
-            text_size=14
+        # Compute completion statistics dynamically
+        total_lessons = len(self.available_lessons)
+        completed_lessons = sum(1 for l in self.available_lessons if l.get("is_completed", False))
+        total_minutes = sum(15 for l in self.available_lessons if l.get("is_completed", False))
+        completion_pct = int((completed_lessons / total_lessons * 100)) if total_lessons > 0 else 0
+
+        # Header Summary Banner matching TSX layout
+        summary_banner = ft.Container(
+            bgcolor=Color.PRIMARY,
+            border_radius=24,
+            padding=24,
+            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
+            content=ft.Column(
+                spacing=20,
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        wrap=True,
+                        controls=[
+                            ft.Column(
+                                spacing=6,
+                                controls=[
+                                    ft.Container(
+                                        content=Text.SMALL("HỌC VIỆN TÀI CHÍNH FINAM", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                                        bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
+                                        padding=ft.Padding(12, 4, 12, 4),
+                                        border_radius=16,
+                                        border=ft.Border.all(1, ft.Colors.with_opacity(0.3, Color.PRIMARY))
+                                    ),
+                                    Text.H2("Tư Duy & Kiến Thức Quản Lý Tiền", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                                    Text.SMALL("Cung cấp các bài học cô đọng giúp bạn đưa ra các quyết định chi tiêu thông minh hơn", color=Color.LIGHT_ACCENT)
+                                ]
+                            ),
+                            ft.Row(
+                                spacing=12,
+                                controls=[
+                                    ft.Container(
+                                        padding=12,
+                                        border_radius=16,
+                                        bgcolor=ft.Colors.with_opacity(0.1, Color.WHITE),
+                                        border=ft.Border.all(1, ft.Colors.with_opacity(0.2, Color.WHITE)),
+                                        alignment=ft.Alignment.CENTER,
+                                        content=ft.Column(
+                                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            spacing=2,
+                                            controls=[
+                                                Text.H3(f"{completed_lessons}/{total_lessons}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                                                Text.SMALL("BÀI HOÀN THÀNH", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+                                            ]
+                                        )
+                                    ),
+                                    ft.Container(
+                                        padding=12,
+                                        border_radius=16,
+                                        bgcolor=ft.Colors.with_opacity(0.1, Color.WHITE),
+                                        border=ft.Border.all(1, ft.Colors.with_opacity(0.2, Color.WHITE)),
+                                        alignment=ft.Alignment.CENTER,
+                                        content=ft.Column(
+                                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            spacing=2,
+                                            controls=[
+                                                Text.H3(f"{total_minutes} phút", color=ft.Colors.AMBER_300 if hasattr(ft.Colors, 'AMBER_300') else "#FCD34D", weight=ft.FontWeight.BOLD),
+                                                Text.SMALL("ĐÃ TÍCH LŨY", color=ft.Colors.AMBER_200 if hasattr(ft.Colors, 'AMBER_200') else "#FDE68A", weight=ft.FontWeight.BOLD)
+                                            ]
+                                        )
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    # Course Progress Bar matching TSX
+                    ft.Container(
+                        bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
+                        border_radius=12,
+                        padding=2,
+                        border=ft.Border.all(1, ft.Colors.with_opacity(0.2, Color.PRIMARY)),
+                        content=ft.ProgressBar(
+                            value=completion_pct / 100.0,
+                            color=Color.LIGHT_ACCENT,
+                            bgcolor=Color.TRANSPARENT,
+                            height=8
+                        )
+                    )
+                ]
+            )
         )
 
-        self.top_navigation_bar = ft.Row(
-            controls=[
-                search_bar
-            ],
-            spacing=10,
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
-        )
-
-        self.header_text = ft.Column(
-            spacing=5,
-            controls=[
-                Text.H1(self.lang["lessons.title"], color=ft.Colors.BLUE_GREY_900),
-            ]
-        )
-
-        dashboard_row = ft.Row(
-            spacing=20,
-            controls=[
-                MilestoneCard(self.lang, self.user_statistics),
-                StatisticsCard(self.lang, self.user_statistics)
-            ]
-        )
-
-        categories = [self.lang["lessons.category_all"]]
-        tabs_row = CategoryTabs(categories)
-
-        self.lesson_components = [
+        # Responsive Lesson Cards Grid
+        lesson_cards = [
             LessonItemCard(
                 page=self._page,
                 title=lesson["title"],
@@ -104,65 +149,49 @@ class LessonView(ft.View):
             for lesson in self.available_lessons
         ]
 
-        lessons_list = ft.Column(
+        self.lesson_grid_responsive = ft.ResponsiveRow(
             spacing=20,
-            scroll=ft.ScrollMode.AUTO,
-            controls=self.lesson_components
+            run_spacing=20,
+            controls=[
+                ft.Container(content=card, col={"xs": 12, "sm": 6, "lg": 4})
+                for card in lesson_cards
+            ]
         )
 
         self.main_container = ft.Container(
             content=ft.Column(
+                scroll=ft.ScrollMode.AUTO,
                 spacing=25,
                 controls=[
-                    self.top_navigation_bar,
-                    self.header_text,
-                    dashboard_row,
-                    tabs_row,
-                    lessons_list
+                    summary_banner,
+                    self.lesson_grid_responsive
                 ]
             ),
-            padding=20
+            padding=20,
+            margin=ft.Margin(left=16, top=84, right=16, bottom=88)
         )
 
         return [
             ft.Stack(
                 expand=True,
                 controls=[
-                    ft.Container(
-                        content=ft.Column(
-                            expand=True,
-                            scroll=ft.ScrollMode.AUTO,
-                            controls=[
-                                ft.Row(
-                                    alignment=ft.MainAxisAlignment.CENTER,
-                                    controls=[self.main_container, self.menu]
-                                )
-                            ]
-                        ),
-                        expand=True,
-                        padding=0
-                    ),
+                    self.main_container,
+                    self.top_navigation_bar,
+                    self.menu
                 ]
             )
         ]
 
     def on_page_resize(self, event=None):
         current_width = self._page.width if event is None else event.width
-        if not current_width: current_width = UISettings.MAX_APP_WIDTH
+        if not current_width:
+            current_width = UISettings.MAX_APP_WIDTH
         safe_width = int(min(current_width, UISettings.MAX_APP_WIDTH))
 
-        self.main_container.width = safe_width
-        self.top_navigation_bar.width = safe_width * 0.9
-
-        header_text_size = max(24, int(safe_width * 0.035))
-        if self.header_text.controls:
-            self.header_text.controls[0].size = header_text_size
-
-        lesson_card_width = max(300, safe_width * 0.85)
-        for card in self.lesson_components:
-            card.width = lesson_card_width
-            if card.content.controls[0]:
-                card.content.controls[0].width = lesson_card_width * 0.5
+        self.main_container.width = max(safe_width - 32, 320)
+        self.main_container.margin = ft.Margin(left=16, top=84, right=16, bottom=88)
+        self.top_navigation_bar.resize(safe_width)
+        self.menu.resize(safe_width)
 
         try:
             self.update()

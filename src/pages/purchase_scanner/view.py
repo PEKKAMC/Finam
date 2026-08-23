@@ -4,7 +4,7 @@
 
 import flet as ft
 
-from src.utils import UISettings, Color
+from src.utils import Color, Text, UISettings
 from src.logger import Logger
 from src.pages.global_components import Menu, TopNavigationBar
 from src.pages.purchase_scanner.logic import LogicController
@@ -46,18 +46,41 @@ class PurchaseScannerView(ft.View):
         Logger.info("Rendering UI for Purchase Scanner page...")
 
         self.menu = Menu(self._page, self.lang, self.user_info)
-        self.top_navigation_bar = TopNavigationBar(menu_button=self.menu.menu_button, current_user=self.user_info["username"])
+        self.top_navigation_bar = TopNavigationBar(current_user=self.user_info["username"])
 
-        self.form_card = ScannerForm(on_scan_click=self.handle_scan_click)
-        self.result_card = ScannerResult()
+        self.form_card = ScannerForm(on_scan_click=self.handle_scan_click, lang=self.lang)
+        self.result_card = ScannerResult(lang=self.lang)
+
+        header_banner = ft.Container(
+            bgcolor=Color.PRIMARY,
+            border_radius=24,
+            padding=22,
+            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
+            content=ft.Column(
+                spacing=8,
+                controls=[
+                    ft.Container(
+                        content=Text.SMALL("Finam AI Impulse Scanner", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                        bgcolor=Color.DARK_SURFACE,
+                        padding=ft.Padding(12, 4, 12, 4),
+                        border_radius=16,
+                        border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
+                    ),
+                    Text.H2("Đánh giá mua sắm bốc đồng", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                    Text.SMALL("Nhập thông tin món đồ bạn muốn mua và AI sẽ phân tích mức độ rủi ro trước khi xuống tiền.", color=Color.LIGHT_ACCENT)
+                ]
+            )
+        )
 
         self.main_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
             padding=20,
+            margin=ft.Margin(left=16, top=84, right=16, bottom=88),
             content=ft.Column(
+                scroll=ft.ScrollMode.AUTO,
                 spacing=20,
                 controls=[
-                    self.top_navigation_bar,
+                    header_banner,
                     ft.ResponsiveRow(
                         controls=[
                             ft.Container(self.form_card, col={"sm": 12, "md": 6}),
@@ -72,21 +95,9 @@ class PurchaseScannerView(ft.View):
             ft.Stack(
                 expand=True,
                 controls=[
-                    ft.Container(
-                        content=ft.Column(
-                            expand=True,
-                            scroll=ft.ScrollMode.AUTO,
-                            controls=[
-                                ft.Row(
-                                    alignment=ft.MainAxisAlignment.CENTER,
-                                    controls=[self.main_container]
-                                )
-                            ]
-                        ),
-                        expand=True,
-                        padding=0
-                    ),
-                    self.menu.view
+                    self.main_container,
+                    self.top_navigation_bar,
+                    self.menu
                 ]
             )
         ]
@@ -96,10 +107,12 @@ class PurchaseScannerView(ft.View):
         if not current_width: current_width = UISettings.MAX_APP_WIDTH
         safe_width = int(min(current_width, UISettings.MAX_APP_WIDTH))
 
-        self.main_container.width = safe_width
-        self.top_navigation_bar.width = safe_width * 0.9
+        self.main_container.width = max(safe_width - 32, 320)
+        self.main_container.margin = ft.Margin(left=16, top=84, right=16, bottom=88)
+        self.top_navigation_bar.resize(safe_width)
+        self.menu.resize(safe_width)
 
-        card_width = safe_width * 0.9
+        card_width = max(safe_width - 48, 320)
         self.form_card.width = card_width
         self.result_card.width = card_width
 
