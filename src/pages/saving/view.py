@@ -19,12 +19,12 @@ class SavingView(ft.View):
         self.user_info = user_info
         self.controller = LogicController(user_info["username"])
 
-        self.create_objective_dialog = CreateObjectiveDialog(self.lang, self.controller, self.refresh_view)
-        self.quick_action_dialog = QuickActionDialog(self.lang, self.controller, self.refresh_view)
-        self.complete_dialog = CompleteConfirmDialog(self.lang, self.controller, self.refresh_view)
-        self.delete_dialog = DeleteConfirmDialog(self.lang, self.controller, self.refresh_view)
-        self.clear_history_dialog = ClearHistoryDialog(self.lang, self.controller, self.refresh_view, self.trigger_export)
-        self.goal_details_dialog = GoalDetailsDialog(self.lang, self.controller, self.complete_dialog.trigger, self.quick_action_dialog.trigger, self.delete_dialog.trigger)
+        self.create_objective_dialog = CreateObjectiveDialog(page=self._page, lang=self.lang, controller=self.controller, on_success=self.refresh_view)
+        self.quick_action_dialog = QuickActionDialog(page=self._page, lang=self.lang, controller=self.controller, on_success=self.refresh_view)
+        self.complete_dialog = CompleteConfirmDialog(page=self._page, lang=self.lang, controller=self.controller, on_success=self.refresh_view)
+        self.delete_dialog = DeleteConfirmDialog(page=self._page, lang=self.lang, controller=self.controller, on_success=self.refresh_view)
+        self.clear_history_dialog = ClearHistoryDialog(page=self._page, lang=self.lang, controller=self.controller, on_success=self.refresh_view, trigger_export=self.trigger_export)
+        self.goal_details_dialog = GoalDetailsDialog(page=self._page, lang=self.lang, controller=self.controller, on_complete=self.complete_dialog.trigger, on_quick_action=self.quick_action_dialog.trigger, on_delete=self.delete_dialog.trigger)
 
         self.menu = None
         self.top_navigation_bar = None
@@ -43,7 +43,7 @@ class SavingView(ft.View):
     def create_ui_components(self):
         Logger.info("Rendering UI for saving page...")
         self.menu = Menu(self._page, self.lang, self.user_info)
-        self.top_navigation_bar = TopNavigationBar(current_user=self.user_info["username"])
+        self.top_navigation_bar = TopNavigationBar(page=self._page, lang=self.lang, current_user=self.user_info["username"])
 
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
         existing_objectives = self.controller.get_user_objectives()
@@ -61,8 +61,8 @@ class SavingView(ft.View):
                 "percentage": card_percentage, "progress": card_progress, "completed": bool(completed_at)
             })
 
-        self.objective_grid = ObjectiveGrid(objectives_data, self.goal_details_dialog.trigger)
-        self.summary_banner = AggregateCard(self.lang, total_savings, total_target, percentage, progress_value, lambda e: self.create_objective_dialog.show(self._page))
+        self.objective_grid = ObjectiveGrid(page=self._page, lang=self.lang, objectives_data=objectives_data, on_card_click=self.goal_details_dialog.trigger)
+        self.summary_banner = AggregateCard(page=self._page, lang=self.lang, total_savings=total_savings, total_target=total_target, percentage=percentage, progress_value=progress_value, on_create_click=lambda e: self.create_objective_dialog.show(self._page))
 
         self.main_container = ft.Container(
             padding=20,
@@ -101,7 +101,7 @@ class SavingView(ft.View):
         file_path = await ft.FilePicker().save_file(allowed_extensions=["xlsx", "xls"], file_name="savings.xlsx")
         if file_path:
             success, error_message = self.controller.export_ledger_to_excel(file_path, self.lang)
-            self._page.show_dialog(ft.SnackBar(Text.LABEL(self.lang["saving.export_succeeded"] if success else self.lang["saving.error.export_failed"].format(error=error_message))))
+            self._page.show_dialog(ft.SnackBar(Text.MEDIUM(self.lang["saving.export_succeeded"] if success else self.lang["saving.error.export_failed"].format(error=error_message))))
             self._page.update()
         return e
 
@@ -111,8 +111,6 @@ class SavingView(ft.View):
         self.main_container.margin = ft.Margin(left=16, top=84, right=16, bottom=88)
         self.top_navigation_bar.resize(safe_width)
         self.menu.resize(safe_width)
-        try: self.update()
-        except RuntimeError: pass
 
         return e
 

@@ -9,17 +9,22 @@ from src.utils import Color
 
 class SettingsButton(ft.Container):
     async def on_clicking_setting(self):
-        await self.page.push_route("/settings")
-        pass
+        if self._page:
+            await self._page.push_route("/settings")
 
-    def __init__(self):
+    def __init__(self, page: ft.Page, lang: dict):
+        self._page = page
+        self.lang = lang
+        self.main_container = ft.IconButton(
+            icon=ft.Icons.SETTINGS,
+            icon_color=Color.BLACK,
+            icon_size=30,
+            on_click=self.on_clicking_setting
+        )
         super().__init__(
-            content=ft.IconButton(
-                icon=ft.Icons.SETTINGS,
-                icon_color=Color.BLACK,
-                icon_size=30,
-                on_click=self.on_clicking_setting
-            ),
+            content=self.main_container,
             alignment=ft.Alignment.CENTER
         )
 
+    def resize(self, width: int) -> None:
+        self.main_container.width = width

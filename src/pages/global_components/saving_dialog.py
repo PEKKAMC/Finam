@@ -21,7 +21,8 @@ class BaseDialog(ft.AlertDialog):
         page.update()
 
 class CreateObjectiveDialog(BaseDialog):
-    def __init__(self, lang: dict, controller, on_success):
+    def __init__(self, page: ft.Page, lang: dict, controller, on_success):
+        self._page = page
         self.lang = lang
         self.controller = controller
         self.on_success = on_success
@@ -55,13 +56,14 @@ class CreateObjectiveDialog(BaseDialog):
             self.on_success()
 
 class QuickActionDialog(BaseDialog):
-    def __init__(self, lang: dict, controller, on_success):
+    def __init__(self, page: ft.Page, lang: dict, controller, on_success):
+        self._page = page
         self.lang = lang
         self.controller = controller
         self.on_success = on_success
         self.current_action_objective = {"id": 0, "action": ""}
 
-        self.quick_amount_input = ft.TextField(label=lang["saving.amount"], color=Color.DEFAULT_TEXT, input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""), border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
+        self.quick_amount_input = ft.TextField(label=lang["generic.amount"], color=Color.DEFAULT_TEXT, input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""), border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
 
         super().__init__(
             title=Text.H3(self.lang["saving.update_savings"], color=Color.PRIMARY_TEXT),
@@ -89,10 +91,10 @@ class QuickActionDialog(BaseDialog):
             if not success:
                 if error_key == "saving.error.not_enough_balance":
                     current = db.saving.get_objective_progress(objective_id)
-                    e.page.snack_bar = ft.SnackBar(Text.LABEL(f"Not enough balance. Current: {current:,} VND" if "format" not in self.lang[error_key] else self.lang[error_key].format(remaining=f"{current:,}")))
+                    e.page.snack_bar = ft.SnackBar(Text.MEDIUM(f"Not enough balance. Current: {current:,} VND" if "format" not in self.lang[error_key] else self.lang[error_key].format(remaining=f"{current:,}")))
                 elif error_key == "saving.error.exceeding_amount":
                     remaining = db.saving.get_objective_target(objective_id) - db.saving.get_objective_progress(objective_id)
-                    e.page.snack_bar = ft.SnackBar(Text.LABEL(f"Amount exceeds target! Remaining: {remaining:,} VND" if "format" not in self.lang[error_key] else self.lang[error_key].format(remaining=f"{remaining:,}")))
+                    e.page.snack_bar = ft.SnackBar(Text.MEDIUM(f"Amount exceeds target! Remaining: {remaining:,} VND" if "format" not in self.lang[error_key] else self.lang[error_key].format(remaining=f"{remaining:,}")))
                 e.page.snack_bar.open = True
                 e.page.update()
                 return
@@ -102,7 +104,8 @@ class QuickActionDialog(BaseDialog):
         except ValueError: pass
 
 class CompleteConfirmDialog(BaseDialog):
-    def __init__(self, lang: dict, controller, on_success):
+    def __init__(self, page: ft.Page, lang: dict, controller, on_success):
+        self._page = page
         self.controller = controller
         self.on_success = on_success
         self.current_id = 0
@@ -126,7 +129,8 @@ class CompleteConfirmDialog(BaseDialog):
         self.on_success()
 
 class DeleteConfirmDialog(BaseDialog):
-    def __init__(self, lang: dict, controller, on_success):
+    def __init__(self, page: ft.Page, lang: dict, controller, on_success):
+        self._page = page
         self.controller = controller
         self.on_success = on_success
         self.current_id = 0
@@ -150,7 +154,8 @@ class DeleteConfirmDialog(BaseDialog):
         self.on_success()
 
 class ClearHistoryDialog(BaseDialog):
-    def __init__(self, lang: dict, controller, on_success, trigger_export):
+    def __init__(self, page: ft.Page, lang: dict, controller, on_success, trigger_export):
+        self._page = page
         self.controller = controller
         self.on_success = on_success
         super().__init__(
@@ -169,7 +174,8 @@ class ClearHistoryDialog(BaseDialog):
         self.on_success()
 
 class GoalDetailsDialog(BaseDialog):
-    def __init__(self, lang: dict, controller, on_complete, on_quick_action, on_delete):
+    def __init__(self, page: ft.Page, lang: dict, controller, on_complete, on_quick_action, on_delete):
+        self._page = page
         self.lang = lang
         self.controller = controller
         self.on_complete = on_complete
@@ -183,7 +189,7 @@ class GoalDetailsDialog(BaseDialog):
                 controls=[
                     ft.ProgressRing(value=1.0, stroke_width=18, color=Color.PROGRESS_BACKGROUND, width=250, height=250),
                     ft.ProgressRing(value=progress, stroke_width=18, color=Color.PROGRESS_COMPLETED if completed else Color.PROGRESS_ACTIVE, width=250, height=250),
-                    ft.Column([Text.SMALL(self.lang["saving.saved"], color=Color.SECONDARY_TEXT), Text.LABEL(current_value, color=Color.BLACK), Text.P(f"/ {target_value}", color=Color.SUBTITLE_TEXT)], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+                    ft.Column([Text.SMALL(self.lang["saving.saved"], color=Color.SECONDARY_TEXT), Text.MEDIUM(current_value, color=Color.BLACK), Text.P(f"/ {target_value}", color=Color.SUBTITLE_TEXT)], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
                 ], alignment=ft.Alignment.CENTER
             ), padding=ft.Padding(0, 20, 0, 30), alignment=ft.Alignment.CENTER
         )
@@ -206,7 +212,7 @@ class GoalDetailsDialog(BaseDialog):
             for item in history_data:
                 amount = f"+{item['amount']:,}" if item["amount"] > 0 else f"{item['amount']:,}"
                 color_theme = Color.PRIMARY_ACTION if item["amount"] > 0 else Color.NEGATIVE_ACTION
-                history_controls.append(ft.ListTile(leading=ft.Icon(ft.Icons.MONEY, color=color_theme), title=Text.LABEL(f"{amount} VND", color=color_theme), subtitle=Text.P(f"{item['date']}")))
+                history_controls.append(ft.ListTile(leading=ft.Icon(ft.Icons.MONEY, color=color_theme), title=Text.MEDIUM(f"{amount} VND", color=color_theme), subtitle=Text.P(f"{item['date']}")))
 
         self.content = ft.Container(
             width=525, height=900, padding=25, bgcolor=Color.DIALOG_BACKGROUND, border_radius=20,
@@ -214,7 +220,7 @@ class GoalDetailsDialog(BaseDialog):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
                     ft.Row(alignment=ft.MainAxisAlignment.SPACE_BETWEEN, controls=[ft.IconButton(ft.Icons.CLOSE, on_click=lambda e: self.close(page), icon_color=Color.PRIMARY_TEXT), Text.H3(self.lang["saving.objective_details"], color=Color.BLACK), ft.Container(width=40)]),
-                    Text.LABEL(goal_title, color=Color.BLACK), Text.P(subtitle, color=Color.SUBTITLE_TEXT), progress_ui, buttons_column,
+                    Text.MEDIUM(goal_title, color=Color.BLACK), Text.P(subtitle, color=Color.SUBTITLE_TEXT), progress_ui, buttons_column,
                     ft.Divider(height=30, color=Color.DEFAULT_BORDER), Text.H3(self.lang["saving.recent_activity"], color=Color.PRIMARY_TEXT),
                     ft.Container(content=ft.Column(history_controls, scroll=ft.ScrollMode.AUTO), expand=True)
                 ]
@@ -235,7 +241,8 @@ class GoalDetailsDialog(BaseDialog):
         self.on_delete(page, oid)
 
 class ObjectiveSelectionDialog(BaseDialog):
-    def __init__(self, lang: dict, controller, on_select):
+    def __init__(self, page: ft.Page, lang: dict, controller, on_select):
+        self._page = page
         self.lang = lang
         self.controller = controller
         self.on_select = on_select
@@ -264,7 +271,7 @@ class ObjectiveSelectionDialog(BaseDialog):
                     bgcolor=Color.CARD_BACKGROUND, border_radius=10, padding=15, border=ft.Border.all(1, Color.DEFAULT_BORDER), ink=True,
                     on_click=self._create_selection_handler(page, objective_id, title, reason, f"{int(obj_savings):,} VND", f"{int(target_amount):,} VND", progress, bool(completed_at)),
                     content=ft.Column([
-                        ft.Row([Text.H3(title, color=Color.PRIMARY_TEXT), Text.LABEL(percentage, color=Color.PRIMARY_ACTION)], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                        ft.Row([Text.H3(title, color=Color.PRIMARY_TEXT), Text.MEDIUM(percentage, color=Color.PRIMARY_ACTION)], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                         Text.P(reason, color=Color.SECONDARY_TEXT), ft.ProgressBar(value=progress, color=Color.PROGRESS_COMPLETED if completed_at else Color.PROGRESS_ACTIVE, bgcolor=Color.PROGRESS_BACKGROUND)
                     ])
                 )

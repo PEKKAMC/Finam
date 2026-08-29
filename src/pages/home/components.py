@@ -1,4 +1,4 @@
-# Copyright (c) 2026 PEKKAMC
+﻿# Copyright (c) 2026 PEKKAMC
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
@@ -7,7 +7,6 @@ from collections.abc import Callable
 import flet as ft
 import flet_charts as fc
 
-from src.database import db
 from src.utils import Color, Text, UISettings
 
 
@@ -25,7 +24,7 @@ class ActionSelectionDialog(ft.AlertDialog):
         )
 
         self.add_income_button = ft.Button(
-            Text.BUTTON(self.lang["home.add_income"]),
+            content=Text.BUTTON(self.lang["home.add_income"]),
             icon=ft.Icons.ARROW_UPWARD_ROUNDED,
             on_click=on_income,
             bgcolor=Color.PRIMARY,
@@ -33,7 +32,7 @@ class ActionSelectionDialog(ft.AlertDialog):
         )
 
         self.add_expense_button = ft.Button(
-            Text.BUTTON(self.lang["home.add_expense"]),
+            content=Text.BUTTON(self.lang["home.add_expense"]),
             icon=ft.Icons.ARROW_DOWNWARD_ROUNDED,
             on_click=on_expense,
             bgcolor=Color.EXPENSE_ACTION_BACKGROUND,
@@ -41,7 +40,7 @@ class ActionSelectionDialog(ft.AlertDialog):
         )
 
         self.object_details_button = ft.Button(
-            Text.BUTTON(self.lang["home.objective_details"]),
+            content=Text.BUTTON(self.lang["home.objective_details"]),
             icon=ft.Icons.SAVINGS,
             on_click=on_saving,
             bgcolor=Color.LIGHT_ACCENT,
@@ -78,266 +77,264 @@ class ActionSelectionDialog(ft.AlertDialog):
 
 
 class BalanceCard(ft.Container):
-    def __init__(self, net_balance: float, income: float, expense: float, saving: float, ai_advice: str, on_add_click: Callable, on_scan_click: Callable, lang: dict):
+    def __init__(self, page: ft.Page, lang: dict, net_balance: float, income: float, expense: float, saving: float, ai_advice: str, on_add_click: Callable, on_scan_click: Callable):
+        self._page = page
         self.lang = lang
+        self.net_balance = net_balance
+        self.income = income
+        self.expense = expense
+        self.saving = saving
+        self.ai_advice = ai_advice
+        self.on_add_click = on_add_click
+        self.on_scan_click = on_scan_click
 
-        balance_header = ft.Column(
+        self.balance_label_container = ft.Container(
+            content=Text.SMALL(self.lang["home.available_balance"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+            bgcolor=Color.DARK_SURFACE,
+            padding=ft.Padding(12, 4, 12, 4),
+            border_radius=20,
+            border=ft.Border.all(1, Color.PRIMARY)
+        )
+
+        self.balance_amount_row = ft.Row(
+            controls=[
+                Text.H1(f"{int(self.net_balance):,}", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                Text.P(self.lang["generic.currency"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            vertical_alignment=ft.CrossAxisAlignment.END
+        )
+
+        self.balance_header_column = ft.Column(
             spacing=4,
-            controls=[
-                ft.Container(
-                    content=Text.SMALL(self.lang["home.available_balance"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
-                    bgcolor=Color.DARK_SURFACE,
-                    padding=ft.Padding(12, 4, 12, 4),
-                    border_radius=20,
-                    border=ft.Border.all(1, Color.PRIMARY)
-                ),
-                ft.Row(
-                    controls=[
-                        Text.H1(f"{int(net_balance):,}", color=Color.WHITE, weight=ft.FontWeight.BOLD),
-                        Text.P(self.lang["generic.currency"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-                    ],
-                    alignment=ft.MainAxisAlignment.START,
-                    vertical_alignment=ft.CrossAxisAlignment.END
-                )
-            ]
+            controls=[self.balance_label_container, self.balance_amount_row]
         )
 
-        action_buttons = ft.Row(
+        self.add_transaction_button = ft.Button(
+            content=ft.Row(
+                controls=[
+                    ft.Icon(ft.Icons.ADD_ROUNDED, color=Color.PRIMARY, size=18),
+                    Text.MEDIUM(self.lang["home.add_transaction"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
+                ],
+                tight=True
+            ),
+            bgcolor=Color.LIGHT_ACCENT,
+            on_click=self.on_add_click,
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=16))
+        )
+
+        self.ai_scan_button = ft.OutlinedButton(
+            content=ft.Row(
+                controls=[
+                    ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.LIGHT_ACCENT, size=18),
+                    Text.MEDIUM(self.lang["home.ai_scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                ],
+                tight=True
+            ),
+            on_click=self.on_scan_click,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=16),
+                side=ft.BorderSide(1, Color.SCAN_BUTTON_BORDER)
+            )
+        )
+
+        self.action_buttons_row = ft.Row(
             spacing=8,
-            controls=[
-                ft.Button(
-                    content=ft.Row(
-                        controls=[
-                            ft.Icon(ft.Icons.ADD_ROUNDED, color=Color.PRIMARY, size=18),
-                            Text.LABEL(self.lang["home.add_transaction"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
-                        ],
-                        tight=True
-                    ),
-                    bgcolor=Color.LIGHT_ACCENT,
-                    on_click=on_add_click,
-                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=16))
-                ),
-                ft.OutlinedButton(
-                    content=ft.Row(
-                        controls=[
-                            ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.LIGHT_ACCENT, size=18),
-                            Text.LABEL(self.lang["home.ai_scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
-                        ],
-                        tight=True
-                    ),
-                    on_click=on_scan_click,
-                    style=ft.ButtonStyle(
-                        shape=ft.RoundedRectangleBorder(radius=16),
-                        side=ft.BorderSide(1, Color.SCAN_BUTTON_BORDER)
-                    )
-                )
-            ]
+            controls=[self.add_transaction_button, self.ai_scan_button]
         )
 
-        top_row = ft.Row(
+        self.balance_top_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             wrap=True,
-            controls=[balance_header, action_buttons]
+            controls=[self.balance_header_column, self.action_buttons_row]
         )
 
-        metrics_row = ft.Row(
+        self.income_metric_container = ft.Container(
+            expand=True,
+            bgcolor=Color.METRIC_PILL_BACKGROUND,
+            border_radius=UISettings.METRIC_PILL_BORDER_RADIUS,
+            padding=UISettings.METRIC_PILL_PADDING,
+            border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
+            content=ft.Column(
+                spacing=2,
+                controls=[
+                    Text.H6(self.lang["home.total_income"], color=Color.LIGHT_ACCENT),
+                    Text.MEDIUM(f"{int(self.income):,} {self.lang['generic.currency']}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+                ]
+            )
+        )
+
+        self.expense_metric_container = ft.Container(
+            expand=True,
+            bgcolor=Color.METRIC_PILL_BACKGROUND,
+            border_radius=UISettings.METRIC_PILL_BORDER_RADIUS,
+            padding=UISettings.METRIC_PILL_PADDING,
+            border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
+            content=ft.Column(
+                spacing=2,
+                controls=[
+                    Text.H6(self.lang["home.total_expense"], color=Color.EXPENSE_LABEL_TEXT),
+                    Text.MEDIUM(f"-{int(self.expense):,} {self.lang['generic.currency']}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+                ]
+            )
+        )
+
+        self.saving_metric_container = ft.Container(
+            expand=True,
+            bgcolor=Color.METRIC_PILL_BACKGROUND,
+            border_radius=UISettings.METRIC_PILL_BORDER_RADIUS,
+            padding=UISettings.METRIC_PILL_PADDING,
+            border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
+            content=ft.Column(
+                spacing=2,
+                controls=[
+                    Text.H6(self.lang["home.total_savings"], color=Color.SAVINGS_LABEL_TEXT),
+                    Text.MEDIUM(f"{int(self.saving):,} {self.lang['generic.currency']}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+                ]
+            )
+        )
+
+        self.metrics_row = ft.Row(
             spacing=10,
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            controls=[self.income_metric_container, self.expense_metric_container, self.saving_metric_container]
+        )
+
+        self.ai_icon_container = ft.Container(
+            width=30,
+            height=30,
+            border_radius=10,
+            bgcolor=Color.LIGHT_ACCENT,
+            alignment=ft.Alignment.CENTER,
+            content=ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=16)
+        )
+
+        self.ai_banner_column = ft.Column(
+            expand=True,
+            spacing=2,
             controls=[
-                ft.Container(
-                    expand=True,
-                    bgcolor=Color.METRIC_PILL_BACKGROUND,
-                    border_radius=16,
-                    padding=8,
-                    border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
-                    content=ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[
-                            ft.Column(
-                                spacing=2,
-                                controls=[
-                                    Text.SMALL(self.lang["home.total_income"], color=Color.LIGHT_ACCENT),
-                                    Text.LABEL(f"{int(income):,} {self.lang['generic.currency']}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-                                ]
-                            ),
-                            ft.Icon(ft.Icons.NORTH_EAST, color=Color.LIGHT_ACCENT, size=20)
-                        ]
-                    )
-                ),
-                ft.Container(
-                    expand=True,
-                    bgcolor=Color.METRIC_PILL_BACKGROUND,
-                    border_radius=16,
-                    padding=8,
-                    border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
-                    content=ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[
-                            ft.Column(
-                                spacing=2,
-                                controls=[
-                                    Text.SMALL(self.lang["home.total_expense"], color=Color.EXPENSE_LABEL_TEXT),
-                                    Text.LABEL(f"-{int(expense):,} {self.lang['generic.currency']}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
-                                ]
-                            ),
-                            ft.Icon(ft.Icons.SOUTH_EAST, color=Color.EXPENSE_VALUE_TEXT, size=20)
-                        ]
-                    )
-                ),
-                ft.Container(
-                    expand=True,
-                    bgcolor=Color.METRIC_PILL_BACKGROUND,
-                    border_radius=16,
-                    padding=8,
-                    border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
-                    content=ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[
-                            ft.Column(
-                                spacing=2,
-                                controls=[
-                                    Text.SMALL(self.lang["home.total_savings"], color=Color.SAVINGS_LABEL_TEXT),
-                                    Text.LABEL(f"{int(saving):,} {self.lang['generic.currency']}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
-                                ]
-                            ),
-                            ft.Icon(ft.Icons.TRACK_CHANGES, color=Color.SAVINGS_VALUE_TEXT, size=20)
-                        ]
-                    )
-                )
+                Text.SMALL(self.lang["home.ai_advisor"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                Text.SMALL(self.ai_advice, color=Color.WHITE)
             ]
         )
 
-        ai_banner = ft.Container(
+        self.ai_banner_container = ft.Container(
             bgcolor=Color.AI_ADVICE_BACKGROUND,
             border_radius=16,
             padding=12,
             border=ft.Border.all(1, Color.AI_ADVICE_BORDER),
             content=ft.Row(
                 spacing=10,
-                controls=[
-                    ft.Container(
-                        width=30,
-                        height=30,
-                        border_radius=10,
-                        bgcolor=Color.LIGHT_ACCENT,
-                        alignment=ft.Alignment.CENTER,
-                        content=ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=16)
-                    ),
-                    ft.Column(
-                        expand=True,
-                        spacing=2,
-                        controls=[
-                            Text.SMALL(self.lang["home.ai_advisor"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
-                            Text.SMALL(ai_advice, color=Color.WHITE)
-                        ]
-                    )
-                ]
+                controls=[self.ai_icon_container, self.ai_banner_column]
+            )
+        )
+
+        self.main_container = ft.Container(
+            content=ft.Column(
+                spacing=20,
+                controls=[self.balance_top_row, self.metrics_row, self.ai_banner_container]
             )
         )
 
         super().__init__(
             bgcolor=Color.PRIMARY,
             border_radius=UISettings.CARD_BORDER_RADIUS,
-            padding=24,
+            padding=UISettings.CARD_PADDING,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
-            content=ft.Column(
-                spacing=20,
-                controls=[top_row, metrics_row, ai_banner]
-            )
+            content=self.main_container
         )
+
+    def resize(self, page_width: int):
+        self.width = max(page_width, 320)
+        self.main_container.width = self.width
+        self.main_container.content.width = max(self.width - 48, 0)
 
 
 class SavingsProgressCard(ft.Container):
-    def __init__(self, page: ft.Page, objectives: list, lang: dict):
+    def __init__(self, page: ft.Page, lang: dict, objective_items: list):
         self._page = page
         self.lang = lang
+        self.objective_items = objective_items or []
 
-        items = []
-        if not objectives:
-            items.append(
-                ft.Container(
-                    padding=20,
-                    alignment=ft.Alignment.CENTER,
-                    content=Text.SMALL(self.lang["home.no_savings_goal"], color=Color.BLAND_TEXT)
-                )
-            )
-        else:
-            for obj in objectives[:3]:
-                objective_id, title, reason, target_amount, completed_at = obj
+        self.goal_icon_container = ft.Container(
+            width=32,
+            height=32,
+            border_radius=10,
+            bgcolor=Color.GOAL_HEADER_ICON_BACKGROUND,
+            alignment=ft.Alignment.CENTER,
+            content=ft.Icon(ft.Icons.TRACK_CHANGES, color=Color.GOAL_HEADER_ICON_COLOR, size=18)
+        )
 
-                cur = float(db.saving.get_objective_progress(objective_id))
-                tgt = float(target_amount) if target_amount > 0 else 1.0
+        self.goal_title_column = ft.Column(
+            spacing=0,
+            controls=[
+                Text.H4(self.lang["home.saving_goal"], color=Color.DEFAULT_TEXT),
+                Text.SMALL(self.lang["home.saving_goal_subtitle"], color=Color.BLAND_TEXT)
+            ]
+        )
 
-                pct = min(1.0, cur / tgt)
-                pct_str = f"{int(pct * 100)}%"
-                display_title = title if title else self.lang["home.default_goal_title"]
-
-                items.append(
-                    ft.Container(
-                        bgcolor=Color.GOAL_ITEM_BACKGROUND,
-                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
-                        border_radius=16,
-                        padding=12,
-                        content=ft.Column(
-                            spacing=6,
-                            controls=[
-                                ft.Row(
-                                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                    controls=[
-                                        Text.LABEL(display_title, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD),
-                                        ft.Container(
-                                            content=Text.SMALL(pct_str, color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
-                                            bgcolor=Color.PRIMARY,
-                                            padding=ft.Padding(8, 2, 8, 2),
-                                            border_radius=12
-                                        )
-                                    ]
-                                ),
-                                ft.ProgressBar(value=pct, color=Color.PRIMARY, bgcolor=Color.PROGRESS_TRACK_BACKGROUND, height=8),
-                                ft.Row(
-                                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                    controls=[
-                                        Text.SMALL(f"{self.lang['home.contributed']}: {int(cur):,} {self.lang['generic.currency']}", color=Color.PRIMARY, weight=ft.FontWeight.BOLD),
-                                        Text.SMALL(f"{self.lang['home.target']}: {int(tgt):,} {self.lang['generic.currency']}", color=Color.BLAND_TEXT)
-                                    ]
-                                )
-                            ]
-                        )
-                    )
-                )
-
-        header = ft.Row(
+        self.goal_header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                ft.Row(
-                    spacing=8,
-                    controls=[
-                        ft.Container(
-                            width=32,
-                            height=32,
-                            border_radius=10,
-                            bgcolor=Color.GOAL_HEADER_ICON_BACKGROUND,
-                            alignment=ft.Alignment.CENTER,
-                            content=ft.Icon(ft.Icons.TRACK_CHANGES, color=Color.GOAL_HEADER_ICON_COLOR, size=18)
-                        ),
-                        ft.Column(
-                            spacing=0,
-                            controls=[
-                                Text.H4(self.lang["home.saving_goal"], color=Color.DEFAULT_TEXT),
-                                Text.SMALL(self.lang["home.saving_goal_subtitle"], color=Color.BLAND_TEXT)
-                            ]
-                        )
-                    ]
-                ),
+                ft.Row(spacing=8, controls=[self.goal_icon_container, self.goal_title_column]),
                 ft.TextButton(
                     content=ft.Row([
-                        Text.SMALL(f"{self.lang['generic.all']} ({len(objectives)})", color=Color.PRIMARY, weight=ft.FontWeight.BOLD),
+                        Text.SMALL(f"{self.lang['generic.all']} ({len(self.objective_items)})", color=Color.PRIMARY, weight=ft.FontWeight.BOLD),
                         ft.Icon(ft.Icons.ARROW_FORWARD, color=Color.PRIMARY, size=14)
                     ], tight=True),
                     on_click=lambda e: self._page.go("/saving")
                 )
             ]
+        )
+
+        self.goal_item_containers = []
+        if not self.objective_items:
+            self.empty_state_container = ft.Container(
+                padding=20,
+                alignment=ft.Alignment.CENTER,
+                content=Text.SMALL(self.lang["home.no_savings_goal"], color=Color.BLAND_TEXT)
+            )
+            self.goal_item_containers.append(self.empty_state_container)
+        else:
+            for objective_item in self.objective_items:
+                objective_progress_bar = ft.ProgressBar(value=objective_item["progress_ratio"], color=Color.PRIMARY, bgcolor=Color.PROGRESS_TRACK_BACKGROUND, height=8)
+                objective_metric_row = ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        Text.SMALL(objective_item["contributed_label"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD),
+                        Text.SMALL(objective_item["target_label"], color=Color.BLAND_TEXT)
+                    ]
+                )
+                objective_title_row = ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        Text.MEDIUM(objective_item["title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD),
+                        ft.Container(
+                            content=Text.SMALL(objective_item["progress_text"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                            bgcolor=Color.PRIMARY,
+                            padding=ft.Padding(8, 2, 8, 2),
+                            border_radius=12
+                        )
+                    ]
+                )
+                self.goal_item_container = ft.Container(
+                    bgcolor=Color.GOAL_ITEM_BACKGROUND,
+                    border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                    border_radius=16,
+                    padding=12,
+                    content=ft.Column(
+                        spacing=6,
+                        controls=[objective_title_row, objective_progress_bar, objective_metric_row]
+                    )
+                )
+                self.goal_item_containers.append(self.goal_item_container)
+
+        self.main_container = ft.Container(
+            content=ft.Column(
+                spacing=12,
+                controls=[self.goal_header_row, *self.goal_item_containers]
+            )
         )
 
         super().__init__(
@@ -346,19 +343,22 @@ class SavingsProgressCard(ft.Container):
             padding=UISettings.CARD_PADDING,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
             expand=True,
-            content=ft.Column(
-                spacing=12,
-                controls=[header] + items
-            )
+            content=self.main_container
         )
 
-class ExpensePieChartCard(ft.Container):
-    def __init__(self, page: ft.Page, category_data: dict, lang: dict):
-        self._page = page
-        self.category_data = category_data
-        self.lang = lang
+    def resize(self, page_width: int):
+        self.width = max(page_width, 320)
+        self.main_container.width = self.width
+        self.main_container.content.width = max(self.width - 32, 0)
 
-        pie_colors = [
+
+class ExpensePieChartCard(ft.Container):
+    def __init__(self, page: ft.Page, lang: dict, category_data: dict):
+        self._page = page
+        self.lang = lang
+        self.category_data = category_data or {}
+
+        self.pie_colors = [
             Color.EXPENSE_ACTION_BACKGROUND,
             Color.PRIMARY,
             Color.GOAL_HEADER_ICON_COLOR,
@@ -369,23 +369,21 @@ class ExpensePieChartCard(ft.Container):
             Color.CHART_INCOME,
         ]
 
-        header = ft.Row(
+        self.chart_icon_container = ft.Container(
+            width=32,
+            height=32,
+            border_radius=10,
+            bgcolor=Color.DIALOG_BACKGROUND,
+            alignment=ft.Alignment.CENTER,
+            content=ft.Icon(ft.Icons.PIE_CHART, color=Color.EXPENSE_ACTION_BACKGROUND, size=18)
+        )
+
+        self.chart_title = Text.H4(self.lang["home.expense_breakdown"], color=Color.DEFAULT_TEXT)
+
+        self.chart_header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                ft.Row(
-                    spacing=8,
-                    controls=[
-                        ft.Container(
-                            width=32,
-                            height=32,
-                            border_radius=10,
-                            bgcolor=Color.DANGER_SOFT if hasattr(Color, 'DANGER_SOFT') else Color.DIALOG_BACKGROUND,
-                            alignment=ft.Alignment.CENTER,
-                            content=ft.Icon(ft.Icons.PIE_CHART, color=Color.EXPENSE_ACTION_BACKGROUND, size=18)
-                        ),
-                        Text.H4(self.lang["home.expense_breakdown"], color=Color.DEFAULT_TEXT)
-                    ]
-                ),
+                ft.Row(spacing=8, controls=[self.chart_icon_container, self.chart_title]),
                 ft.TextButton(
                     content=ft.Row([
                         Text.SMALL(self.lang["home.view_details"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD),
@@ -396,8 +394,8 @@ class ExpensePieChartCard(ft.Container):
             ]
         )
 
-        if not category_data:
-            content_area = ft.Container(
+        if not self.category_data:
+            self.empty_state_container = ft.Container(
                 padding=40,
                 alignment=ft.Alignment.CENTER,
                 content=ft.Column(
@@ -408,22 +406,14 @@ class ExpensePieChartCard(ft.Container):
                     ]
                 )
             )
+            self.chart_content_area = self.empty_state_container
         else:
-            sections = []
-            legend_items = []
-
-            for i, (category, value) in enumerate(category_data.items()):
-                color = pie_colors[i % len(pie_colors)]
-
-                sections.append(
-                    fc.PieChartSection(
-                        value,
-                        color=color,
-                        radius=45
-                    )
-                )
-
-                legend_items.append(
+            self.chart_sections = []
+            self.chart_legend_items = []
+            for index, (category_name, category_value) in enumerate(self.category_data.items()):
+                color = self.pie_colors[index % len(self.pie_colors)]
+                self.chart_sections.append(fc.PieChartSection(category_value, color=color, radius=45))
+                self.chart_legend_items.append(
                     ft.Row(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         controls=[
@@ -431,35 +421,42 @@ class ExpensePieChartCard(ft.Container):
                                 spacing=8,
                                 controls=[
                                     ft.Container(width=10, height=10, border_radius=5, bgcolor=color),
-                                    Text.SMALL(category, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
+                                    Text.SMALL(category_name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
                                 ]
                             ),
-                            Text.SMALL(f"{int(value):,} đ", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+                            Text.SMALL(f"{int(category_value):,} đ", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
                         ]
                     )
                 )
 
-            pie_chart = ft.Container(
+            self.pie_chart_container = ft.Container(
                 alignment=ft.Alignment.CENTER,
                 content=fc.PieChart(
-                    sections=sections,
+                    sections=self.chart_sections,
                     sections_space=2,
                     center_space_radius=40,
                     expand=True
                 )
             )
 
-            legend_list = ft.Column(
+            self.legend_list = ft.Column(
                 scroll=ft.ScrollMode.AUTO,
                 height=120,
                 spacing=8,
-                controls=legend_items
+                controls=self.chart_legend_items
             )
 
-            content_area = ft.Column(
+            self.chart_content_area = ft.Column(
                 spacing=16,
-                controls=[pie_chart, legend_list]
+                controls=[self.pie_chart_container, self.legend_list]
             )
+
+        self.main_container = ft.Container(
+            content=ft.Column(
+                spacing=16,
+                controls=[self.chart_header_row, self.chart_content_area]
+            )
+        )
 
         super().__init__(
             bgcolor=Color.WHITE,
@@ -467,40 +464,41 @@ class ExpensePieChartCard(ft.Container):
             padding=UISettings.CARD_PADDING,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
             expand=True,
-            content=ft.Column(
-                spacing=16,
-                controls=[header, content_area]
-            )
+            content=self.main_container
         )
+
+    def resize(self, page_width: int):
+        self.width = max(page_width, 320)
+        self.main_container.width = self.width
+        self.main_container.content.width = max(self.width - 32, 0)
+
 
 class FeaturedLessonCard(ft.Container):
     def __init__(self, page: ft.Page, lang: dict):
         self._page = page
         self.lang = lang
 
-        header = ft.Row(
+        self.lesson_icon_container = ft.Container(
+            width=32,
+            height=32,
+            border_radius=10,
+            bgcolor=Color.LESSON_ICON_BACKGROUND,
+            alignment=ft.Alignment.CENTER,
+            content=ft.Icon(ft.Icons.BOOK_ROUNDED, color=Color.LESSON_ICON_COLOR, size=18)
+        )
+
+        self.lesson_title_column = ft.Column(
+            spacing=0,
+            controls=[
+                Text.H4(self.lang["home.financial_learning"], color=Color.DEFAULT_TEXT),
+                Text.SMALL(self.lang["home.financial_learning_subtitle"], color=Color.BLAND_TEXT)
+            ]
+        )
+
+        self.lesson_header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                ft.Row(
-                    spacing=8,
-                    controls=[
-                        ft.Container(
-                            width=32,
-                            height=32,
-                            border_radius=10,
-                            bgcolor=Color.LESSON_ICON_BACKGROUND,
-                            alignment=ft.Alignment.CENTER,
-                            content=ft.Icon(ft.Icons.BOOK_ROUNDED, color=Color.LESSON_ICON_COLOR, size=18)
-                        ),
-                        ft.Column(
-                            spacing=0,
-                            controls=[
-                                Text.H4(self.lang["home.financial_learning"], color=Color.DEFAULT_TEXT),
-                                Text.SMALL(self.lang["home.financial_learning_subtitle"], color=Color.BLAND_TEXT)
-                            ]
-                        )
-                    ]
-                ),
+                ft.Row(spacing=8, controls=[self.lesson_icon_container, self.lesson_title_column]),
                 ft.TextButton(
                     content=Text.SMALL(self.lang["home.view_list"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD),
                     on_click=lambda e: self._page.go("/lessons")
@@ -508,7 +506,7 @@ class FeaturedLessonCard(ft.Container):
             ]
         )
 
-        lesson_banner = ft.Container(
+        self.lesson_banner_container = ft.Container(
             bgcolor=Color.LESSON_BANNER_BACKGROUND,
             border_radius=16,
             padding=16,
@@ -540,12 +538,20 @@ class FeaturedLessonCard(ft.Container):
             )
         )
 
-        footer = ft.Row(
+        self.footer_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
                 Text.SMALL(self.lang["home.completion_status"], color=Color.BLAND_TEXT),
                 Text.SMALL(self.lang["home.financial_motto"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
             ]
+        )
+
+        self.main_container = ft.Container(
+            content=ft.Column(
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                spacing=12,
+                controls=[self.lesson_header_row, self.lesson_banner_container, ft.Divider(height=1, color=Color.CARD_DIVIDER), self.footer_row]
+            )
         )
 
         super().__init__(
@@ -554,9 +560,9 @@ class FeaturedLessonCard(ft.Container):
             padding=UISettings.CARD_PADDING,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
             expand=True,
-            content=ft.Column(
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                spacing=12,
-                controls=[header, lesson_banner, ft.Divider(height=1, color=Color.CARD_DIVIDER), footer]
-            )
+            content=self.main_container
         )
+
+    def resize(self, page_width: int):
+        self.main_container.width = page_width
+        self.main_container.content.width = max(page_width - 32, 0)

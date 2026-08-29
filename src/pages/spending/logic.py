@@ -13,10 +13,11 @@ from src.pages.global_components import CategorySelectionDialog, IncomeInputDial
 
 
 class LogicController:
-    def __init__(self, current_user: str, page: ft.Page, user_info: dict, refresh_callback):
+    def __init__(self, current_user: str, page: ft.Page, lang: dict, user_info: dict, refresh_callback):
         self.cached_expenses = None
         self.cached_incomes = None
         self.page = page
+        self.lang = lang
         self.current_user = current_user
         self.user_info = user_info
         self.refresh_callback = refresh_callback
@@ -25,18 +26,22 @@ class LogicController:
         self.current_category_type = None
 
         self.expense_dialog = ExpenseInputDialog(
+            page=self.page,
+            lang=self.lang,
             on_save=self.handle_save_expense,
             on_cancel=self.close_expense_dialog,
             on_category_click=lambda e: self.open_category_selector("expense")
         )
 
         self.income_dialog = IncomeInputDialog(
+            page=self.page,
+            lang=self.lang,
             on_save=self.handle_save_income,
             on_cancel=self.close_income_dialog,
             on_category_click=lambda e: self.open_category_selector("income")
         )
 
-        self.category_dialog = CategorySelectionDialog(on_select=self.handle_category_selected)
+        self.category_dialog = CategorySelectionDialog(page=self.page, lang=self.lang, on_select=self.handle_category_selected)
 
     def open_category_selector(self, category_type: str):
         self.current_category_type = category_type
@@ -131,7 +136,7 @@ class LogicController:
                 self.expense_dialog.clear()
                 self.close_expense_dialog()
                 if self.refresh_callback: self.refresh_callback()
-                self.page.snack_bar = ft.SnackBar(Text.LABEL("Expense added successfully!"))
+                self.page.snack_bar = ft.SnackBar(Text.MEDIUM("Expense added successfully!"))
                 self.page.snack_bar.open = True
                 self.page.update()
         except ValueError as e:
@@ -163,14 +168,13 @@ class LogicController:
                 self.income_dialog.clear()
                 self.close_income_dialog()
                 if self.refresh_callback: self.refresh_callback()
-                self.page.snack_bar = ft.SnackBar(Text.LABEL("Income added successfully!"))
+                self.page.snack_bar = ft.SnackBar(Text.MEDIUM("Income added successfully!"))
                 self.page.snack_bar.open = True
                 self.page.update()
         except ValueError as e:
             Logger.error(f"Invalid amount provided: {e}")
 
     def get_transaction_data(self):
-        from src.pages.global_components import get_categories
         username = self.user_info.get("username")
         total_incomes = db.spending.get_total_income(username)
         total_expenses = db.spending.get_total_expense(username)
@@ -198,8 +202,6 @@ class LogicController:
         combined_list.sort(key=lambda x: x["date"], reverse=True)
         today = datetime.now().date()
         yesterday = today - timedelta(days=1)
-        expense_cats = {c["name"]: c["icon"] for c in get_categories("expense")}
-        income_cats = {c["name"]: c["icon"] for c in get_categories("income")}
 
         for item in combined_list:
             try:
@@ -212,7 +214,7 @@ class LogicController:
 
             if date_key not in transactions: transactions[date_key] = []
             title, subtitle = item["title"], item["subtitle"]
-            icon = income_cats.get(title, ft.Icons.ACCOUNT_BALANCE) if item["is_income"] else expense_cats.get(title, ft.Icons.ATTACH_MONEY)
+            icon = ft.Icons.ACCOUNT_BALANCE
 
             transactions[date_key].append({
                 "title": title, "subtitle": subtitle,
@@ -231,7 +233,7 @@ class LogicController:
             if success:
                 if self.refresh_callback:
                     self.refresh_callback()
-                self.page.snack_bar = ft.SnackBar(Text.LABEL("Xóa giao dịch thành công!"))
+                self.page.snack_bar = ft.SnackBar(Text.MEDIUM("Xóa giao dịch thành công!"))
                 self.page.snack_bar.open = True
                 self.page.update()
         except Exception as e:

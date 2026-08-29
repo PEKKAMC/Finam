@@ -8,8 +8,6 @@ from enum import Enum
 
 import flet as ft
 
-from src.logger import Logger
-
 
 class Text(Enum):
     """Text classifications."""
@@ -21,6 +19,7 @@ class Text(Enum):
     H6 = "h6"
     P = "p"
     LABEL = "label"
+    MEDIUM = "medium"
     SMALL = "small"
     BUTTON = "button"
     BADGE = "badge"
@@ -47,7 +46,8 @@ TEXT_STYLES = {
     Text.H5: (13, ft.FontWeight.BOLD),
     Text.H6: (11, ft.FontWeight.BOLD),
     Text.P: (16, ft.FontWeight.NORMAL),
-    Text.LABEL: (12, ft.FontWeight.W_500),
+    Text.LABEL: (9, ft.FontWeight.W_500),
+    Text.MEDIUM: (12, ft.FontWeight.NORMAL),
     Text.SMALL: (10, ft.FontWeight.NORMAL),
     Text.BUTTON: (14, ft.FontWeight.W_500),
     Text.BADGE: (12, ft.FontWeight.W_500),

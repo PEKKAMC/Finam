@@ -5,7 +5,7 @@
 """Home page - Dashboard and main financial overview."""
 
 from src.pages.home.components import ActionSelectionDialog, BalanceCard, SavingsProgressCard, ExpensePieChartCard, FeaturedLessonCard
-from src.pages.home.logic import LogicController, get_categories
+from src.pages.home.logic import LogicController
 from src.pages.home.view import HomeView, get_home_view
 
 __all__ = [
@@ -15,7 +15,6 @@ __all__ = [
     "ExpensePieChartCard"
     "FeaturedLessonCard",
     "LogicController",
-    "get_categories",
     "HomeView",
     "get_home_view"
 ]

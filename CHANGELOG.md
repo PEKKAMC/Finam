@@ -1,6 +1,6 @@
 # Finam v0.2.0-alpha
 
-**Release Date:** Unknown
+**Release Date:** August 29, 2026
 
 > **⚠️ ALPHA WARNING: Read Before Using**
 >
@@ -14,22 +14,28 @@ This version contains the new UI, which has been completely redesigned to be mor
 
 *   **Financial Chart**: The chart has been completely redesigned with improved interactivity and visual appeal.
 *   **Pages UI**: The pages have been redesigned to be more user-friendly and visually appealing.
-*   **Responsive UI**: The UI is now mostly responsive and adapts to different screen sizes.
 *   **Source code documentation**: Many parts of the source code has been documented with docstrings and comments for better understanding and maintainability.
+*   **Anti-crash**: Automatically restart application after crashing in most cases.
 
 ## Changes in this version
 
-*   data.db, which was falsely included in the source code, is no longer there.
+*   Moved assets folder into src folder.
+*   Removing data.db from the source code, which was falsely included.
 *   Removed auto resize text functionality, as it was not working properly and was unnecessary.
 *   Improved error handling and user feedback for various UI elements.
 
 ##  Known Issues & Instability
 
 *   Certain actions may cause softlocks or crashes.
+*   Lesson page is kinda broken...
 *   The Purchase Scanner AI hasn't been fully implemented.
+*   Many actions that supposed to update the page don't do that.
+*   Some elements might be obstructed by the operating system.
+*   Some transaction features are broken.
 *   Settings (gear icon) button redirect to settings page, which doesn't exist.
-*   Various UI elements may not scale perfectly on all screen sizes just yet.
+*   Various UI elements may not scale perfectly on all screen sizes.
 *   Lesson audio stops working after the first slide.
+*   Pages are initialized twice during normal app launch.
 
 # Finam v0.1.3-alpha
 

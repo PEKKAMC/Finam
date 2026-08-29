@@ -10,52 +10,56 @@ from src.utils import Color, Text, UISettings
 
 
 class LoginHeader(ft.Container):
-    def __init__(self, lang: dict, on_close: Callable):
-        super().__init__(
-            content=ft.Row(
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                controls=[
-                    ft.Row(
-                        spacing=12,
-                        controls=[
-                            ft.Container(
-                                content=ft.Icon(ft.Icons.PEOPLE_ALT, color="#1A4734", size=22),
-                                bgcolor="#DAF1DE",
-                                padding=10,
-                                border_radius=14
-                            ),
-                            Text.H3("Quản Lý Hồ Sơ Người Dùng", color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
-                        ]
-                    ),
-                    ft.IconButton(
-                        icon=ft.Icons.CLOSE,
-                        icon_color=Color.SECONDARY_TEXT,
-                        icon_size=20,
-                        on_click=on_close
-                    )
-                ]
-            )
+    def __init__(self, page: ft.Page, lang: dict, on_close: Callable):
+        self._page = page
+        self.lang = lang
+        self.on_close = on_close
+        self.main_container = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Row(
+                    spacing=12,
+                    controls=[
+                        ft.Container(
+                            content=ft.Icon(ft.Icons.PEOPLE_ALT, color="#1A4734", size=22),
+                            bgcolor="#DAF1DE",
+                            padding=10,
+                            border_radius=14
+                        ),
+                        Text.H3("Quản Lý Hồ Sơ Người Dùng", color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+                    ]
+                ),
+                ft.IconButton(
+                    icon=ft.Icons.CLOSE,
+                    icon_color=Color.SECONDARY_TEXT,
+                    icon_size=20,
+                    on_click=on_close
+                )
+            ]
         )
+        super().__init__(content=self.main_container)
 
-    def resize(self, width: int):
-        pass
+    def resize(self, width: int) -> None:
+        self.main_container.width = width
 
 
 class UserList(ft.Container):
-    def __init__(self, lang: dict, current_user: str, on_select_callback, on_delete_callback):
+    def __init__(self, page: ft.Page, lang: dict, current_user: str, on_select_callback, on_delete_callback):
+        self._page = page
         self.lang = lang
         self.current_user = current_user
         self.on_select = on_select_callback
         self.on_delete = on_delete_callback
 
         self.list_column = ft.Column(spacing=12, scroll=ft.ScrollMode.AUTO)
-
-        super().__init__(
+        self.main_container = ft.Container(
             content=self.list_column,
             height=240,
             clip_behavior=ft.ClipBehavior.HARD_EDGE
         )
+
+        super().__init__(content=self.main_container)
 
     def refresh(self, current_users: list, current_user: str = ""):
         self.current_user = current_user
@@ -63,7 +67,7 @@ class UserList(ft.Container):
 
         if not current_users:
             self.list_column.controls.append(
-                Text.P(self.lang.get("login.no_user", "Chưa có người dùng nào"), color=Color.SECONDARY_TEXT, text_align=ft.TextAlign.CENTER)
+                Text.P(self.lang["login.no_user"], color=Color.SECONDARY_TEXT, text_align=ft.TextAlign.CENTER)
             )
         else:
             for username in current_users:
@@ -97,7 +101,7 @@ class UserList(ft.Container):
                         spacing=14,
                         controls=[
                             ft.Container(
-                                content=Text.LABEL(initial, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
+                                content=Text.MEDIUM(initial, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
                                 bgcolor="#1A4734",
                                 width=40,
                                 height=40,
@@ -107,7 +111,7 @@ class UserList(ft.Container):
                             ft.Column(
                                 spacing=2,
                                 controls=[
-                                    Text.LABEL(username, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
+                                    Text.MEDIUM(username, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
                                     Text.SMALL("Tạo ngày 2026-01-01 08:00", color=Color.SECONDARY_TEXT)
                                 ]
                             )
@@ -130,7 +134,9 @@ class UserList(ft.Container):
 
 
 class AddUserField(ft.Container):
-    def __init__(self, lang: dict, on_submit_callback):
+    def __init__(self, page: ft.Page, lang: dict, on_submit_callback):
+        self._page = page
+        self.lang = lang
         self.on_submit_callback = on_submit_callback
 
         self.input_field = ft.TextField(
@@ -150,7 +156,7 @@ class AddUserField(ft.Container):
                 spacing=6,
                 controls=[
                     ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=16),
-                    Text.LABEL("Tạo", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+                    Text.MEDIUM("Tạo", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
                 ],
                 tight=True
             ),
@@ -161,22 +167,21 @@ class AddUserField(ft.Container):
                 padding=16
             )
         )
-
-        super().__init__(
-            content=ft.Column(
-                spacing=6,
-                controls=[
-                    ft.Row(
-                        spacing=12,
-                        controls=[
-                            self.input_field,
-                            self.submit_button
-                        ]
-                    ),
-                    self.error_message
-                ]
-            )
+        self.main_container = ft.Column(
+            spacing=6,
+            controls=[
+                ft.Row(
+                    spacing=12,
+                    controls=[
+                        self.input_field,
+                        self.submit_button
+                    ]
+                ),
+                self.error_message
+            ]
         )
+
+        super().__init__(content=self.main_container)
 
     def _handle_submit(self, e=None):
         input_username = self.input_field.value.strip()
@@ -204,20 +209,21 @@ class AddUserField(ft.Container):
 class DeleteUserDialog:
     def __init__(self, page: ft.Page, lang: dict, on_confirm_callback):
         self._page = page
+        self.lang = lang
         self.on_confirm = on_confirm_callback
         self.selected_user: str = ""
-
-        self.dialog = ft.AlertDialog(
+        self.main_container = ft.AlertDialog(
             modal=True,
             bgcolor=Color.WHITE,
-            title=Text.H3(lang.get("login.confirm_delete_user_title", "Xóa người dùng"), color=Color.PRIMARY_TEXT),
-            content=Text.P(lang.get("login.confirm_delete_user_content", "Bạn có chắc chắn muốn xóa người dùng này không?"), color=Color.SECONDARY_TEXT),
+            title=Text.H3(self.lang["login.confirm_delete_user_title"], color=Color.PRIMARY_TEXT),
+            content=Text.P(self.lang["login.confirm_delete_user_content"], color=Color.SECONDARY_TEXT),
             actions=[
                 ft.TextButton(Text.BUTTON("Hủy", color=Color.SECONDARY_TEXT), on_click=lambda e: self.close()),
                 ft.TextButton(Text.BUTTON("Xóa", color=ft.Colors.RED_600), on_click=lambda e: self.confirm()),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
+        self.dialog = self.main_container
 
     def show(self, username: str):
         self.selected_user = username
@@ -231,9 +237,13 @@ class DeleteUserDialog:
 
     def close(self):
         self.dialog.open = False
-        self._page.update()
+        if self._page:
+            self._page.update()
 
     def confirm(self):
-        if self.selected_user:
+        if self.selected_user and self.on_confirm:
             self.on_confirm(self.selected_user)
         self.close()
+
+    def resize(self, width: int) -> None:
+        self.main_container.width = width

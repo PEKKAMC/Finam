@@ -23,12 +23,11 @@ class LoginView(ft.View):
         self.controller.set_view(self)
 
         # INITIALIZE PAGE COMPONENTS
-        self.add_form = AddUserField(self.lang, on_submit_callback=self.controller.handle_add_user)
-        self.delete_dialog = DeleteUserDialog(self._page, self.lang, on_confirm_callback=self.controller.handle_delete_confirm)
-        self.header = LoginHeader(self.lang, on_close=lambda e: self._page.go("/home") if self.user_info.get("username") else None)
-        self.user_list = UserList(self.lang, self.user_info.get("username", ""), on_select_callback=self.controller.login_user, on_delete_callback=self.controller.handle_delete_prompt)
+        self.add_form = AddUserField(page=self._page, lang=self.lang, on_submit_callback=self.controller.handle_add_user)
+        self.delete_dialog = DeleteUserDialog(page=self._page, lang=self.lang, on_confirm_callback=self.controller.handle_delete_confirm)
+        self.header = LoginHeader(page=self._page, lang=self.lang, on_close=lambda e: self._page.go("/home") if self.user_info.get("username") else None)
+        self.user_list = UserList(page=self._page, lang=self.lang, current_user=self.user_info.get("username", ""), on_select_callback=self.controller.login_user, on_delete_callback=self.controller.handle_delete_prompt)
 
-        # Modal Card Container matching reference layout
         modal_card = ft.Container(
             width=520,
             bgcolor=Color.WHITE,
@@ -101,10 +100,6 @@ class LoginView(ft.View):
         self.user_list.refresh(self.controller.get_all_users(), self.user_info.get("username", ""))
 
     def on_page_resize(self, e=None):
-        try:
-            self.update()
-        except RuntimeError as ex:
-            Logger.debug(f"Render skipped: {ex}")
         return e
 
 

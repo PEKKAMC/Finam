@@ -78,7 +78,7 @@ class LogicController:
     def delete_objective(objective_id: int):
         db.saving.delete_objective(objective_id)
 
-    def process_quick_action(self, objective_id: int, action: str, amount: int, note: str, time: str) -> tuple[bool, str]:
+    def process_quick_action(self, objective_id: int, action: str, amount: int, time: str, note: str = "") -> tuple[bool, str]:
         current_saved = db.saving.get_objective_progress(objective_id)
         if action == "remove":
             if amount > current_saved:

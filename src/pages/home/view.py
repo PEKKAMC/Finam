@@ -16,7 +16,7 @@ Logger.info("Initializing Home page...")
 class HomeDialogManager:
     """Handles all dialog instantiation, states, and callbacks for the Home View."""
     def __init__(self, page: ft.Page, lang: dict, controller: LogicController, refresh_callback):
-        self.page = page
+        self._page = page
         self.lang = lang
         self.controller = controller
         self.refresh_view = refresh_callback
@@ -24,24 +24,28 @@ class HomeDialogManager:
 
         # INITIALIZE DIALOG COMPONENTS
         self.quick_action_dialog = QuickActionDialog(
+            page=self._page,
             lang=self.lang,
             controller=self.controller,
             on_success=self.refresh_view
         )
 
         self.complete_confirm_dialog = CompleteConfirmDialog(
+            page=self._page,
             lang=self.lang,
             controller=self.controller,
             on_success=self.refresh_view
         )
 
         self.delete_confirm_dialog = DeleteConfirmDialog(
+            page=self._page,
             lang=self.lang,
             controller=self.controller,
             on_success=self.refresh_view
         )
 
         self.goal_details_dialog = GoalDetailsDialog(
+            page=self._page,
             lang=self.lang,
             controller=self.controller,
             on_complete=lambda ftpage, objective_id: self.complete_confirm_dialog.trigger(ftpage, objective_id),
@@ -50,13 +54,14 @@ class HomeDialogManager:
         )
 
         self.saving_dialog = ObjectiveSelectionDialog(
-            self.lang,
-            self.controller,
-            self.handle_objective_selected
+            page=self._page,
+            lang=self.lang,
+            controller=self.controller,
+            on_select=self.handle_objective_selected
         )
 
         self.action_dialog = ActionSelectionDialog(
-            page=self.page,
+            page=self._page,
             lang=self.lang,
             on_income=self.open_income_dialog,
             on_expense=self.open_expense_dialog,
@@ -64,15 +69,23 @@ class HomeDialogManager:
             on_cancel=self.close_all
         )
 
-        self.category_dialog = CategorySelectionDialog(on_select=self.handle_category_selected)
+        self.category_dialog = CategorySelectionDialog(
+            page=self._page,
+            lang=self.lang,
+            on_select=self.handle_category_selected
+        )
 
         self.income_dialog = IncomeInputDialog(
+            page=self._page,
+            lang=self.lang,
             on_save=self.handle_save_income,
             on_cancel=self.close_all,
             on_category_click=lambda e: self.open_category_selector("income")
         )
 
         self.expense_dialog = ExpenseInputDialog(
+            page=self._page,
+            lang=self.lang,
             on_save=self.handle_save_expense,
             on_cancel=self.close_all,
             on_category_click=lambda e: self.open_category_selector("expense")
@@ -80,28 +93,34 @@ class HomeDialogManager:
 
     def close_all(self, e=None):
         dialogs = [
-            self.action_dialog, self.income_dialog, self.expense_dialog,
-            self.category_dialog, self.saving_dialog, self.goal_details_dialog,
-            self.quick_action_dialog, self.complete_confirm_dialog, self.delete_confirm_dialog
+            self.action_dialog,
+            self.income_dialog,
+            self.expense_dialog,
+            self.category_dialog,
+            self.saving_dialog,
+            self.goal_details_dialog,
+            self.quick_action_dialog,
+            self.complete_confirm_dialog,
+            self.delete_confirm_dialog
         ]
         for dialog in dialogs:
             if dialog:
                 dialog.open = False
-        self.page.update()
+        self._page.update()
         return e
 
     def _open_dialog(self, dialog):
         self.close_all()
-        if dialog not in self.page.overlay:
-            self.page.overlay.append(dialog)
+        if dialog not in self._page.overlay:
+            self._page.overlay.append(dialog)
         dialog.open = True
-        self.page.update()
+        self._page.update()
 
     def open_action_dialog(self, e=None):
-        if self.action_dialog not in self.page.overlay:
-            self.page.overlay.append(self.action_dialog)
+        if self.action_dialog not in self._page.overlay:
+            self._page.overlay.append(self.action_dialog)
         self.action_dialog.open = True
-        self.page.update()
+        self._page.update()
         return e
 
     def open_income_dialog(self, e=None):
@@ -114,20 +133,20 @@ class HomeDialogManager:
 
     def open_saving_dialog(self, e=None):
         self.close_all()
-        if self.saving_dialog not in self.page.overlay:
-            self.page.overlay.append(self.saving_dialog)
-        self.saving_dialog.load_objectives(self.page)
+        if self.saving_dialog not in self._page.overlay:
+            self._page.overlay.append(self.saving_dialog)
+        self.saving_dialog.load_objectives(self._page)
         self.saving_dialog.open = True
-        self.page.update()
+        self._page.update()
         return e
 
     def open_category_selector(self, category_type: str):
         self.current_category_type = category_type
-        if self.category_dialog not in self.page.overlay:
-            self.page.overlay.append(self.category_dialog)
+        if self.category_dialog not in self._page.overlay:
+            self._page.overlay.append(self.category_dialog)
         self.category_dialog.load_categories(category_type)
         self.category_dialog.open = True
-        self.page.update()
+        self._page.update()
 
     def handle_category_selected(self, category_name: str):
         if self.current_category_type == "expense":
@@ -135,26 +154,26 @@ class HomeDialogManager:
         elif self.current_category_type == "income":
             self.income_dialog.set_category(category_name)
         self.category_dialog.open = False
-        self.page.update()
+        self._page.update()
 
     def handle_objective_selected(self, ftpage, objective_id, title, reason, cur, tgt, prog, comp):
         self.goal_details_dialog.trigger(ftpage, objective_id, title, reason, cur, tgt, prog, comp)
         self.saving_dialog.open = False
-        self.page.update()
+        self._page.update()
 
     def handle_save_income(self, e=None):
         vals = self.income_dialog.get_values()
         success, message = self.controller.add_income_entry(vals)
 
-        self.page.snack_bar = ft.SnackBar(Text.LABEL(message))
-        self.page.snack_bar.open = True
+        self._page.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self._page.snack_bar.open = True
 
         if success:
             self.income_dialog.clear()
             self.close_all()
             self.refresh_view()
         else:
-            self.page.update()
+            self._page.update()
 
         return e
 
@@ -162,15 +181,15 @@ class HomeDialogManager:
         vals = self.expense_dialog.get_values()
         success, message = self.controller.add_expense_entry(vals)
 
-        self.page.snack_bar = ft.SnackBar(Text.LABEL(message))
-        self.page.snack_bar.open = True
+        self._page.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self._page.snack_bar.open = True
 
         if success:
             self.expense_dialog.clear()
             self.close_all()
             self.refresh_view()
         else:
-            self.page.update()
+            self._page.update()
 
         return e
 
@@ -198,22 +217,31 @@ class HomeView(ft.View):
 
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(self._page, self.lang, self.user_info)
-        self.top_navigation_bar = TopNavigationBar(current_user=self.user_info["username"])
+        self.top_navigation_bar = TopNavigationBar(page=self._page, lang=self.lang, current_user=self.user_info["username"])
 
         self.balance_card = BalanceCard(
+            page=self._page,
+            lang=self.lang,
             net_balance=self.metrics["net_balance"],
             income=self.metrics["total_income"],
             expense=self.metrics["total_expense"],
             saving=self.metrics["total_savings"],
             ai_advice=self.ai_advice,
             on_add_click=self.dialogs.open_action_dialog,
-            on_scan_click=lambda e: self._page.go("/purchase_scanner"),
-            lang=self.lang
+            on_scan_click=lambda e: self._page.go("/purchase_scanner")
         )
 
-        self.financial_chart = FinancialChart(self.chart_date, self.chart_data, self.chart_type, self.lang)
-        self.savings_progress_card = SavingsProgressCard(self._page, self.objectives, self.lang)
-        self.expense_pie_chart = ExpensePieChartCard(page=self._page, category_data=self.metrics["category_expenses"], lang=self.lang)
+        self.financial_chart = FinancialChart(page=self._page, lang=self.lang, chart_date=self.chart_date, chart_data=self.chart_data, chart_type=self.chart_type)
+        self.savings_progress_card = SavingsProgressCard(
+            page=self._page,
+            lang=self.lang,
+            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang)
+        )
+        self.expense_pie_chart = ExpensePieChartCard(
+            page=self._page,
+            lang=self.lang,
+            category_data=self.metrics["category_expenses"]
+        )
         self.featured_lesson_card = FeaturedLessonCard(self._page, self.lang)
 
         # INITIALIZE MAIN CONTAINER
@@ -240,7 +268,7 @@ class HomeView(ft.View):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(left=16, top=84, right=16, bottom=90)
+            margin=ft.Margin(top=UISettings.TOP_NAVIGATION_HEIGHT, bottom=UISettings.MENU_HEIGHT)
         )
 
         super().__init__(
@@ -261,13 +289,9 @@ class HomeView(ft.View):
         self._page.on_resize = self.on_page_resize
         self.on_page_resize()
 
-    def refresh_view(self):
+    def refresh_view(self) -> None:
         for control in self._page.overlay:
             control.open = False
-
-        if len(self._page.views) > 0:
-            self._page.views[-1].controls.clear()
-            self._page.views[-1].controls.extend(get_home_view(self._page, self.lang, self.user_info).controls)
 
         self._page.update()
 
@@ -282,19 +306,23 @@ class HomeView(ft.View):
 
         return safe_width, safe_height
 
-    def on_page_resize(self, e=None):
+    def on_page_resize(self, e=None) -> None:
         page_width, page_height = self.get_safe_page_size()
 
-        self.main_container.width = max(page_width - 32, 320)
-        self.main_container.margin = ft.Margin(left=16, top=84, right=16, bottom=90)
-        self.dialogs.action_dialog.resize(int(page_width * 0.5), int(page_width * 0.4), int(page_height * 0.1))
+        self.main_container.width = page_width
+
+        self.dialogs.action_dialog.resize(
+            dialog_width=int(page_width * 0.5),
+            button_width=int(page_width * 0.4),
+            button_height=int(page_height * 0.1)
+        )
+
+        self.dialogs.category_dialog.resize(
+            dialog_width=int(page_width * 0.9),
+        )
+
         self.menu.resize(page_width)
         self.top_navigation_bar.resize(page_width)
-
-        try:
-            self.update()
-        except RuntimeError as ex:
-            Logger.debug(f"Skipped updating during resize: {ex}")
 
         return e
 

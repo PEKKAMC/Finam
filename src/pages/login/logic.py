@@ -29,7 +29,7 @@ class LogicController:
             db.users.add_user(input_username)
             Logger.info(f"Created user: {input_username}")
             return True, ""
-        return False, self.lang.get("login.user_already_exists", "Tên người dùng đã tồn tại")
+        return False, self.lang["login.user_already_exists"]
 
     @staticmethod
     def delete_user(username: str):

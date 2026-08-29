@@ -10,16 +10,16 @@ from src.utils import Color, Text
 
 
 class ReturnButton(ft.Row):
-    def __init__(self, page: ft.Page, on_return_click: Callable):
+    def __init__(self, page: ft.Page, lang: dict, on_click: Callable):
         self._page = page
+        self.lang = lang
         self.return_button = ft.IconButton(
             icon=ft.Icons.ARROW_BACK,
             icon_color=Color.BLACK,
             icon_size=30,
-            on_click=on_return_click
+            on_click=on_click
         )
-
-        super().__init__(
+        self.main_container = ft.Row(
             controls=[
                 ft.Container(
                     content=self.return_button,
@@ -29,9 +29,14 @@ class ReturnButton(ft.Row):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
+        super().__init__(
+            controls=[self.main_container],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+        )
+
 
 class NotSupportedMessageBox(ft.Container):
-    def __init__(self, page: ft.Page, message: str, lang: dict):
+    def __init__(self, page: ft.Page, lang: dict, message: str):
         self._page = page
         self.lang: dict = lang
         self.message: str = message
@@ -47,9 +52,13 @@ class NotSupportedMessageBox(ft.Container):
             border=ft.Border.all(width=1, color=Color.DEFAULT_BORDER),
             padding=30
         )
+        self.main_container = ft.Container(
+            content=self.message_box,
+            alignment=ft.Alignment.CENTER,
+        )
 
         super().__init__(
-            content=self.message_box,
+            content=self.main_container,
             alignment=ft.Alignment.CENTER,
         )
 

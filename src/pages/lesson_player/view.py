@@ -294,9 +294,10 @@ class LessonPlayerView(ft.View):
             self.slide_canvas.height = max(500, safe_height_value * 0.6)
             self.presentation_board.width = safe_width_value * 0.95
             self.presentation_board.height = safe_height_value
-            self._page.update()
         except Exception:
             pass
+
+        return event
 
 def get_lesson_player_view(page: ft.Page, lang: dict, user_info_information: dict, target_lesson_filename: str = None) -> ft.View:
     return LessonPlayerView(page, lang, user_info_information, target_lesson_filename)

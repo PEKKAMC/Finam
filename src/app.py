@@ -7,7 +7,7 @@ import os
 import flet as ft
 
 from src.database import db
-from src.utils import UISettings, get_language, Color
+from src.utils import UISettings, get_language
 from src.logger import Logger
 from src.pages.fallback import get_fallback_view
 from src.pages.home import get_home_view
@@ -39,7 +39,6 @@ async def main(page: ft.Page) -> None:
         "username": ""
     }
 
-    page.bgcolor = Color.WHITE
     page.title = "Finam"
     page.theme = ft.Theme(
         page_transitions=ft.PageTransitionsTheme(
@@ -66,15 +65,15 @@ async def main(page: ft.Page) -> None:
             page.views.append(get_login_view(page, lang, user_info))
 
         elif troute.match("/home"):
-            Logger.info(f"Redirecting to home page")
+            Logger.info("Redirecting to home page")
             page.views.append(get_home_view(page, lang, user_info))
 
         elif troute.match("/lessons"):
-            Logger.info(f"Redirecting to lessons page")
+            Logger.info("Redirecting to lessons page")
             page.views.append(get_lesson_view(page, lang, user_info))
 
         elif troute.match("/saving"):
-            Logger.info(f"Redirecting to saving page")
+            Logger.info("Redirecting to saving page")
             page.views.append(get_savings_view(page, lang, user_info))
 
         elif troute.match("/lesson-player/:lesson_id"):
@@ -83,37 +82,34 @@ async def main(page: ft.Page) -> None:
             page.views.append(get_lesson_player_view(page, lang, user_info, lesson_id))
 
         elif troute.match("/lesson-player"):
-            Logger.info(f"Redirecting to lesson loader page")
+            Logger.info("Redirecting to lesson loader page")
             page.views.append(get_lesson_player_view(page, lang, user_info))
 
         elif troute.match("/spending"):
-            Logger.info(f"Redirecting to spending page")
+            Logger.info("Redirecting to spending page")
             page.views.append(get_spending_view(page, lang, user_info))
 
         elif troute.match("/purchase_scanner"):
-            Logger.info(f"Redirecting to purchase scanner page")
+            Logger.info("Redirecting to purchase scanner page")
             page.views.append(get_scanner_view(page, lang, user_info))
 
-        # DEVELOPER EDITOR PAGE, ONLY AVAILABLE WHEN ENABLE_EDITOR IS SET TO TRUE
         elif ENABLE_EDITOR and troute.match("/lesson-editor"):
-            Logger.info(f"Redirecting to lesson editor page")
+            Logger.info("Redirecting to lesson editor page")
             page.views.append(get_lesson_editor_view(page, lang, user_info))
 
         elif not troute.match("/fallback"):
-            Logger.info(f"Page not found")
+            Logger.info("Page not found")
             await redirect_to_fallback(page, lang, "page_not_found")
-            page.update()
 
         page.update()
         return e
 
-    async def view_pop(e: ft.ViewPopEvent) -> ft.ViewPopEvent:
-        page.views.pop()
-        top_view = page.views[-1]
-        await page.push_route(top_view.route)
-        return e
+    async def on_error(e: ft.ControlEvent) -> None:
+        Logger.critical(f"Unexpected error occurred: {e}")
+        Logger.info("Attempting to restart application...")
+        exit(-1)
 
+    page.on_error = on_error
     page.on_route_change = route_change
-    page.on_view_pop = view_pop
 
     await page.push_route("/login")

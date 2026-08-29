@@ -27,7 +27,7 @@ class SpendingView(ft.View):
         self.menu = None
         self.main_container = None
 
-        self.controller = LogicController(user_info["username"], self._page, self.user_info, self.refresh_view)
+        self.controller = LogicController(user_info["username"], self._page, self.lang, self.user_info, self.refresh_view)
 
         super().__init__(
             route="/spending",
@@ -91,6 +91,8 @@ class SpendingView(ft.View):
 
         # Metric Cards Header
         metric_cards = MetricCards(
+            page=self._page,
+            lang=self.lang,
             total_income=balance_data["incomes"].replace("+", "").replace(" VND", ""),
             total_expense=balance_data["expenses"].replace("-", "").replace(" VND", ""),
             net_balance=balance_data["current"]
@@ -98,13 +100,14 @@ class SpendingView(ft.View):
 
         # Toolbar
         toolbar = TransactionToolbar(
+            page=self._page,
+            lang=self.lang,
             filter_type=self.filter_type,
             on_filter_change=self.on_filter_change,
             on_search_change=self.on_search_change,
             on_category_change=self.on_category_change,
             categories=categories,
             on_add_click=lambda e: self.controller.open_income_dialog(),
-            lang=self.lang
         )
 
         # Transaction History List Container
@@ -119,7 +122,7 @@ class SpendingView(ft.View):
         tx_list_controls = [history_header]
         if filtered_txs:
             for tx in filtered_txs:
-                tx_list_controls.append(TransactionItemCard(tx, on_delete=lambda tid: self.controller.delete_transaction(tid)))
+                tx_list_controls.append(TransactionItemCard(page=self._page, lang=self.lang, tx=tx, on_delete=lambda tid: self.controller.delete_transaction(tid)))
         else:
             tx_list_controls.append(
                 ft.Container(
@@ -129,7 +132,7 @@ class SpendingView(ft.View):
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=6,
                         controls=[
-                            Text.LABEL("Không tìm thấy giao dịch nào phù hợp.", color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                            Text.MEDIUM("Không tìm thấy giao dịch nào phù hợp.", color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
                             Text.SMALL("Hãy thử thay đổi bộ lọc hoặc thêm giao dịch mới.", color=Color.SECONDARY_TEXT)
                         ]
                     )
@@ -158,7 +161,7 @@ class SpendingView(ft.View):
     def create_ui_components(self):
         Logger.info("Rendering UI for Spending page...")
         self.menu = Menu(self._page, self.lang, self.user_info)
-        self.top_navigation_bar = TopNavigationBar(current_user=self.user_info["username"])
+        self.top_navigation_bar = TopNavigationBar(page=self._page, lang=self.lang, current_user=self.user_info["username"])
 
         self.main_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
@@ -185,10 +188,7 @@ class SpendingView(ft.View):
         self.main_container.width = max(safe_width - 32, 320)
         self.main_container.margin = ft.Margin(left=16, top=84, right=16, bottom=88)
         self.menu.resize(safe_width)
-        try:
-            self.update()
-        except RuntimeError:
-            pass
+        return e
 
 
 def get_spending_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:

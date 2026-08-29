@@ -8,48 +8,6 @@ from src.database import db
 from src.logger import Logger
 
 
-def get_categories(tab_type: str):
-    if tab_type == "expense":
-        return [
-            {"name": "Mua sắm", "icon": "shopping_cart"},
-            {"name": "Đồ ăn", "icon": "restaurant"},
-            {"name": "Điện thoại", "icon": "smartphone"},
-            {"name": "Giải trí", "icon": "sports_esports"},
-            {"name": "Giáo dục", "icon": "school"},
-            {"name": "Làm đẹp", "icon": "content_cut"},
-            {"name": "Thể thao", "icon": "directions_run"},
-            {"name": "Giao lưu", "icon": "people"},
-            {"name": "Đi lại", "icon": "directions_bus"},
-            {"name": "Quần áo", "icon": "checkroom"},
-            {"name": "Ô tô", "icon": "directions_car"},
-            {"name": "Thiết bị điện tử", "icon": "computer"},
-            {"name": "Du lịch", "icon": "flight"},
-            {"name": "Sức khỏe", "icon": "favorite"},
-            {"name": "Thú cưng", "icon": "pets"},
-            {"name": "Sửa chữa", "icon": "build"},
-            {"name": "Nhà ở", "icon": "home"},
-            {"name": "Nhà", "icon": "chair"},
-            {"name": "Quà tặng", "icon": "card_giftcard"},
-            {"name": "Quyên góp", "icon": "volunteer_activism"},
-            {"name": "Vé số", "icon": "casino"},
-            {"name": "Ăn vặt", "icon": "bakery_dining"},
-            {"name": "Trẻ em", "icon": "child_care"},
-            {"name": "Rau quả", "icon": "local_florist"},
-            {"name": "Hoa quả", "icon": "apple"},
-            {"name": "Thêm", "icon": "add"},
-        ]
-    elif tab_type == "income":
-        return [
-            {"name": "Lương", "icon": "work"},
-            {"name": "Khoản đầu tư", "icon": "trending_up"},
-            {"name": "Làm thêm", "icon": "money"},
-            {"name": "Tiền thưởng", "icon": "emoji_events"},
-            {"name": "Khác", "icon": "monetization_on"},
-            {"name": "Thêm", "icon": "add"},
-        ]
-    return []
-
-
 class LogicController:
     def __init__(self, current_user: str):
         self.current_user = current_user
@@ -98,7 +56,7 @@ class LogicController:
             "net_balance": net_balance,
             "total_savings": total_savings,
             "total_target": total_target,
-            "category_expenses": category_expenses # Export the mapped data
+            "category_expenses": category_expenses
         }
 
         return metrics, chart_date, chart_data, "daily"
@@ -157,6 +115,32 @@ class LogicController:
 
     def get_user_objectives(self):
         return db.saving.get_user_objectives(self.current_user)
+
+    @staticmethod
+    def get_saving_progress_items(objectives: list, lang: dict):
+        goal_items = []
+        if not objectives:
+            return goal_items
+
+        for objective in objectives[:3]:
+            objective_id, objective_title, objective_reason, target_amount, completed_at = objective
+            current_amount = float(db.saving.get_objective_progress(objective_id))
+            target_value = float(target_amount) if target_amount and float(target_amount) > 0 else 1.0
+            progress_ratio = min(1.0, current_amount / target_value) if target_value > 0 else 1.0
+            display_title = objective_title if objective_title else lang["home.default_goal_title"]
+
+            goal_items.append({
+                "id": objective_id,
+                "title": display_title,
+                "current_amount": current_amount,
+                "target_amount": target_value,
+                "progress_ratio": progress_ratio,
+                "progress_text": f"{int(progress_ratio * 100)}%",
+                "contributed_label": f"{lang['home.contributed']}: {int(current_amount):,} {lang['generic.currency']}",
+                "target_label": f"{lang['home.target']}: {int(target_value):,} {lang['generic.currency']}",
+            })
+
+        return goal_items
 
     @staticmethod
     def get_objective_progress_data(objective_id: int, target_amount: float) -> tuple[float, float, str]:

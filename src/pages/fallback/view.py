@@ -18,9 +18,21 @@ class FallbackView(ft.View):
         self.fallback_reason = fallback_reason
 
         # INITIALIZE PAGE COMPONENTS
-        self.message = self.get_fallback_message(self.fallback_reason)
-        self.message_box = NotSupportedMessageBox(self._page, self.message, self.lang)
-        self.return_button = ReturnButton(self._page, lambda e: self._page.go("/home"))
+        self.message = self.get_fallback_message(
+            reason=self.fallback_reason
+        )
+
+        self.message_box = NotSupportedMessageBox(
+            page=self._page,
+            lang=self.lang,
+            message=self.message
+        )
+
+        self.return_button = ReturnButton(
+            page=self._page,
+            lang=self.lang,
+            on_click=lambda e: self._page.go("/home")
+        )
 
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
@@ -38,8 +50,8 @@ class FallbackView(ft.View):
         super().__init__(
             route="/fallback",
             padding=0,
-            bgcolor=Color.WHITE,
-            controls=ft.Container(content=self.main_container, alignment=ft.Alignment.CENTER, expand=True)
+            bgcolor=Color.PAGE_BACKGROUND,
+            controls=[self.main_container]
         )
 
         self._page.on_resize = self.on_page_resize
@@ -60,18 +72,12 @@ class FallbackView(ft.View):
         current_width: int = int(self._page.width or UISettings.MAX_APP_WIDTH)
         current_height: int = int(self._page.height or UISettings.MAX_APP_HEIGHT)
 
-        # Safe value: reference size to properly resize elements
         safe_width: int = min(current_width, UISettings.MAX_APP_WIDTH)
         safe_height: int = min(current_height, UISettings.MAX_APP_HEIGHT)
 
         self.main_container.width = safe_width
         self.main_container.height = safe_height
         self.message_box.resize(safe_width, safe_height)
-
-        try:
-            self.update()
-        except RuntimeError as ex:
-            Logger.debug(f"Render skipped: {ex}")
 
         return e
 

@@ -26,7 +26,7 @@ class LessonEditorView(ft.View):
         self.title_input = ft.TextField(label="Lesson Title", color=Color.DEFAULT_TEXT, expand=True)
         self.subtitle_input = ft.TextField(label="Lesson Subtitle", color=Color.DEFAULT_TEXT, expand=True)
         self.cover_image_input = ft.TextField(label="Cover Image Path/URL", color=Color.DEFAULT_TEXT, expand=True)
-        self.slide_number_title = Text.LABEL(f"Slide {self.logic.current_slide_index + 1}", scale=0.06, min_size=12, weight=ft.FontWeight.BOLD)
+        self.slide_number_title = Text.MEDIUM(f"Slide {self.logic.current_slide_index + 1}", scale=0.06, min_size=12, weight=ft.FontWeight.BOLD)
 
         # Core Layout Setup
         self.sidebar_column = ft.Column(spacing=10, scroll=ft.ScrollMode.AUTO, expand=True)
@@ -80,7 +80,7 @@ class LessonEditorView(ft.View):
         self.refresh_editor()
 
     def show_snackbar(self, message: str, color: str):
-        sb = ft.SnackBar(Text.LABEL(message, scale=0.047, min_size=12), bgcolor=color)
+        sb = ft.SnackBar(Text.MEDIUM(message, scale=0.047, min_size=12), bgcolor=color)
         self._page.overlay.append(sb)
         sb.open = True
         self._page.update()
@@ -207,7 +207,7 @@ class LessonEditorView(ft.View):
                     scale_from_size = max(0.02, min(0.3, float(font_size) / 300.0))
                 except Exception:
                     scale_from_size = 0.047
-                visual = ft.Container(content=Text.LABEL(display_text, scale=scale_from_size, min_size=9, color=Color.DEFAULT_TEXT), width=w_val)
+                visual = ft.Container(content=Text.MEDIUM(display_text, scale=scale_from_size, min_size=9, color=Color.DEFAULT_TEXT), width=w_val)
             elif is_divider:
                 w_val = safe_float(el.get("width"), 300.0)
                 visual = ft.Container(content=ft.Divider(thickness=2, color=Color.DEFAULT_TEXT), width=w_val, height=20, alignment=ft.Alignment.CENTER)
@@ -257,7 +257,7 @@ class LessonEditorView(ft.View):
         # Audio Pane Loop
         audio_elements = [(i, el) for i, el in enumerate(elements) if el.get("type") == "audio"]
         if not audio_elements:
-            self.audio_pane.controls.append(Text.LABEL("No audio tracks added.", scale=0.033, min_size=9, color=ft.Colors.GREY_500))
+            self.audio_pane.controls.append(Text.MEDIUM("No audio tracks added.", scale=0.033, min_size=9, color=ft.Colors.GREY_500))
         else:
             for orig_idx, el in audio_elements:
                 path_tf = ft.TextField(label="Audio Path", value=el.get("content", ""), expand=True, color=Color.DEFAULT_TEXT, on_change=lambda e, i=orig_idx: update_audio_prop(e, "content", i))
@@ -270,7 +270,7 @@ class LessonEditorView(ft.View):
         # Animations Pane Loop
         visual_elements = [el for el in elements if el.get("type") != "audio"]
         if not visual_elements:
-            self.animation_pane.controls.append(Text.LABEL("No visual elements.", scale=0.033, min_size=9, color=ft.Colors.GREY_500))
+            self.animation_pane.controls.append(Text.MEDIUM("No visual elements.", scale=0.033, min_size=9, color=ft.Colors.GREY_500))
         else:
             for i, el in enumerate(elements):
                 if el.get("type") == "audio": continue
@@ -282,30 +282,30 @@ class LessonEditorView(ft.View):
                 ent = ENTRANCE_EFFECTS.get(el.get("entrance", 0), "None")
                 has_anim = (ent != "None") or (EXIT_EFFECTS.get(el.get("exit", 0), "None") != "None") or el.get("timer_in")
                 anim_desc = f"Delay: {el.get('timer_in', 0)}s | In: {ent}" if has_anim else "No animation assigned"
-                anim_item = ft.Container(content=ft.Row([ft.Icon(icon_name, size=18, color=ft.Colors.BLUE_600 if is_sel else ft.Colors.BLUE_GREY_400), ft.Column([Text.LABEL(f"{preview}", weight=ft.FontWeight.BOLD if is_sel else ft.FontWeight.NORMAL, scale=0.043, min_size=11), Text.LABEL(anim_desc, scale=0.033, min_size=9, color=ft.Colors.GREY_600 if has_anim else ft.Colors.GREY_400)], spacing=2, expand=True), ft.Icon(ft.Icons.STAR, size=14, color=ft.Colors.AMBER_400 if has_anim else ft.Colors.TRANSPARENT)]), padding=10, bgcolor=ft.Colors.BLUE_50 if is_sel else ft.Colors.WHITE, border=ft.Border.all(1, ft.Colors.BLUE_400 if is_sel else ft.Colors.GREY_300), border_radius=8, ink=True, on_click=lambda e, i_idx=i: self.select_element_by_index(i_idx))
+                anim_item = ft.Container(content=ft.Row([ft.Icon(icon_name, size=18, color=ft.Colors.BLUE_600 if is_sel else ft.Colors.BLUE_GREY_400), ft.Column([Text.MEDIUM(f"{preview}", weight=ft.FontWeight.BOLD if is_sel else ft.FontWeight.NORMAL, scale=0.043, min_size=11), Text.MEDIUM(anim_desc, scale=0.033, min_size=9, color=ft.Colors.GREY_600 if has_anim else ft.Colors.GREY_400)], spacing=2, expand=True), ft.Icon(ft.Icons.STAR, size=14, color=ft.Colors.AMBER_400 if has_anim else ft.Colors.TRANSPARENT)]), padding=10, bgcolor=ft.Colors.BLUE_50 if is_sel else ft.Colors.WHITE, border=ft.Border.all(1, ft.Colors.BLUE_400 if is_sel else ft.Colors.GREY_300), border_radius=8, ink=True, on_click=lambda e, i_idx=i: self.select_element_by_index(i_idx))
                 self.animation_pane.controls.append(anim_item)
 
             if idx is not None and elements[idx].get("type") != "audio":
                 el = elements[idx]
                 self.animation_pane.controls.append(ft.Divider())
-                self.animation_pane.controls.append(Text.LABEL("Delays", weight=ft.FontWeight.BOLD, scale=0.047, min_size=12, color=ft.Colors.BLUE_800))
+                self.animation_pane.controls.append(Text.MEDIUM("Delays", weight=ft.FontWeight.BOLD, scale=0.047, min_size=12, color=ft.Colors.BLUE_800))
                 self.animation_pane.controls.append(ft.Row([ft.TextField(label="Delay In (s)", value=str(el.get("timer_in", "")), expand=True, on_change=lambda e: update_prop(e, "timer_in"), color=Color.DEFAULT_TEXT, input_filter=float_filter), ft.TextField(label="Delay Out (s)", value=str(el.get("timer_out", "")), expand=True, on_change=lambda e: update_prop(e, "timer_out"), color=Color.DEFAULT_TEXT, input_filter=float_filter)]))
                 self.animation_pane.controls.append(ft.Divider())
-                self.animation_pane.controls.append(Text.LABEL("Entrance Animation", weight=ft.FontWeight.BOLD, scale=0.047, min_size=12, color=ft.Colors.BLUE_800))
+                self.animation_pane.controls.append(Text.MEDIUM("Entrance Animation", weight=ft.FontWeight.BOLD, scale=0.047, min_size=12, color=ft.Colors.BLUE_800))
                 self.animation_pane.controls.append(ft.Dropdown(label="Entrance Effect", value=ENTRANCE_EFFECTS.get(el.get("entrance", 0), "None"), on_select=lambda e: update_prop(e, "entrance", rebuild_ui=True, map_dict=ENTRANCE_IDS), options=[ft.dropdown.Option(x) for x in list(ENTRANCE_EFFECTS.values())[:5]], color=Color.DEFAULT_TEXT))
                 self.animation_pane.controls.append(ft.TextField(label="Duration (s)", value=str(el.get("duration_in", el.get("duration", ""))), expand=True, on_change=lambda e: update_prop(e, "duration_in"), tooltip="e.g., 0.5", color=Color.DEFAULT_TEXT, input_filter=float_filter))
                 self.animation_pane.controls.append(ft.Divider())
-                self.animation_pane.controls.append(Text.LABEL("Exit Animation", weight=ft.FontWeight.BOLD, scale=0.047, min_size=12, color=ft.Colors.BLUE_800))
+                self.animation_pane.controls.append(Text.MEDIUM("Exit Animation", weight=ft.FontWeight.BOLD, scale=0.047, min_size=12, color=ft.Colors.BLUE_800))
                 self.animation_pane.controls.append(ft.Dropdown(label="Exit Effect", value=EXIT_EFFECTS.get(el.get("exit", 0), "None"), on_select=lambda e: update_prop(e, "exit", rebuild_ui=True, map_dict=EXIT_IDS), options=[ft.dropdown.Option(x) for x in EXIT_EFFECTS.values()], color=Color.DEFAULT_TEXT))
                 self.animation_pane.controls.append(ft.TextField(label="Duration (s)", value=str(el.get("duration_out", el.get("duration", ""))), expand=True, on_change=lambda e: update_prop(e, "duration_out"), tooltip="e.g., 0.5", color=Color.DEFAULT_TEXT, input_filter=float_filter))
 
         # Properties Pane
         if idx is None or not elements or elements[idx].get("type") == "audio":
-            self.element_properties.controls.append(Text.LABEL("Select a visual element to edit properties.", scale=0.033, min_size=9, color=ft.Colors.GREY_500))
+            self.element_properties.controls.append(Text.MEDIUM("Select a visual element to edit properties.", scale=0.033, min_size=9, color=ft.Colors.GREY_500))
             return
 
         el = elements[idx]
-        self.element_properties.controls.append(Text.LABEL("Element Properties", weight=ft.FontWeight.BOLD, scale=0.06, min_size=12, color=ft.Colors.BLUE_GREY_900))
+        self.element_properties.controls.append(Text.MEDIUM("Element Properties", weight=ft.FontWeight.BOLD, scale=0.06, min_size=12, color=ft.Colors.BLUE_GREY_900))
         if el["type"] == "text":
             self.element_properties.controls.append(ft.TextField(label="Text", multiline=True, value=el.get("content", ""), on_change=lambda e: update_prop(e, "content", needs_canvas_update=True), color=Color.DEFAULT_TEXT))
             self.element_properties.controls.append(ft.Row([ft.TextField(label="Width (px)", value=str(el.get("width", 300.0)), on_change=lambda e: update_prop(e, "width", needs_canvas_update=True), color=Color.DEFAULT_TEXT, input_filter=float_filter, expand=True), ft.TextField(label="Font Size", value=str(el.get("size", 16.0)), on_change=lambda e: update_prop(e, "size", needs_canvas_update=True), color=Color.DEFAULT_TEXT, input_filter=float_filter, expand=True)]))
@@ -317,7 +317,7 @@ class LessonEditorView(ft.View):
             self.element_properties.controls.append(ft.TextField(label="Scale", value=str(el.get("scale", 1.0)), on_change=lambda e: update_prop(e, "scale", needs_canvas_update=True), color=Color.DEFAULT_TEXT, input_filter=float_filter))
 
         self.element_properties.controls.append(ft.Divider())
-        self.element_properties.controls.append(Text.LABEL("Layer Order", weight=ft.FontWeight.BOLD, scale=0.047, min_size=12))
+        self.element_properties.controls.append(Text.MEDIUM("Layer Order", weight=ft.FontWeight.BOLD, scale=0.047, min_size=12))
         self.element_properties.controls.append(ft.Row([ft.Button("Forward", icon=ft.Icons.ARROW_UPWARD, on_click=lambda e: self.move_layer_handler("forward"), expand=True), ft.Button("Backward", icon=ft.Icons.ARROW_DOWNWARD, on_click=lambda e: self.move_layer_handler("backward"), expand=True)]))
         self.element_properties.controls.append(ft.Divider())
         self.element_properties.controls.append(ft.Button("Delete Element", icon=ft.Icons.DELETE, color=ft.Colors.RED, on_click=lambda e: self.delete_element_handler(idx)))
@@ -327,7 +327,7 @@ class LessonEditorView(ft.View):
         for i, slide in enumerate(self.logic.slides_data):
             is_selected = (i == self.logic.current_slide_index)
             item = ft.Container(
-                content=Text.LABEL(f"Slide {i + 1}", weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_900 if is_selected else Color.DEFAULT_TEXT),
+                content=Text.MEDIUM(f"Slide {i + 1}", weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_900 if is_selected else Color.DEFAULT_TEXT),
                 padding=10, bgcolor=ft.Colors.BLUE_50 if is_selected else Color.WHITE,
                 border=ft.Border.all(2, ft.Colors.BLUE_400) if is_selected else ft.Border.all(1, ft.Colors.GREY_300),
                 border_radius=8, ink=True, on_click=lambda e, idx=i: self.select_slide(idx)

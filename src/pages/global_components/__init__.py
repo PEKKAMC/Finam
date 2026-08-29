@@ -4,7 +4,7 @@
 
 """Global page elements - Reusable components across all pages."""
 
-from src.pages.global_components.category_selection import get_categories, CategorySelectionDialog, ExpenseInputDialog, IncomeInputDialog
+from src.pages.global_components.category_selection import CategorySelectionDialog, ExpenseInputDialog, IncomeInputDialog
 from src.pages.global_components.financial_chart import FinancialChart
 from src.pages.global_components.saving_dialog import BaseDialog, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog, ObjectiveSelectionDialog
 from src.pages.global_components.settings_button import SettingsButton
@@ -12,7 +12,6 @@ from src.pages.global_components.menu import Menu
 from src.pages.global_components.top_navigation_bar import TopNavigationBar
 
 __all__ = [
-    "get_categories",
     "CategorySelectionDialog",
     "ExpenseInputDialog",
     "IncomeInputDialog",

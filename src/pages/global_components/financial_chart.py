@@ -5,23 +5,34 @@
 import flet as ft
 import flet_charts as fc
 
-from src.utils import Color, Text
+from src.utils import Color, Text, UISettings
 from src.logger import Logger
 
 Logger.info("Building financial chart...")
 
 
 class FinancialChart(ft.Container):
-    def __init__(self, chart_date: dict, chart_data: list, chart_type: str, lang: dict):
+    def __init__(self, page: ft.Page, lang: dict, chart_date: dict, chart_data: list, chart_type: str):
+        self._page = page
+        self.lang = lang
         self.chart_date = chart_date
         self.chart_data = chart_data
         self.chart_type = chart_type
-        self.lang = lang
 
-        max_chart_value = max(max(int(data["income"]), int(data["expense"])) for data in chart_data)
+        max_chart_value = max(max(int(data["income"]), int(data["expense"])) for data in self.chart_data) if self.chart_data else 1
         self.max_value = max_chart_value if max_chart_value > 0 else 1
 
-        from src.utils import UISettings
+        self.main_container = ft.Column(
+            spacing=16,
+            controls=[
+                self.build_legend(),
+                ft.Container(
+                    content=self.build_bar_chart(),
+                    expand=True,
+                    padding=ft.Padding.only(top=10)
+                )
+            ]
+        )
         super().__init__(
             expand=True,
             height=275,
@@ -33,17 +44,7 @@ class FinancialChart(ft.Container):
                 blur_radius=UISettings.SHADOW_BLUR,
                 color=Color.SHADOW
             ),
-            content=ft.Column(
-                spacing=16,
-                controls=[
-                    self.build_legend(),
-                    ft.Container(
-                        content=self.build_bar_chart(),
-                        expand=True,
-                        padding=ft.Padding.only(top=10)
-                    )
-                ]
-            )
+            content=self.main_container
         )
 
     def build_legend(self):
@@ -76,7 +77,7 @@ class FinancialChart(ft.Container):
                             spacing=2,
                             controls=[
                                 Text.H5(self.lang["financial_chart.chart_title"], color=Color.DEFAULT_TEXT),
-                                Text.LABEL(date_text, color=Color.SECONDARY_TEXT)
+                                Text.MEDIUM(date_text, color=Color.SECONDARY_TEXT)
                             ]
                         )
                     ]
@@ -110,11 +111,10 @@ class FinancialChart(ft.Container):
         labels = []
         for i in range(5):
             value = int(i * step)
-            label_str = f"{value // 1000}K"
             labels.append(
                 fc.ChartAxisLabel(
                     value=value,
-                    label=Text.LABEL(label_str, color=Color.SECONDARY_TEXT)
+                    label=Text.LABEL(f"{value // 1000}K", color=Color.SECONDARY_TEXT)
                 )
             )
         return labels
@@ -160,7 +160,7 @@ class FinancialChart(ft.Container):
                             color=Color.PRIMARY,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang.get('generic.income', 'Thu nhập')}: {income_value:,} đ"
+                                text=f"{self.lang["generic.income"]}: {income_value:,} đ"
                             ),
                         ),
                         fc.BarChartRod(
@@ -170,7 +170,7 @@ class FinancialChart(ft.Container):
                             color=Color.EXPENSE_ACTION_BACKGROUND,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang.get('generic.expense', 'Chi tiêu')}: {expense_value:,} đ"
+                                text=f"{self.lang["generic.expense"]}: {expense_value:,} đ"
                             ),
                         )
                     ]
@@ -201,3 +201,6 @@ class FinancialChart(ft.Container):
             expand=True,
             padding=ft.Padding.only(top=10)
         )
+
+    def resize(self, width: int) -> None:
+        self.main_container.width = width

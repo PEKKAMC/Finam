@@ -31,7 +31,6 @@ class LessonView(ft.View):
         super().__init__(
             route="/lessons",
             padding=0,
-            bgcolor="#FAFAF8",
             controls=self.create_ui_components()
         )
 
@@ -46,7 +45,7 @@ class LessonView(ft.View):
     def create_ui_components(self):
         Logger.info("Rendering UI for Lesson page...")
         self.menu = Menu(self._page, self.lang, self.user_info)
-        self.top_navigation_bar = TopNavigationBar(current_user=self.user_info["username"])
+        self.top_navigation_bar = TopNavigationBar(page=self._page, lang=self.lang, current_user=self.user_info["username"])
 
         # Compute completion statistics dynamically
         total_lessons = len(self.available_lessons)
@@ -119,7 +118,6 @@ class LessonView(ft.View):
                             )
                         ]
                     ),
-                    # Course Progress Bar matching TSX
                     ft.Container(
                         bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
                         border_radius=12,
@@ -136,10 +134,10 @@ class LessonView(ft.View):
             )
         )
 
-        # Responsive Lesson Cards Grid
         lesson_cards = [
             LessonItemCard(
                 page=self._page,
+                lang=self.lang,
                 title=lesson["title"],
                 subtitle=lesson["subtitle"],
                 cover_image=lesson["cover_image"],
@@ -186,17 +184,14 @@ class LessonView(ft.View):
         current_width = self._page.width if event is None else event.width
         if not current_width:
             current_width = UISettings.MAX_APP_WIDTH
-        safe_width = int(min(current_width, UISettings.MAX_APP_WIDTH))
 
+        safe_width = int(min(current_width, UISettings.MAX_APP_WIDTH))
         self.main_container.width = max(safe_width - 32, 320)
         self.main_container.margin = ft.Margin(left=16, top=84, right=16, bottom=88)
         self.top_navigation_bar.resize(safe_width)
         self.menu.resize(safe_width)
 
-        try:
-            self.update()
-        except RuntimeError as e:
-            Logger.debug(f"Skipped updating during resize: {e}")
+        return event
 
 
 def get_lesson_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:

@@ -8,8 +8,10 @@ from src.utils import UISettings, Color, Text
 
 
 class ScannerForm(ft.Container):
-    def __init__(self, on_scan_click, lang: dict):
+    def __init__(self, page: ft.Page, lang: dict, on_scan_click):
+        self._page = page
         self.lang = lang
+        self.on_scan_click = on_scan_click
         self.item_name = ft.TextField(
             label=self.lang["purchase_scanner.item_name"],
             hint_text=self.lang["purchase_scanner.item_name_hint"],
@@ -72,6 +74,37 @@ class ScannerForm(ft.Container):
             filled=True,
             bgcolor=Color.CARD_BACKGROUND
         )
+        self.main_container = ft.Column(
+            spacing=16,
+            controls=[
+                ft.Row(
+                    spacing=10,
+                    controls=[
+                        ft.Container(width=32, height=32, border_radius=10, bgcolor=Color.LIGHT_ACCENT, alignment=ft.Alignment.CENTER, content=ft.Icon(ft.Icons.SHOPPING_BAG, color=Color.PRIMARY, size=18)),
+                        Text.H4(self.lang["purchase_scanner.title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+                    ]
+                ),
+                Text.P(self.lang["purchase_scanner.subtitle"], color=Color.SECONDARY_TEXT),
+                self.item_name,
+                self.item_price,
+                self.item_reason,
+                self.trigger,
+                self.thinking_time,
+                ft.Button(
+                    content=ft.Row([ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.WHITE, size=16), Text.MEDIUM(self.lang["purchase_scanner.analyze"], weight=ft.FontWeight.BOLD)], tight=True),
+                    on_click=lambda e: self.on_scan_click(
+                        self.item_name.value,
+                        self.item_price.value,
+                        self.item_reason.value,
+                        self.trigger.value,
+                        self.thinking_time.value
+                    ) if self.on_scan_click else None,
+                    bgcolor=Color.PRIMARY_ACTION,
+                    color=Color.WHITE,
+                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=14), padding=20)
+                )
+            ]
+        )
 
         super().__init__(
             bgcolor=Color.WHITE,
@@ -79,57 +112,37 @@ class ScannerForm(ft.Container):
             padding=22,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
-            content=ft.Column(
-                spacing=16,
-                controls=[
-                    ft.Row(
-                        spacing=10,
-                        controls=[
-                            ft.Container(width=32, height=32, border_radius=10, bgcolor=Color.LIGHT_ACCENT, alignment=ft.Alignment.CENTER, content=ft.Icon(ft.Icons.SHOPPING_BAG, color=Color.PRIMARY, size=18)),
-                            Text.H4(self.lang["purchase_scanner.title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
-                        ]
-                    ),
-                    Text.P(self.lang["purchase_scanner.subtitle"], color=Color.SECONDARY_TEXT),
-                    self.item_name,
-                    self.item_price,
-                    self.item_reason,
-                    self.trigger,
-                    self.thinking_time,
-                    ft.Button(
-                        content=ft.Row([ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.WHITE, size=16), Text.LABEL(self.lang["purchase_scanner.analyze"], weight=ft.FontWeight.BOLD)], tight=True),
-                        on_click=lambda e: on_scan_click(
-                            self.item_name.value,
-                            self.item_price.value,
-                            self.item_reason.value,
-                            self.trigger.value,
-                            self.thinking_time.value
-                        ),
-                        bgcolor=Color.PRIMARY_ACTION,
-                        color=Color.WHITE,
-                        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=14), padding=20)
-                    )
-                ]
-            )
+            content=self.main_container
         )
 
+    def resize(self, page_width: int):
+        self.main_container.width = max(page_width, 0)
+
 class InterventionItem(ft.Container):
-    def __init__(self, title, description):
+    def __init__(self, page: ft.Page, lang: dict, title: str, description: str):
+        self._page = page
+        self.lang = lang
+        self.main_container = ft.Column(
+            spacing=5,
+            controls=[
+                Text.MEDIUM(title, weight=ft.FontWeight.BOLD),
+                Text.P(description, color=Color.SECONDARY_TEXT)
+            ]
+        )
         super().__init__(
             border=ft.Border.all(1, Color.DEFAULT_BORDER),
             border_radius=10,
             padding=15,
             bgcolor=Color.WHITE,
-            content=ft.Column(
-                spacing=5,
-                controls=[
-                    Text.LABEL(title, weight=ft.FontWeight.BOLD),
-                    Text.P(description, color=Color.SECONDARY_TEXT)
-                ]
-            )
+            content=self.main_container
         )
 
+    def resize(self, width: int) -> None:
+        self.main_container.width = width
+
 class ScannerResult(ft.Container):
-    def __init__(self, lang: dict):
+    def __init__(self, page: ft.Page, lang: dict):
+        self._page = page
         self.lang = lang
         self.result_text = Text.P(self.lang["purchase_scanner.no_data"], color=Color.PRIMARY_TEXT)
         self.result_box = ft.Container(
@@ -141,6 +154,21 @@ class ScannerResult(ft.Container):
         )
         self.progress_bar = ft.ProgressBar(value=0.0, color=Color.PROGRESS_ACTIVE, bgcolor=Color.PROGRESS_BACKGROUND, height=12)
         self.interventions_col = ft.Column(spacing=10)
+        self.main_container = ft.Column(
+            spacing=16,
+            controls=[
+                ft.Row(
+                    spacing=10,
+                    controls=[
+                        ft.Container(width=32, height=32, border_radius=10, bgcolor=Color.LIGHT_ACCENT, alignment=ft.Alignment.CENTER, content=ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=18)),
+                        Text.H4(self.lang["purchase_scanner.analysis_result"], weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT)
+                    ]
+                ),
+                self.result_box,
+                self.progress_bar,
+                self.interventions_col
+            ]
+        )
 
         super().__init__(
             bgcolor=Color.WHITE,
@@ -148,22 +176,11 @@ class ScannerResult(ft.Container):
             padding=22,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
-            content=ft.Column(
-                spacing=16,
-                controls=[
-                    ft.Row(
-                        spacing=10,
-                        controls=[
-                            ft.Container(width=32, height=32, border_radius=10, bgcolor=Color.LIGHT_ACCENT, alignment=ft.Alignment.CENTER, content=ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=18)),
-                            Text.H4(self.lang["purchase_scanner.analysis_result"], weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT)
-                        ]
-                    ),
-                    self.result_box,
-                    self.progress_bar,
-                    self.interventions_col
-                ]
-            )
+            content=self.main_container
         )
+
+    def resize(self, page_width: int):
+        self.main_container.width = max(page_width, 0)
 
     def set_loading_state(self):
         self.result_text.value = self.lang["purchase_scanner.waiting"]

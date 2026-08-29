@@ -1,6 +1,7 @@
 {
   "financial_chart.chart_title": "Tổng Quan Thu & Chi",
   "generic.all": "Tất cả",
+  "generic.amount": "Số tiền",
   "generic.cancel": "Huỷ",
   "generic.change_user": "Đăng xuất",
   "generic.complete": "Hoàn thành",
@@ -107,7 +108,6 @@
   "saving.add_money": "Thêm tiền",
   "saving.aggregate_portfolio_value": "Tổng giá trị danh mục",
   "saving.allocate_to_objective": "Chọn mục tiêu",
-  "saving.amount": "Số tiền",
   "saving.clear_history": "Xoá lịch sử",
   "saving.clear_history_desc": "Bạn có chắc chắn muốn xoá lịch sử không? Bạn có thể xuất dữ liệu trước khi xoá",
   "saving.clear_history_title": "Xoá lịch sử",

@@ -46,10 +46,10 @@ class PurchaseScannerView(ft.View):
         Logger.info("Rendering UI for Purchase Scanner page...")
 
         self.menu = Menu(self._page, self.lang, self.user_info)
-        self.top_navigation_bar = TopNavigationBar(current_user=self.user_info["username"])
+        self.top_navigation_bar = TopNavigationBar(page=self._page, lang=self.lang, current_user=self.user_info["username"])
 
-        self.form_card = ScannerForm(on_scan_click=self.handle_scan_click, lang=self.lang)
-        self.result_card = ScannerResult(lang=self.lang)
+        self.form_card = ScannerForm(page=self._page, lang=self.lang, on_scan_click=self.handle_scan_click)
+        self.result_card = ScannerResult(page=self._page, lang=self.lang)
 
         header_banner = ft.Container(
             bgcolor=Color.PRIMARY,
@@ -116,10 +116,7 @@ class PurchaseScannerView(ft.View):
         self.form_card.width = card_width
         self.result_card.width = card_width
 
-        try:
-            self.update()
-        except RuntimeError as e:
-            Logger.debug(f"Skipped updating during resize: {e}")
+        return e
 
 def get_scanner_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
     return PurchaseScannerView(page, lang, user_info)
