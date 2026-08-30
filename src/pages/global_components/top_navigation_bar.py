@@ -16,7 +16,7 @@ class TopNavigationBar(ft.Container):
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
                 ft.Image(
-                    src="assets/icon.png",
+                    src="icon.png",
                     height=26,
                     width=26,
                     border_radius=8
