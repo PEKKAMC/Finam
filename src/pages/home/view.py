@@ -2,6 +2,8 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from collections.abc import Callable
+
 import flet as ft
 
 from src.logger import Logger
@@ -15,7 +17,7 @@ Logger.info("Initializing Home page...")
 
 class HomeDialogManager:
     """Handles all dialog instantiation, states, and callbacks for the Home View."""
-    def __init__(self, page: ft.Page, lang: dict, controller: LogicController, refresh_callback):
+    def __init__(self, page: ft.Page, lang: dict, controller: LogicController, refresh_callback: Callable):
         self._page = page
         self.lang = lang
         self.controller = controller
@@ -204,7 +206,12 @@ class HomeView(ft.View):
         self.controller = LogicController(self.user_info["username"])
 
         # INITIALIZE DIALOG MANAGER
-        self.dialogs = HomeDialogManager(self._page, self.lang, self.controller, self.refresh_view)
+        self.dialogs = HomeDialogManager(
+            page=self._page,
+            lang=self.lang,
+            controller=self.controller,
+            refresh_callback=self.refresh_view
+        )
 
         # FETCH DASHBOARD DATA
         self.metrics, self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
@@ -213,11 +220,20 @@ class HomeView(ft.View):
             self.metrics["total_income"],
             self.metrics["total_expense"]
         )
-        self.objectives = self.controller.get_user_objectives() or []
+        self.objectives = self.controller.get_user_objectives()
 
         # INITIALIZE PAGE COMPONENTS
-        self.menu = Menu(self._page, self.lang, self.user_info)
-        self.top_navigation_bar = TopNavigationBar(page=self._page, lang=self.lang, current_user=self.user_info["username"])
+        self.menu = Menu(
+            page=self._page,
+            lang=self.lang,
+            user_info=self.user_info
+        )
+
+        self.top_navigation_bar = TopNavigationBar(
+            page=self._page,
+            lang=self.lang,
+            current_user=self.user_info["username"]
+        )
 
         self.balance_card = BalanceCard(
             page=self._page,
@@ -231,7 +247,14 @@ class HomeView(ft.View):
             on_scan_click=lambda e: self._page.go("/purchase_scanner")
         )
 
-        self.financial_chart = FinancialChart(page=self._page, lang=self.lang, chart_date=self.chart_date, chart_data=self.chart_data, chart_type=self.chart_type)
+        self.financial_chart = FinancialChart(
+            page=self._page,
+            lang=self.lang,
+            chart_date=self.chart_date,
+            chart_data=self.chart_data,
+            chart_type=self.chart_type
+        )
+
         self.savings_progress_card = SavingsProgressCard(
             page=self._page,
             lang=self.lang,
@@ -242,7 +265,10 @@ class HomeView(ft.View):
             lang=self.lang,
             category_data=self.metrics["category_expenses"]
         )
-        self.featured_lesson_card = FeaturedLessonCard(self._page, self.lang)
+        self.featured_lesson_card = FeaturedLessonCard(
+            page=self._page,
+            lang=self.lang
+        )
 
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
@@ -311,6 +337,14 @@ class HomeView(ft.View):
 
         self.main_container.width = page_width
 
+        self.menu.resize(
+            width=page_width
+        )
+
+        self.top_navigation_bar.resize(
+            width=page_width
+        )
+
         self.dialogs.action_dialog.resize(
             dialog_width=int(page_width * 0.5),
             button_width=int(page_width * 0.4),
@@ -320,9 +354,6 @@ class HomeView(ft.View):
         self.dialogs.category_dialog.resize(
             dialog_width=int(page_width * 0.9),
         )
-
-        self.menu.resize(page_width)
-        self.top_navigation_bar.resize(page_width)
 
         return e
 

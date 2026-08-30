@@ -6,26 +6,17 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import Menu, TopNavigationBar
-from src.pages.lesson.components import LessonGrid, LessonSummaryBanner
-from src.pages.lesson.logic import LogicController
+from src.pages.settings.components import SettingsTemporaryMessageBox
 from src.utils import Color, UISettings
 
-Logger.info("Initializing Lesson page...")
+Logger.info("Initializing Settings page...")
 
 
-class LessonView(ft.View):
+class SettingsView(ft.View):
     def __init__(self, page: ft.Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
-
-        # INITIALIZE PAGE CONTROLLER
-        self.controller = LogicController(user_info["username"])
-
-        # LOAD LESSON DATA
-        self.available_lessons = []
-        self.load_data()
-        stats = self.controller.get_user_statistics(self.available_lessons)
 
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
@@ -40,26 +31,16 @@ class LessonView(ft.View):
             current_user=self.user_info["username"]
         )
 
-        self.summary_banner = LessonSummaryBanner(
+        # Temporary message box
+        self.text_box = SettingsTemporaryMessageBox(
             page=self._page,
-            lang=self.lang,
-            total_lessons=stats["total_lessons"],
-            completed_lessons=stats["completed_lessons"],
-            total_minutes=stats["total_minutes"],
-            completion_pct=stats["completion_percentage"]
-        )
-
-        self.lesson_grid = LessonGrid(
-            page=self._page,
-            lang=self.lang,
-            lessons=self.available_lessons
+            lang=self.lang
         )
 
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                spacing=20,
                 controls=[
                     ft.Container(
                         width=UISettings.MAX_APP_WIDTH,
@@ -68,8 +49,7 @@ class LessonView(ft.View):
                             spacing=20,
                             expand=True,
                             controls=[
-                                self.summary_banner,
-                                self.lesson_grid
+                                self.text_box
                             ]
                         )
                     )
@@ -81,7 +61,7 @@ class LessonView(ft.View):
         )
 
         super().__init__(
-            route="/lessons",
+            route="/settings",
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
@@ -98,14 +78,12 @@ class LessonView(ft.View):
         self._page.on_resize = self.on_page_resize
         self.on_page_resize()
 
-    def load_data(self):
-        Logger.info("Loading lesson data...")
-        self.available_lessons = self.controller.load_available_lessons()
-
-    def get_safe_page_size(self) -> tuple[int, int]:
+    def get_safe_page_size(self) -> tuple[int, int]: # -> (width, height)
+        # Get page width and height if available, return fallback values otherwise
         current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
         current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
 
+        # Make sure width and height don't exceed max values
         safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
         safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
 
@@ -124,8 +102,11 @@ class LessonView(ft.View):
             width=page_width
         )
 
+        self.text_box.resize(
+            size=int(min(page_width, page_height) * 0.7)
+        )
+
         return e
 
-
-def get_lesson_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
-    return LessonView(page, lang, user_info)
+def get_settings_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+    return SettingsView(page, lang, user_info)

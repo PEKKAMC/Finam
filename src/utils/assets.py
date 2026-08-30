@@ -17,9 +17,9 @@ class TranslationDict(dict):
 
 def get_asset_path(relative_path) -> str:
     if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-        base_path = Path(sys._MEIPASS) / "src/assets"
+        base_path = Path(sys._MEIPASS) / "assets"
     else:
-        base_path = Path(__file__).resolve().parent.parent.parent / "src/assets"
+        base_path = Path(__file__).resolve().parent.parent.parent / "assets"
 
     return str(base_path / relative_path)
 

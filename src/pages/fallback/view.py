@@ -68,16 +68,25 @@ class FallbackView(ft.View):
             case _:
                 return self.lang["fallback.default"]
 
+    def get_safe_page_size(self) -> tuple[int, int]: # -> (width, height)
+        # Get page width and height if available, return fallback values otherwise
+        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
+        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
+
+        # Make sure width and height don't exceed max values
+        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
+        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
+
+        return safe_width, safe_height
+
     def on_page_resize(self, e=None):
-        current_width: int = int(self._page.width or UISettings.MAX_APP_WIDTH)
-        current_height: int = int(self._page.height or UISettings.MAX_APP_HEIGHT)
+        page_width, page_height = self.get_safe_page_size()
 
-        safe_width: int = min(current_width, UISettings.MAX_APP_WIDTH)
-        safe_height: int = min(current_height, UISettings.MAX_APP_HEIGHT)
+        self.main_container.width = page_width
 
-        self.main_container.width = safe_width
-        self.main_container.height = safe_height
-        self.message_box.resize(safe_width, safe_height)
+        self.message_box.resize(
+            size=int(min(page_width, page_height) * 0.7)
+        )
 
         return e
 

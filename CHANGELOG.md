@@ -1,3 +1,37 @@
+# Finam v0.2.1-alpha
+
+**Release Date:** August 30, 2026
+
+> **⚠️ ALPHA WARNING: Read Before Using**
+>
+> This is an early alpha release intended for testing and development purposes only. While most core features are present in the UI, **many systems are highly unstable**. You *will* experience unwanted behaviors, application crashes, softlocks, and incomplete processes.
+>
+> *Please do not use this version to store sensitive or critical financial data, as local database corruption is possible.*
+
+## Changes in this version
+
+*   Soft-added settings page.
+*   Moved assets folder back outside of src folder, as the previous change has been proven to be quite a bad decision.
+*   Package src.pages.global_components.settings_button was removed, moving SettingsButton to src.pages.global_components.top_navigation_bar package
+
+## Bug fixes in this version
+
+*   Fixed app crashes instantly upon launch.
+*   Version metadata gets updated correcly.
+*   All pages now initalize only once.
+*   Settings button no longer redirects to fallback page.
+*   Fixed many minor issues for the previous version.
+
+##  Known Issues & Instability
+
+*   Some actions may cause softlocks or crashes.
+*   Lesson player and lesson editor UI haven't been updated to match the format in v0.2.0-alpha, rendering both unusable.
+*   The Purchase Scanner AI hasn't been fully implemented.
+*   Many actions that supposed to update the page don't do that.
+*   Some elements might be obstructed by the operating system.
+*   Some transaction features are broken.
+*   Various UI elements may not scale perfectly on all screen sizes.
+
 # Finam v0.2.0-alpha
 
 **Release Date:** August 29, 2026

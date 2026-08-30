@@ -38,8 +38,8 @@ class ReturnButton(ft.Row):
 class NotSupportedMessageBox(ft.Container):
     def __init__(self, page: ft.Page, lang: dict, message: str):
         self._page = page
-        self.lang: dict = lang
-        self.message: str = message
+        self.lang = lang
+        self.message = message
 
         self.message_box: ft.Container = ft.Container(
             content=ft.Column(
@@ -62,7 +62,6 @@ class NotSupportedMessageBox(ft.Container):
             alignment=ft.Alignment.CENTER,
         )
 
-    def resize(self, width: int, height: int):
-        size: int = int(min(width, height) * 0.7)
+    def resize(self, size: int):
         self.width = size
         self.height = size

@@ -4,9 +4,7 @@
 
 import flet as ft
 
-from src.pages.global_components.settings_button import SettingsButton
 from src.utils import Color, Text, UISettings
-
 
 class TopNavigationBar(ft.Container):
     def __init__(self, page: ft.Page, lang: dict, current_user: str = ""):
@@ -18,7 +16,7 @@ class TopNavigationBar(ft.Container):
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
                 ft.Image(
-                    src="src/assets/icon.png",
+                    src="assets/icon.png",
                     height=26,
                     width=26,
                     border_radius=8
@@ -38,7 +36,13 @@ class TopNavigationBar(ft.Container):
             ]
         )
 
-        self.settings_button = SettingsButton(page=self._page, lang=self.lang)
+        self.settings_button = ft.IconButton(
+            icon=ft.Icons.SETTINGS,
+            icon_color=Color.BLACK,
+            icon_size=30,
+            on_click=self.on_clicking_setting,
+            alignment=ft.Alignment.CENTER
+        )
 
         self.main_container = ft.Container(
             content=ft.Row(
@@ -60,6 +64,10 @@ class TopNavigationBar(ft.Container):
             content=self.main_container,
             width=UISettings.MAX_APP_WIDTH,
         )
+
+    async def on_clicking_setting(self):
+        if self._page:
+            await self._page.push_route("/settings")
 
     def resize(self, width: int) -> None:
         self.main_container.width = width

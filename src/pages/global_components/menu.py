@@ -63,7 +63,7 @@ class Menu(ft.Container):
 
     async def change_user(self, e=None):
         await self._page.push_route("/login")
-        self.user_info["username"] = None
+        self.user_info["username"] = ""
         return e
 
     @staticmethod

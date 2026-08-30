@@ -31,7 +31,7 @@ copyright = "Copyright (C) 2026 by PEKKAMC"
 
 [tool.flet.app]
 path = ""
-assets = "src/assets"
+assets = "assets"
 exclude = [
     "venv",
     ".venv",
@@ -54,4 +54,4 @@ where = ["."]
 include = ["src*"]
 
 [tool.setuptools.package-data]
-"*" = ["src/assets/**", "*.db", "*.png", "*.json"]
+"*" = ["assets/**", "*.db", "*.png", "*.json"]

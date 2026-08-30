@@ -8,17 +8,27 @@ import os
 from src.logger import Logger
 from src.utils import get_asset_path
 
+
 class LogicController:
     def __init__(self, current_user: str):
         self.current_user = current_user
 
     @staticmethod
-    def get_user_statistics() -> dict:
+    def get_user_statistics(available_lessons: list | None = None) -> dict:
+        lessons = available_lessons or []
+        total_lessons = len(lessons)
+        completed_lessons = sum(1 for lesson in lessons if lesson.get("is_completed", False))
+        total_minutes = sum(15 for lesson in lessons if lesson.get("is_completed", False))
+        completion_percentage = int((completed_lessons / total_lessons * 100)) if total_lessons > 0 else 0
+
         return {
-            "completion_percentage": 0,
-            "completion_decimal": 0,
-            "learning_hours": 0,
-            "certificates_earned": 0
+            "total_lessons": total_lessons,
+            "completed_lessons": completed_lessons,
+            "total_minutes": total_minutes,
+            "completion_percentage": completion_percentage,
+            "completion_decimal": completion_percentage / 100.0 if total_lessons > 0 else 0.0,
+            "learning_hours": total_minutes / 60,
+            "certificates_earned": 0,
         }
 
     @staticmethod

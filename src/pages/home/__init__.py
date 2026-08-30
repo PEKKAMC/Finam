@@ -12,7 +12,7 @@ __all__ = [
     "ActionSelectionDialog",
     "BalanceCard",
     "SavingsProgressCard",
-    "ExpensePieChartCard"
+    "ExpensePieChartCard",
     "FeaturedLessonCard",
     "LogicController",
     "HomeView",

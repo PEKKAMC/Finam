@@ -60,7 +60,10 @@ class LessonItemCard(ft.Container):
                     gradient=ft.LinearGradient(
                         begin=ft.Alignment.TOP_CENTER,
                         end=ft.Alignment.BOTTOM_CENTER,
-                        colors=["rgba(2, 6, 23, 0.2)", "rgba(2, 6, 23, 0.9)"]
+                        colors=[
+                            ft.Colors.with_opacity(0.2, "#020617"),
+                            ft.Colors.with_opacity(0.9, "#020617")
+                        ]
                     ),
                     padding=12,
                     content=ft.Column(
@@ -108,6 +111,7 @@ class LessonItemCard(ft.Container):
                 ]
             )
         )
+
         self.main_container = ft.Column(
             spacing=0,
             controls=[self.cover_container, self.content_panel]
@@ -126,4 +130,122 @@ class LessonItemCard(ft.Container):
         )
 
     def resize(self, width: int) -> None:
-        self.main_container.width = max(width, 0)
+        self.main_container.width = width
+
+
+class LessonSummaryBanner(ft.Container):
+    def __init__(self, page: ft.Page, lang: dict, total_lessons: int, completed_lessons: int, total_minutes: int, completion_pct: int):
+        self._page = page
+        self.lang = lang
+
+        self.summary_banner_row = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            wrap=True,
+            controls=[
+                ft.Column(
+                    spacing=6,
+                    controls=[
+                        ft.Container(
+                            content=Text.SMALL("HỌC VIỆN TÀI CHÍNH FINAM", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                            bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
+                            padding=ft.Padding(12, 4, 12, 4),
+                            border_radius=16,
+                            border=ft.Border.all(1, ft.Colors.with_opacity(0.3, Color.PRIMARY))
+                        ),
+                        Text.H2("Tư Duy & Kiến Thức Quản Lý Tiền", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                        Text.SMALL("Cung cấp các bài học cô đọng giúp bạn đưa ra các quyết định chi tiêu thông minh hơn", color=Color.LIGHT_ACCENT)
+                    ]
+                ),
+                ft.Row(
+                    spacing=12,
+                    controls=[
+                        ft.Container(
+                            padding=12,
+                            border_radius=16,
+                            bgcolor=ft.Colors.with_opacity(0.1, Color.WHITE),
+                            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, Color.WHITE)),
+                            alignment=ft.Alignment.CENTER,
+                            content=ft.Column(
+                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                spacing=2,
+                                controls=[
+                                    Text.H3(f"{completed_lessons}/{total_lessons}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                                    Text.SMALL("BÀI HOÀN THÀNH", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+                                ]
+                            )
+                        ),
+                        ft.Container(
+                            padding=12,
+                            border_radius=16,
+                            bgcolor=ft.Colors.with_opacity(0.1, Color.WHITE),
+                            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, Color.WHITE)),
+                            alignment=ft.Alignment.CENTER,
+                            content=ft.Column(
+                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                spacing=2,
+                                controls=[
+                                    Text.H3(f"{total_minutes} phút", color=ft.Colors.AMBER_300 if hasattr(ft.Colors, 'AMBER_300') else "#FCD34D", weight=ft.FontWeight.BOLD),
+                                    Text.SMALL("ĐÃ TÍCH LŨY", color=ft.Colors.AMBER_200 if hasattr(ft.Colors, 'AMBER_200') else "#FDE68A", weight=ft.FontWeight.BOLD)
+                                ]
+                            )
+                        ),
+                    ]
+                )
+            ]
+        )
+
+        self.progress_bar = ft.Container(
+            bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
+            border_radius=12,
+            padding=2,
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, Color.PRIMARY)),
+            content=ft.ProgressBar(
+                value=completion_pct / 100.0 if total_lessons > 0 else 0.0,
+                color=Color.LIGHT_ACCENT,
+                bgcolor=Color.TRANSPARENT,
+                height=8
+            )
+        )
+
+        super().__init__(
+            bgcolor=Color.PRIMARY,
+            border_radius=24,
+            padding=24,
+            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
+            content=ft.Column(
+                spacing=20,
+                controls=[
+                    self.summary_banner_row,
+                    self.progress_bar
+                ]
+            )
+        )
+
+
+class LessonGrid(ft.ResponsiveRow):
+    def __init__(self, page: ft.Page, lang: dict, lessons: list):
+        self._page = page
+        self.lang = lang
+
+        lesson_cards = [
+            LessonItemCard(
+                page=self._page,
+                lang=self.lang,
+                title=lesson["title"],
+                subtitle=lesson["subtitle"],
+                cover_image=lesson["cover_image"],
+                is_completed=lesson["is_completed"],
+                route=lesson["route"]
+            )
+            for lesson in lessons
+        ]
+
+        super().__init__(
+            spacing=20,
+            run_spacing=20,
+            controls=[
+                ft.Container(content=card, col={"xs": 12, "sm": 6, "lg": 4})
+                for card in lesson_cards
+            ]
+        )
