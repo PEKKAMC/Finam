@@ -1,6 +1,6 @@
 # Finam v0.2.1-alpha
 
-**Release Date:** August 30, 2026
+**Release Date:** August 31, 2026
 
 > **⚠️ ALPHA WARNING: Read Before Using**
 >
@@ -13,6 +13,7 @@
 *   Soft-added settings page.
 *   Moved assets folder back outside of src folder, as the previous change has been proven to be quite a bad decision.
 *   Package src.pages.global_components.settings_button was removed, moving SettingsButton to src.pages.global_components.top_navigation_bar package
+*   Improved build workflow.
 
 ## Bug fixes in this version
 
@@ -25,7 +26,7 @@
 ##  Known Issues & Instability
 
 *   Some actions may cause softlocks or crashes.
-*   Lesson player and lesson editor UI haven't been updated to match the format in v0.2.0-alpha, rendering both unusable.
+*   Lesson player and lesson editor UI haven't been updated to match the new format in v0.2.0-alpha, rendering both unusable.
 *   The Purchase Scanner AI hasn't been fully implemented.
 *   Many actions that supposed to update the page don't do that.
 *   Some elements might be obstructed by the operating system.

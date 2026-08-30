@@ -4,22 +4,41 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-android:
-    name: Build Android (APK & AAB)
+  prepare:
+    name: Extract Version
     runs-on: ubuntu-latest
-
+    outputs:
+      app_version: ${{ steps.extract.outputs.version }}
+      raw_version: ${{ steps.extract.outputs.raw_version }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Get Version from pyproject.toml
+        id: extract
+        run: |
+          RAW_VERSION=$(grep -m 1 '^version = ' pyproject.toml | cut -d '"' -f 2)
+          FORMATTED_VERSION="v${RAW_VERSION}-alpha"
+          
+          echo "raw_version=$RAW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "version=$FORMATTED_VERSION" >> "$GITHUB_OUTPUT"
+
+  build-apk:
+    name: Build Android (APK)
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '25'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Accept Android Licenses
         run: |
@@ -27,7 +46,7 @@ jobs:
           sdkmanager "build-tools;34.0.0" "platforms;android-34"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.14'
 
@@ -37,32 +56,70 @@ jobs:
           pip install flet
 
       - name: Build APK
-        run: flet build apk --build-version 0.0.1 --module-name main --yes -v
+        run: flet build apk --build-version ${{ needs.prepare.outputs.raw_version }} --module-name main --yes -v
 
-      - name: Build AAB (App Bundle)
-        run: flet build aab --build-version 0.0.1 --module-name main --yes -v
+      - name: Rename APK
+        run: mv build/apk/Finam.apk build/apk/Finam-${{ needs.prepare.outputs.app_version }}.apk
 
-      - name: Generate Checksums
-        run: |
-          cd build
-          sha256sum apk/*.apk aab/*.aab > checksums-android.txt
-
-      - name: Upload Android Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload Temp APK
+        uses: actions/upload-artifact@v5
         with:
-          name: flet-android-builds
-          path: |
-            build/apk/Finam.apk
-            build/aab/Finam.aab
-            build/checksums-android.txt
+          name: temp-apk
+          path: build/apk/Finam-${{ needs.prepare.outputs.app_version }}.apk
+          if-no-files-found: error
+
+  build-aab:
+    name: Build Android (AAB)
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '25'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Accept Android Licenses
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "build-tools;34.0.0" "platforms;android-34"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Install Flet
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet
+
+      - name: Build AAB
+        run: flet build aab --build-version ${{ needs.prepare.outputs.raw_version }} --module-name main --yes -v
+
+      - name: Rename AAB
+        run: mv build/aab/Finam.aab build/aab/Finam-${{ needs.prepare.outputs.app_version }}.aab
+
+      - name: Upload Temp AAB
+        uses: actions/upload-artifact@v5
+        with:
+          name: temp-aab
+          path: build/aab/Finam-${{ needs.prepare.outputs.app_version }}.aab
+          if-no-files-found: error
 
   build-ios:
     name: Build iOS (IPA)
+    needs: prepare
     runs-on: macos-latest
-
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -70,7 +127,7 @@ jobs:
           channel: 'stable'
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.14'
 
@@ -80,20 +137,43 @@ jobs:
           pip install flet
 
       - name: Build IPA (Generates xcarchive)
-        run: flet build ipa --build-version 0.0.1 --module-name main --yes -v
+        run: flet build ipa --build-version ${{ needs.prepare.outputs.raw_version }} --module-name main --yes -v
 
-      - name: Convert to Sideloadable IPA & Generate Checksum
+      - name: Convert to Sideloadable IPA & Rename
         run: |
           mkdir -p Payload
           mv build/ipa/*.xcarchive/Products/Applications/*.app Payload/
-          zip -qr Finam.ipa Payload
-          
-          shasum -a 256 Finam.ipa > checksums-ios.txt
+          zip -qr Finam-${{ needs.prepare.outputs.app_version }}.ipa Payload
 
-      - name: Upload iOS Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload Temp IPA
+        uses: actions/upload-artifact@v5
         with:
-          name: ios-release-artifacts
+          name: temp-ios
+          path: Finam-${{ needs.prepare.outputs.app_version }}.ipa
+          if-no-files-found: error
+
+  package-artifacts:
+    name: Package and Generate Checksum
+    needs: [prepare, build-apk, build-aab, build-ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all temp artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: .
+          merge-multiple: true
+
+      - name: Generate Checksums
+        run: |
+          sha256sum Finam-${{ needs.prepare.outputs.app_version }}.apk Finam-${{ needs.prepare.outputs.app_version }}.aab Finam-${{ needs.prepare.outputs.app_version }}.ipa > checksums.txt
+          cat checksums.txt
+
+      - name: Upload Final Artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: mobile-release-artifacts
           path: |
-            Finam.ipa
-            checksums-ios.txt
+            Finam-${{ needs.prepare.outputs.app_version }}.apk
+            Finam-${{ needs.prepare.outputs.app_version }}.aab
+            Finam-${{ needs.prepare.outputs.app_version }}.ipa
+            checksums.txt
