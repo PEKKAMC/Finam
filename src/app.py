@@ -31,7 +31,7 @@ async def redirect_to_fallback(page: ft.Page, lang: dict, fallback_reason: str) 
     page.views.append(get_fallback_view(page, lang, fallback_reason))
 
 
-async def main(page: ft.Page) -> None:
+async def main(page: ft.Page):
     db.initialize_database()
 
     lang: dict = get_language("vi")
@@ -104,10 +104,14 @@ async def main(page: ft.Page) -> None:
         page.update()
         return e
 
-    async def on_error(e: ft.ControlEvent) -> None:
+    async def on_error(e: ft.ControlEvent) -> ft.ControlEvent:
         Logger.critical(f"Unexpected error occurred: {e}")
         Logger.info("Attempting to restart application...")
-        exit(-1)
+
+        os.environ["RESTART_FINAM"] = "1"
+
+        await page.window.close()
+        return e
 
     page.on_error = on_error
     page.on_route_change = route_change

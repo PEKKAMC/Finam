@@ -1,6 +1,6 @@
 [project]
 name = "Finam"
-version = "0.1.3"
+version = "0.2.1"
 description = "Financial Learning App"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -13,7 +13,7 @@ dependencies = [
     "flet-charts>=0.86.5",
     "colorlog>=6.12.0",
     "openpyxl>=3.1.5",
-    "google-genai>=2.15.0"
+    "google-genai>=2.16.0"
 ]
 
 [dependency-groups]
@@ -31,7 +31,7 @@ copyright = "Copyright (C) 2026 by PEKKAMC"
 
 [tool.flet.app]
 path = ""
-assets = "assets"
+assets = "src/assets"
 exclude = [
     "venv",
     ".venv",
@@ -54,4 +54,4 @@ where = ["."]
 include = ["src*"]
 
 [tool.setuptools.package-data]
-"*" = ["assets/**", "*.db", "*.png", "*.json"]
+"*" = ["src/assets/**", "*.db", "*.png", "*.json"]
