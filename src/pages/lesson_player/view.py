@@ -1,4 +1,4 @@
-# Copyright (c) 2026 PEKKAMC
+﻿# Copyright (c) 2026 PEKKAMC
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
@@ -8,9 +8,11 @@ import re
 
 import flet as ft
 
-from src.utils import Color, create_text
+from src.utils import Color, create_text, Text
 from src.pages.lesson_player.logic import LogicController, AudioController, AnimationController, ENTRANCE_EFFECTS
 from src.pages.lesson_player.components import TopNavigationMenu, SlideCanvas, LessonHeader, LessonControls, PresentationBoard
+from src.utils import UISettings
+
 
 class LessonPlayerView(ft.View):
     def __init__(self, page: ft.Page, lang: dict, user_info_information: dict, target_lesson_filename: str = ""):
@@ -23,15 +25,16 @@ class LessonPlayerView(ft.View):
         self.lesson_logic = LogicController(target_lesson_filename)
         self.animation_controller = AnimationController(self._page, self.audio_controller)
 
-        self.top_navigation_menu = TopNavigationMenu(on_return_click=self.handle_return_click)
-        self.slide_canvas = SlideCanvas()
-        self.lesson_header = LessonHeader(self.lesson_logic.lesson_title)
+        self.top_navigation_menu = TopNavigationMenu(page=self._page, lang=self.lang, on_return_click=self.handle_return_click)
+        self.slide_canvas = SlideCanvas(page=self._page, lang=self.lang)
+        self.lesson_header = LessonHeader(page=self._page, lang=self.lang, default_title=self.lesson_logic.lesson_title)
         self.lesson_controls = LessonControls(
-            self.lang,
+            page=self._page,
+            lang=self.lang,
             on_previous_click=self.handle_previous_slide,
             on_next_click=self.handle_next_slide
         )
-        self.presentation_board = PresentationBoard(self.lesson_header, self.lesson_controls, self.slide_canvas)
+        self.presentation_board = PresentationBoard(self._page, self.lang, self.lesson_header, self.lesson_controls, self.slide_canvas)
 
         self.center_alignment_container = ft.Container(
             content=ft.Column(spacing=25, controls=[self.top_navigation_menu, self.presentation_board]),
@@ -67,7 +70,7 @@ class LessonPlayerView(ft.View):
         self._page.on_disconnect = self.cleanup_audio_resources
 
     def display_snackbar_message(self, message_text: str, background_color: str):
-        snackbar_control = ft.SnackBar(create_text(message_text, scale=0.047, min_size=12, max_size=18), bgcolor=background_color)
+        snackbar_control = ft.SnackBar(Text.P(message_text), bgcolor=background_color)
         self._page.overlay.append(snackbar_control)
         snackbar_control.open = True
         self._page.update()
@@ -99,19 +102,14 @@ class LessonPlayerView(ft.View):
 
             if is_text_element:
                 target_width = self.animation_controller.safe_convert_to_float(element_data.get("width"), 300.0)
-                font_size = self.animation_controller.safe_convert_to_float(element_data.get("size"), 16.0)
+                font_size = int(element_data.get("size")) or 16
                 raw_text_content = element_data.get("content", "")
-                clean_text_content = re.sub(r'\{pause:[\d.]+}', '', raw_text_content)
-
-                try:
-                    scale_from_size = max(0.02, min(0.3, float(font_size) / 300.0))
-                except Exception:
-                    scale_from_size = 0.047
+                clean_text_content = re.sub(r'\{pause:[\d.]+\}', '', raw_text_content)
 
                 if entrance_effect == "Wipe":
-                    visual_control = create_text("", scale=scale_from_size, min_size=9, max_size=14, color=Color.DEFAULT_TEXT, width=target_width)
+                    visual_control = create_text("", size=font_size, color=Color.DEFAULT_TEXT, width=target_width)
                 else:
-                    visual_control = create_text(clean_text_content, scale=scale_from_size, min_size=9, max_size=14, color=Color.DEFAULT_TEXT, width=target_width)
+                    visual_control = create_text(clean_text_content, size=font_size, color=Color.DEFAULT_TEXT, width=target_width)
 
             elif is_divider_element:
                 target_width = self.animation_controller.safe_convert_to_float(element_data.get("width"), 300.0)
@@ -221,11 +219,13 @@ class LessonPlayerView(ft.View):
         finally:
             self.is_constructing_slide = False
 
-    async def handle_next_slide(self, event):
+    async def handle_next_slide(self, e):
         await self.change_slide_wrapper(1)
+        return e
 
-    async def handle_previous_slide(self, event):
+    async def handle_previous_slide(self, e):
         await self.change_slide_wrapper(-1)
+        return e
 
     async def initialize_lesson_from_path(self, filepath: str):
         success = self.lesson_logic.load_lesson_data(filepath)
@@ -249,10 +249,11 @@ class LessonPlayerView(ft.View):
         initial_sequence_identifier = self.animation_controller.start_new_sequence()
         await self.build_and_play_current_slide(initial_sequence_identifier)
 
-    async def handle_return_click(self, event=None):
+    async def handle_return_click(self, e):
         self.animation_controller.start_new_sequence()
         await self.audio_controller.pause()
         await self._page.push_route("/lessons")
+        return e
 
     async def cleanup_audio_resources(self, event):
         self.animation_controller.start_new_sequence()
@@ -279,14 +280,20 @@ class LessonPlayerView(ft.View):
         if self.audio_controller.active_audio and self.audio_controller.active_audio in self._page.services:
             self._page.services.remove(self.audio_controller.active_audio)
 
-    def handle_page_resize(self, event) -> None:
-        current_width = self._page.width if event is None else event.width
-        current_height = self._page.height if event is None else event.height
-        if not current_width: current_width = 650
-        if not current_height: current_height = 900
+    def get_safe_page_size(self) -> tuple[int, int]:
+        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
+        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
 
-        safe_width_value = min(current_width, 650)
-        safe_height_value = max(600, current_height - 100)
+        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
+        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
+        return safe_width, safe_height
+
+    def handle_page_resize(self, event) -> None:
+        page_width, page_height = self.get_safe_page_size()
+
+        # Keep legacy safe caps for content sizing
+        safe_width_value = min(page_width, 650)
+        safe_height_value = max(600, page_height - 100)
 
         try:
             self.center_alignment_container.width = safe_width_value
@@ -299,5 +306,5 @@ class LessonPlayerView(ft.View):
 
         return event
 
-def get_lesson_player_view(page: ft.Page, lang: dict, user_info_information: dict, target_lesson_filename: str = None) -> ft.View:
+def get_lesson_player_view(page: ft.Page, lang: dict, user_info_information: dict, target_lesson_filename: str = "") -> ft.View:
     return LessonPlayerView(page, lang, user_info_information, target_lesson_filename)

@@ -195,9 +195,9 @@ class LogicController:
         transactions = {}
         combined_list = []
         for expense in expenses:
-            combined_list.append({"date": expense["date"], "title": expense["category"], "subtitle": expense["note"] if expense["note"] else "Expense", "amount": expense["amount"], "is_income": False})
+            combined_list.append({"id": expense["id"], "date": expense["date"], "title": expense["category"], "subtitle": expense["note"] if expense["note"] else "Expense", "amount": expense["amount"], "is_income": False})
         for income in incomes:
-            combined_list.append({"date": income["date"], "title": income["category"], "subtitle": income.get("note", ""), "amount": income.get("amount", 0), "is_income": True})
+            combined_list.append({"id": income["id"], "date": income["date"], "title": income["category"], "subtitle": income.get("note", ""), "amount": income.get("amount", 0), "is_income": True})
 
         combined_list.sort(key=lambda x: x["date"], reverse=True)
         today = datetime.now().date()
@@ -217,6 +217,7 @@ class LogicController:
             icon = ft.Icons.ACCOUNT_BALANCE
 
             transactions[date_key].append({
+                "id": item["id"],
                 "title": title, "subtitle": subtitle,
                 "amount": f"+{item['amount']:,} VND" if item["is_income"] else f"-{item['amount']:,} VND",
                 "icon": icon, "positive": item["is_income"]

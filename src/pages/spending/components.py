@@ -46,7 +46,7 @@ class MetricCards(ft.ResponsiveRow):
             )
 
         self.main_container = ft.Container(
-            content=ft.Row(
+            content=ft.Column(
                 spacing=16,
                 controls=[
                     card(
@@ -87,14 +87,16 @@ class MetricCards(ft.ResponsiveRow):
 
 
 class TransactionToolbar(ft.Container):
-    """Filter, Search, and Action Toolbar matching the TSX design."""
-    def __init__(self, page: ft.Page, lang: dict, filter_type: str, on_filter_change, on_search_change, on_category_change, categories: list, on_add_click: Callable):
+    """Filter, Search, and Action Toolbar"""
+    def __init__(self, page: ft.Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_category_change: Callable, categories: list, on_add_expense_click: Callable, on_add_income_click: Callable, search_query: str = "", selected_category: str = "all"):
         self._page = page
         self.lang = lang
         self.on_filter = on_filter_change
         self.on_search = on_search_change
         self.on_category = on_category_change
         self.filter_type = filter_type
+        self.search_query = search_query
+        self.selected_category = selected_category
 
         def filter_btn(label: str, f_type: str, active_bg: str):
             is_active = (self.filter_type == f_type)
@@ -110,6 +112,8 @@ class TransactionToolbar(ft.Container):
             )
 
         category_options = [ft.dropdown.Option("all", "Tất cả danh mục chi/thu")] + [ft.dropdown.Option(c, c) for c in (categories or [])]
+        valid_cat_keys = [opt.key for opt in category_options]
+        dropdown_value = self.selected_category if self.selected_category in valid_cat_keys else "all"
 
         self.main_container = ft.Column(
             spacing=16,
@@ -126,21 +130,42 @@ class TransactionToolbar(ft.Container):
                                 filter_btn("Khoản thu (+)", "income", "#1A4734")
                             ]
                         ),
-                        ft.Button(
-                            content=ft.Row(
-                                spacing=8,
-                                controls=[
-                                    ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=18),
-                                    Text.MEDIUM("Thêm Giao Dịch", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
-                                ],
-                                tight=True
-                            ),
-                            bgcolor="#1A4734",
-                            on_click=on_add_click,
-                            style=ft.ButtonStyle(
-                                shape=ft.RoundedRectangleBorder(radius=16),
-                                padding=12
-                            )
+                        ft.Row(
+                            spacing=6,
+                            controls=[
+                                ft.Button(
+                                    content=ft.Row(
+                                        spacing=8,
+                                        controls=[
+                                            ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=18),
+                                            Text.MEDIUM("Thêm Khoản Chi", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+                                        ],
+                                        tight=True
+                                    ),
+                                    bgcolor="#E90C00",
+                                    on_click=on_add_expense_click,
+                                    style=ft.ButtonStyle(
+                                        shape=ft.RoundedRectangleBorder(radius=16),
+                                        padding=12
+                                    )
+                                ),
+                                ft.Button(
+                                    content=ft.Row(
+                                        spacing=8,
+                                        controls=[
+                                            ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=18),
+                                            Text.MEDIUM("Thêm Khoản Thu", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+                                        ],
+                                        tight=True
+                                    ),
+                                    bgcolor="#1A4734",
+                                    on_click=on_add_income_click,
+                                    style=ft.ButtonStyle(
+                                        shape=ft.RoundedRectangleBorder(radius=16),
+                                        padding=12
+                                    )
+                                )
+                            ]
                         )
                     ]
                 ),
@@ -151,6 +176,7 @@ class TransactionToolbar(ft.Container):
                         ft.Container(
                             col={"xs": 12, "sm": 6},
                             content=ft.TextField(
+                                value=self.search_query,
                                 hint_text="Tìm theo từ khóa, ghi chú, số tiền...",
                                 prefix_icon=ft.Icons.SEARCH,
                                 on_change=lambda e: self.on_search(e.control.value) if self.on_search else None,
@@ -167,7 +193,7 @@ class TransactionToolbar(ft.Container):
                             content=ft.Dropdown(
                                 leading_icon=ft.Icons.TAG,
                                 options=category_options,
-                                value="all",
+                                value=dropdown_value,
                                 on_select=lambda e: self.on_category(e.control.value) if self.on_category else None,
                                 bgcolor=Color.CARD_BACKGROUND,
                                 border_color=Color.INPUT_BORDER,
@@ -203,7 +229,6 @@ class TransactionItemCard(ft.Container):
         self.on_delete = on_delete
         is_income = self.tx.get("positive", False)
         amount_color = "#1A4734" if is_income else "#E90C00"
-        amount_prefix = "+" if is_income else "-"
         icon_bg = "#DAF1DE" if is_income else "#FEE2E2"
         icon_color = "#1A4734" if is_income else "#E90C00"
         icon = ft.Icons.NORTH_EAST if is_income else ft.Icons.SOUTH_EAST
@@ -212,6 +237,7 @@ class TransactionItemCard(ft.Container):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
                 ft.Row(
+                    expand=True,
                     spacing=14,
                     controls=[
                         ft.Container(
@@ -253,7 +279,7 @@ class TransactionItemCard(ft.Container):
                 ft.Row(
                     spacing=12,
                     controls=[
-                        Text.MEDIUM(f"{amount_prefix}{self.tx['amount']}", color=amount_color, weight=ft.FontWeight.BOLD),
+                        Text.MEDIUM(f"{self.tx['amount']}", color=amount_color, weight=ft.FontWeight.BOLD),
                         *(
                             [
                                 ft.IconButton(

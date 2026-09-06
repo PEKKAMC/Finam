@@ -343,11 +343,11 @@ class SpendingDatabase:
 
     def get_user_expenses(self, username: str) -> list:
         rows = self.db.execute(
-            "SELECT e.amount, e.category, e.date, e.note FROM expenses e JOIN users u ON e.user_id = u.id WHERE u.name = ? ORDER BY e.date DESC",
+            "SELECT e.id, e.amount, e.category, e.date, e.note FROM expenses e JOIN users u ON e.user_id = u.id WHERE u.name = ? ORDER BY e.date DESC",
             (username,),
             fetch_all=True
         )
-        return [{"amount": row[0], "category": row[1], "date": row[2], "note": row[3]} for row in rows]
+        return [{"id": row[0], "amount": row[1], "category": row[2], "date": row[3], "note": row[4]} for row in rows]
 
     def add_income_entry(self, username: str, amount: int, category: str, date: str, note: str = "") -> bool:
         user_id = self.user_db.get_user_id(username)
@@ -369,11 +369,36 @@ class SpendingDatabase:
 
     def get_user_incomes(self, username: str) -> list:
         rows = self.db.execute(
-            "SELECT i.amount, i.category, i.date, i.note FROM incomes i JOIN users u ON i.user_id = u.id WHERE u.name = ? ORDER BY i.date DESC",
+            "SELECT i.id, i.amount, i.category, i.date, i.note FROM incomes i JOIN users u ON i.user_id = u.id WHERE u.name = ? ORDER BY i.date DESC",
             (username,),
             fetch_all=True
         )
-        return [{"amount": row[0], "category": row[1], "date": row[2], "note": row[3]} for row in rows]
+        return [{"id": row[0], "amount": row[1], "category": row[2], "date": row[3], "note": row[4]} for row in rows]
+
+    def delete_entry(self, username: str, entry_id: int) -> bool:
+        """Delete an expense or income entry by ID. Tries both tables and returns success."""
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return False
+
+        try:
+            # Try deleting from expenses first
+            with sqlite3.connect(self.db.database_name) as connection:
+                connection.execute("PRAGMA foreign_keys = ON;")
+                cursor = connection.cursor()
+                cursor.execute("DELETE FROM expenses WHERE id = ? AND user_id = ?", (entry_id, user_id))
+                if cursor.rowcount > 0:
+                    connection.commit()
+                    return True
+
+                # If not found in expenses, try incomes
+                cursor.execute("DELETE FROM incomes WHERE id = ? AND user_id = ?", (entry_id, user_id))
+                deleted = cursor.rowcount > 0
+                connection.commit()
+                return deleted
+        except Exception as e:
+            Logger.error(f"Error deleting entry {entry_id} for user {username}: {e}")
+            return False
 
 # ==========================================
 # MAIN DATABASE MANAGER

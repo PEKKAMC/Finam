@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import flet as ft
 from src.logger import Logger
-from src.utils import Color, Text, UISettings
+from src.utils import Color, Text
 
 
 class LoginHeader(ft.Container):
@@ -29,12 +29,6 @@ class LoginHeader(ft.Container):
                         ),
                         Text.H3("Quản Lý Hồ Sơ Người Dùng", color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
                     ]
-                ),
-                ft.IconButton(
-                    icon=ft.Icons.CLOSE,
-                    icon_color=Color.SECONDARY_TEXT,
-                    icon_size=20,
-                    on_click=on_close
                 )
             ]
         )

@@ -10,12 +10,12 @@ from src.logger import Logger
 from src.pages.global_components import CategorySelectionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ExpenseInputDialog, FinancialChart, GoalDetailsDialog, IncomeInputDialog, ObjectiveSelectionDialog, QuickActionDialog, Menu, TopNavigationBar
 from src.pages.home.components import ActionSelectionDialog, BalanceCard, SavingsProgressCard, ExpensePieChartCard, FeaturedLessonCard
 from src.pages.home.logic import LogicController
-from src.utils import Color, Text, UISettings
+from src.utils import Color, get_safe_page_size, Text, UISettings
 
 Logger.info("Initializing Home page...")
 
 
-class HomeDialogManager:
+class DialogManager:
     """Handles all dialog instantiation, states, and callbacks for the Home View."""
     def __init__(self, page: ft.Page, lang: dict, controller: LogicController, refresh_callback: Callable):
         self._page = page
@@ -206,7 +206,7 @@ class HomeView(ft.View):
         self.controller = LogicController(self.user_info["username"])
 
         # INITIALIZE DIALOG MANAGER
-        self.dialogs = HomeDialogManager(
+        self.dialogs = DialogManager(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
@@ -321,22 +321,16 @@ class HomeView(ft.View):
 
         self._page.update()
 
-    def get_safe_page_size(self) -> tuple[int, int]: # -> (width, height)
-        # Get page width and height if available, return fallback values otherwise
-        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
-        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
+    def on_page_resize(self, e=None) -> ft.PageResizeEvent | None:
+        page_width, page_height = get_safe_page_size(
+            page=self._page
+        )
 
-        # Make sure width and height don't exceed max values
-        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
-        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
-
-        return safe_width, safe_height
-
-    def on_page_resize(self, e=None) -> None:
-        page_width, page_height = self.get_safe_page_size()
-
+        # Resizing main container
         self.main_container.width = page_width
+        self.main_container.height = page_height
 
+        # Resizing other components
         self.menu.resize(
             width=page_width
         )

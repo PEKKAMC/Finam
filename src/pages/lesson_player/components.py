@@ -4,7 +4,7 @@
 
 import flet as ft
 
-from src.utils import Color, create_text
+from src.utils import Color, Text
 
 
 class TopNavigationMenu(ft.Row):
@@ -66,13 +66,12 @@ class SlideCanvas(ft.Container):
         self.width = max(width, 0)
         self.height = max(height, 0)
 
-
 class LessonHeader(ft.Row):
     def __init__(self, page: ft.Page, lang: dict, default_title: str):
         self._page = page
         self.lang = lang
-        self.title_display = create_text(default_title, scale=0.08, min_size=14, max_size=21, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_GREY_900)
-        self.progress_display = create_text("0 / 0", scale=0.04, min_size=10, max_size=15, color=ft.Colors.GREY_600)
+        self.title_display = Text.H2(default_title, color=ft.Colors.BLUE_GREY_900)
+        self.progress_display = Text.H4("0 / 0", color=ft.Colors.GREY_600)
         self.main_container = ft.Row(
             controls=[self.title_display, self.progress_display],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN

@@ -6,7 +6,7 @@
 
 from src.pages.home.components import ActionSelectionDialog, BalanceCard, SavingsProgressCard, ExpensePieChartCard, FeaturedLessonCard
 from src.pages.home.logic import LogicController
-from src.pages.home.view import HomeView, get_home_view
+from src.pages.home.view import DialogManager, HomeView, get_home_view
 
 __all__ = [
     "ActionSelectionDialog",
@@ -15,6 +15,7 @@ __all__ = [
     "ExpensePieChartCard",
     "FeaturedLessonCard",
     "LogicController",
+    "DialogManager",
     "HomeView",
     "get_home_view"
 ]

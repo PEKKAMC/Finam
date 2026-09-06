@@ -62,7 +62,7 @@ jobs:
         run: mv build/apk/Finam.apk build/apk/Finam-${{ needs.prepare.outputs.app_version }}.apk
 
       - name: Upload Temp APK
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: temp-apk
           path: build/apk/Finam-${{ needs.prepare.outputs.app_version }}.apk
@@ -107,7 +107,7 @@ jobs:
         run: mv build/aab/Finam.aab build/aab/Finam-${{ needs.prepare.outputs.app_version }}.aab
 
       - name: Upload Temp AAB
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: temp-aab
           path: build/aab/Finam-${{ needs.prepare.outputs.app_version }}.aab
@@ -146,7 +146,7 @@ jobs:
           zip -qr Finam-${{ needs.prepare.outputs.app_version }}.ipa Payload
 
       - name: Upload Temp IPA
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: temp-ios
           path: Finam-${{ needs.prepare.outputs.app_version }}.ipa
@@ -158,7 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all temp artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           path: .
           merge-multiple: true
@@ -169,7 +169,7 @@ jobs:
           cat checksums.txt
 
       - name: Upload Final Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: mobile-release-artifacts
           path: |

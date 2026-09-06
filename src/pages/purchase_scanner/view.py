@@ -1,4 +1,4 @@
-# Copyright (c) 2026 PEKKAMC
+﻿# Copyright (c) 2026 PEKKAMC
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
@@ -20,37 +20,14 @@ class PurchaseScannerView(ft.View):
         self.user_info = user_info
         self.controller = LogicController()
 
-        self.menu = None
-        self.top_navigation_bar = None
-        self.main_container = None
-        self.form_card = None
-        self.result_card = None
-
-        super().__init__(
-            route="/purchase_scanner",
-            padding=0,
-            bgcolor=Color.WHITE,
-            controls=self.create_ui_components()
-        )
-
-        self._page.on_resize = self.on_page_resize
-        self.on_page_resize()
-
-    def handle_scan_click(self, name, price, reason, trigger, time):
-        self.result_card.set_loading_state()
-        item_name = name if name else "Món hàng"
-        risk, trigger_display, price_val, ai_advice = self.controller.analyze_purchase(item_name, price, reason, trigger, time)
-        self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
-
-    def create_ui_components(self):
-        Logger.info("Rendering UI for Purchase Scanner page...")
-
+        # components
         self.menu = Menu(self._page, self.lang, self.user_info)
         self.top_navigation_bar = TopNavigationBar(page=self._page, lang=self.lang, current_user=self.user_info["username"])
 
         self.form_card = ScannerForm(page=self._page, lang=self.lang, on_scan_click=self.handle_scan_click)
         self.result_card = ScannerResult(page=self._page, lang=self.lang)
 
+        # header banner
         header_banner = ft.Container(
             bgcolor=Color.PRIMARY,
             border_radius=24,
@@ -73,9 +50,6 @@ class PurchaseScannerView(ft.View):
         )
 
         self.main_container = ft.Container(
-            width=UISettings.MAX_APP_WIDTH,
-            padding=20,
-            margin=ft.Margin(left=16, top=84, right=16, bottom=88),
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
                 spacing=20,
@@ -88,35 +62,54 @@ class PurchaseScannerView(ft.View):
                         ]
                     )
                 ]
-            )
+            ),
+            padding=20,
+            margin=ft.Margin(left=16, top=UISettings.TOP_NAVIGATION_HEIGHT, right=16, bottom=UISettings.MENU_HEIGHT),
+            width=UISettings.MAX_APP_WIDTH,
         )
 
-        return [
-            ft.Stack(
-                expand=True,
-                controls=[
-                    self.main_container,
-                    self.top_navigation_bar,
-                    self.menu
-                ]
-            )
-        ]
+        super().__init__(
+            route="/purchase_scanner",
+            padding=0,
+            bgcolor=Color.WHITE,
+            horizontal_alignment=ft.MainAxisAlignment.CENTER,
+            controls=ft.Stack(expand=True, controls=[self.main_container, self.top_navigation_bar, self.menu])
+        )
+
+        self._page.on_resize = self.on_page_resize
+        self.on_page_resize()
+
+    def handle_scan_click(self, name, price, reason, trigger, time):
+        self.result_card.set_loading_state()
+        item_name = name if name else "Món hàng"
+        risk, trigger_display, price_val, ai_advice = self.controller.analyze_purchase(item_name, price, reason, trigger, time)
+        self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
+
+    def get_safe_page_size(self) -> tuple[int, int]:
+        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
+        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
+
+        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
+        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
+        return safe_width, safe_height
 
     def on_page_resize(self, e=None):
-        current_width = self._page.width if e is None else e.width
-        if not current_width: current_width = UISettings.MAX_APP_WIDTH
-        safe_width = int(min(current_width, UISettings.MAX_APP_WIDTH))
+        page_width, page_height = self.get_safe_page_size()
 
-        self.main_container.width = max(safe_width - 32, 320)
-        self.main_container.margin = ft.Margin(left=16, top=84, right=16, bottom=88)
-        self.top_navigation_bar.resize(safe_width)
-        self.menu.resize(safe_width)
+        self.main_container.width = page_width
+        self.main_container.margin = ft.Margin(left=16, top=UISettings.TOP_NAVIGATION_HEIGHT, right=16, bottom=UISettings.MENU_HEIGHT)
+        self.top_navigation_bar.resize(page_width)
+        self.menu.resize(page_width)
 
-        card_width = max(safe_width - 48, 320)
-        self.form_card.width = card_width
-        self.result_card.width = card_width
+        card_width = max(page_width - 48, 320)
+        try:
+            self.form_card.width = card_width
+            self.result_card.width = card_width
+        except Exception:
+            pass
 
         return e
+
 
 def get_scanner_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
     return PurchaseScannerView(page, lang, user_info)

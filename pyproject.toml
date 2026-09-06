@@ -1,6 +1,6 @@
 [project]
 name = "Finam"
-version = "0.2.1"
+version = "0.2.2"
 description = "Financial Learning App"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -13,7 +13,7 @@ dependencies = [
     "flet-charts>=0.86.5",
     "colorlog>=6.12.0",
     "openpyxl>=3.1.5",
-    "google-genai>=2.16.0"
+    "google-genai>=2.22.0"
 ]
 
 [dependency-groups]

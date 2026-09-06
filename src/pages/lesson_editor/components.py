@@ -13,7 +13,7 @@ class TopNavigationBar(ft.Row):
         self.lang = lang
         self.main_container = ft.Row(
             controls=[
-                Text.MEDIUM("Lesson Editor", scale=0.06, min_size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_GREY_900, expand=True),
+                Text.MEDIUM("Lesson Editor", weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_GREY_900, expand=True),
                 ft.Row([
                     ft.IconButton(ft.Icons.FOLDER_OPEN, icon_color=ft.Colors.BLUE_GREY_700, tooltip="Load JSON", on_click=on_load),
                     ft.Button("Save", icon=ft.Icons.SAVE, bgcolor="#1d7333", color=Color.WHITE, on_click=on_save),
@@ -79,7 +79,7 @@ class SlideSidebarLayout(ft.Container):
         self._page = page
         self.lang = lang
         self.main_container = ft.Column([
-            Text.MEDIUM("Slides", weight=ft.FontWeight.BOLD, scale=0.06, min_size=14),
+            Text.MEDIUM("Slides", weight=ft.FontWeight.BOLD),
             ft.Divider(),
             ft.Button("New Slide", icon=ft.Icons.ADD, on_click=on_add_slide),
             ft.Row([
