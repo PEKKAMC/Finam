@@ -1,3 +1,26 @@
+# Finam v0.2.2-alpha
+
+**Release Date:** Unknown
+
+> **⚠️ ALPHA WARNING: Read Before Using**
+>
+> This is an early alpha release intended for testing and development purposes only. While most core features are present in the UI, **many systems are highly unstable**. You *will* experience unwanted behaviors, application crashes, softlocks, and incomplete processes.
+>
+> *Please do not use this version to store sensitive or critical financial data, as local database corruption is possible.*
+
+## Bug fixes in this version
+
+*   Fixed actions not updating displays that they are supposed to.
+*   Lesson player and lesson editor can now be accessed, but its still heavily unusable.
+
+##  Known Issues & Instability
+
+*   Some actions may cause softlocks or crashes.
+*   Lesson player and lesson editor UI don't fit the screen.
+*   The Purchase Scanner AI hasn't been fully implemented.
+*   Some elements might be obstructed by the operating system.
+*   Various UI elements may not scale perfectly on all screen sizes.
+
 # Finam v0.2.1-alpha
 
 **Release Date:** August 31, 2026

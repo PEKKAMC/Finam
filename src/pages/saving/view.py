@@ -87,12 +87,29 @@ class SavingView(ft.View):
             margin=ft.Margin(top=UISettings.TOP_NAVIGATION_HEIGHT, bottom=UISettings.MENU_HEIGHT)
         )
 
-    def refresh_view(self):
+    def refresh_view(self) -> None:
         for control in self._page.overlay:
             control.open = False
-        if len(self._page.views) > 0:
-            self._page.views[-1].controls.clear()
-            self._page.views[-1].controls.extend(get_savings_view(self._page, self.lang, self.user_info).controls)
+
+        total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
+        existing_objectives = self.controller.get_user_objectives()
+
+        objectives_data = []
+        for objective_id, title, reason, target_amount, completed_at in existing_objectives:
+            objective_savings, card_progress, card_percentage = self.controller.get_objective_progress_data(objective_id, target_amount)
+            remaining_amt = max(0, target_amount - objective_savings)
+
+            objectives_data.append({
+                "objective_id": objective_id, "title": title, "reason": reason,
+                "current_value": f"{int(objective_savings):,}".replace(",", ".") + " đ",
+                "target_value": f"{int(target_amount):,}".replace(",", ".") + " đ",
+                "remaining_value": f"Còn lại: {int(remaining_amt):,}".replace(",", ".") + " đ",
+                "percentage": card_percentage, "progress": card_progress, "completed": bool(completed_at)
+            })
+
+        self.summary_banner.update_data(total_savings, total_target, percentage, progress_value)
+        self.objective_grid.update_grid(objectives_data)
+
         self._page.update()
 
     async def trigger_export(self, e=None):

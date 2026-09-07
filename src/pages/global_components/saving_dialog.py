@@ -27,9 +27,9 @@ class CreateObjectiveDialog(BaseDialog):
         self.controller = controller
         self.on_success = on_success
 
-        self.goal_title_input = ft.TextField(label=lang["saving.goal_title"], color=Color.DEFAULT_TEXT, border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
-        self.goal_amount_input = ft.TextField(label=lang["saving.target_amount"], color=Color.DEFAULT_TEXT, input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""), border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
-        self.reason_input = ft.TextField(label=lang["saving.reason"], color=Color.DEFAULT_TEXT, border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
+        self.goal_title_input = ft.TextField(label=lang["saving.goal_title"], color=Color.DEFAULT_TEXT, input_filter=ft.InputFilter(allow=True, regex_string=r"^[a-zA-Z0-9À-ỹ\s]{0,50}$", replacement_string=""), border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
+        self.goal_amount_input = ft.TextField(label=lang["saving.target_amount"], color=Color.DEFAULT_TEXT, input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]{0,12}$", replacement_string=""), border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
+        self.reason_input = ft.TextField(label=lang["saving.reason"], color=Color.DEFAULT_TEXT, input_filter=ft.InputFilter(allow=True, regex_string=r"^[a-zA-Z0-9À-ỹ\s]{0,50}$", replacement_string=""), border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
 
         submit_button = ft.Button(
             lang["saving.save_objective"], icon=ft.Icons.ADD_CIRCLE, on_click=self._process_add, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE, width=400, height=55, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=12))
@@ -63,7 +63,7 @@ class QuickActionDialog(BaseDialog):
         self.on_success = on_success
         self.current_action_objective = {"id": 0, "action": ""}
 
-        self.quick_amount_input = ft.TextField(label=lang["generic.amount"], color=Color.DEFAULT_TEXT, input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""), border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
+        self.quick_amount_input = ft.TextField(label=lang["generic.amount"], color=Color.DEFAULT_TEXT, input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]{0,12}$", replacement_string=""), border_radius=10, border_color=Color.INPUT_BORDER, focused_border_color=Color.PRIMARY_ACTION)
 
         super().__init__(
             title=Text.H3(self.lang["saving.update_savings"], color=Color.PRIMARY_TEXT),

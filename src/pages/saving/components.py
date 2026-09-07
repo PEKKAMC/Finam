@@ -127,6 +127,11 @@ class ObjectiveGrid(ft.Column):
     def __init__(self, page: ft.Page, lang: dict, objectives_data: list, on_card_click: Callable):
         self._page = page
         self.lang = lang
+        self.on_card_click = on_card_click
+        super().__init__(spacing=20)
+        self.update_grid(objectives_data)
+
+    def update_grid(self, objectives_data: list):
         cards = []
         for data in objectives_data:
             cards.append(ObjectiveCard(
@@ -135,19 +140,24 @@ class ObjectiveGrid(ft.Column):
                 objective_id=data["objective_id"], objective_title=data["title"], subtitle=data["reason"],
                 current_value=data["current_value"], target_value=data["target_value"], remaining_value=data["remaining_value"],
                 percentage=data["percentage"], progress=data["progress"], completed=data["completed"],
-                on_click_callback=on_card_click
+                on_click_callback=self.on_card_click
             ))
-        self.main_container = ft.Column(spacing=20, controls=cards)
-        super().__init__(spacing=20, controls=cards)
+        self.controls = cards
 
     def resize(self, width: int) -> None:
-        self.main_container.width = width
+        self.controls.width = width
 
 
 class AggregateCard(ft.Container):
     def __init__(self, page: ft.Page, lang: dict, total_savings: float, total_target: float, percentage: str, progress_value: float, on_create_click: Callable):
         self._page = page
         self.lang = lang
+
+        self.savings_text = Text.H3(f"{int(total_savings):,}".replace(",", "."), color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.target_text = Text.H5(f" / {int(total_target):,}".replace(",", ".") + " đ", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.percentage_text = Text.MEDIUM(f"{percentage}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.progress_bar = ft.ProgressBar(value=progress_value, color=Color.LIGHT_ACCENT, bgcolor=Color.DARK_SURFACE, height=8, border_radius=4)
+
         self.main_container = ft.Column(
             spacing=10,
             controls=[
@@ -167,15 +177,12 @@ class AggregateCard(ft.Container):
                                 ),
                                 ft.Row(
                                     vertical_alignment=ft.CrossAxisAlignment.END,
-                                    controls=[
-                                        Text.H3(f"{int(total_savings):,}".replace(",", "."), color=Color.WHITE, weight=ft.FontWeight.BOLD),
-                                        Text.H5(f" / {int(total_target):,}".replace(",", ".") + " đ", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-                                    ]
+                                    controls=[self.savings_text, self.target_text]
                                 ),
                                 ft.Row(
                                     controls=[
                                         Text.MEDIUM("Tổng tiến độ tích lũy các mục tiêu đạt", color=Color.WHITE),
-                                        Text.MEDIUM(f"{percentage}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                                        self.percentage_text,
                                     ]
                                 )
                             ]
@@ -183,9 +190,7 @@ class AggregateCard(ft.Container):
                         ft.Container(
                             content=ft.Row(
                                 spacing=8,
-                                controls=[
-                                    ft.Icon(ft.Icons.ADD, color=Color.PRIMARY, size=16)
-                                ]
+                                controls=[ft.Icon(ft.Icons.ADD, color=Color.PRIMARY, size=16)]
                             ),
                             bgcolor=Color.LIGHT_ACCENT,
                             padding=ft.Padding(16, 12, 16, 12),
@@ -195,7 +200,7 @@ class AggregateCard(ft.Container):
                         )
                     ]
                 ),
-                ft.ProgressBar(value=progress_value, color=Color.LIGHT_ACCENT, bgcolor=Color.DARK_SURFACE, height=8, border_radius=4)
+                self.progress_bar
             ]
         )
         super().__init__(
@@ -205,6 +210,12 @@ class AggregateCard(ft.Container):
             shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
             content=self.main_container
         )
+
+    def update_data(self, total_savings: float, total_target: float, percentage: str, progress_value: float):
+        self.savings_text.value = f"{int(total_savings):,}".replace(",", ".")
+        self.target_text.value = f" / {int(total_target):,}".replace(",", ".") + " đ"
+        self.percentage_text.value = percentage
+        self.progress_bar.value = progress_value
 
     def resize(self, width: int) -> None:
         self.main_container.width = width

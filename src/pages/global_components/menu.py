@@ -24,7 +24,7 @@ class Menu(ft.Container):
             self.build_nav_item(ft.Icons.SAVINGS_ROUNDED, self.lang["generic.saving"], self.navigate_to("/saving"), is_active=active_icon == "saving"),
             self.build_nav_item(ft.Icons.ACCOUNT_BALANCE_WALLET_ROUNDED, self.lang["generic.spending"], self.navigate_to("/spending"), is_active=active_icon == "spending"),
             self.build_nav_item(ft.Icons.AUTO_AWESOME_ROUNDED, self.lang["generic.purchase_scanner"], self.navigate_to("/purchase_scanner"), is_active=active_icon == "scanner"),
-            self.build_nav_item(ft.Icons.LOGOUT_ROUNDED, self.lang["generic.change_user"], self.change_user, is_active=False),
+            self.build_nav_item(ft.Icons.PERSON_ROUNDED, self.lang["generic.change_user"], self.change_user, is_active=False),
         ]
 
         if os.getenv("ENABLE_EDITOR") == "1":

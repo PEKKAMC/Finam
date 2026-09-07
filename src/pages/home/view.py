@@ -215,11 +215,13 @@ class HomeView(ft.View):
 
         # FETCH DASHBOARD DATA
         self.metrics, self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
+
         self.ai_advice = self.controller.get_ai_advice(
-            self.metrics["net_balance"],
-            self.metrics["total_income"],
-            self.metrics["total_expense"]
+            net_balance=self.metrics["net_balance"],
+            total_income=self.metrics["total_income"],
+            total_expense=self.metrics["total_expense"]
         )
+
         self.objectives = self.controller.get_user_objectives()
 
         # INITIALIZE PAGE COMPONENTS
@@ -318,6 +320,54 @@ class HomeView(ft.View):
     def refresh_view(self) -> None:
         for control in self._page.overlay:
             control.open = False
+
+        self.metrics, self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
+        self.ai_advice = self.controller.get_ai_advice(
+            self.metrics["net_balance"],
+            self.metrics["total_income"],
+            self.metrics["total_expense"]
+        )
+        self.objectives = self.controller.get_user_objectives()
+
+        self.balance_card = BalanceCard(
+            page=self._page,
+            lang=self.lang,
+            net_balance=self.metrics["net_balance"],
+            income=self.metrics["total_income"],
+            expense=self.metrics["total_expense"],
+            saving=self.metrics["total_savings"],
+            ai_advice=self.ai_advice,
+            on_add_click=self.dialogs.open_action_dialog,
+            on_scan_click=lambda e: self._page.go("/purchase_scanner")
+        )
+
+        self.financial_chart = FinancialChart(
+            page=self._page,
+            lang=self.lang,
+            chart_date=self.chart_date,
+            chart_data=self.chart_data,
+            chart_type=self.chart_type
+        )
+
+        self.savings_progress_card = SavingsProgressCard(
+            page=self._page,
+            lang=self.lang,
+            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang)
+        )
+
+        self.expense_pie_chart = ExpensePieChartCard(
+            page=self._page,
+            lang=self.lang,
+            category_data=self.metrics["category_expenses"]
+        )
+
+        self.main_container.content.controls[0].content.controls = [
+            self.balance_card,
+            self.financial_chart,
+            self.expense_pie_chart,
+            self.savings_progress_card,
+            self.featured_lesson_card
+        ]
 
         self._page.update()
 

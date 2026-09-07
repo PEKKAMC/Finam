@@ -171,8 +171,7 @@ class SpendingView(ft.View):
 
     def refresh_view(self) -> None:
         for control in self._page.overlay:
-            if hasattr(control, "open"):
-                control.open = False
+            control.open = False
         self.refresh_content()
         self._page.update()
 
