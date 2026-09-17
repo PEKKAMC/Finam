@@ -4,7 +4,68 @@
 
 import flet as ft
 
-from src.utils import UISettings, Color, Text
+from src.utils import Color, Text
+
+
+class SelectableOptionGroup(ft.Container):
+    """Custom option selector matching the React toggle buttons style."""
+    def __init__(self, options: list[tuple[str, str]], initial_value: str, is_dark_selected: bool = False):
+        self.options = options
+        self.value = initial_value
+        self.is_dark_selected = is_dark_selected
+        self.button_controls: dict[str, ft.Container] = {}
+
+        grid_controls = []
+        for val_id, label in self.options:
+            btn = ft.Container(
+                content=ft.Text(
+                    label,
+                    size=12,
+                    weight=ft.FontWeight.BOLD,
+                    text_align=ft.TextAlign.CENTER
+                ),
+                padding=ft.Padding(12, 10, 12, 10),
+                border_radius=16,
+                animate=ft.Animation(200, ft.AnimationCurve.EASE_IN_OUT),
+                on_click=lambda e, vid=val_id: self._select(vid),
+                expand=True
+            )
+            self.button_controls[val_id] = btn
+
+        # Arrange buttons into rows of 2 or 3 items
+        chunk_size = 2 if len(options) > 3 else 3
+        rows = []
+        for i in range(0, len(options), chunk_size):
+            chunk_keys = [opt[0] for opt in options[i:i + chunk_size]]
+            row_controls = [self.button_controls[k] for k in chunk_keys]
+            rows.append(ft.Row(controls=row_controls, spacing=8))
+
+        super().__init__(content=ft.Column(controls=rows, spacing=8))
+        self._update_styles()
+
+    def _select(self, val_id: str):
+        self.value = val_id
+        self._update_styles()
+        self.update()
+
+    def _update_styles(self):
+        for val_id, btn in self.button_controls.items():
+            is_selected = (val_id == self.value)
+            text_ctrl: ft.Text = btn.content
+
+            if is_selected:
+                if self.is_dark_selected:
+                    btn.bgcolor = Color.PRIMARY
+                    btn.border = ft.Border.all(1.5, Color.PRIMARY)
+                    text_ctrl.color = Color.WHITE
+                else:
+                    btn.bgcolor = Color.LIGHT_ACCENT
+                    btn.border = ft.Border.all(1.5, Color.PRIMARY)
+                    text_ctrl.color = Color.PRIMARY
+            else:
+                btn.bgcolor = Color.WHITE
+                btn.border = ft.Border.all(1, Color.INPUT_BORDER)
+                text_ctrl.color = Color.DEFAULT_TEXT
 
 
 class ScannerForm(ft.Container):
@@ -12,104 +73,135 @@ class ScannerForm(ft.Container):
         self._page = page
         self.lang = lang
         self.on_scan_click = on_scan_click
+
+        # Input fields matching React design specifications
         self.item_name = ft.TextField(
-            label=self.lang["purchase_scanner.item_name"],
-            hint_text=self.lang["purchase_scanner.item_name_hint"],
+            hint_text="Ví dụ: Giày Sneaker, Áo khoác sale, Tai nghe bluetooth...",
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
             border_radius=16,
             filled=True,
-            bgcolor=Color.CARD_BACKGROUND,
-            height=55
+            bgcolor=Color.PAGE_BACKGROUND,
+            height=48,
+            text_size=13,
+            content_padding=ft.Padding(16, 12, 16, 12)
         )
+
         self.item_price = ft.TextField(
-            label=self.lang["purchase_scanner.item_price"],
-            hint_text=self.lang["purchase_scanner.item_price_hint"],
+            hint_text="0 đ",
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
             border_radius=16,
             filled=True,
-            bgcolor=Color.CARD_BACKGROUND,
-            height=55
+            bgcolor=Color.PAGE_BACKGROUND,
+            height=48,
+            text_size=14,
+            text_style=ft.TextStyle(weight=ft.FontWeight.BOLD),
+            content_padding=ft.Padding(16, 12, 16, 12)
         )
+
         self.item_reason = ft.TextField(
-            label=self.lang["purchase_scanner.item_reason"],
-            hint_text=self.lang["purchase_scanner.item_reason_hint"],
-            multiline=True,
-            min_lines=3,
+            hint_text="Tại sao bạn lại cần sản phẩm này ngay lúc này?",
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
             border_radius=16,
             filled=True,
-            bgcolor=Color.CARD_BACKGROUND
+            bgcolor=Color.PAGE_BACKGROUND,
+            height=48,
+            text_size=12,
+            content_padding=ft.Padding(16, 12, 16, 12)
         )
-        self.trigger = ft.Dropdown(
-            label=self.lang["purchase_scanner.source"],
-            options=[
-                ft.dropdown.Option("need", "Nhu cầu thật sự"),
-                ft.dropdown.Option("social", "Bạn bè/peer pressure"),
-                ft.dropdown.Option("tiktok", "TikTok/social media"),
-                ft.dropdown.Option("sale", "Flash sale/giảm giá"),
-                ft.dropdown.Option("emotion", "Buồn/chán/stress nên muốn mua"),
-            ],
-            value="need",
-            border_color=Color.INPUT_BORDER,
-            color=Color.DEFAULT_TEXT,
+
+        # Triggers selection grid
+        trigger_options = [
+            ("need", "Nhu cầu dùng thực tế"),
+            ("sale", "Săn Flash sale / Giảm giá"),
+            ("tiktok", "TikTok / Mạng xã hội"),
+            ("social", "Bạn bè rủ mua"),
+            ("emotion", "Cảm xúc (Stress, hưng phấn)")
+        ]
+        self.trigger = SelectableOptionGroup(trigger_options, initial_value="tiktok", is_dark_selected=False)
+
+        # Thinking time selection grid
+        thinking_options = [
+            ("short", "Dưới 1 giờ"),
+            ("medium", "Trong 24h"),
+            ("long", "Trên 3 ngày")
+        ]
+        self.thinking_time = SelectableOptionGroup(thinking_options, initial_value="short", is_dark_selected=True)
+
+        self.submit_btn = ft.Container(
+            content=ft.Row(
+                controls=[
+                    ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.LIGHT_ACCENT, size=18),
+                    ft.Text("Quét & Đánh Giá Chi Tiêu", color=Color.WHITE, weight=ft.FontWeight.BOLD, size=14)
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=8
+            ),
+            bgcolor=Color.PRIMARY,
             border_radius=16,
-            filled=True,
-            bgcolor=Color.CARD_BACKGROUND
+            padding=ft.Padding(0, 14, 0, 14),
+            on_click=lambda e: self.on_scan_click(
+                self.item_name.value,
+                self.item_price.value,
+                self.item_reason.value,
+                self.trigger.value,
+                self.thinking_time.value
+            ) if self.on_scan_click else None
         )
-        self.thinking_time = ft.Dropdown(
-            label=self.lang["purchase_scanner.thinking_time"],
-            options=[
-                ft.dropdown.Option("long", "Trên 24 giờ"),
-                ft.dropdown.Option("medium", "1–24 giờ"),
-                ft.dropdown.Option("short", "Dưới 1 giờ"),
-            ],
-            value="long",
-            border_color=Color.INPUT_BORDER,
-            color=Color.DEFAULT_TEXT,
-            border_radius=16,
-            filled=True,
-            bgcolor=Color.CARD_BACKGROUND
-        )
+
         self.main_container = ft.Column(
             spacing=16,
             controls=[
                 ft.Row(
-                    spacing=10,
+                    spacing=8,
                     controls=[
-                        ft.Container(width=32, height=32, border_radius=10, bgcolor=Color.LIGHT_ACCENT, alignment=ft.Alignment.CENTER, content=ft.Icon(ft.Icons.SHOPPING_BAG, color=Color.PRIMARY, size=18)),
-                        Text.H4(self.lang["purchase_scanner.title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+                        ft.Icon(ft.Icons.SHOPPING_BAG_OUTLINED, color=Color.PRIMARY, size=20),
+                        Text.H4(self.lang.get("purchase_scanner.title", "Thông Tin Món Đồ Sắp Mua"), color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
                     ]
                 ),
-                Text.P(self.lang["purchase_scanner.subtitle"], color=Color.SECONDARY_TEXT),
-                self.item_name,
-                self.item_price,
-                self.item_reason,
-                self.trigger,
-                self.thinking_time,
-                ft.Button(
-                    content=ft.Row([ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.WHITE, size=16), Text.MEDIUM(self.lang["purchase_scanner.analyze"], weight=ft.FontWeight.BOLD)], tight=True),
-                    on_click=lambda e: self.on_scan_click(
-                        self.item_name.value,
-                        self.item_price.value,
-                        self.item_reason.value,
-                        self.trigger.value,
-                        self.thinking_time.value
-                    ) if self.on_scan_click else None,
-                    bgcolor=Color.PRIMARY_ACTION,
-                    color=Color.WHITE,
-                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=14), padding=20)
-                )
+                ft.Divider(height=1, color=Color.CARD_DIVIDER),
+
+                # Name
+                ft.Column([
+                    ft.Text("TÊN MÓN ĐỒ / SẢN PHẨM *", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    self.item_name
+                ], spacing=6),
+
+                # Price
+                ft.Column([
+                    ft.Text("GIÁ TIỀN DỰ KIẾN (VNĐ) *", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    self.item_price
+                ], spacing=6),
+
+                # Trigger
+                ft.Column([
+                    ft.Text("YẾU TỐ THÔI THÚC BẠN MUA?", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    self.trigger
+                ], spacing=6),
+
+                # Thinking time
+                ft.Column([
+                    ft.Text("THỜI GIAN BẠN ĐÃ ĐẮN ĐO SUY NGHĨ?", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    self.thinking_time
+                ], spacing=6),
+
+                # Reason
+                ft.Column([
+                    ft.Text("LÝ DO NGẮN GỌN", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    self.item_reason
+                ], spacing=6),
+
+                self.submit_btn
             ]
         )
 
         super().__init__(
             bgcolor=Color.WHITE,
             border_radius=24,
-            padding=22,
+            padding=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
             content=self.main_container
@@ -118,21 +210,28 @@ class ScannerForm(ft.Container):
     def resize(self, page_width: int):
         self.main_container.width = max(page_width, 0)
 
+
 class InterventionItem(ft.Container):
     def __init__(self, page: ft.Page, lang: dict, title: str, description: str):
         self._page = page
         self.lang = lang
         self.main_container = ft.Column(
-            spacing=5,
+            spacing=4,
             controls=[
-                Text.MEDIUM(title, weight=ft.FontWeight.BOLD),
-                Text.P(description, color=Color.SECONDARY_TEXT)
+                ft.Row([
+                    ft.Icon(ft.Icons.CHECK_CIRCLE_OUTLINE, color=Color.PRIMARY, size=16),
+                    Text.MEDIUM(title, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT)
+                ], spacing=6),
+                ft.Container(
+                    content=Text.P(description, color=Color.SECONDARY_TEXT, size=12),
+                    padding=ft.Padding(22, 0, 0, 0)
+                )
             ]
         )
         super().__init__(
-            border=ft.Border.all(1, Color.DEFAULT_BORDER),
-            border_radius=10,
-            padding=15,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            border_radius=16,
+            padding=14,
             bgcolor=Color.WHITE,
             content=self.main_container
         )
@@ -140,40 +239,117 @@ class InterventionItem(ft.Container):
     def resize(self, width: int) -> None:
         self.main_container.width = width
 
+
 class ScannerResult(ft.Container):
     def __init__(self, page: ft.Page, lang: dict):
         self._page = page
         self.lang = lang
-        self.result_text = Text.P(self.lang["purchase_scanner.no_data"], color=Color.PRIMARY_TEXT)
-        self.result_box = ft.Container(
-            content=self.result_text,
-            padding=18,
-            border_radius=18,
-            bgcolor=Color.AGGREGATE_BACKGROUND,
-            border=ft.Border.all(1, Color.INPUT_BORDER)
-        )
-        self.progress_bar = ft.ProgressBar(value=0.0, color=Color.PROGRESS_ACTIVE, bgcolor=Color.PROGRESS_BACKGROUND, height=12)
-        self.interventions_col = ft.Column(spacing=10)
-        self.main_container = ft.Column(
-            spacing=16,
+
+        # Empty state display
+        self.empty_state = ft.Column(
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=12,
             controls=[
-                ft.Row(
-                    spacing=10,
-                    controls=[
-                        ft.Container(width=32, height=32, border_radius=10, bgcolor=Color.LIGHT_ACCENT, alignment=ft.Alignment.CENTER, content=ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=18)),
-                        Text.H4(self.lang["purchase_scanner.analysis_result"], weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT)
-                    ]
-                ),
-                self.result_box,
-                self.progress_bar,
-                self.interventions_col
+                ft.Icon(ft.Icons.SHIELD_OUTLINED, color=Color.PRIMARY, size=52),
+                ft.Text("Chưa có kết quả quét", size=15, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                ft.Text(
+                    "Điền thông tin sản phẩm bên trái để AI đánh giá mức độ bốc đồng và bảo vệ ví tiền của bạn.",
+                    size=12,
+                    color=Color.SECONDARY_TEXT,
+                    text_align=ft.TextAlign.CENTER
+                )
             ]
+        )
+
+        # Dynamic results controls
+        self.risk_badge_text = ft.Text("24 giờ", size=11, weight=ft.FontWeight.BOLD, color=Color.LIGHT_ACCENT)
+        self.risk_score_text = ft.Text("0%", size=36, weight=ft.FontWeight.BOLD, color=Color.PROGRESS_ACTIVE)
+        self.risk_status_text = ft.Text("Đánh giá rủi ro", size=12, color=Color.BLAND_TEXT)
+        self.progress_bar = ft.ProgressBar(value=0.0, color=Color.PROGRESS_ACTIVE, bgcolor=Color.DARK_BUTTON, height=8)
+
+        # Gauge Score Header Card
+        self.gauge_card = ft.Container(
+            bgcolor=Color.DARK_SURFACE,
+            border_radius=20,
+            padding=18,
+            border=ft.Border.all(1, Color.DARK_BUTTON),
+            content=ft.Column(
+                spacing=12,
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[
+                            ft.Text("CHỈ SỐ RỦI RO BỐC ĐỒNG", size=10, weight=ft.FontWeight.BOLD, color=Color.BLAND_TEXT),
+                            ft.Container(
+                                content=self.risk_badge_text,
+                                bgcolor=Color.DARK_BUTTON,
+                                padding=ft.Padding(10, 4, 10, 4),
+                                border_radius=12
+                            )
+                        ]
+                    ),
+                    ft.Row(
+                        controls=[
+                            self.risk_score_text,
+                            self.risk_status_text
+                        ],
+                        alignment=ft.MainAxisAlignment.START,
+                        vertical_alignment=ft.CrossAxisAlignment.BASELINE,
+                        spacing=10
+                    ),
+                    self.progress_bar
+                ]
+            )
+        )
+
+        # Advice Box
+        self.advice_text = Text.P("", color=Color.DEFAULT_TEXT)
+        self.advice_box = ft.Container(
+            bgcolor=Color.GOAL_ITEM_BACKGROUND,
+            border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+            border_radius=16,
+            padding=14,
+            content=ft.Column(
+                spacing=6,
+                controls=[
+                    ft.Row([
+                        ft.Icon(ft.Icons.LIGHTBULB_OUTLINE, color=Color.PRIMARY, size=18),
+                        ft.Text("Góc nhìn từ chuyên gia Finam:", size=12, weight=ft.FontWeight.BOLD, color=Color.PRIMARY)
+                    ], spacing=6),
+                    self.advice_text
+                ]
+            )
+        )
+
+        self.interventions_col = ft.Column(spacing=10)
+
+        self.result_container = ft.Column(
+            spacing=16,
+            visible=False,
+            controls=[
+                self.gauge_card,
+                self.advice_box,
+                ft.Column([
+                    ft.Text("QUY TẮC CAN THIỆP ĐỀ XUẤT:", size=11, weight=ft.FontWeight.BOLD, color=Color.SECONDARY_TEXT),
+                    self.interventions_col
+                ], spacing=8)
+            ]
+        )
+
+        self.main_container = ft.Container(
+            content=ft.Column(
+                controls=[self.empty_state, self.result_container],
+                alignment=ft.MainAxisAlignment.CENTER
+            ),
+            alignment=ft.Alignment.CENTER,
+            expand=True
         )
 
         super().__init__(
             bgcolor=Color.WHITE,
             border_radius=24,
-            padding=22,
+            padding=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
             content=self.main_container
@@ -183,44 +359,44 @@ class ScannerResult(ft.Container):
         self.main_container.width = max(page_width, 0)
 
     def set_loading_state(self):
-        self.result_text.value = self.lang["purchase_scanner.waiting"]
-        self.result_text.color = Color.PRIMARY_TEXT
+        self.empty_state.visible = False
+        self.result_container.visible = True
+        self.advice_text.value = self.lang.get("purchase_scanner.waiting", "AI Đang Phân Tích Mua Sắm...")
         self.update()
 
     def update_result(self, risk: int, trigger_display: str, price: float, item_name: str, ai_advice: str = ""):
-        if risk >= 70:
-            self.result_box.bgcolor = Color.NEGATIVE_ACTION + "22"
-            self.result_box.border = ft.Border.all(1, Color.NEGATIVE_ACTION)
-            self.result_text.color = Color.NEGATIVE_ACTION
-            message = f"Rủi ro cao: {risk}/100.\n{item_name} có dấu hiệu mua bốc đồng. Nên trì hoãn 24 giờ trước khi mua."
+        self.empty_state.visible = False
+        self.result_container.visible = True
+
+        if risk > 65:
+            risk_color = Color.NEGATIVE_ACTION
+            status_desc = "Rủi ro phung phí RẤT CAO"
             pause_time = "24 giờ"
-        elif risk >= 40:
-            self.result_box.bgcolor = Color.EXPENSE_ACTION_BACKGROUND + "22"
-            self.result_box.border = ft.Border.all(1, Color.EXPENSE_ACTION_BACKGROUND)
-            self.result_text.color = Color.PRIMARY_TEXT
-            message = f"Rủi ro trung bình: {risk}/100.\n{item_name} cần được kiểm tra lại bằng bộ lọc Need vs Want."
+        elif risk > 35:
+            risk_color = "#F59E0B"
+            status_desc = "Mức độ vừa phải"
             pause_time = "60 giây"
         else:
-            self.result_box.bgcolor = Color.AGGREGATE_BACKGROUND
-            self.result_box.border = ft.Border.all(1, Color.PRIMARY_ACTION)
-            self.result_text.color = Color.AGGREGATE_TEXT
-            message = f"Rủi ro thấp: {risk}/100.\nQuyết định mua có vẻ hợp lý hơn, nhưng vẫn nên kiểm tra ngân sách."
+            risk_color = Color.PROGRESS_ACTIVE
+            status_desc = "Quyết định hợp lý"
             pause_time = "60 giây"
 
-        self.result_text.value = message
+        self.risk_score_text.value = f"{risk}%"
+        self.risk_score_text.color = risk_color
+        self.risk_status_text.value = status_desc
+        self.risk_badge_text.value = pause_time
         self.progress_bar.value = risk / 100.0
+        self.progress_bar.color = risk_color
+
+        self.advice_text.value = ai_advice if ai_advice else f"Món đồ {item_name} đang chịu ảnh hưởng từ {trigger_display}."
 
         formatted_price = f"{int(price):,}đ" if price > 0 else "chưa nhập"
 
-        interventions = []
-        if ai_advice:
-            interventions.append(InterventionItem("Lời khuyên từ AI", ai_advice))
-
-        interventions.extend([
-            InterventionItem(self.lang["purchase_scanner.pause_rule"], f"Đợi ít nhất {pause_time} trước khi thanh toán."),
-            InterventionItem(self.lang["purchase_scanner.budget_check"], f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),
-            InterventionItem(self.lang["purchase_scanner.reflection"], f"Bạn mua vì cần thật, hay vì {trigger_display}?")
-        ])
+        interventions = [
+            InterventionItem(self._page, self.lang, self.lang.get("purchase_scanner.pause_rule", "Quy tắc trì hoãn"), f"Đợi ít nhất {pause_time} trước khi thanh toán."),
+            InterventionItem(self._page, self.lang, self.lang.get("purchase_scanner.budget_check", "Kiểm tra ngân sách"), f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),
+            InterventionItem(self._page, self.lang, self.lang.get("purchase_scanner.reflection", "So sánh động lực"), f"Bạn mua vì cần thật, hay vì {trigger_display}?")
+        ]
 
         self.interventions_col.controls = interventions
-        self.update()  
+        self.update()

@@ -10,72 +10,6 @@ import flet_charts as fc
 from src.utils import Color, Text, UISettings
 
 
-class ActionSelectionDialog(ft.AlertDialog):
-    def __init__(self, page: ft.Page, lang: dict, on_income: Callable, on_expense: Callable, on_saving: Callable, on_cancel: Callable):
-        self._page = page
-        self.lang = lang
-
-        self.dialog_header = ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            controls=[
-                Text.H4(self.lang["home.quick_actions"], color=Color.LIGHT_ACCENT),
-                ft.IconButton(ft.Icons.CLOSE, on_click=on_cancel, icon_color=Color.LIGHT_ACCENT),
-            ]
-        )
-
-        self.add_income_button = ft.Button(
-            content=Text.BUTTON(self.lang["home.add_income"]),
-            icon=ft.Icons.ARROW_UPWARD_ROUNDED,
-            on_click=on_income,
-            bgcolor=Color.PRIMARY,
-            color=Color.WHITE
-        )
-
-        self.add_expense_button = ft.Button(
-            content=Text.BUTTON(self.lang["home.add_expense"]),
-            icon=ft.Icons.ARROW_DOWNWARD_ROUNDED,
-            on_click=on_expense,
-            bgcolor=Color.EXPENSE_ACTION_BACKGROUND,
-            color=Color.WHITE
-        )
-
-        self.object_details_button = ft.Button(
-            content=Text.BUTTON(self.lang["home.objective_details"]),
-            icon=ft.Icons.SAVINGS,
-            on_click=on_saving,
-            bgcolor=Color.LIGHT_ACCENT,
-            color=Color.DARK_SURFACE
-        )
-
-        self.main_container = ft.Container(
-            padding=25,
-            bgcolor=Color.DARK_SURFACE,
-            border_radius=24,
-            border=ft.Border.all(1, Color.PRIMARY),
-            content=ft.Column(
-                tight=True,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                controls=[
-                    self.dialog_header,
-                    self.add_income_button,
-                    self.add_expense_button,
-                    self.object_details_button
-                ]
-            )
-        )
-
-        super().__init__(
-            content_padding=0,
-            bgcolor=Color.TRANSPARENT,
-            content=self.main_container
-        )
-
-    def resize(self, dialog_width: int, button_width: int, button_height: int):
-        self.main_container.width = dialog_width
-        self.add_income_button.width, self.add_expense_button.width, self.object_details_button.width = button_width, button_width, button_width
-        self.add_income_button.height, self.add_expense_button.height, self.object_details_button.height = button_height, button_height, button_height
-
-
 class BalanceCard(ft.Container):
     def __init__(self, page: ft.Page, lang: dict, net_balance: float, income: float, expense: float, saving: float, ai_advice: str, on_add_click: Callable, on_scan_click: Callable):
         self._page = page
@@ -140,14 +74,20 @@ class BalanceCard(ft.Container):
 
         self.action_buttons_row = ft.Row(
             spacing=8,
-            controls=[self.add_transaction_button, self.ai_scan_button]
+            controls=[
+                self.add_transaction_button,
+                self.ai_scan_button
+            ]
         )
 
         self.balance_top_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             wrap=True,
-            controls=[self.balance_header_column, self.action_buttons_row]
+            controls=[
+                self.balance_header_column,
+                self.action_buttons_row
+            ]
         )
 
         self.income_metric_container = ft.Container(
@@ -245,6 +185,22 @@ class BalanceCard(ft.Container):
             content=self.main_container
         )
 
+    def update_data(self, net_balance: float, income: float, expense: float, saving: float, ai_advice: str):
+        self.net_balance = net_balance
+        self.income = income
+        self.expense = expense
+        self.saving = saving
+        self.ai_advice = ai_advice
+
+        self.balance_amount_row.controls[0].value = f"{int(self.net_balance):,}"
+        self.income_metric_container.content.controls[1].value = f"{int(self.income):,} {self.lang['generic.currency']}"
+        self.expense_metric_container.content.controls[1].value = f"-{int(self.expense):,} {self.lang['generic.currency']}"
+        self.saving_metric_container.content.controls[1].value = f"{int(self.saving):,} {self.lang['generic.currency']}"
+
+        self.ai_banner_column.controls[1].value = self.lang.get(self.ai_advice, self.ai_advice)
+
+        self.update()
+
     def resize(self, page_width: int):
         self.width = max(page_width, 320)
         self.main_container.width = self.width
@@ -269,8 +225,8 @@ class SavingsProgressCard(ft.Container):
         self.goal_title_column = ft.Column(
             spacing=0,
             controls=[
-                Text.H4(self.lang["home.saving_goal"], color=Color.DEFAULT_TEXT),
-                Text.SMALL(self.lang["home.saving_goal_subtitle"], color=Color.BLAND_TEXT)
+                Text.H4(self.lang["home.savings_goal"], color=Color.DEFAULT_TEXT),
+                Text.SMALL(self.lang["home.savings_goal_subtitle"], color=Color.BLAND_TEXT)
             ]
         )
 
@@ -345,6 +301,56 @@ class SavingsProgressCard(ft.Container):
             expand=True,
             content=self.main_container
         )
+
+    def _build_goal_items(self):
+        self.goal_item_containers = []
+        if not self.objective_items:
+            self.empty_state_container = ft.Container(
+                padding=20,
+                alignment=ft.Alignment.CENTER,
+                content=Text.SMALL(self.lang["home.no_savings_goal"], color=Color.BLAND_TEXT)
+            )
+            self.goal_item_containers.append(self.empty_state_container)
+        else:
+            for objective_item in self.objective_items:
+                objective_progress_bar = ft.ProgressBar(value=objective_item["progress_ratio"], color=Color.PRIMARY, bgcolor=Color.PROGRESS_TRACK_BACKGROUND, height=8)
+                objective_metric_row = ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        Text.SMALL(objective_item["contributed_label"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD),
+                        Text.SMALL(objective_item["target_label"], color=Color.BLAND_TEXT)
+                    ]
+                )
+                objective_title_row = ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        Text.MEDIUM(objective_item["title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD),
+                        ft.Container(
+                            content=Text.SMALL(objective_item["progress_text"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                            bgcolor=Color.PRIMARY,
+                            padding=ft.Padding(8, 2, 8, 2),
+                            border_radius=12
+                        )
+                    ]
+                )
+                goal_item_container = ft.Container(
+                    bgcolor=Color.GOAL_ITEM_BACKGROUND,
+                    border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                    border_radius=16,
+                    padding=12,
+                    content=ft.Column(
+                        spacing=6,
+                        controls=[objective_title_row, objective_progress_bar, objective_metric_row]
+                    )
+                )
+                self.goal_item_containers.append(goal_item_container)
+
+        self.main_container.content.controls = [self.goal_header_row, *self.goal_item_containers]
+
+    def update_data(self, objective_items: list):
+        self.objective_items = objective_items or []
+        self._build_goal_items()
+        self.update()
 
     def resize(self, page_width: int):
         self.width = max(page_width, 320)
@@ -466,6 +472,72 @@ class ExpensePieChartCard(ft.Container):
             expand=True,
             content=self.main_container
         )
+
+    def _build_chart(self):
+        if not self.category_data:
+            self.empty_state_container = ft.Container(
+                padding=40,
+                alignment=ft.Alignment.CENTER,
+                content=ft.Column(
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Icon(ft.Icons.ERROR_OUTLINE, color=Color.DEFAULT_BORDER, size=32),
+                        Text.SMALL(self.lang["home.no_expense_data"], color=Color.BLAND_TEXT)
+                    ]
+                )
+            )
+            self.chart_content_area = self.empty_state_container
+        else:
+            self.chart_sections = []
+            self.chart_legend_items = []
+            for index, (category_name, category_value) in enumerate(self.category_data.items()):
+                color = self.pie_colors[index % len(self.pie_colors)]
+                self.chart_sections.append(fc.PieChartSection(category_value, color=color, radius=45))
+                self.chart_legend_items.append(
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[
+                            ft.Row(
+                                spacing=8,
+                                controls=[
+                                    ft.Container(width=10, height=10, border_radius=5, bgcolor=color),
+                                    Text.SMALL(category_name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
+                                ]
+                            ),
+                            Text.SMALL(f"{int(category_value):,} {self.lang['generic.currency']}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+                        ]
+                    )
+                )
+
+            self.pie_chart_container = ft.Container(
+                alignment=ft.Alignment.CENTER,
+                content=fc.PieChart(
+                    sections=self.chart_sections,
+                    sections_space=2,
+                    center_space_radius=40,
+                    expand=True
+                )
+            )
+
+            self.legend_list = ft.Column(
+                scroll=ft.ScrollMode.AUTO,
+                height=120,
+                spacing=8,
+                controls=self.chart_legend_items
+            )
+
+            self.chart_content_area = ft.Column(
+                spacing=16,
+                controls=[self.pie_chart_container, self.legend_list]
+            )
+
+        if hasattr(self, 'main_container'):
+            self.main_container.content.controls = [self.chart_header_row, self.chart_content_area]
+
+    def update_data(self, category_data: dict):
+        self.category_data = category_data or {}
+        self._build_chart()
+        self.update()
 
     def resize(self, page_width: int):
         self.width = max(page_width, 320)

@@ -6,7 +6,7 @@ import flet as ft
 
 from src.utils import UISettings, Color, Text
 from src.logger import Logger
-from src.pages.global_components import Menu, TopNavigationBar, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog
+from src.pages.global_components import Menu, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog
 from src.pages.saving.logic import LogicController
 from src.pages.saving.components import AggregateCard, ObjectiveGrid
 
@@ -28,7 +28,6 @@ class SavingView(ft.View):
 
         # components
         self.menu = Menu(self._page, self.lang, self.user_info)
-        self.top_navigation_bar = TopNavigationBar(page=self._page, lang=self.lang, current_user=self.user_info["username"])
 
         # load data and build UI
         self._load_and_build()
@@ -38,7 +37,7 @@ class SavingView(ft.View):
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.Stack(expand=True, controls=[self.main_container, self.top_navigation_bar, self.menu])
+            controls=ft.Stack(expand=True, controls=[self.main_container, self.menu])
         )
 
         self._page.on_resize = self.on_page_resize
@@ -84,7 +83,7 @@ class SavingView(ft.View):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(top=UISettings.TOP_NAVIGATION_HEIGHT, bottom=UISettings.MENU_HEIGHT)
+            margin=ft.Margin(bottom=UISettings.MENU_HEIGHT)
         )
 
     def refresh_view(self) -> None:
@@ -132,7 +131,6 @@ class SavingView(ft.View):
         page_width, page_height = self.get_safe_page_size()
 
         self.main_container.width = page_width
-        self.top_navigation_bar.resize(page_width)
         self.menu.resize(page_width)
 
         return e

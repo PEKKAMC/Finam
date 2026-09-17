@@ -6,7 +6,7 @@
 
 from src.pages.purchase_scanner.view import PurchaseScannerView, get_scanner_view
 from src.pages.purchase_scanner.logic import LogicController
-from src.pages.purchase_scanner.components import ScannerForm, InterventionItem, ScannerResult
+from src.pages.purchase_scanner.components import ScannerForm, InterventionItem, ScannerResult, SelectableOptionGroup
 
 __all__ = [
     "PurchaseScannerView",
@@ -14,5 +14,6 @@ __all__ = [
     "LogicController",
     "ScannerForm",
     "InterventionItem",
-    "ScannerResult"
+    "ScannerResult",
+    "SelectableOptionGroup",
 ]

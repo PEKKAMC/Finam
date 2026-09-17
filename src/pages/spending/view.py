@@ -2,79 +2,155 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from collections.abc import Callable
+
 import flet as ft
 
-from src.utils import Color, UISettings, Text
 from src.logger import Logger
-from src.pages.global_components import Menu, TopNavigationBar
+from src.pages.global_components import CategorySelectionDialog, ExpenseInputDialog, IncomeInputDialog, FinancialChart, Menu
 from src.pages.spending.logic import LogicController
 from src.pages.spending.components import MetricCards, TransactionToolbar, TransactionItemCard
+from src.utils import Color, get_safe_page_size, UISettings, Text
 
 Logger.info("Initializing Spending page...")
 
 
 class DialogManager:
-    """Handles dialog state and callbacks for the Spending View."""
-
-    def __init__(self, page: ft.Page, lang: dict, controller: LogicController, refresh_callback):
+    """Handles all dialog instantiation, states, and callbacks for the Home View."""
+    def __init__(self, page: ft.Page, lang: dict, controller: LogicController, refresh_callback: Callable):
         self._page = page
         self.lang = lang
         self.controller = controller
-        self.refresh_view = refresh_callback
-        self.current_category_type = None
+        self._refresh_view = refresh_callback
+        self.current_category_type = "expense"
 
-        self.income_dialog = self.controller.income_dialog
-        self.expense_dialog = self.controller.expense_dialog
-        self.category_dialog = self.controller.category_dialog
+        # INITIALIZE DIALOG COMPONENTS
+        self.category_dialog = CategorySelectionDialog(
+            page=self._page,
+            lang=self.lang,
+            on_select=self._handle_category_selected,
+            on_cancel=self._cancel_category_selector_dialog
+        )
+        self.category_dialog.load_categories("expense")
 
-    def close_all(self, e=None):
-        dialogs = [
-            self.income_dialog,
-            self.expense_dialog,
-            self.category_dialog
-        ]
-        for dialog in dialogs:
-            if dialog:
-                dialog.open = False
-        self._page.update()
+        self.expense_dialog = ExpenseInputDialog(
+            page=self._page,
+            lang=self.lang,
+            on_save=self._handle_save_expense,
+            on_cancel=self._cancel_expense_dialog,
+            on_category_click=lambda e=None: self._load_category_selector_data()
+        )
+
+        self.income_dialog = IncomeInputDialog(
+            page=self._page,
+            lang=self.lang,
+            on_save=self._handle_save_income,
+            on_cancel=self._cancel_income_dialog,
+            on_category_click=lambda e=None: self._load_category_selector_data()
+        )
+
+        self._add_dialogs_to_overlay()
+
+    # CATEGORY SELECTOR DIALOG
+    def _load_category_selector_data(self) -> int:
+        try:
+            if self.expense_dialog.open:
+                self.expense_dialog.close_most_recent_dialog(self._page)
+            if self.income_dialog.open:
+                self.income_dialog.close_most_recent_dialog(self._page)
+
+            self.category_dialog.load_categories(self.current_category_type)
+            self.category_dialog.show(self._page)
+            return 0
+
+        except Exception as e:
+            Logger.error(f"Error loading category selector data: {e}")
+            return -1
+
+    def _cancel_category_selector_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+        self.category_dialog.close_most_recent_dialog(self._page)
         return e
 
-    def _open_dialog(self, dialog):
-        self.close_all()
-        if dialog not in self._page.overlay:
-            self._page.overlay.append(dialog)
-        dialog.open = True
-        self._page.update()
+    def _handle_category_selected(self, category_name: str, category_type: str, e = None) -> None:
+        self.category_dialog.close_most_recent_dialog(self._page)
 
-    def open_income_dialog(self, e=None):
-        self._open_dialog(self.income_dialog)
-        return e
-
-    def open_expense_dialog(self, e=None):
-        self._open_dialog(self.expense_dialog)
-        return e
-
-    def open_category_selector(self, category_type: str):
-        self.current_category_type = category_type
-        if self.category_dialog not in self._page.overlay:
-            self._page.overlay.append(self.category_dialog)
-        self.category_dialog.load_categories(category_type)
-        self.category_dialog.open = True
-        self._page.update()
-
-    def handle_category_selected(self, category_name: str):
-        if self.current_category_type == "expense":
+        if category_type == "expense":
             self.expense_dialog.set_category(category_name)
-        elif self.current_category_type == "income":
+            self.expense_dialog.show(self._page)
+        elif category_type == "income":
             self.income_dialog.set_category(category_name)
-        self.category_dialog.open = False
-        self._page.update()
+            self.income_dialog.show(self._page)
 
-    def handle_save_income(self, e=None):
-        return self.controller.handle_save_income()
+        self.current_category_type = category_type
 
-    def handle_save_expense(self, e=None):
-        return self.controller.handle_save_expense()
+        return e
+
+    # EXPENSE DIALOG
+    def open_expense_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+        self.expense_dialog.show(self._page)
+        return e
+
+    def _cancel_expense_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+        self.expense_dialog.close_most_recent_dialog(self._page)
+        return e
+
+    def _handle_save_expense(self, e: ft.ControlEvent) -> ft.ControlEvent:
+        success, message = self.controller.add_expense_entry(self.expense_dialog.get_values())
+
+        self._page.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self._page.snack_bar.open = True
+
+        if success:
+            self.expense_dialog.clear()
+            self._refresh_view()
+            self.expense_dialog.close_most_recent_dialog(self._page)
+        else:
+            self._page.update()
+
+        return e
+
+    # INCOME DIALOG
+    def open_income_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+        self.income_dialog.show(self._page)
+        return e
+
+    def _cancel_income_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+        self.income_dialog.close_most_recent_dialog(self._page)
+        return e
+
+    def _handle_save_income(self, e: ft.ControlEvent) -> ft.ControlEvent:
+        success, message = self.controller.add_income_entry(self.income_dialog.get_values())
+
+        self._page.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self._page.snack_bar.open = True
+
+        if success:
+            self.income_dialog.clear()
+            self._refresh_view()
+            self.income_dialog.close_most_recent_dialog(self._page)
+        else:
+            self._page.update()
+
+        return e
+
+    # OVERLAY MANAGEMENT
+    def _add_dialogs_to_overlay(self) -> None:
+        dialogs = [
+            self.category_dialog,
+            self.expense_dialog,
+            self.income_dialog
+        ]
+        for d in dialogs:
+            d.add_to_overlay(self._page)
+
+    def _remove_dialogs_from_overlay(self) -> None:
+        dialogs = [
+            self.category_dialog,
+            self.expense_dialog,
+            self.income_dialog
+        ]
+        for d in dialogs:
+            d.remove_from_overlay(self._page)
 
 
 class SpendingView(ft.View):
@@ -89,6 +165,8 @@ class SpendingView(ft.View):
         self.raw_transactions = {}
 
         self.controller = LogicController(user_info["username"], self._page, self.lang, self.user_info, self.refresh_view)
+        self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
+
         self.dialogs = DialogManager(
             page=self._page,
             lang=self.lang,
@@ -96,12 +174,15 @@ class SpendingView(ft.View):
             refresh_callback=self.refresh_view,
         )
 
-        self.menu = Menu(self._page, self.lang, self.user_info)
-        self.top_navigation_bar = TopNavigationBar(
+        self.financial_chart = FinancialChart(
             page=self._page,
             lang=self.lang,
-            current_user=self.user_info["username"],
+            chart_date=self.chart_date,
+            chart_data=self.chart_data,
+            chart_type=self.chart_type
         )
+
+        self.menu = Menu(self._page, self.lang, self.user_info)
 
         self.metric_cards = MetricCards(
             page=self._page,
@@ -132,29 +213,29 @@ class SpendingView(ft.View):
             content=ft.Column(spacing=12, controls=[]),
         )
 
-        self.content_column = ft.Column(
-            spacing=20,
-            expand=True,
-            controls=[
-                self.metric_cards,
-                self.toolbar,
-                self.history_container,
-            ]
-        )
-        self.content_wrapper = ft.Container(
-            width=UISettings.MAX_APP_WIDTH,
-            padding=UISettings.CARD_PADDING,
-            content=self.content_column,
-        )
-
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                controls=[self.content_wrapper]
+                controls=[
+                    ft.Container(
+                        width=UISettings.MAX_APP_WIDTH,
+                        padding=UISettings.CARD_PADDING,
+                        content=ft.Column(
+                            spacing=20,
+                            expand=True,
+                            controls=[
+                                self.metric_cards,
+                                self.financial_chart,
+                                self.toolbar,
+                                self.history_container
+                            ]
+                        )
+                    )
+                ]
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(top=UISettings.TOP_NAVIGATION_HEIGHT, bottom=UISettings.MENU_HEIGHT)
+            margin=ft.Margin(bottom=UISettings.MENU_HEIGHT)
         )
 
         super().__init__(
@@ -162,16 +243,19 @@ class SpendingView(ft.View):
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.Stack(expand=True, controls=[self.main_container, self.top_navigation_bar, self.menu]),
+            controls=ft.Stack(
+                expand=True,
+                controls=[
+                    self.main_container,
+                    self.menu
+                ]
+            )
         )
 
         self._page.on_resize = self.on_page_resize
-        self.refresh_content()
         self.on_page_resize()
 
     def refresh_view(self) -> None:
-        for control in self._page.overlay:
-            control.open = False
         self.refresh_content()
         self._page.update()
 
@@ -195,7 +279,7 @@ class SpendingView(ft.View):
         )
         try:
             self.history_container.update()
-        except Exception:
+        except Exception as e:
             try:
                 self._page.update()
             except RuntimeError:
@@ -206,7 +290,6 @@ class SpendingView(ft.View):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
                 Text.H4(f"Lịch Sử Giao Dịch ({len(filtered_txs)})", color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
-                Text.SMALL("Cập nhật tự động theo thời gian", color=Color.SECONDARY_TEXT),
             ],
         )
 
@@ -277,6 +360,8 @@ class SpendingView(ft.View):
         balance_data, raw_transactions = self.controller.get_transaction_data()
         self.raw_transactions = raw_transactions
 
+        self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
+
         all_categories = sorted(list({
             tx["title"] for items in raw_transactions.values() for tx in items if "title" in tx
         }))
@@ -309,27 +394,19 @@ class SpendingView(ft.View):
             controls=self._build_history_controls(filtered_txs),
         )
 
-        self.content_column.controls = [
-            self.metric_cards,
-            self.toolbar,
-            self.history_container,
-        ]
+        self.financial_chart.update_data(
+            chart_date=self.chart_date,
+            chart_data=self.chart_data,
+            chart_type=self.chart_type
+        )
+
         try:
             self._page.update()
         except RuntimeError:
             pass
 
-    def get_safe_page_size(self) -> tuple[int, int]:
-        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
-        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
-
-        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
-        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
-        return safe_width, safe_height
-
     def on_page_resize(self, e=None):
-        safe_width, _ = self.get_safe_page_size()
-        self.top_navigation_bar.resize(safe_width)
+        safe_width, safe_height = get_safe_page_size(self._page)
         self.main_container.width = safe_width
         self.menu.resize(safe_width)
         return e

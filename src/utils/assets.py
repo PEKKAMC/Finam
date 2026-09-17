@@ -6,6 +6,7 @@ import json
 import sys
 from pathlib import Path
 
+from src.logger import Logger
 
 class TranslationDict(dict):
     def __missing__(self, key):
@@ -29,11 +30,11 @@ def get_language(lang=None) -> dict:
     translations = TranslationDict()
 
     try:
-        with open(lang_file, "r", encoding="utf-8") as f:
+        with open(lang_file, "r", encoding="utf-8-sig") as f:
             loaded_json = json.load(f)
             translations.update(loaded_json)
-    except (FileNotFoundError, json.JSONDecodeError):
-        pass
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        Logger.error(f"Error loading language file {lang_file}: {e}")
 
     return translations
 

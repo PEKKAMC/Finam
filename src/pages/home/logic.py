@@ -61,7 +61,7 @@ class LogicController:
 
         return metrics, chart_date, chart_data, "daily"
 
-    @staticmethod
+    @staticmethod # Temporary static messages until AI integration is implemented
     def get_ai_advice(net_balance: float, total_income: float, total_expense: float) -> str:
         if total_income == 0 and total_expense == 0:
             return "Hãy bắt đầu ghi chép các khoản thu chi hàng ngày để Finam AI phân tích sức khỏe tài chính cho bạn!"
@@ -76,20 +76,20 @@ class LogicController:
 
         if not amount or not category:
             Logger.warning("Amount or Category missing.")
-            return False, "Vui lòng nhập đủ số tiền và danh mục."
+            return False, "home.error.missing_amount_category"
 
         try:
             amount_val = int(amount)
             if amount_val <= 0:
-                return False, "Số tiền phải lớn hơn 0."
+                return False, "home.error.amount_less_than_zero"
         except ValueError:
             Logger.error("Invalid amount provided")
-            return False, "Số tiền không hợp lệ. Vui lòng nhập số."
+            return False, "home.error.invalid_amount"
 
         date = datetime.now().strftime("%Y-%m-%d %H:%M")
         if db.spending.add_income_entry(self.current_user, amount_val, category, date, note):
-            return True, "Thu nhập đã được thêm thành công!"
-        return False, "Đã xảy ra lỗi khi lưu thu nhập."
+            return True, "spending.income_added_success"
+        return False, "home.error.save_income_failed"
 
     def add_expense_entry(self, vals: dict) -> tuple[bool, str]:
         amount = vals.get("amount", '0')
@@ -98,20 +98,20 @@ class LogicController:
 
         if not amount or not category:
             Logger.warning("Amount or Category missing.")
-            return False, "Vui lòng nhập đủ số tiền và danh mục."
+            return False, "home.error.missing_amount_category"
 
         try:
             amount_val = int(amount)
             if amount_val <= 0:
-                return False, "Số tiền phải lớn hơn 0."
+                return False, "home.error.amount_less_than_zero"
         except ValueError:
             Logger.error("Invalid amount provided")
-            return False, "Số tiền không hợp lệ. Vui lòng nhập số."
+            return False, "home.error.invalid_amount"
 
         date = datetime.now().strftime("%Y-%m-%d %H:%M")
         if db.spending.add_expense_entry(self.current_user, amount_val, category, date, note):
-            return True, "Chi tiêu đã được thêm thành công!"
-        return False, "Đã xảy ra lỗi khi lưu chi tiêu."
+            return True, "spending.expense_added_success"
+        return False, "home.error.save_expense_failed"
 
     def get_user_objectives(self):
         return db.saving.get_user_objectives(self.current_user)

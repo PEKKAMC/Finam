@@ -9,7 +9,6 @@ import flet as ft
 from src.database import db
 from src.logger import Logger
 from src.utils import Text
-from src.pages.global_components import CategorySelectionDialog, IncomeInputDialog, ExpenseInputDialog
 
 
 class LogicController:
@@ -25,40 +24,49 @@ class LogicController:
         self.current_chart_type = "daily"
         self.current_category_type = None
 
-        self.expense_dialog = ExpenseInputDialog(
-            page=self.page,
-            lang=self.lang,
-            on_save=self.handle_save_expense,
-            on_cancel=self.close_expense_dialog,
-            on_category_click=lambda e: self.open_category_selector("expense")
-        )
+    def add_income_entry(self, vals: dict) -> tuple[bool, str]:
+        amount = vals.get("amount", '0')
+        category = vals.get("category")
+        note = vals.get("note", "")
 
-        self.income_dialog = IncomeInputDialog(
-            page=self.page,
-            lang=self.lang,
-            on_save=self.handle_save_income,
-            on_cancel=self.close_income_dialog,
-            on_category_click=lambda e: self.open_category_selector("income")
-        )
+        if not amount or not category:
+            Logger.warning("Amount or Category missing.")
+            return False, "home.error.missing_amount_category"
 
-        self.category_dialog = CategorySelectionDialog(page=self.page, lang=self.lang, on_select=self.handle_category_selected)
+        try:
+            amount_val = int(amount)
+            if amount_val <= 0:
+                return False, "home.error.amount_less_than_zero"
+        except ValueError:
+            Logger.error("Invalid amount provided")
+            return False, "home.error.invalid_amount"
 
-    def open_category_selector(self, category_type: str):
-        self.current_category_type = category_type
-        if self.category_dialog not in self.page.overlay:
-            self.page.overlay.append(self.category_dialog)
-            self.page.update()
-        self.category_dialog.load_categories(category_type)
-        self.category_dialog.open = True
-        self.page.update()
+        date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        if db.spending.add_income_entry(self.current_user, amount_val, category, date, note):
+            return True, "spending.income_added_success"
+        return False, "home.error.save_income_failed"
 
-    def handle_category_selected(self, category_name: str):
-        if self.current_category_type == "expense":
-            self.expense_dialog.set_category(category_name)
-        elif self.current_category_type == "income":
-            self.income_dialog.set_category(category_name)
-        self.category_dialog.open = False
-        self.page.update()
+    def add_expense_entry(self, vals: dict) -> tuple[bool, str]:
+        amount = vals.get("amount", '0')
+        category = vals.get("category")
+        note = vals.get("note", "")
+
+        if not amount or not category:
+            Logger.warning("Amount or Category missing.")
+            return False, "home.error.missing_amount_category"
+
+        try:
+            amount_val = int(amount)
+            if amount_val <= 0:
+                return False, "home.error.amount_less_than_zero"
+        except ValueError:
+            Logger.error("Invalid amount provided")
+            return False, "home.error.invalid_amount"
+
+        date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        if db.spending.add_expense_entry(self.current_user, amount_val, category, date, note):
+            return True, "spending.expense_added_success"
+        return False, "home.error.save_expense_failed"
 
     def get_dashboard_data(self):
         now = datetime.now()
@@ -109,70 +117,6 @@ class LogicController:
             Logger.error(f"Error formatting dashboard data: {e}")
 
         return chart_date, chart_data, self.current_chart_type
-
-    def open_expense_dialog(self):
-        if self.expense_dialog not in self.page.overlay:
-            self.page.overlay.append(self.expense_dialog)
-        self.expense_dialog.open = True
-        self.page.update()
-
-    def close_expense_dialog(self):
-        self.expense_dialog.open = False
-        self.page.update()
-
-    def handle_save_expense(self):
-        values = self.expense_dialog.get_values()
-        amount, category, note = values["amount"], values["category"], values["note"]
-        username = self.user_info.get("username")
-
-        if not amount or not category:
-            Logger.warning("Amount or Category missing.")
-            return
-
-        try:
-            date = datetime.now().strftime("%Y-%m-%d %H:%M")
-            success = db.spending.add_expense_entry(username, amount, category, date, note)
-            if success:
-                self.expense_dialog.clear()
-                self.close_expense_dialog()
-                if self.refresh_callback: self.refresh_callback()
-                self.page.snack_bar = ft.SnackBar(Text.MEDIUM("Expense added successfully!"))
-                self.page.snack_bar.open = True
-                self.page.update()
-        except ValueError as e:
-            Logger.error(f"Invalid amount provided: {e}")
-
-    def open_income_dialog(self):
-        if self.income_dialog not in self.page.overlay:
-            self.page.overlay.append(self.income_dialog)
-        self.income_dialog.open = True
-        self.page.update()
-
-    def close_income_dialog(self):
-        self.income_dialog.open = False
-        self.page.update()
-
-    def handle_save_income(self):
-        values = self.income_dialog.get_values()
-        amount, category, note = values["amount"], values["category"], values["note"]
-        username = self.user_info.get("username")
-
-        if not amount or not category:
-            Logger.warning("Amount or Category missing.")
-            return
-
-        try:
-            date = datetime.now().strftime("%Y-%m-%d %H:%M")
-            success = db.spending.add_income_entry(username, amount, category, date, note)
-            if success:
-                self.income_dialog.clear()
-                self.close_income_dialog()
-                if self.refresh_callback: self.refresh_callback()
-                self.page.snack_bar = ft.SnackBar(Text.MEDIUM("Income added successfully!"))
-                self.page.snack_bar.open = True
-                self.page.update()
-        except ValueError as e:
-            Logger.error(f"Invalid amount provided: {e}")
 
     def get_transaction_data(self):
         username = self.user_info.get("username")

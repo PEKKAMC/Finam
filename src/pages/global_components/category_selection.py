@@ -7,7 +7,7 @@ from typing import TypedDict
 
 import flet as ft
 
-from src.utils import Color, Text, UISettings
+from src.utils import Color, Dialog, Text, UISettings
 
 
 class _Category(TypedDict):
@@ -58,11 +58,13 @@ class CategoryItem(ft.Container):
         )
 
 
-class CategorySelectionDialog(ft.AlertDialog):
-    def __init__(self, page: ft.Page, lang: dict, on_select: Callable):
+class CategorySelectionDialog(Dialog):
+    def __init__(self, page: ft.Page, lang: dict, on_select: Callable, on_cancel: Callable):
         self._page = page
         self.lang = lang
         self._on_select = on_select
+        self._on_cancel = on_cancel
+        self.current_type = "expense"
 
         self.category_list = ft.Column(
             spacing=10,
@@ -72,32 +74,101 @@ class CategorySelectionDialog(ft.AlertDialog):
         )
 
         self.cancel_button = ft.TextButton(
-            content=self.lang["generic.cancel"],
-            on_click=lambda e: self.close_dialog(),
-            style=ft.ButtonStyle(color=Color.DEFAULT_TEXT)
+            content=Text.P(self.lang["generic.cancel"], color=Color.DEFAULT_TEXT),
+            on_click=self._on_cancel
+        )
+
+        self.title_text = Text.H3(value="Thêm", color=Color.DEFAULT_TEXT)
+
+        self.expense_text = Text.P("Chi tiêu", color=Color.BLACK, weight=ft.FontWeight.BOLD)
+        self.income_text = Text.P("Thu nhập", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.NORMAL)
+
+        self.expense_button = ft.Container(
+            content=self.expense_text,
+            bgcolor=Color.WHITE,
+            padding=ft.Padding.symmetric(horizontal=20, vertical=8),
+            border_radius=8,
+            alignment=ft.Alignment.CENTER,
+            on_click=lambda e: self.switch_type("expense"),
+            expand=True
+        )
+
+        self.income_button = ft.Container(
+            content=self.income_text,
+            bgcolor=Color.TRANSPARENT,
+            padding=ft.Padding.symmetric(horizontal=20, vertical=8),
+            border_radius=8,
+            alignment=ft.Alignment.CENTER,
+            on_click=lambda e: self.switch_type("income"),
+            expand=True
+        )
+
+        self.segment_control = ft.Container(
+            bgcolor=Color.INPUT_BORDER,
+            border_radius=10,
+            padding=3,
+            content=ft.Row(
+                controls=[self.expense_button, self.income_button],
+                spacing=0,
+                alignment=ft.MainAxisAlignment.CENTER
+            )
         )
 
         self.main_container = ft.Container(
-            content=self.category_list
+            content=ft.Column(
+                tight=True,
+                spacing=15,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[
+                            self.cancel_button,
+                            self.title_text,
+                            ft.Container(width=50)
+                        ]
+                    ),
+                    self.segment_control,
+                    self.category_list
+                ]
+            )
         )
 
         super().__init__(
-            title=Text.H3(value=self.lang["spending.select_category"], color=Color.DEFAULT_TEXT),
-            bgcolor=Color.DIALOG_BACKGROUND,
-            content_padding=20,
-            content=self.main_container,
-            actions=[
-                self.cancel_button
-            ]
+            color=Color.DIALOG_BACKGROUND,
+            dialog_content=self.main_container
         )
+    def switch_type(self, category_type: str) -> None:
+        self.load_categories(category_type)
+        if self._page is not None:
+            self._page.update()
 
     # TODO: Use language instead of hardcoding name.
     def load_categories(self, category_type: str) -> None:
+        self.current_type = category_type
+
+        # Update tab visual state
+        if category_type == "expense":
+            self.expense_button.bgcolor = Color.WHITE
+            self.expense_text.color = Color.BLACK
+            self.expense_text.weight = ft.FontWeight.BOLD
+
+            self.income_button.bgcolor = Color.TRANSPARENT
+            self.income_text.color = Color.DEFAULT_TEXT
+            self.income_text.weight = ft.FontWeight.NORMAL
+        elif category_type == "income":
+            self.income_button.bgcolor = Color.WHITE
+            self.income_text.color = Color.BLACK
+            self.income_text.weight = ft.FontWeight.BOLD
+
+            self.expense_button.bgcolor = Color.TRANSPARENT
+            self.expense_text.color = Color.DEFAULT_TEXT
+            self.expense_text.weight = ft.FontWeight.NORMAL
+
         categories: list[list[_Category]] = []
 
         match category_type: # Categories divided into rows of 4 for organization (temporary)
             case "expense":
-                self.title.value = self.lang["spending.expense_category"]
                 categories = [
                     [
                         {"name": "Mua sắm", "icon": ft.Icons.SHOPPING_CART},
@@ -141,7 +212,6 @@ class CategorySelectionDialog(ft.AlertDialog):
                     ]
                 ]
             case "income":
-                self.title.value = self.lang["spending.income_category"]
                 categories = [
                     [
                         {"name": "Lương", "icon": ft.Icons.WORK},
@@ -175,137 +245,21 @@ class CategorySelectionDialog(ft.AlertDialog):
             self.category_list.controls.append(category_row)
 
     def _create_handler(self, name: str):
-        def handler(e):
-            self._on_select(name)
+        def handler(e=None):
+            self._on_select(name, self.current_type)
             return e
         return handler
 
-    def close_dialog(self):
-        self.open = False
-        self.update()
+    def resize(self, dialog_width: int, dialog_height: int) -> None:
+        self.main_container.width = dialog_width
+        self.main_container.height = dialog_height
 
-    def resize(self, dialog_width: int) -> None:
-        self.content.width = dialog_width
 
-class IncomeInputDialog(ft.AlertDialog):
-    def __init__(self, page: ft.Page, lang: dict, on_save=None, on_cancel=None, on_category_click=None):
+class ExpenseInputDialog(Dialog):
+    def __init__(self, page: ft.Page, lang: dict, on_save: Callable, on_cancel: Callable, on_category_click: Callable):
         self._page = page
         self.lang = lang
-
-        # INTIAL VALUES
-        self.category_value = ""
-        self.category_text = Text.P(self.lang["spending.select_category"], color=Color.SECONDARY_TEXT)
-        self.income_icon = ft.Icon(ft.Icons.ARROW_DROP_DOWN, color=Color.SECONDARY_TEXT)
-
-        # DIALOG FIELDS
-        self.amount_input = ft.TextField(
-            label=lang["generic.amount"],
-            color=Color.DEFAULT_TEXT,
-            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]{0,12}$", replacement_string=""),
-            keyboard_type=ft.KeyboardType.NUMBER,
-            border_radius=10,
-            border_color=Color.INPUT_BORDER,
-            width=400,
-            focused_border_color=Color.PRIMARY_ACTION
-        )
-
-        self.category_button = ft.Container(
-            content=ft.Row(
-                controls=[
-                    self.category_text,
-                    self.income_icon
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-            width=400,
-            height=55,
-            border_radius=10,
-            border=ft.Border.all(1, Color.INPUT_BORDER),
-            padding=ft.Padding.symmetric(horizontal=12),
-            ink=True,
-            on_click=on_category_click,
-            alignment=ft.Alignment.CENTER_LEFT
-        )
-
-        self.note_input = ft.TextField(
-            label="Note (Optional)",
-            color=Color.DEFAULT_TEXT,
-            prefix_icon=ft.Icons.NOTES,
-            border_radius=10,
-            width=400,
-            border_color=Color.INPUT_BORDER,
-            focused_border_color=Color.PRIMARY_ACTION
-        )
-
-        # MAIN DIALOG CONTAINER
-        self.main_container = ft.Container(
-            width=UISettings.MAX_APP_WIDTH * 0.9,
-            padding=25,
-            bgcolor=Color.DIALOG_BACKGROUND,
-            border_radius=20,
-            content=ft.Column(
-                tight=True,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                controls=[
-                    ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[
-                            ft.IconButton(ft.Icons.CLOSE, on_click=on_cancel, icon_color=Color.PRIMARY_TEXT),
-                            Text.H3("Add Income", color=Color.DEFAULT_TEXT), ft.Container(width=40)
-                        ]
-                    ),
-                    ft.Container(height=10),
-                    ft.Column(
-                        spacing=15,
-                        controls=[
-                            self.amount_input,
-                            self.category_button,
-                            self.note_input
-                        ]
-                    ),
-                    ft.Container(height=25),
-                    ft.Button(
-                        content="Save Income",
-                        icon=ft.Icons.ADD_CIRCLE,
-                        on_click=on_save,
-                        bgcolor=Color.PRIMARY_ACTION,
-                        color=Color.WHITE,
-                        width=400,
-                        height=55,
-                        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=12))
-                    ),
-                    ft.Container(height=10)
-                ]
-            )
-        )
-        super().__init__(
-            content_padding=0,
-            bgcolor=Color.TRANSPARENT,
-            content=self.main_container
-        )
-
-    def set_category(self, category_name: str):
-        self.category_value = category_name
-        self.category_text.value = category_name
-        self.category_text.color = Color.DEFAULT_TEXT
-        self.category_button.update()
-
-    def get_values(self):
-        return {"amount": self.amount_input.value, "category": self.category_value, "note": self.note_input.value}
-
-    def clear(self):
-        self.amount_input.value = ""
-        self.category_value = ""
-        self.category_text.value = self.lang["spending.select_category"]
-        self.category_text.color = Color.SECONDARY_TEXT
-        self.note_input.value = ""
-
-    def resize(self, width: int) -> None:
-        self.main_container.width = width
-
-class ExpenseInputDialog(ft.AlertDialog):
-    def __init__(self, page: ft.Page, lang: dict, on_save=None, on_cancel=None, on_category_click=None):
-        self._page = page
-        self.lang = lang
+        self._on_cancel = on_cancel
 
         # INTIAL VALUES
         self.category_value = ""
@@ -365,7 +319,7 @@ class ExpenseInputDialog(ft.AlertDialog):
                     ft.Row(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         controls=[
-                            ft.IconButton(ft.Icons.CLOSE, on_click=on_cancel, icon_color=Color.PRIMARY_TEXT),
+                            ft.IconButton(ft.Icons.CLOSE, on_click=self._handle_close, icon_color=Color.PRIMARY_TEXT),
                             Text.H3(value="Add Expense", color=Color.DEFAULT_TEXT)
                         ]
                     ),
@@ -393,16 +347,151 @@ class ExpenseInputDialog(ft.AlertDialog):
             )
         )
         super().__init__(
-            content_padding=0,
-            bgcolor=Color.TRANSPARENT,
-            content=self.main_container
+            color=Color.TRANSPARENT,
+            dialog_content=self.main_container
         )
+
+    def _handle_close(self, e=None):
+        page = e.page if e is not None and hasattr(e, "page") else self._page
+        self.close_most_recent_dialog(page)
+        if self._on_cancel is not None:
+            try:
+                self._on_cancel(e)
+            except TypeError:
+                self._on_cancel()
+        return e
 
     def set_category(self, category_name: str):
         self.category_value = category_name
         self.category_text.value = category_name
         self.category_text.color = Color.DEFAULT_TEXT
-        self.category_button.update()
+
+    def get_values(self):
+        return {"amount": self.amount_input.value, "category": self.category_value, "note": self.note_input.value}
+
+    def clear(self):
+        self.amount_input.value = ""
+        self.category_value = ""
+        self.category_text.value = self.lang["spending.select_category"]
+        self.category_text.color = Color.SECONDARY_TEXT
+        self.note_input.value = ""
+
+    def resize(self, width: int) -> None:
+        self.main_container.width = width
+
+
+class IncomeInputDialog(Dialog):
+    def __init__(self, page: ft.Page, lang: dict, on_save: Callable, on_cancel: Callable, on_category_click: Callable):
+        self._page = page
+        self.lang = lang
+        self._on_cancel = on_cancel
+
+        # INTIAL VALUES
+        self.category_value = ""
+        self.category_text = Text.P(self.lang["spending.select_category"], color=Color.SECONDARY_TEXT)
+        self.income_icon = ft.Icon(ft.Icons.ARROW_DROP_DOWN, color=Color.SECONDARY_TEXT)
+
+        # DIALOG FIELDS
+        self.amount_input = ft.TextField(
+            label=lang["generic.amount"],
+            color=Color.DEFAULT_TEXT,
+            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]{0,12}$", replacement_string=""),
+            keyboard_type=ft.KeyboardType.NUMBER,
+            border_radius=10,
+            border_color=Color.INPUT_BORDER,
+            width=400,
+            focused_border_color=Color.PRIMARY_ACTION
+        )
+
+        self.category_button = ft.Container(
+            content=ft.Row(
+                controls=[
+                    self.category_text,
+                    self.income_icon
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+            width=400,
+            height=55,
+            border_radius=10,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            padding=ft.Padding.symmetric(horizontal=12),
+            ink=True,
+            on_click=on_category_click,
+            alignment=ft.Alignment.CENTER_LEFT
+        )
+
+        self.note_input = ft.TextField(
+            label="Note (Optional)",
+            color=Color.DEFAULT_TEXT,
+            prefix_icon=ft.Icons.NOTES,
+            border_radius=10,
+            width=400,
+            border_color=Color.INPUT_BORDER,
+            focused_border_color=Color.PRIMARY_ACTION
+        )
+
+        # MAIN DIALOG CONTAINER
+        self.main_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH * 0.9,
+            padding=25,
+            bgcolor=Color.DIALOG_BACKGROUND,
+            border_radius=20,
+            content=ft.Column(
+                tight=True,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[
+                            ft.IconButton(ft.Icons.CLOSE, on_click=self._handle_close, icon_color=Color.PRIMARY_TEXT),
+                            Text.H3("Add Income", color=Color.DEFAULT_TEXT), ft.Container(width=40)
+                        ]
+                    ),
+                    ft.Container(height=10),
+                    ft.Column(
+                        spacing=15,
+                        controls=[
+                            self.amount_input,
+                            self.category_button,
+                            self.note_input
+                        ]
+                    ),
+                    ft.Container(height=25),
+                    ft.Button(
+                        content="Save Income",
+                        icon=ft.Icons.ADD_CIRCLE,
+                        on_click=on_save,
+                        bgcolor=Color.PRIMARY_ACTION,
+                        color=Color.WHITE,
+                        width=400,
+                        height=55,
+                        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=12))
+                    ),
+                    ft.Container(height=10)
+                ]
+            )
+        )
+        super().__init__(
+            color=Color.TRANSPARENT,
+            dialog_content=self.main_container
+        )
+
+    def _handle_close(self, e=None):
+        page = e.page if e is not None and hasattr(e, "page") else self._page
+        self.close_most_recent_dialog(page)
+        if self._on_cancel is not None:
+            try:
+                self._on_cancel(e)
+            except TypeError:
+                self._on_cancel()
+        return e
+
+    def set_category(self, category_name: str):
+        self.category_value = category_name
+        self.category_text.value = category_name
+        self.category_text.color = Color.DEFAULT_TEXT
+        if self._page is not None:
+            self._page.update()
 
     def get_values(self):
         return {"amount": self.amount_input.value, "category": self.category_value, "note": self.note_input.value}

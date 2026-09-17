@@ -22,15 +22,13 @@ class FinancialChart(ft.Container):
         max_chart_value = max(max(int(data["income"]), int(data["expense"])) for data in self.chart_data) if self.chart_data else 1
         self.max_value = max_chart_value if max_chart_value > 0 else 1
 
+        self.bar_chart = self.build_bar_chart
+
         self.main_container = ft.Column(
             spacing=16,
             controls=[
                 self.build_legend(),
-                ft.Container(
-                    content=self.build_bar_chart(),
-                    expand=True,
-                    padding=ft.Padding.only(top=10)
-                )
+                self.build_bar_chart()
             ]
         )
         super().__init__(
@@ -59,7 +57,7 @@ class FinancialChart(ft.Container):
                 date_text = ""
                 Logger.error("Unknown chart type")
 
-        legend = ft.Row(
+        return ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
                 ft.Row(
@@ -103,8 +101,6 @@ class FinancialChart(ft.Container):
                 )
             ]
         )
-
-        return legend
 
     def _generate_y_axis_labels(self):
         step = self.max_value / 4
@@ -178,29 +174,48 @@ class FinancialChart(ft.Container):
             )
 
         return ft.Container(
-            content=fc.BarChart(
-                groups=groups,
-                bottom_axis=fc.ChartAxis(
-                    labels=chart_label,
-                    label_size=40,
+            content=ft.Container(
+                content=fc.BarChart(
+                    groups=groups,
+                    bottom_axis=fc.ChartAxis(
+                        labels=chart_label,
+                        label_size=40,
+                    ),
+                    left_axis=fc.ChartAxis(
+                        labels=self._generate_y_axis_labels(),
+                        label_size=35,
+                    ),
+                    horizontal_grid_lines=fc.ChartGridLines(color=Color.TRANSPARENT),
+                    max_y=self.max_value,
+                    interactive=True,
+                    tooltip=fc.BarChartTooltip(
+                        bgcolor=Color.WHITE,
+                        border_radius=8,
+                        padding=ft.Padding.all(8),
+                        border_side=ft.BorderSide(color=Color.DEFAULT_BORDER, width=1),
+                    ),
                 ),
-                left_axis=fc.ChartAxis(
-                    labels=self._generate_y_axis_labels(),
-                    label_size=35,
-                ),
-                horizontal_grid_lines=fc.ChartGridLines(color=Color.TRANSPARENT),
-                max_y=self.max_value,
-                interactive=True,
-                tooltip=fc.BarChartTooltip(
-                    bgcolor=Color.WHITE,
-                    border_radius=8,
-                    padding=ft.Padding.all(8),
-                    border_side=ft.BorderSide(color=Color.DEFAULT_BORDER, width=1),
-                ),
+                expand=True,
+                padding=ft.Padding.only(top=10)
             ),
             expand=True,
             padding=ft.Padding.only(top=10)
         )
+
+    def update_data(self, chart_date: dict, chart_data: list, chart_type: str) -> None:
+        self.chart_date = chart_date
+        self.chart_data = chart_data
+        self.chart_type = chart_type
+
+        max_chart_value = max(max(int(data["income"]), int(data["expense"])) for data in self.chart_data) if self.chart_data else 1
+        self.max_value = max_chart_value if max_chart_value > 0 else 1
+
+        self.main_container.controls = [
+            self.build_legend(),
+            self.build_bar_chart()
+        ]
+
+        self.update()
 
     def resize(self, width: int) -> None:
         self.main_container.width = width

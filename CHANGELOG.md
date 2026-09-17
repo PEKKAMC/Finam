@@ -8,12 +8,20 @@
 >
 > *Please do not use this version to store sensitive or critical financial data, as local database corruption is possible.*
 
+## Changes in this version
+
+*   Added dialog utility package for better dialog management.
+*   Renamed "login" page to "user_management" page, with some features being added to the page, including option to go to settings.
+*   Removed the top navigation bar, which served no purpose.
+
 ## Bug fixes in this version
 
 *   Fixed actions not updating displays that they are supposed to.
+*   Fxied A LOT of broken dialogs.
 *   Lesson player and lesson editor can now be accessed, but its still heavily unusable.
+*   Updated purchase scanner page to use the new v0.2.0 UI.
 
-##  Known Issues & Instability
+## Known Issues & Instability
 
 *   Some actions may cause softlocks or crashes.
 *   Lesson player and lesson editor UI don't fit the screen.

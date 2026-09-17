@@ -11,13 +11,13 @@ from src.utils import UISettings, get_language
 from src.logger import Logger
 from src.pages.fallback import get_fallback_view
 from src.pages.home import get_home_view
-from src.pages.login import get_login_view
 from src.pages.lesson import get_lesson_view
 from src.pages.lesson_player import get_lesson_player_view
 from src.pages.saving import get_savings_view
 from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.purchase_scanner import get_scanner_view
+from src.pages.user_management import get_user_management_view
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
@@ -62,9 +62,9 @@ async def main(page: ft.Page):
             page.views.clear()
             troute = ft.TemplateRoute(page.route)
 
-            if troute.match("/login"):
-                if user_info["username"]: Logger.info("Logged out")
-                page.views.append(get_login_view(page, lang, user_info))
+            if troute.match("/user_management"):
+                Logger.info("Redirecting to user management page")
+                page.views.append(get_user_management_view(page, lang, user_info))
 
             elif troute.match("/home"):
                 Logger.info("Redirecting to home page")
@@ -127,4 +127,4 @@ async def main(page: ft.Page):
     page.on_error = on_error
     page.on_route_change = route_change
 
-    await page.push_route("/login")
+    await page.push_route("/user_management")

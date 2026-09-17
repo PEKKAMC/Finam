@@ -10,7 +10,7 @@ import re
 from src.pages.global_components import Menu
 from src.utils import Color, create_text, Text, UISettings
 from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, LogicController, safe_float, calculate_pan_position
-from src.pages.lesson_editor.components import TopNavigationBar, EditorToolbar, PropertiesTabs, SlideSidebarLayout
+from src.pages.lesson_editor.components import EditorToolbar, PropertiesTabs, SlideSidebarLayout
 
 
 class LessonEditorView(ft.View):
@@ -45,7 +45,6 @@ class LessonEditorView(ft.View):
         self.audio_pane = ft.Column(spacing=10, scroll=ft.ScrollMode.AUTO, expand=True)
         self.properties_tabs = PropertiesTabs(self._page, self.lang, self.element_properties, self.animation_pane, self.audio_pane)
 
-        self.top_nav_bar = TopNavigationBar(self._page, self.lang, self.load_file, self.save_file)
         self.toolbar = EditorToolbar(self._page, self.lang, self.add_element_handler, self.add_element_handler, self.add_element_handler, self.add_element_handler)
         self.slide_sidebar = SlideSidebarLayout(self._page, self.lang, self.sidebar_column, self.add_slide_handler, self.move_slide_up_handler, self.move_slide_down_handler, self.delete_slide_handler)
 
@@ -65,7 +64,7 @@ class LessonEditorView(ft.View):
 
         page_content = ft.Container(
             content=ft.Column(
-                [self.top_nav_bar, ft.Row([self.lesson_id_input, self.title_input, self.subtitle_input, self.cover_image_input], spacing=15), self.editor_layout],
+                [ft.Row([self.lesson_id_input, self.title_input, self.subtitle_input, self.cover_image_input], spacing=15), self.editor_layout],
                 expand=True),
             expand=True, padding=20
         )
@@ -75,7 +74,7 @@ class LessonEditorView(ft.View):
             content=ft.Column(scroll=ft.ScrollMode.AUTO, controls=[page_content]),
             expand=True,
             padding=0,
-            margin=ft.Margin(top=UISettings.TOP_NAVIGATION_HEIGHT, bottom=UISettings.MENU_HEIGHT)
+            margin=ft.Margin(bottom=UISettings.MENU_HEIGHT)
         )
 
         super().__init__(
@@ -216,7 +215,7 @@ class LessonEditorView(ft.View):
 
             if is_text:
                 raw_text = el.get("content", "")
-                display_text = re.sub(r'\{pause:[\d.]+\}', '', raw_text) or "[Empty Text]"
+                display_text = re.sub(r'\{pause:[\d.]+}', '', raw_text) or "[Empty Text]"
                 w_val = safe_float(el.get("width"), 300.0)
                 font_size = int(el.get("size")) or 16
                 visual = ft.Container(content=create_text(display_text, size=font_size, color=Color.DEFAULT_TEXT), width=w_val)

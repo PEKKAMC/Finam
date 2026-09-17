@@ -5,7 +5,7 @@
 import flet as ft
 
 from src.logger import Logger
-from src.pages.global_components import Menu, TopNavigationBar
+from src.pages.global_components import Menu
 from src.pages.settings.components import SettingsTemporaryMessageBox
 from src.utils import Color, UISettings
 
@@ -23,12 +23,6 @@ class SettingsView(ft.View):
             page=self._page,
             lang=self.lang,
             user_info=self.user_info
-        )
-
-        self.top_navigation_bar = TopNavigationBar(
-            page=self._page,
-            lang=self.lang,
-            current_user=self.user_info["username"]
         )
 
         # Temporary message box
@@ -57,7 +51,7 @@ class SettingsView(ft.View):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(top=UISettings.TOP_NAVIGATION_HEIGHT, bottom=UISettings.MENU_HEIGHT)
+            margin=ft.Margin(bottom=UISettings.MENU_HEIGHT)
         )
 
         super().__init__(
@@ -69,7 +63,6 @@ class SettingsView(ft.View):
                 expand=True,
                 controls=[
                     self.main_container,
-                    self.top_navigation_bar,
                     self.menu
                 ]
             )
@@ -95,10 +88,6 @@ class SettingsView(ft.View):
         self.main_container.width = page_width
 
         self.menu.resize(
-            width=page_width
-        )
-
-        self.top_navigation_bar.resize(
             width=page_width
         )
 

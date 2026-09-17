@@ -35,7 +35,9 @@ class CreateObjectiveDialog(BaseDialog):
             lang["saving.save_objective"], icon=ft.Icons.ADD_CIRCLE, on_click=self._process_add, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE, width=400, height=55, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=12))
         )
         super().__init__(
-            content_padding=0, bgcolor=Color.TRANSPARENT,
+            content_padding=0,
+            bgcolor=Color.TRANSPARENT,
+            modal=True,
             content=ft.Container(
                 width=UISettings.MAX_APP_WIDTH * 0.9, height=UISettings.MAX_APP_HEIGHT * 0.9, padding=25, bgcolor=Color.DIALOG_BACKGROUND, border_radius=20,
                 content=ft.Column(tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, controls=[
@@ -48,8 +50,10 @@ class CreateObjectiveDialog(BaseDialog):
     def _process_add(self, e):
         title = self.goal_title_input.value if self.goal_title_input.value else self.lang["saving.untitled_goal"]
         subtitle = self.reason_input.value if self.reason_input.value else self.lang["saving.no_reason"]
-        try: target = int(self.goal_amount_input.value)
-        except ValueError: target = 0
+        try:
+            target = int(self.goal_amount_input.value)
+        except ValueError:
+            target = 0
 
         if self.controller.add_new_objective(title, subtitle, target):
             self.close(e.page)
@@ -181,7 +185,11 @@ class GoalDetailsDialog(BaseDialog):
         self.on_complete = on_complete
         self.on_quick_action = on_quick_action
         self.on_delete = on_delete
-        super().__init__(content_padding=0, bgcolor=Color.TRANSPARENT)
+        super().__init__(
+            content_padding=0,
+            modal=True,
+            bgcolor=Color.TRANSPARENT
+        )
 
     def trigger(self, page: ft.Page, objective_id: int, goal_title: str, subtitle: str, current_value: str, target_value: str, progress: float, completed: bool):
         progress_ui = ft.Container(
@@ -239,48 +247,3 @@ class GoalDetailsDialog(BaseDialog):
     def _handle_delete(self, page, oid):
         self.close(page)
         self.on_delete(page, oid)
-
-class ObjectiveSelectionDialog(BaseDialog):
-    def __init__(self, page: ft.Page, lang: dict, controller, on_select):
-        self._page = page
-        self.lang = lang
-        self.controller = controller
-        self.on_select = on_select
-        self.selection_list = ft.Column(scroll=ft.ScrollMode.AUTO, spacing=10)
-        super().__init__(
-            content_padding=0, bgcolor=Color.TRANSPARENT,
-            content=ft.Container(
-                width=UISettings.MAX_APP_WIDTH * 0.9, height=UISettings.MAX_APP_HEIGHT * 0.8, padding=25, bgcolor=Color.DIALOG_BACKGROUND, border_radius=20,
-                content=ft.Column(tight=True, controls=[
-                    ft.Row(alignment=ft.MainAxisAlignment.SPACE_BETWEEN, controls=[ft.IconButton(ft.Icons.CLOSE, on_click=lambda e: self.close(e.page), icon_color=Color.PRIMARY_TEXT), Text.H3("Select Objective", color=Color.DEFAULT_TEXT), ft.Container(width=40)]),
-                    ft.Container(height=10), self.selection_list
-                ])
-            )
-        )
-
-    def load_objectives(self, page: ft.Page):
-        self.selection_list.controls.clear()
-        objectives = self.controller.get_user_objectives()
-        if not objectives:
-            self.selection_list.controls.append(Text.P("No active objectives found.", color=Color.SECONDARY_TEXT))
-        else:
-            for obj in objectives:
-                objective_id, title, reason, target_amount, completed_at = obj
-                obj_savings, progress, percentage = self.controller.get_objective_progress_data(objective_id, target_amount)
-                card = ft.Container(
-                    bgcolor=Color.CARD_BACKGROUND, border_radius=10, padding=15, border=ft.Border.all(1, Color.DEFAULT_BORDER), ink=True,
-                    on_click=self._create_selection_handler(page, objective_id, title, reason, f"{int(obj_savings):,} VND", f"{int(target_amount):,} VND", progress, bool(completed_at)),
-                    content=ft.Column([
-                        ft.Row([Text.H3(title, color=Color.PRIMARY_TEXT), Text.MEDIUM(percentage, color=Color.PRIMARY_ACTION)], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                        Text.P(reason, color=Color.SECONDARY_TEXT), ft.ProgressBar(value=progress, color=Color.PROGRESS_COMPLETED if completed_at else Color.PROGRESS_ACTIVE, bgcolor=Color.PROGRESS_BACKGROUND)
-                    ])
-                )
-                self.selection_list.controls.append(card)
-        self.show(page)
-
-    def _create_selection_handler(self, page, oid, title, reason, cur, tgt, prog, comp):
-        def handler(e):
-            self.close(page)
-            self.on_select(page, oid, title, reason, cur, tgt, prog, comp)
-            return e
-        return handler
