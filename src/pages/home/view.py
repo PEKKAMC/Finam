@@ -10,7 +10,7 @@ from src.logger import Logger
 from src.pages.global_components import CategorySelectionDialog, ExpenseInputDialog, FinancialChart, IncomeInputDialog, Menu
 from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChartCard, FeaturedLessonCard
 from src.pages.home.logic import LogicController
-from src.utils import Color, get_safe_page_size, Text, UISettings
+from src.utils import Color, get_safe_page_size, navigate_to, Text, UISettings
 
 Logger.info("Initializing Home page...")
 
@@ -162,6 +162,10 @@ class HomeView(ft.View):
         self.lang = lang
         self.user_info = user_info
 
+        # IMPORTED FUNCTIONS
+        self.navigate_to = navigate_to
+        self.get_safe_page_size = get_safe_page_size
+
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info["username"])
 
@@ -191,19 +195,17 @@ class HomeView(ft.View):
         )
 
         self.balance_card = BalanceCard(
-            page=self._page,
             lang=self.lang,
             net_balance=self.metrics["net_balance"],
             income=self.metrics["total_income"],
             expense=self.metrics["total_expense"],
-            saving=self.metrics["total_savings"],
+            savings=self.metrics["total_savings"],
             ai_advice=self.ai_advice,
             on_add_click=self.dialogs.open_category_selector_dialog,
-            on_scan_click=lambda e: self._page.go("/purchase_scanner")
+            on_scan_click=self.navigate_to(self._page, "/purchase_scanner")
         )
 
         self.financial_chart = FinancialChart(
-            page=self._page,
             lang=self.lang,
             chart_date=self.chart_date,
             chart_data=self.chart_data,
@@ -211,19 +213,22 @@ class HomeView(ft.View):
         )
 
         self.savings_progress_card = SavingsProgressCard(
-            page=self._page,
             lang=self.lang,
-            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang)
+            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang),
+            on_view_all_click=self.navigate_to(self._page, "/saving")
         )
+
         self.expense_pie_chart = ExpensePieChartCard(
-            page=self._page,
             lang=self.lang,
-            category_data=self.metrics["category_expenses"]
+            category_data=self.metrics["category_expenses"],
+            on_details_click=self.navigate_to(self._page, "/spending")
         )
+
         self.featured_lesson_card = FeaturedLessonCard(
-            page=self._page,
-            lang=self.lang
+            lang=self.lang,
+            on_learn_click=self.navigate_to(self._page, "/lessons")
         )
+
 
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
@@ -284,7 +289,7 @@ class HomeView(ft.View):
                 net_balance=self.metrics["net_balance"],
                 income=self.metrics["total_income"],
                 expense=self.metrics["total_expense"],
-                saving=self.metrics["total_savings"],
+                savings=self.metrics["total_savings"],
                 ai_advice=self.ai_advice
             )
 
@@ -309,7 +314,7 @@ class HomeView(ft.View):
             return -1
 
     def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
-        page_width, page_height = get_safe_page_size(
+        page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
 

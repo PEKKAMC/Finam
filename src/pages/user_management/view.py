@@ -5,32 +5,92 @@
 import flet as ft
 
 from src.logger import Logger
-from src.utils import Color, get_safe_page_size, Text, UISettings
 from src.pages.global_components import Menu
+from src.pages.user_management.components import AddUserField, DeleteUserDialog, MenuItem, MenuSectionCard, ProfileCard, UserList, UserManagementDialog
 from src.pages.user_management.logic import LogicController
-from src.pages.user_management.components import UserManagementDialog, AddUserField, UserList, DeleteUserDialog
+from src.utils import Color, Text, UISettings, get_safe_page_size
 
 Logger.info("Initializing User Management page...")
 
 
 class DialogManager:
-    def __init__(self, page: ft.Page, lang: dict, controller: LogicController, refresh_callback):
+    def __init__(self, page: ft.Page, lang: dict, user_info: dict, controller: LogicController, refresh_callback):
         self._page = page
         self.lang = lang
+        self.user_info = user_info
         self.controller = controller
         self.refresh_view = refresh_callback
+
+        self.user_list = UserList(
+            page=self._page,
+            lang=self.lang,
+            current_user=self.user_info.get("username", ""),
+            on_select_callback=self.handle_change_user,
+            on_delete_callback=self.show_delete_prompt
+        )
+
+        self.add_form = AddUserField(page=self._page, lang=self.lang, on_submit_callback=self.handle_add_user)
+
+        self.user_dialog = UserManagementDialog(
+            page=self._page,
+            lang=self.lang,
+            user_list=self.user_list,
+            add_form=self.add_form,
+            on_close_callback=self._close_user_management_dialog
+        )
 
         self.delete_dialog = DeleteUserDialog(
             page=self._page,
             lang=self.lang,
-            on_confirm_callback=self.handle_delete_confirm
+            on_confirm_callback=self._handle_delete_confirm
         )
 
-    def show_delete_prompt(self, username: str):
-        self.delete_dialog.show(username)
+    def show_user_management_dialog(self) -> int:
+        try:
+            self.user_dialog.show(self._page)
+            return 0
 
-    def handle_delete_confirm(self, username: str):
-        self.controller.delete_user(username)
+        except Exception as e:
+            Logger.warn(f"Failed to show user management prompt {e}")
+            return -1
+
+    def show_delete_prompt(self, username: str = "") -> int:
+        try:
+            if username:
+                self.delete_dialog.selected_user = username
+            self.delete_dialog.show(self._page)
+            return 0
+
+        except Exception as e:
+            Logger.warn(f"Failed to show delete prompt {e}")
+            return -1
+
+    def _handle_delete_confirm(self, username: str) -> int:
+        try:
+            self.controller.delete_user(username)
+            self.refresh_view()
+            return 0
+
+        except Exception as e:
+            Logger.warn(f"Cannot delete user {username}, {e}")
+            return -1
+
+    def _close_user_management_dialog(self):
+        self.user_dialog.close_most_recent_dialog(self._page)
+
+    def handle_add_user(self, input_username: str):
+        if not input_username:
+            return
+        success, error_msg = self.controller.add_user(input_username)
+        if success:
+            self.add_form.clear()
+            self.refresh_view()
+        else:
+            self.add_form.show_error(self.lang.get(error_msg, error_msg))
+
+    def handle_change_user(self, username: str):
+        self.user_dialog.close_most_recent_dialog(self._page)
+        self.controller.change_user(username)
         self.refresh_view()
 
 
@@ -40,11 +100,20 @@ class UserManagementView(ft.View):
         self.lang = lang
         self.user_info = user_info
 
+        # IMPORTED FUNCTIONS
+        self.get_safe_page_size = get_safe_page_size
+
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info)
 
         # INITIALIZE DIALOG MANAGER
-        self.dialogs = DialogManager(self._page, self.lang, self.controller, self.refresh_view)
+        self.dialogs = DialogManager(
+            page=self._page,
+            lang=self.lang,
+            user_info=self.user_info,
+            controller=self.controller,
+            refresh_callback=self.refresh_view
+        )
 
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
@@ -53,87 +122,128 @@ class UserManagementView(ft.View):
             user_info=self.user_info
         )
 
-        self.add_form = AddUserField(page=self._page, lang=self.lang, on_submit_callback=self.handle_add_user)
+        self.top_header = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                Text.SMALL("HỒ SƠ & TUỲ CHỌN", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD),
+            ]
+        )
 
-        self.user_list = UserList(
-            page=self._page,
+        # Profile Card
+        self.profile_card = ProfileCard(
+            username=self.user_info.get("username", ""),
             lang=self.lang,
-            current_user=self.user_info.get("username", ""),
-            on_select_callback=self.handle_change_user,
-            on_delete_callback=self.dialogs.show_delete_prompt
+            on_change_user=self.dialogs.show_user_management_dialog
         )
 
-        # INITIALIZE USER MANAGEMENT DIALOG
-        self.user_dialog = UserManagementDialog(
-            page=self._page,
-            lang=self.lang,
-            user_list=self.user_list,
-            add_form=self.add_form,
-            on_close_callback=self._close_user_management_dialog
+        # Section 1: Services & Features
+        services_section_title = Text.SMALL("DỊCH VỤ & TÍNH NĂNG", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+
+        services_card = MenuSectionCard(
+            items=[
+                MenuItem(
+                    icon=ft.Icons.WORKSPACE_PREMIUM,
+                    icon_color=Color.GOAL_HEADER_ICON_COLOR,
+                    icon_bg_color=Color.GOAL_HEADER_ICON_BACKGROUND,
+                    title="Thành viên Premium",
+                    subtitle="Đang hoạt động • Toàn bộ đặc quyền",
+                    badge_text="PRO",
+                    badge_bg=Color.LIGHT_ACCENT,
+                    badge_color=Color.PRIMARY
+                ),
+                MenuItem(
+                    icon=ft.Icons.THUMB_UP_OUTLINED,
+                    icon_color=Color.PRIMARY_ACTION,
+                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
+                    title="Giới thiệu cho bạn bè",
+                    subtitle="Nhận ngay 30 ngày VIP cho cả hai",
+                    badge_text="+30 Ngày",
+                    badge_bg=Color.LIGHT_ACCENT,
+                    badge_color=Color.PRIMARY
+                ),
+                MenuItem(
+                    icon=ft.Icons.SHIELD_OUTLINED,
+                    icon_color=Color.PRIMARY_ACTION,
+                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
+                    title="Tắt quảng cáo",
+                    subtitle="Trải nghiệm mượt mà không quảng cáo",
+                    trailing=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
+                ),
+                MenuItem(
+                    icon=ft.Icons.SETTINGS_OUTLINED,
+                    icon_color=Color.PRIMARY_ACTION,
+                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
+                    title="Cài đặt",
+                    subtitle="Ngôn ngữ (VI), bảo mật, tiền tệ",
+                    on_click=lambda e: self._page.go("/settings")
+                ),
+                MenuItem(
+                    icon=ft.Icons.GRID_VIEW_ROUNDED,
+                    icon_color=Color.PRIMARY_ACTION,
+                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
+                    title="Ứng dụng của chúng tôi",
+                    subtitle="Khám phá các công cụ tài chính hỗ trợ",
+                    badge_text="4 Ứng dụng",
+                    badge_bg=Color.ACTIVITY_BACKGROUND,
+                    badge_color=Color.PRIMARY_TEXT
+                ),
+            ]
         )
 
-        # ---------------------------------------------------------
-        # NEW LAYOUT: LOGIN ROW (Opens User Dialog)
-        # ---------------------------------------------------------
-        self.login_row = ft.Container(
-            padding=ft.Padding.only(top=40, bottom=20, left=20, right=20),
-            on_click=lambda e: self.user_dialog.show(self._page),
-            ink=True,
-            content=ft.Row(
-                spacing=15,
-                controls=[
-                    ft.CircleAvatar(
-                        radius=35,
-                        bgcolor="#4A4A4A",
-                        content=ft.Icon(ft.Icons.PERSON, color=Color.WHITE, size=45)
-                    ),
-                    ft.Column(
-                        spacing=4,
-                        controls=[
-                            Text.H3(self.lang["user_management.select_user"], color=Color.DEFAULT_TEXT),
-                        ]
-                    )
-                ]
-            )
+        # Section 2: Support & Information
+        support_section_title = Text.SMALL("HỖ TRỢ & THÔNG TIN", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+
+        current_username = self.user_info.get("username", "minhkhang").lower().replace(" ", "")
+        user_email = f"{current_username}.finance@gmail.com" if current_username else "minhkhang.finance@gmail.com"
+
+        support_card = MenuSectionCard(
+            items=[
+                MenuItem(
+                    icon=ft.Icons.STAR_OUTLINE,
+                    icon_color=Color.GOAL_HEADER_ICON_COLOR,
+                    icon_bg_color=Color.GOAL_HEADER_ICON_BACKGROUND,
+                    title="Đánh giá ứng dụng",
+                    subtitle="Góp ý 5 sao trên cửa hàng ứng dụng"
+                ),
+                MenuItem(
+                    icon=ft.Icons.HELP_OUTLINE,
+                    icon_color=Color.PRIMARY_ACTION,
+                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
+                    title="Trung tâm trợ giúp & FAQ",
+                    subtitle="Hướng dẫn quản lý chi tiêu hiệu quả"
+                ),
+                MenuItem(
+                    icon=ft.Icons.LOGOUT,
+                    icon_color=Color.NEGATIVE_ACTION,
+                    icon_bg_color=Color.ACTIVITY_BACKGROUND,
+                    title="Đăng xuất tài khoản",
+                    subtitle=user_email
+                ),
+            ]
         )
 
-        def create_menu_item(icon, icon_color, text, on_click=None):
-            return ft.Container(
-                padding=ft.Padding.symmetric(vertical=16, horizontal=20),
-                border_radius=UISettings.CARD_BORDER_RADIUS,
-                on_click=on_click,
-                ink=True,
-                content=ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        # Footer
+        footer = ft.Column(
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=4,
+            controls=[
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=6,
                     controls=[
-                        ft.Row(
-                            spacing=15,
-                            controls=[
-                                ft.Icon(icon, color=icon_color, size=22),
-                                Text.H4(text, color=Color.DEFAULT_TEXT)
-                            ]
+                        ft.Container(
+                            width=8,
+                            height=8,
+                            border_radius=4,
+                            bgcolor=Color.PRIMARY_ACTION
                         ),
-                        ft.Icon(ft.Icons.CHEVRON_RIGHT, color="#555555", size=24)
+                        Text.SMALL("Phiên bản v0.2.2-alpha", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
                     ]
-                )
-            )
-
-        self.menu_items = ft.Container(
-            bgcolor=Color.CARD_BACKGROUND,
-            content=ft.Column(
-                spacing=0,
-                controls=[
-                    create_menu_item(ft.Icons.WORKSPACE_PREMIUM, "#FFC107", "Thành viên Premium"),
-                    ft.Divider(height=1, color="#2C2C2C", thickness=1),
-                    create_menu_item(ft.Icons.THUMB_UP_OUTLINED, "#FFC107", "Giới thiệu cho bạn bè"),
-                    ft.Divider(height=1, color="#2C2C2C", thickness=1),
-                    create_menu_item(ft.Icons.AD_UNITS, "#FFC107", "Tắt quảng cáo"),
-                    ft.Divider(height=1, color="#2C2C2C", thickness=1),
-                    create_menu_item(ft.Icons.SETTINGS_OUTLINED, "#FFC107", "Cài đặt", on_click=lambda e: self._page.go("/settings")),
-                    ft.Divider(height=1, color="#2C2C2C", thickness=1),
-                    create_menu_item(ft.Icons.APPS, "#FFC107", "Ứng dụng của chúng tôi"),
-                ]
-            )
+                ),
+                Text.SMALL("Bảo vệ quyền riêng tư & Mã hóa dữ liệu an toàn", color=Color.SUBTITLE_TEXT, text_align=ft.TextAlign.CENTER)
+            ]
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -145,11 +255,17 @@ class UserManagementView(ft.View):
                         width=UISettings.MAX_APP_WIDTH,
                         padding=UISettings.CARD_PADDING,
                         content=ft.Column(
-                            spacing=20,
+                            spacing=16,
                             expand=True,
                             controls=[
-                                self.login_row,
-                                self.menu_items
+                                self.top_header,
+                                self.profile_card,
+                                services_section_title,
+                                services_card,
+                                support_section_title,
+                                support_card,
+                                ft.Container(height=8),
+                                footer
                             ]
                         )
                     )
@@ -161,7 +277,7 @@ class UserManagementView(ft.View):
         )
 
         super().__init__(
-            route="/home",
+            route="/user_management",
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
@@ -179,33 +295,22 @@ class UserManagementView(ft.View):
 
         # INITIAL DATA LOAD
         self.refresh_view()
+        self._initial_launch()
 
-    def _close_user_management_dialog(self):
-        self.user_dialog.close_most_recent_dialog(self._page)
-
-    def handle_add_user(self, input_username: str):
-        if not input_username:
-            return
-        success, error_msg = self.controller.add_user(input_username)
-        if success:
-            self.add_form.clear()
-            self.refresh_view()
-        else:
-            self.add_form.show_error(self.lang.get(error_msg, error_msg))
-
-    def handle_change_user(self, username: str):
-        self.controller.change_user(username)
-        self._page.go("/home")
+    def _initial_launch(self):
+        if self.user_info.get("username", "") == "":
+            self.dialogs.show_user_management_dialog()
 
     def refresh_view(self):
-        self.user_list.refresh(self.controller.get_all_users(), self.user_info.get("username", ""))
+        self.dialogs.user_list.refresh(self.controller.get_all_users(), self.user_info.get("username", ""))
+        self.profile_card.update_user(self.user_info.get("username", ""))
         try:
             self._page.update()
         except RuntimeError:
             pass
 
-    def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
-        page_width, page_height = get_safe_page_size(
+    def _on_page_resize(self, e=None) -> ft.PageResizeEvent | None:
+        page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
 

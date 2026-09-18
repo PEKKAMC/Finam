@@ -3,7 +3,6 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import os
-
 import flet as ft
 
 from src.database import db
@@ -116,12 +115,21 @@ async def main(page: ft.Page):
             return e
 
     async def on_error(e: ft.ControlEvent) -> ft.ControlEvent:
-        Logger.critical(f"Unexpected error occurred: {e}")
-        Logger.info("Attempting to restart application...")
+        if e == ft.Event(name='error', data='Bad state: No element', control=page):
+            print("there is like 3-5% chance you'll see this message on launch lmao.")
+            print("actually its cuz of a bug that makes 2 processes racing for control,")
+            print("and if that one specifically wins the race, it causes this to happen.")
+            print("currently the bug doesn't affect the application much, so i'll be fixing")
+            print("it later. consider yourself lucky.\n\n")
+            Logger.error("PEKKAMC")
+        else:
+            Logger.critical(f"Unexpected error occurred: {e.control}")
+            Logger.info("Attempting to restart application...")
 
-        os.environ["RESTART_FINAM"] = "1"
+            os.environ["RESTART_FINAM"] = "1"
 
-        await page.window.close()
+            await page.window.close()
+
         return e
 
     page.on_error = on_error

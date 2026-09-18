@@ -6,8 +6,8 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import Menu
-from src.pages.settings.components import SettingsTemporaryMessageBox
-from src.utils import Color, UISettings
+from src.pages.settings.components import SettingsHeader, SettingCard, SettingRow, SettingDropdown
+from src.utils import Color, navigate_to, get_safe_page_size, UISettings
 
 Logger.info("Initializing Settings page...")
 
@@ -18,6 +18,9 @@ class SettingsView(ft.View):
         self.lang = lang
         self.user_info = user_info
 
+        # IMPORTED FUNCTIONS
+        self.get_safe_page_size = get_safe_page_size
+
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
             page=self._page,
@@ -25,10 +28,15 @@ class SettingsView(ft.View):
             user_info=self.user_info
         )
 
-        # Temporary message box
-        self.text_box = SettingsTemporaryMessageBox(
-            page=self._page,
-            lang=self.lang
+        # Done Button (Xong)
+        self.done_btn = ft.Container(
+            content=ft.Text("Xong", size=16, weight=ft.FontWeight.BOLD, color=Color.WHITE),
+            alignment=ft.Alignment.CENTER,
+            bgcolor=Color.PRIMARY_ACTION,
+            padding=16,
+            border_radius=25,
+            margin=ft.Margin.only(top=10),
+            on_click=navigate_to(self._page, "/user_management")
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -40,10 +48,53 @@ class SettingsView(ft.View):
                         width=UISettings.MAX_APP_WIDTH,
                         padding=UISettings.CARD_PADDING,
                         content=ft.Column(
-                            spacing=20,
+                            spacing=18,
                             expand=True,
                             controls=[
-                                self.text_box
+                                SettingsHeader(on_close=navigate_to(self._page, "/user_management")),
+                                ft.Divider(height=10, thickness=1, color=Color.INPUT_BORDER),
+
+                                SettingCard(
+                                    controls=[
+                                        SettingRow(
+                                            icon=ft.Icons.LANGUAGE,
+                                            title="Ngôn ngữ hiển thị",
+                                            subtitle="Tiếng Việt / English",
+                                            control=SettingDropdown(["Tiếng Việt", "English"], active_index=0)
+                                        )
+                                    ]
+                                ),
+
+                                SettingCard(
+                                    controls=[
+                                        SettingRow(
+                                            icon=ft.Icons.PAID_OUTLINED,
+                                            title="Đơn vị tiền tệ chính",
+                                            subtitle="Định dạng tiền tệ sổ sách",
+                                            control=SettingDropdown(["VNĐ (đ)", "USD ($)"], active_index=0)
+                                        )
+                                    ]
+                                ),
+
+                                SettingCard(
+                                    controls=[
+                                        SettingRow(
+                                            icon=ft.Icons.FINGERPRINT,
+                                            title="Khóa ứng dụng (Face ID / PIN)",
+                                            subtitle="Yêu cầu mở khóa khi vào ứng dụng",
+                                            control=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
+                                        ),
+                                        ft.Container(height=4),
+                                        SettingRow(
+                                            icon=ft.Icons.VOLUME_UP_OUTLINED,
+                                            title="Âm thanh & Rung xúc giác",
+                                            subtitle="Hiệu ứng khi chạm nút",
+                                            control=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
+                                        )
+                                    ]
+                                ),
+
+                                self.done_btn
                             ]
                         )
                     )
@@ -71,28 +122,15 @@ class SettingsView(ft.View):
         self._page.on_resize = self.on_page_resize
         self.on_page_resize()
 
-    def get_safe_page_size(self) -> tuple[int, int]: # -> (width, height)
-        # Get page width and height if available, return fallback values otherwise
-        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
-        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
-
-        # Make sure width and height don't exceed max values
-        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
-        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
-
-        return safe_width, safe_height
-
     def on_page_resize(self, e=None) -> None:
-        page_width, page_height = self.get_safe_page_size()
+        page_width, page_height = self.get_safe_page_size(
+            page=self._page
+        )
 
         self.main_container.width = page_width
 
         self.menu.resize(
             width=page_width
-        )
-
-        self.text_box.resize(
-            size=int(min(page_width, page_height) * 0.7)
         )
 
         return e

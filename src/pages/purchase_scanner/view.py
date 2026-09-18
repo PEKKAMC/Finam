@@ -4,11 +4,11 @@
 
 import flet as ft
 
-from src.utils import Color, get_safe_page_size, Text, UISettings
 from src.logger import Logger
 from src.pages.global_components import Menu
 from src.pages.purchase_scanner.logic import LogicController
 from src.pages.purchase_scanner.components import ScannerForm, ScannerResult
+from src.utils import Color, get_safe_page_size, Text, UISettings
 
 Logger.info("Initializing Purchase Scanner page...")
 
@@ -19,6 +19,9 @@ class PurchaseScannerView(ft.View):
         self.lang = lang
         self.user_info = user_info
         self.controller = LogicController()
+
+        # IMPORTED FUNCTIONS
+        self.get_safe_page_size = get_safe_page_size
 
         # Global components
         self.menu = Menu(self._page, self.lang, self.user_info)
@@ -110,7 +113,7 @@ class PurchaseScannerView(ft.View):
         self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
 
     def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
-        page_width, page_height = get_safe_page_size(
+        page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
 

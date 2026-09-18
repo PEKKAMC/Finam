@@ -12,8 +12,7 @@ Logger.info("Building financial chart...")
 
 
 class FinancialChart(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, chart_date: dict, chart_data: list, chart_type: str):
-        self._page = page
+    def __init__(self, lang: dict, chart_date: dict, chart_data: list, chart_type: str):
         self.lang = lang
         self.chart_date = chart_date
         self.chart_data = chart_data

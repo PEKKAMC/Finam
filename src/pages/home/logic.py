@@ -25,15 +25,13 @@ class LogicController:
 
         total_income = 0
         total_expense = 0
-        category_expenses = {} # Add this dictionary to map categories
+        category_expenses = {}
 
         try:
             for expense in expenses:
                 amount = int(expense.get("amount", 0))
                 category = expense.get("category", "Khác")
                 total_expense += amount
-
-                # Aggregate for the Pie Chart
                 category_expenses[category] = category_expenses.get(category, 0) + amount
 
                 exp_date = datetime.strptime(str(expense["date"])[:16], "%Y-%m-%d %H:%M")

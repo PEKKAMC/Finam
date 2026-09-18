@@ -175,7 +175,6 @@ class SpendingView(ft.View):
         )
 
         self.financial_chart = FinancialChart(
-            page=self._page,
             lang=self.lang,
             chart_date=self.chart_date,
             chart_data=self.chart_data,

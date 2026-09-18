@@ -8,7 +8,7 @@ from src.logger import Logger
 from src.pages.global_components import Menu
 from src.pages.lesson.components import LessonGrid, LessonSummaryBanner
 from src.pages.lesson.logic import LogicController
-from src.utils import Color, UISettings
+from src.utils import Color, get_safe_page_size, UISettings
 
 Logger.info("Initializing Lesson page...")
 
@@ -18,6 +18,9 @@ class LessonView(ft.View):
         self._page = page
         self.lang = lang
         self.user_info = user_info
+
+        # IMPORTED FUNCTIONS
+        self.get_safe_page_size = get_safe_page_size
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(user_info["username"])
@@ -95,17 +98,10 @@ class LessonView(ft.View):
         Logger.info("Loading lesson data...")
         self.available_lessons = self.controller.load_available_lessons()
 
-    def get_safe_page_size(self) -> tuple[int, int]:
-        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
-        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
-
-        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
-        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
-
-        return safe_width, safe_height
-
     def on_page_resize(self, e=None) -> None:
-        page_width, page_height = self.get_safe_page_size()
+        page_width, page_height = self.get_safe_page_size(
+            page=self._page
+        )
 
         self.main_container.width = page_width
 

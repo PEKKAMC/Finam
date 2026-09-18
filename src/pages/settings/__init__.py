@@ -4,11 +4,14 @@
 
 """Settings page - User settings"""
 
-from src.pages.settings.components import SettingsTemporaryMessageBox
+from src.pages.settings.components import SettingsHeader, SettingCard, SettingRow, SettingDropdown
 from src.pages.settings.view import SettingsView, get_settings_view
 
 __all__ = [
-    "SettingsTemporaryMessageBox",
+    "SettingsHeader",
+    "SettingCard",
+    "SettingRow",
+    "SettingDropdown",
     "SettingsView",
     "get_settings_view"
 ]
