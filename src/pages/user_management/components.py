@@ -98,53 +98,6 @@ class ProfileCard(ft.Container):
             ]
         )
 
-        active_user_card = ft.Container(
-            bgcolor=Color.DARK_SURFACE,
-            border_radius=16,
-            padding=14,
-            content=ft.Column(
-                spacing=8,
-                controls=[
-                    Text.SMALL("HỒ SƠ ĐANG CHỌN", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD),
-                    ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        controls=[
-                            ft.Row(
-                                spacing=10,
-                                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                                controls=[
-                                    ft.Container(
-                                        content=ft.Icon(ft.Icons.PERSON_OUTLINE, color=Color.WHITE, size=20),
-                                        bgcolor=Color.METRIC_PILL_BACKGROUND,
-                                        padding=8,
-                                        border_radius=12
-                                    ),
-                                    ft.Column(
-                                        spacing=2,
-                                        controls=[
-                                            self.active_user_text,
-                                        ]
-                                    )
-                                ]
-                            ),
-                            ft.Container(
-                                content=ft.Row(
-                                    spacing=2,
-                                    controls=[
-                                        Text.SMALL("Thay đổi", color=Color.LIGHT_ACCENT),
-                                        ft.Icon(ft.Icons.CHEVRON_RIGHT, color=Color.LIGHT_ACCENT, size=16)
-                                    ]
-                                ),
-                                on_click=lambda e: self.on_change_user(),
-                                ink=True
-                            )
-                        ]
-                    )
-                ]
-            )
-        )
-
         super().__init__(
             bgcolor=Color.PRIMARY,
             border_radius=24,
@@ -152,8 +105,7 @@ class ProfileCard(ft.Container):
             content=ft.Column(
                 spacing=14,
                 controls=[
-                    top_row,
-                    active_user_card
+                    top_row
                 ]
             )
         )
@@ -304,120 +256,6 @@ class UserManagementCard(ft.Container):
 
     def resize(self, width: int):
         self.main_container.width = width
-
-
-class UserManagementDialog(Dialog):
-    def __init__(self, page: ft.Page, lang: dict, user_list: UserList, add_form, on_close_callback: Callable):
-        self.card = UserManagementCard(
-            page=page,
-            lang=lang,
-            user_list=user_list,
-            add_form=add_form,
-            on_close_callback=on_close_callback
-        )
-        super().__init__(dialog_content=self.card, color=Color.WHITE)
-
-
-class UserList(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, current_user: str, on_select_callback, on_delete_callback):
-        self._page = page
-        self.lang = lang
-        self.current_user = current_user
-        self.on_select = on_select_callback
-        self.on_delete = on_delete_callback
-
-        self.list_column = ft.Column(
-            spacing=12,
-            scroll=ft.ScrollMode.AUTO,
-            height=160
-        )
-        self.main_container = ft.Container(
-            content=self.list_column,
-            clip_behavior=ft.ClipBehavior.HARD_EDGE
-        )
-
-        super().__init__(content=self.main_container)
-
-    def refresh(self, current_users: list, current_user: str = ""):
-        self.current_user = current_user
-        self.list_column.controls.clear()
-
-        if not current_users:
-            self.list_column.controls.append(
-                Text.P(self.lang["user_management.no_user"], color=Color.SECONDARY_TEXT, text_align=ft.TextAlign.CENTER)
-            )
-        else:
-            for username in current_users:
-                self.list_column.controls.append(self.create_user_box(username))
-
-    def create_user_box(self, username: str):
-        is_active = (username == self.current_user)
-        initial = username[0].upper() if username else ""
-        created_prefix = self.lang["user_management.created_date"]
-
-        def handle_select(e, name=username):
-            self.on_select(name)
-            return e
-
-        return ft.Container(
-            bgcolor=Color.WHITE,
-            border_radius=20,
-            padding=14,
-            border=ft.Border.all(2 if is_active else 1, Color.PRIMARY if is_active else Color.INPUT_BORDER),
-            ink=True,
-            on_click=handle_select,
-            content=ft.Row(
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                controls=[
-                    ft.Row(
-                        spacing=14,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        controls=[
-                            ft.Container(
-                                content=Text.MEDIUM(initial, color=Color.WHITE, weight=ft.FontWeight.BOLD),
-                                bgcolor=Color.PRIMARY,
-                                width=40,
-                                height=40,
-                                border_radius=14,
-                                alignment=ft.Alignment.CENTER
-                            ),
-                            ft.Column(
-                                spacing=2,
-                                controls=[
-                                    Text.MEDIUM(username, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
-                                    Text.SMALL(f"{created_prefix} 2026-01-01 08:00", color=Color.SECONDARY_TEXT)
-                                ]
-                            ),
-                        ]
-                    ),
-                    ft.Row(
-                        spacing=4,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        controls=[
-                            *(
-                                [
-                                    ft.Container(
-                                        content=ft.Icon(ft.Icons.PERSON_PIN, color=Color.PRIMARY, size=20),
-                                        padding=4
-                                    )
-                                ] if is_active else []
-                            ),
-                            ft.IconButton(
-                                icon=ft.Icons.DELETE_OUTLINE,
-                                icon_color=Color.DELETE_ACTION,
-                                icon_size=18,
-                                on_click=lambda e, u=username: self.on_delete(u),
-                                tooltip="Xóa người dùng"
-                            )
-                        ]
-                    )
-                ]
-            )
-        )
-
-    def resize(self, height: int):
-        pass
 
 
 class AddUserField(ft.Container):

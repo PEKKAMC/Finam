@@ -143,16 +143,6 @@ class UserManagementView(ft.View):
         services_card = MenuSectionCard(
             items=[
                 MenuItem(
-                    icon=ft.Icons.WORKSPACE_PREMIUM,
-                    icon_color=Color.GOAL_HEADER_ICON_COLOR,
-                    icon_bg_color=Color.GOAL_HEADER_ICON_BACKGROUND,
-                    title="Thành viên Premium",
-                    subtitle="Đang hoạt động • Toàn bộ đặc quyền",
-                    badge_text="PRO",
-                    badge_bg=Color.LIGHT_ACCENT,
-                    badge_color=Color.PRIMARY
-                ),
-                MenuItem(
                     icon=ft.Icons.THUMB_UP_OUTLINED,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
@@ -177,21 +167,10 @@ class UserManagementView(ft.View):
                     title="Cài đặt",
                     subtitle="Ngôn ngữ (VI), bảo mật, tiền tệ",
                     on_click=lambda e: self._page.go("/settings")
-                ),
-                MenuItem(
-                    icon=ft.Icons.GRID_VIEW_ROUNDED,
-                    icon_color=Color.PRIMARY_ACTION,
-                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title="Ứng dụng của chúng tôi",
-                    subtitle="Khám phá các công cụ tài chính hỗ trợ",
-                    badge_text="4 Ứng dụng",
-                    badge_bg=Color.ACTIVITY_BACKGROUND,
-                    badge_color=Color.PRIMARY_TEXT
-                ),
+                )
             ]
         )
 
-        # Section 2: Support & Information
         support_section_title = Text.SMALL("HỖ TRỢ & THÔNG TIN", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
 
         current_username = self.user_info.get("username", "minhkhang").lower().replace(" ", "")

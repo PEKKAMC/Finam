@@ -102,6 +102,9 @@ async def main(page: ft.Page):
                 Logger.info("Redirecting to lesson editor page")
                 page.views.append(get_lesson_editor_view(page, lang, user_info))
 
+            elif troute.match("/starter"):
+                pass
+
             else:
                 Logger.info("Page not found")
                 await redirect_to_fallback(page, lang, "page_not_found")
@@ -135,4 +138,4 @@ async def main(page: ft.Page):
     page.on_error = on_error
     page.on_route_change = route_change
 
-    await page.push_route("/user_management")
+    await page.push_route("/starter")
