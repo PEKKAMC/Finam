@@ -6,27 +6,30 @@ from collections.abc import Callable
 
 import flet as ft
 
-from src.utils import Color, Dialog, Text
+from src.logger import Logger
+from src.utils import Color, Dialog, Page, Text
 
 class UserManagementCard(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, user_list, add_form, on_close_callback: Callable):
+    def __init__(self, page: Page, lang: dict, user_list, add_form, on_close_callback: Callable, has_cancel_button: bool = True):
         self._page = page
         self.lang = lang
         self._close_dialog = on_close_callback
 
+        header_controls = []
+        if has_cancel_button:
+            header_controls.append(
+                ft.IconButton(
+                    icon=ft.Icons.CLOSE,
+                    icon_color=Color.SECONDARY_TEXT,
+                    tooltip=self.lang["generic.close"],
+                    on_click=self._close_dialog
+                )
+            )
+
         self.main_container = ft.Column(
             height=375,
             controls=[
-                ft.Row(
-                    controls=[
-                        ft.IconButton(
-                            icon=ft.Icons.CLOSE,
-                            icon_color=Color.SECONDARY_TEXT,
-                            tooltip=self.lang["generic.close"],
-                            on_click=self._close_dialog
-                        )
-                    ]
-                ),
+                ft.Row(controls=header_controls),
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -73,19 +76,28 @@ class UserManagementCard(ft.Container):
         self.main_container.width = width
 
 class UserManagementDialog(Dialog):
-    def __init__(self, page: ft.Page, lang: dict, user_list: UserList, add_form, on_close_callback: Callable):
+    def __init__(
+        self,
+        page: Page,
+        lang: dict,
+        user_list: "UserList",
+        add_form,
+        on_close_callback: Callable,
+        has_cancel_button: bool = True
+    ):
         self.card = UserManagementCard(
             page=page,
             lang=lang,
             user_list=user_list,
             add_form=add_form,
-            on_close_callback=on_close_callback
+            on_close_callback=on_close_callback,
+            has_cancel_button=has_cancel_button
         )
         super().__init__(dialog_content=self.card, color=Color.WHITE)
 
 
 class UserList(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, current_user: str, on_select_callback, on_delete_callback):
+    def __init__(self, page: Page, lang: dict, current_user: str, on_select_callback, on_delete_callback):
         self._page = page
         self.lang = lang
         self.current_user = current_user
@@ -184,3 +196,113 @@ class UserList(ft.Container):
 
     def resize(self, height: int):
         pass
+
+
+class AddUserField(ft.Container):
+    def __init__(self, page: Page, lang: dict, on_submit_callback):
+        self._page = page
+        self.lang = lang
+        self.on_submit_callback = on_submit_callback
+
+        self.input_field = ft.TextField(
+            hint_text=self.lang["user_management.username_hint"],
+            color=Color.DEFAULT_TEXT,
+            bgcolor=Color.DIALOG_BACKGROUND,
+            border_color=Color.INPUT_BORDER,
+            border_radius=16,
+            text_size=13,
+            content_padding=12,
+            filled=True,
+            expand=True,
+            on_submit=self._handle_submit
+        )
+        self.error_message = Text.SMALL("", color=Color.ERROR_TEXT)
+        self.submit_button = ft.Button(
+            content=ft.Row(
+                spacing=6,
+                controls=[
+                    ft.Icon(ft.Icons.ADD, color=Color.LIGHT_ACCENT, size=16),
+                    Text.MEDIUM(self.lang["user_management.create_btn"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                ],
+                tight=True
+            ),
+            bgcolor=Color.PRIMARY,
+            on_click=self._handle_submit,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=16),
+                padding=16
+            )
+        )
+        self.main_container = ft.Column(
+            spacing=6,
+            controls=[
+                ft.Row(
+                    spacing=12,
+                    controls=[
+                        self.input_field,
+                        self.submit_button
+                    ]
+                ),
+                self.error_message
+            ]
+        )
+
+        super().__init__(content=self.main_container)
+
+    def _handle_submit(self, e=None):
+        input_username = self.input_field.value.strip()
+        self.on_submit_callback(input_username)
+
+    def show_error(self, message: str):
+        self.error_message.value = message
+        try:
+            self.update()
+        except RuntimeError as e:
+            Logger.debug(f"Render skipped: {e}")
+
+    def clear(self):
+        self.input_field.value = ""
+        self.error_message.value = ""
+        try:
+            self.update()
+        except RuntimeError as e:
+            Logger.debug(f"Render skipped: {e}")
+
+    def resize(self, width: int):
+        pass
+
+
+class DeleteUserDialog(Dialog):
+    def __init__(self, page: Page, lang: dict, on_confirm_callback):
+        self._page = page
+        self.lang = lang
+        self.on_confirm = on_confirm_callback
+        self.selected_user: str = ""
+
+        cancel_text = self.lang["generic.cancel"]
+        delete_text = self.lang["generic.delete"]
+
+        self.main_container = ft.AlertDialog(
+            modal=True,
+            bgcolor=Color.WHITE,
+            title=Text.H3(self.lang["user_management.confirm_delete_user_title"], color=Color.PRIMARY_TEXT),
+            content=Text.P(self.lang["user_management.confirm_delete_user_content"], color=Color.SECONDARY_TEXT),
+            actions=[
+                ft.TextButton(Text.BUTTON(cancel_text, color=Color.SECONDARY_TEXT), on_click=lambda e: self.close_most_recent_dialog),
+                ft.TextButton(Text.BUTTON(delete_text, color=Color.DELETE_ACTION), on_click=lambda e: self.confirm()),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+        super().__init__(
+            color=Color.DIALOG_BACKGROUND,
+            dialog_content=self.main_container
+        )
+
+    def confirm(self):
+        if self.selected_user and self.on_confirm:
+            self.on_confirm(self.selected_user)
+        self.close_most_recent_dialog(self._page)
+
+    def resize(self, width: int) -> None:
+        self.main_container.width = width

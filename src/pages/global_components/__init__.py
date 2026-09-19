@@ -6,14 +6,16 @@
 
 from src.pages.global_components.category_selection import CategorySelectionDialog, ExpenseInputDialog, IncomeInputDialog
 from src.pages.global_components.financial_chart import FinancialChart
-from src.pages.global_components.saving_dialog import BaseDialog, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog
 from src.pages.global_components.menu import Menu
+from src.pages.global_components.saving_dialog import BaseDialog, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog
+from src.pages.global_components.user_dialog import AddUserField, DeleteUserDialog, UserList, UserManagementCard, UserManagementDialog
 
 __all__ = [
     "CategorySelectionDialog",
     "ExpenseInputDialog",
     "IncomeInputDialog",
     "FinancialChart",
+    "Menu",
     "BaseDialog",
     "CreateObjectiveDialog",
     "QuickActionDialog",
@@ -21,5 +23,9 @@ __all__ = [
     "DeleteConfirmDialog",
     "ClearHistoryDialog",
     "GoalDetailsDialog",
-    "Menu"
+    "UserList",
+    "UserManagementCard",
+    "UserManagementDialog",
+    "AddUserField",
+    "DeleteUserDialog",
 ]

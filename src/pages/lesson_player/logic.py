@@ -10,7 +10,9 @@ import re
 import time
 
 import flet as ft
+
 import flet_audio as fta
+from src.utils import Page
 
 from src.logger import Logger
 
@@ -41,7 +43,7 @@ def generate_timeline(segment_length: int, segment_duration: float, frames_per_s
     return output_frames
 
 class AudioController:
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: Page):
         self.page = page
         self.active_audio = None
 
@@ -138,7 +140,7 @@ class LogicController:
 
 
 class AnimationController:
-    def __init__(self, page: ft.Page, audio_controller: AudioController):
+    def __init__(self, page: Page, audio_controller: AudioController):
         self.page = page
         self.audio_controller = audio_controller
         self.active_sequence_identifier = 0

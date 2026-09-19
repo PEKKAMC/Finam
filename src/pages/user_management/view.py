@@ -5,16 +5,16 @@
 import flet as ft
 
 from src.logger import Logger
-from src.pages.global_components import Menu
-from src.pages.user_management.components import AddUserField, DeleteUserDialog, MenuItem, MenuSectionCard, ProfileCard, UserList, UserManagementDialog
+from src.pages.global_components import AddUserField, DeleteUserDialog, Menu, UserList, UserManagementDialog
+from src.pages.user_management.components import MenuItem, MenuSectionCard, ProfileCard
 from src.pages.user_management.logic import LogicController
-from src.utils import Color, Text, UISettings, get_safe_page_size
+from src.utils import Color, Page, get_safe_page_size, Text, UISettings
 
 Logger.info("Initializing User Management page...")
 
 
 class DialogManager:
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict, controller: LogicController, refresh_callback):
+    def __init__(self, page: Page, lang: dict, user_info: dict, controller: LogicController, refresh_callback):
         self._page = page
         self.lang = lang
         self.user_info = user_info
@@ -95,7 +95,7 @@ class DialogManager:
 
 
 class UserManagementView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
@@ -130,14 +130,12 @@ class UserManagementView(ft.View):
             ]
         )
 
-        # Profile Card
         self.profile_card = ProfileCard(
             username=self.user_info.get("username", ""),
             lang=self.lang,
             on_change_user=self.dialogs.show_user_management_dialog
         )
 
-        # Section 1: Services & Features
         services_section_title = Text.SMALL("DỊCH VỤ & TÍNH NĂNG", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
 
         services_card = MenuSectionCard(
@@ -166,15 +164,13 @@ class UserManagementView(ft.View):
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
                     title="Cài đặt",
                     subtitle="Ngôn ngữ (VI), bảo mật, tiền tệ",
-                    on_click=lambda e: self._page.go("/settings")
+                    on_click=self._page.navigate_to("/settings")
                 )
             ]
         )
 
         support_section_title = Text.SMALL("HỖ TRỢ & THÔNG TIN", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
-
-        current_username = self.user_info.get("username", "minhkhang").lower().replace(" ", "")
-        user_email = f"{current_username}.finance@gmail.com" if current_username else "minhkhang.finance@gmail.com"
+        user_email = "temp@gmail.com"
 
         support_card = MenuSectionCard(
             items=[
@@ -274,11 +270,6 @@ class UserManagementView(ft.View):
 
         # INITIAL DATA LOAD
         self.refresh_view()
-        self._initial_launch()
-
-    def _initial_launch(self):
-        if self.user_info.get("username", "") == "":
-            self.dialogs.show_user_management_dialog()
 
     def refresh_view(self):
         self.dialogs.user_list.refresh(self.controller.get_all_users(), self.user_info.get("username", ""))
@@ -303,5 +294,5 @@ class UserManagementView(ft.View):
         return e
 
 
-def get_user_management_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+def get_user_management_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     return UserManagementView(page, lang, user_info)

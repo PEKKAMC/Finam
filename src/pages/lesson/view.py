@@ -8,13 +8,13 @@ from src.logger import Logger
 from src.pages.global_components import Menu
 from src.pages.lesson.components import LessonGrid, LessonSummaryBanner
 from src.pages.lesson.logic import LogicController
-from src.utils import Color, get_safe_page_size, UISettings
+from src.utils import Color, Page, get_safe_page_size, UISettings
 
 Logger.info("Initializing Lesson page...")
 
 
 class LessonView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
@@ -112,5 +112,5 @@ class LessonView(ft.View):
         return e
 
 
-def get_lesson_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+def get_lesson_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     return LessonView(page, lang, user_info)

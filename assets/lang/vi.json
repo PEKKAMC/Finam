@@ -1,4 +1,4 @@
-﻿{
+{
   "financial_chart.chart_title": "Tổng Quan Thu & Chi",
   "generic.all": "Tất cả",
   "generic.amount": "Số tiền",
@@ -91,7 +91,7 @@
   "purchase_scanner.source": "Nguồn kích thích mua",
   "purchase_scanner.subtitle": "Nhập một món bạn đang muốn mua. App sẽ phân tích mức rủi ro hành vi.",
   "purchase_scanner.thinking_time": "Thời gian suy nghĩ trước khi mua",
-  "purchase_scanner.title": "Purchase Decision Scanner",
+  "purchase_scanner.title": "Máy quét quyết định mua",
   "purchase_scanner.waiting": "Trí tuệ nhân tạo đang phân tích quyết định của bạn...",
   "saving.active_objectives": "Mục tiêu đang thực hiện",
   "saving.activity_added": "Đã thêm {money} VND cho {activity}",
@@ -181,5 +181,17 @@
   "user_management.select_account": "CHỌN TÀI KHOẢN ĐANG LÀM VIỆC",
   "user_management.select_user": "Chọn người dùng",
   "user_management.user_already_exists": "Tên người dùng đã tồn tại",
-  "user_management.username_hint": "Tên người dùng..."
+  "user_management.username_hint": "Tên người dùng...",
+  "fallback.default": "Đã xảy ra lỗi không xác định.",
+  "fallback.page_not_found": "Không tìm thấy trang.",
+  "fallback.something_went_wrong": "Đã xảy ra lỗi",
+  "fallback.unsupported_os": "Hệ điều hành không được hỗ trợ.",
+  "fallback.unsupported_screen": "Màn hình không được hỗ trợ.",
+  "generic.close": "Đóng",
+  "saving.added_to": "Đã thêm vào",
+  "saving.completed_objective": "Đã hoàn thành mục tiêu",
+  "saving.created_objective": "Đã tạo mục tiêu",
+  "saving.deleted_objective": "Đã xoá mục tiêu",
+  "saving.removed_from": "Đã bớt khỏi",
+  "saving.transaction": "Giao dịch"
 }

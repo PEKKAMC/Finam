@@ -6,11 +6,11 @@ from typing import Callable
 
 import flet as ft
 
-from src.utils import Color, Text
+from src.utils import Color, Page, Text
 
 
 class ObjectiveCard(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, objective_id: int, objective_title: str, subtitle: str, current_value: str, target_value: str, remaining_value: str, percentage: str, progress: float, completed: bool, on_click_callback: Callable):
+    def __init__(self, page: Page, lang: dict, objective_id: int, objective_title: str, subtitle: str, current_value: str, target_value: str, remaining_value: str, percentage: str, progress: float, completed: bool, on_click_callback: Callable):
         self._page = page
         self.lang = lang
         self.objective_id = objective_id
@@ -124,7 +124,7 @@ class ObjectiveCard(ft.Container):
 
 
 class ObjectiveGrid(ft.Column):
-    def __init__(self, page: ft.Page, lang: dict, objectives_data: list, on_card_click: Callable):
+    def __init__(self, page: Page, lang: dict, objectives_data: list, on_card_click: Callable):
         self._page = page
         self.lang = lang
         self.on_card_click = on_card_click
@@ -149,7 +149,7 @@ class ObjectiveGrid(ft.Column):
 
 
 class AggregateCard(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, total_savings: float, total_target: float, percentage: str, progress_value: float, on_create_click: Callable):
+    def __init__(self, page: Page, lang: dict, total_savings: float, total_target: float, percentage: str, progress_value: float, on_create_click: Callable):
         self._page = page
         self.lang = lang
 

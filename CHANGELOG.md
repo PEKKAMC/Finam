@@ -10,9 +10,10 @@
 
 ## Changes in this version
 
-*   Added dialog utility package for better dialog management.
+*   Added dialog, page utility packages.
 *   Renamed "login" page to "user_management" page, with some features being added to the page, including option to go to settings.
 *   Removed the top navigation bar, which served no purpose.
+*   Added options to settings page that doesn't to anything yet
 
 ## Bug fixes in this version
 

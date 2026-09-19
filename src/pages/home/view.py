@@ -10,14 +10,14 @@ from src.logger import Logger
 from src.pages.global_components import CategorySelectionDialog, ExpenseInputDialog, FinancialChart, IncomeInputDialog, Menu
 from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChartCard, FeaturedLessonCard
 from src.pages.home.logic import LogicController
-from src.utils import Color, get_safe_page_size, navigate_to, Text, UISettings
+from src.utils import Color, Page, get_safe_page_size, Text, UISettings
 
 Logger.info("Initializing Home page...")
 
 
 class DialogManager:
     """Handles all dialog instantiation, states, and callbacks for the Home View."""
-    def __init__(self, page: ft.Page, lang: dict, controller: LogicController, refresh_callback: Callable):
+    def __init__(self, page: Page, lang: dict, controller: LogicController, refresh_callback: Callable):
         self._page = page
         self.lang = lang
         self.controller = controller
@@ -157,13 +157,12 @@ class DialogManager:
             d.remove_from_overlay(self._page)
 
 class HomeView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
 
         # IMPORTED FUNCTIONS
-        self.navigate_to = navigate_to
         self.get_safe_page_size = get_safe_page_size
 
         # INITIALIZE PAGE CONTROLLER
@@ -202,7 +201,7 @@ class HomeView(ft.View):
             savings=self.metrics["total_savings"],
             ai_advice=self.ai_advice,
             on_add_click=self.dialogs.open_category_selector_dialog,
-            on_scan_click=self.navigate_to(self._page, "/purchase_scanner")
+            on_scan_click=self._page.navigate_to("/purchase_scanner")
         )
 
         self.financial_chart = FinancialChart(
@@ -215,18 +214,18 @@ class HomeView(ft.View):
         self.savings_progress_card = SavingsProgressCard(
             lang=self.lang,
             objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang),
-            on_view_all_click=self.navigate_to(self._page, "/saving")
+            on_view_all_click=self._page.navigate_to("/saving")
         )
 
         self.expense_pie_chart = ExpensePieChartCard(
             lang=self.lang,
             category_data=self.metrics["category_expenses"],
-            on_details_click=self.navigate_to(self._page, "/spending")
+            on_details_click=self._page.navigate_to("/spending")
         )
 
         self.featured_lesson_card = FeaturedLessonCard(
             lang=self.lang,
-            on_learn_click=self.navigate_to(self._page, "/lessons")
+            on_learn_click=self._page.navigate_to("/lessons")
         )
 
 
@@ -334,5 +333,5 @@ class HomeView(ft.View):
 
         return e
 
-def get_home_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+def get_home_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     return HomeView(page, lang, user_info)

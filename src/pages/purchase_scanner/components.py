@@ -4,7 +4,7 @@
 
 import flet as ft
 
-from src.utils import Color, Text
+from src.utils import Color, Page, Text
 
 
 class SelectableOptionGroup(ft.Container):
@@ -69,7 +69,7 @@ class SelectableOptionGroup(ft.Container):
 
 
 class ScannerForm(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, on_scan_click):
+    def __init__(self, page: Page, lang: dict, on_scan_click):
         self._page = page
         self.lang = lang
         self.on_scan_click = on_scan_click
@@ -212,7 +212,7 @@ class ScannerForm(ft.Container):
 
 
 class InterventionItem(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, title: str, description: str):
+    def __init__(self, page: Page, lang: dict, title: str, description: str):
         self._page = page
         self.lang = lang
         self.main_container = ft.Column(
@@ -241,7 +241,7 @@ class InterventionItem(ft.Container):
 
 
 class ScannerResult(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict):
+    def __init__(self, page: Page, lang: dict):
         self._page = page
         self.lang = lang
 

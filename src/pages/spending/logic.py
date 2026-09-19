@@ -8,11 +8,11 @@ import flet as ft
 
 from src.database import db
 from src.logger import Logger
-from src.utils import Text
+from src.utils import Page, Text
 
 
 class LogicController:
-    def __init__(self, current_user: str, page: ft.Page, lang: dict, user_info: dict, refresh_callback):
+    def __init__(self, current_user: str, page: Page, lang: dict, user_info: dict, refresh_callback):
         self.cached_expenses = None
         self.cached_incomes = None
         self.page = page

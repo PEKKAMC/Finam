@@ -4,11 +4,11 @@
 
 import flet as ft
 
-from src.utils import Color, Text
+from src.utils import Color, Page, Text
 
 
 class LessonItemCard(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, title: str, subtitle: str, cover_image: str, is_completed: bool, route: str, duration: int = 15):
+    def __init__(self, page: Page, lang: dict, title: str, subtitle: str, cover_image: str, is_completed: bool, route: str, duration: int = 15):
         self._page = page
         self.lang = lang
         self.title = title
@@ -134,7 +134,7 @@ class LessonItemCard(ft.Container):
 
 
 class LessonSummaryBanner(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, total_lessons: int, completed_lessons: int, total_minutes: int, completion_pct: int):
+    def __init__(self, page: Page, lang: dict, total_lessons: int, completed_lessons: int, total_minutes: int, completion_pct: int):
         self._page = page
         self.lang = lang
 
@@ -224,7 +224,7 @@ class LessonSummaryBanner(ft.Container):
 
 
 class LessonGrid(ft.ResponsiveRow):
-    def __init__(self, page: ft.Page, lang: dict, lessons: list):
+    def __init__(self, page: Page, lang: dict, lessons: list):
         self._page = page
         self.lang = lang
 

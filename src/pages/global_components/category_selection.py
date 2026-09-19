@@ -7,7 +7,7 @@ from typing import TypedDict
 
 import flet as ft
 
-from src.utils import Color, Dialog, Text, UISettings
+from src.utils import Color, Dialog, Page, Text, UISettings
 
 
 class _Category(TypedDict):
@@ -16,7 +16,7 @@ class _Category(TypedDict):
 
 
 class CategoryItem(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, name: str, icon: ft.IconData, on_click: Callable):
+    def __init__(self, page: Page, lang: dict, name: str, icon: ft.IconData, on_click: Callable):
         self._page = page
         self.lang = lang
         self.category_name = name
@@ -59,7 +59,7 @@ class CategoryItem(ft.Container):
 
 
 class CategorySelectionDialog(Dialog):
-    def __init__(self, page: ft.Page, lang: dict, on_select: Callable, on_cancel: Callable):
+    def __init__(self, page: Page, lang: dict, on_select: Callable, on_cancel: Callable):
         self._page = page
         self.lang = lang
         self._on_select = on_select
@@ -256,7 +256,7 @@ class CategorySelectionDialog(Dialog):
 
 
 class ExpenseInputDialog(Dialog):
-    def __init__(self, page: ft.Page, lang: dict, on_save: Callable, on_cancel: Callable, on_category_click: Callable):
+    def __init__(self, page: Page, lang: dict, on_save: Callable, on_cancel: Callable, on_category_click: Callable):
         self._page = page
         self.lang = lang
         self._on_cancel = on_cancel
@@ -381,7 +381,7 @@ class ExpenseInputDialog(Dialog):
 
 
 class IncomeInputDialog(Dialog):
-    def __init__(self, page: ft.Page, lang: dict, on_save: Callable, on_cancel: Callable, on_category_click: Callable):
+    def __init__(self, page: Page, lang: dict, on_save: Callable, on_cancel: Callable, on_category_click: Callable):
         self._page = page
         self.lang = lang
         self._on_cancel = on_cancel

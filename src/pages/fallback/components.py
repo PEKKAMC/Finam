@@ -6,11 +6,11 @@ from collections.abc import Callable
 
 import flet as ft
 
-from src.utils import Color, Text
+from src.utils import Color, Page, Text
 
 
 class ReturnButton(ft.Row):
-    def __init__(self, page: ft.Page, lang: dict, on_click: Callable):
+    def __init__(self, page: Page, lang: dict, on_click: Callable):
         self._page = page
         self.lang = lang
         self.return_button = ft.IconButton(
@@ -36,7 +36,7 @@ class ReturnButton(ft.Row):
 
 
 class NotSupportedMessageBox(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, message: str):
+    def __init__(self, page: Page, lang: dict, message: str):
         self._page = page
         self.lang = lang
         self.message = message

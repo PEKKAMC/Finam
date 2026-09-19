@@ -7,21 +7,21 @@ from datetime import datetime
 import flet as ft
 
 from src.database import db
-from src.utils import Color, Text, UISettings
+from src.utils import Color, Page, Text, UISettings
 
 class BaseDialog(ft.AlertDialog):
-    def show(self, page: ft.Page):
+    def show(self, page: Page):
         if self not in page.overlay:
             page.overlay.append(self)
         self.open = True
         page.update()
 
-    def close(self, page: ft.Page):
+    def close(self, page: Page):
         self.open = False
         page.update()
 
 class CreateObjectiveDialog(BaseDialog):
-    def __init__(self, page: ft.Page, lang: dict, controller, on_success):
+    def __init__(self, page: Page, lang: dict, controller, on_success):
         self._page = page
         self.lang = lang
         self.controller = controller
@@ -60,7 +60,7 @@ class CreateObjectiveDialog(BaseDialog):
             self.on_success()
 
 class QuickActionDialog(BaseDialog):
-    def __init__(self, page: ft.Page, lang: dict, controller, on_success):
+    def __init__(self, page: Page, lang: dict, controller, on_success):
         self._page = page
         self.lang = lang
         self.controller = controller
@@ -79,7 +79,7 @@ class QuickActionDialog(BaseDialog):
             ]
         )
 
-    def trigger(self, page: ft.Page, objective_id: int, action: str):
+    def trigger(self, page: Page, objective_id: int, action: str):
         self.current_action_objective = {"id": objective_id, "action": action}
         self.quick_amount_input.value = ""
         self.title = Text.H3(self.lang["saving.add_money"] if action == "add" else self.lang["saving.remove_money"])
@@ -108,7 +108,7 @@ class QuickActionDialog(BaseDialog):
         except ValueError: pass
 
 class CompleteConfirmDialog(BaseDialog):
-    def __init__(self, page: ft.Page, lang: dict, controller, on_success):
+    def __init__(self, page: Page, lang: dict, controller, on_success):
         self._page = page
         self.controller = controller
         self.on_success = on_success
@@ -123,7 +123,7 @@ class CompleteConfirmDialog(BaseDialog):
             ]
         )
 
-    def trigger(self, page: ft.Page, objective_id: int):
+    def trigger(self, page: Page, objective_id: int):
         self.current_id = objective_id
         self.show(page)
 
@@ -133,7 +133,7 @@ class CompleteConfirmDialog(BaseDialog):
         self.on_success()
 
 class DeleteConfirmDialog(BaseDialog):
-    def __init__(self, page: ft.Page, lang: dict, controller, on_success):
+    def __init__(self, page: Page, lang: dict, controller, on_success):
         self._page = page
         self.controller = controller
         self.on_success = on_success
@@ -148,7 +148,7 @@ class DeleteConfirmDialog(BaseDialog):
             ]
         )
 
-    def trigger(self, page: ft.Page, objective_id: int):
+    def trigger(self, page: Page, objective_id: int):
         self.current_id = objective_id
         self.show(page)
 
@@ -158,7 +158,7 @@ class DeleteConfirmDialog(BaseDialog):
         self.on_success()
 
 class ClearHistoryDialog(BaseDialog):
-    def __init__(self, page: ft.Page, lang: dict, controller, on_success, trigger_export):
+    def __init__(self, page: Page, lang: dict, controller, on_success, trigger_export):
         self._page = page
         self.controller = controller
         self.on_success = on_success
@@ -178,7 +178,7 @@ class ClearHistoryDialog(BaseDialog):
         self.on_success()
 
 class GoalDetailsDialog(BaseDialog):
-    def __init__(self, page: ft.Page, lang: dict, controller, on_complete, on_quick_action, on_delete):
+    def __init__(self, page: Page, lang: dict, controller, on_complete, on_quick_action, on_delete):
         self._page = page
         self.lang = lang
         self.controller = controller
@@ -191,7 +191,7 @@ class GoalDetailsDialog(BaseDialog):
             bgcolor=Color.TRANSPARENT
         )
 
-    def trigger(self, page: ft.Page, objective_id: int, goal_title: str, subtitle: str, current_value: str, target_value: str, progress: float, completed: bool):
+    def trigger(self, page: Page, objective_id: int, goal_title: str, subtitle: str, current_value: str, target_value: str, progress: float, completed: bool):
         progress_ui = ft.Container(
             content=ft.Stack(
                 controls=[

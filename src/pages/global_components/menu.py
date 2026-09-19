@@ -7,33 +7,28 @@ from collections.abc import Callable
 
 import flet as ft
 
-from src.utils import Color, navigate_to, Text
+from src.utils import Color, Page, Text
 
 
 class Menu(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
-        self.navigate_to = navigate_to
-
         self.active_icon = self.get_active_icon()
 
-        #hasnt_chosen_user = self._page.route == "/user_management" and self.user_info["username"] == ""
-        hasnt_chosen_user = False # Temporary disabled to get some bugs fixed
-
         self.navigation_items = [
-            self.build_nav_item(ft.Icons.HOME_ROUNDED, self.lang["generic.home"], self.navigate_to(self._page, "/home", hasnt_chosen_user), is_active=self.active_icon == "home"),
-            self.build_nav_item(ft.Icons.MENU_BOOK_ROUNDED, self.lang["generic.lesson"], self.navigate_to(self._page, "/lessons", hasnt_chosen_user), is_active=self.active_icon == "lesson"),
-            self.build_nav_item(ft.Icons.SAVINGS_ROUNDED, self.lang["generic.saving"], self.navigate_to(self._page, "/saving", hasnt_chosen_user), is_active=self.active_icon == "saving"),
-            self.build_nav_item(ft.Icons.ACCOUNT_BALANCE_WALLET_ROUNDED, self.lang["generic.spending"], self.navigate_to(self._page, "/spending", hasnt_chosen_user), is_active=self.active_icon == "spending"),
-            self.build_nav_item(ft.Icons.AUTO_AWESOME_ROUNDED, self.lang["generic.purchase_scanner"], self.navigate_to(self._page, "/purchase_scanner", hasnt_chosen_user), is_active=self.active_icon == "scanner"),
-            self.build_nav_item(ft.Icons.PERSON_ROUNDED, self.lang["generic.change_user"], self.navigate_to(self._page, "/user_management", hasnt_chosen_user), is_active=self.active_icon == "user_management"),
+            self.build_nav_item(ft.Icons.HOME_ROUNDED, self.lang["generic.home"], self._page.navigate_to("/home"), is_active=self.active_icon == "home"),
+            self.build_nav_item(ft.Icons.MENU_BOOK_ROUNDED, self.lang["generic.lesson"], self._page.navigate_to("/lessons"), is_active=self.active_icon == "lesson"),
+            self.build_nav_item(ft.Icons.SAVINGS_ROUNDED, self.lang["generic.saving"], self._page.navigate_to("/saving"), is_active=self.active_icon == "saving"),
+            self.build_nav_item(ft.Icons.ACCOUNT_BALANCE_WALLET_ROUNDED, self.lang["generic.spending"], self._page.navigate_to("/spending"), is_active=self.active_icon == "spending"),
+            self.build_nav_item(ft.Icons.AUTO_AWESOME_ROUNDED, self.lang["generic.purchase_scanner"], self._page.navigate_to("/purchase_scanner"), is_active=self.active_icon == "scanner"),
+            self.build_nav_item(ft.Icons.PERSON_ROUNDED, self.lang["generic.change_user"], self._page.navigate_to("/user_management"), is_active=self.active_icon == "user_management"),
         ]
 
         if os.getenv("ENABLE_EDITOR") == "1":
             self.navigation_items.append(
-                self.build_nav_item(ft.Icons.EDIT_NOTE_ROUNDED, "editor", self.navigate_to(self._page, "/lesson-editor"), is_active=self.active_icon == "editor")
+                self.build_nav_item(ft.Icons.EDIT_NOTE_ROUNDED, "editor", self._page.navigate_to("/lesson-editor"), is_active=self.active_icon == "editor")
             )
 
         self.main_container = ft.Container(

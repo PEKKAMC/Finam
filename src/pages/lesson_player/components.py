@@ -4,11 +4,11 @@
 
 import flet as ft
 
-from src.utils import Color, Text
+from src.utils import Color, Page, Text
 
 
 class TopNavigationMenu(ft.Row):
-    def __init__(self, page: ft.Page, lang: dict, on_return_click):
+    def __init__(self, page: Page, lang: dict, on_return_click):
         self._page = page
         self.lang = lang
         self.return_button = ft.IconButton(
@@ -37,7 +37,7 @@ class TopNavigationMenu(ft.Row):
 
 
 class SlideCanvas(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict):
+    def __init__(self, page: Page, lang: dict):
         self._page = page
         self.lang = lang
         self.canvas_stack = ft.Stack(expand=True)
@@ -67,7 +67,7 @@ class SlideCanvas(ft.Container):
         self.height = max(height, 0)
 
 class LessonHeader(ft.Row):
-    def __init__(self, page: ft.Page, lang: dict, default_title: str):
+    def __init__(self, page: Page, lang: dict, default_title: str):
         self._page = page
         self.lang = lang
         self.title_display = Text.H2(default_title, color=ft.Colors.BLUE_GREY_900)
@@ -88,7 +88,7 @@ class LessonHeader(ft.Row):
 
 
 class LessonControls(ft.Row):
-    def __init__(self, page: ft.Page, lang: dict, on_previous_click, on_next_click):
+    def __init__(self, page: Page, lang: dict, on_previous_click, on_next_click):
         self._page = page
         self.lang = lang
         self.button_previous = ft.Button(self.lang["lesson_player.previous"], icon=ft.Icons.ARROW_BACK, on_click=on_previous_click, disabled=True)
@@ -109,7 +109,7 @@ class LessonControls(ft.Row):
 
 
 class PresentationBoard(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, lesson_header, lesson_controls, slide_canvas):
+    def __init__(self, page: Page, lang: dict, lesson_header, lesson_controls, slide_canvas):
         self._page = page
         self.lang = lang
         self.lesson_header = lesson_header

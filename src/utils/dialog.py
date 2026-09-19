@@ -7,7 +7,7 @@ import re
 import flet as ft
 
 from logger import Logger
-from src.utils.color import Color
+from src.utils import Color, Page
 
 class Dialog(ft.AlertDialog):
     def __init__(self, dialog_content: ft.Control, color: Color | ft.Colors | str):
@@ -31,14 +31,14 @@ class Dialog(ft.AlertDialog):
         else:
             return False
 
-    def _is_in_overlay(self, page: ft.Page) -> bool:
+    def _is_in_overlay(self, page: Page) -> bool:
         try:
             return self in page.overlay
         except Exception as e:
             Logger.error(f"Error checking if dialog is in overlay: {e}")
             return False
 
-    def add_to_overlay(self, page: ft.Page) -> int:
+    def add_to_overlay(self, page: Page) -> int:
         try:
             if not self._is_in_overlay(page):
                 page.overlay.append(self)
@@ -51,7 +51,7 @@ class Dialog(ft.AlertDialog):
             Logger.error(f"Error adding dialog to overlay: {e}")
             return -1
 
-    def remove_from_overlay(self, page: ft.Page) -> int:
+    def remove_from_overlay(self, page: Page) -> int:
         try:
             if self._is_in_overlay(page):
                 page.overlay.remove(self)
@@ -64,7 +64,7 @@ class Dialog(ft.AlertDialog):
             Logger.error(f"Error removing dialog from overlay: {e}")
             return -1
 
-    def show(self, page: ft.Page) -> int:
+    def show(self, page: Page) -> int:
         try:
             if not self.open:
                 page.show_dialog(self)
@@ -78,7 +78,7 @@ class Dialog(ft.AlertDialog):
             return -1
 
     @staticmethod
-    def close_most_recent_dialog(page: ft.Page) -> int:
+    def close_most_recent_dialog(page: Page) -> int:
         try:
             page.pop_dialog()
             return 0

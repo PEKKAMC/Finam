@@ -4,7 +4,7 @@
 
 import flet as ft
 
-from src.utils import UISettings, Color, Text
+from src.utils import Color, Page, Text, UISettings
 from src.logger import Logger
 from src.pages.global_components import Menu, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog
 from src.pages.saving.logic import LogicController
@@ -12,7 +12,7 @@ from src.pages.saving.components import AggregateCard, ObjectiveGrid
 
 
 class SavingView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
@@ -136,5 +136,5 @@ class SavingView(ft.View):
         return e
 
 
-def get_savings_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+def get_savings_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     return SavingView(page, lang, user_info)

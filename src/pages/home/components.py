@@ -5,6 +5,7 @@
 from collections.abc import Callable
 
 import flet as ft
+
 import flet_charts as fc
 
 from src.utils import Color, Text, UISettings

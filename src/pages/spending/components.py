@@ -5,12 +5,13 @@
 from collections.abc import Callable
 
 import flet as ft
-from src.utils import Color, Text
+
+from src.utils import Color, Page, Text
 
 
 class MetricCards(ft.ResponsiveRow):
     """Top summary metric cards matching the TSX TransactionsView layout."""
-    def __init__(self, page: ft.Page, lang: dict, total_income: str, total_expense: str, net_balance: str):
+    def __init__(self, page: Page, lang: dict, total_income: str, total_expense: str, net_balance: str):
         self._page = page
         self.lang = lang
 
@@ -88,7 +89,7 @@ class MetricCards(ft.ResponsiveRow):
 
 class TransactionToolbar(ft.Container):
     """Filter, Search, and Action Toolbar"""
-    def __init__(self, page: ft.Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_category_change: Callable, categories: list, on_add_expense_click: Callable, on_add_income_click: Callable, search_query: str = "", selected_category: str = "all"):
+    def __init__(self, page: Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_category_change: Callable, categories: list, on_add_expense_click: Callable, on_add_income_click: Callable, search_query: str = "", selected_category: str = "all"):
         self._page = page
         self.lang = lang
         self.on_filter = on_filter_change
@@ -222,7 +223,7 @@ class TransactionToolbar(ft.Container):
 
 
 class TransactionItemCard(ft.Container):
-    def __init__(self, page: ft.Page, lang: dict, tx: dict, on_delete=None):
+    def __init__(self, page: Page, lang: dict, tx: dict, on_delete=None):
         self._page = page
         self.lang = lang
         self.tx = tx

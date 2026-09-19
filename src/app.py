@@ -6,7 +6,7 @@ import os
 import flet as ft
 
 from src.database import db
-from src.utils import UISettings, get_language
+from src.utils import Page, UISettings, get_language
 from src.logger import Logger
 from src.pages.fallback import get_fallback_view
 from src.pages.home import get_home_view
@@ -16,6 +16,7 @@ from src.pages.saving import get_savings_view
 from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.purchase_scanner import get_scanner_view
+from src.pages.starter.view import get_starter_view
 from src.pages.user_management import get_user_management_view
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
@@ -25,13 +26,13 @@ if ENABLE_EDITOR:
     from src.pages.lesson_editor import get_lesson_editor_view
 
 
-async def redirect_to_fallback(page: ft.Page, lang: dict, fallback_reason: str) -> None:
+async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> None:
     Logger.info("Redirecting to fallback page")
     await page.push_route("/fallback")
     page.views.append(get_fallback_view(page, lang, fallback_reason))
 
 
-async def main(page: ft.Page):
+async def main(page: Page):
     db.initialize_database()
 
     lang: dict = get_language("vi")
@@ -103,7 +104,8 @@ async def main(page: ft.Page):
                 page.views.append(get_lesson_editor_view(page, lang, user_info))
 
             elif troute.match("/starter"):
-                pass
+                Logger.info("Redirecting to starter page")
+                page.views.append(get_starter_view(page, lang, user_info))
 
             else:
                 Logger.info("Page not found")
@@ -119,11 +121,11 @@ async def main(page: ft.Page):
 
     async def on_error(e: ft.ControlEvent) -> ft.ControlEvent:
         if e == ft.Event(name='error', data='Bad state: No element', control=page):
-            print("there is like 3-5% chance you'll see this message on launch lmao.")
-            print("actually its cuz of a bug that makes 2 processes racing for control,")
+            print("there is like 5-15% chance you'll see this message on launch, depends on")
+            print("your computer. it's because of a bug that makes 2 processes racing for control,")
             print("and if that one specifically wins the race, it causes this to happen.")
             print("currently the bug doesn't affect the application much, so i'll be fixing")
-            print("it later. consider yourself lucky.\n\n")
+            print("it later. consider yourself lucky.\n")
             Logger.error("PEKKAMC")
         else:
             Logger.critical(f"Unexpected error occurred: {e.control}")

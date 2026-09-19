@@ -10,14 +10,14 @@ from src.logger import Logger
 from src.pages.global_components import CategorySelectionDialog, ExpenseInputDialog, IncomeInputDialog, FinancialChart, Menu
 from src.pages.spending.logic import LogicController
 from src.pages.spending.components import MetricCards, TransactionToolbar, TransactionItemCard
-from src.utils import Color, get_safe_page_size, UISettings, Text
+from src.utils import Color, Page, get_safe_page_size, UISettings, Text
 
 Logger.info("Initializing Spending page...")
 
 
 class DialogManager:
     """Handles all dialog instantiation, states, and callbacks for the Home View."""
-    def __init__(self, page: ft.Page, lang: dict, controller: LogicController, refresh_callback: Callable):
+    def __init__(self, page: Page, lang: dict, controller: LogicController, refresh_callback: Callable):
         self._page = page
         self.lang = lang
         self.controller = controller
@@ -154,7 +154,7 @@ class DialogManager:
 
 
 class SpendingView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
@@ -411,5 +411,5 @@ class SpendingView(ft.View):
         return e
 
 
-def get_spending_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+def get_spending_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     return SpendingView(page, lang, user_info)

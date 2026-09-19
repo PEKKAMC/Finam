@@ -6,13 +6,13 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.fallback.components import NotSupportedMessageBox, ReturnButton
-from src.utils import Color, UISettings
+from src.utils import Color, Page, UISettings
 
 Logger.info("Initializing Fallback page...")
 
 
 class FallbackView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, fallback_reason: str):
+    def __init__(self, page: Page, lang: dict, fallback_reason: str):
         self._page = page
         self.lang = lang
         self.fallback_reason = fallback_reason
@@ -91,5 +91,5 @@ class FallbackView(ft.View):
         return e
 
 
-def get_fallback_view(page: ft.Page, lang: dict, fallback_reason: str) -> ft.View:
+def get_fallback_view(page: Page, lang: dict, fallback_reason: str) -> ft.View:
     return FallbackView(page, lang, fallback_reason)

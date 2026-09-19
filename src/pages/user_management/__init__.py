@@ -4,7 +4,8 @@
 
 """User management page - User management and settings."""
 
-from src.pages.user_management.components import AddUserField, DeleteUserDialog, MenuItem, MenuSectionCard, ProfileCard, UserList, UserManagementDialog
+from src.pages.global_components.user_dialog import AddUserField, DeleteUserDialog, UserList, UserManagementCard, UserManagementDialog
+from src.pages.user_management.components import MenuItem, MenuSectionCard, ProfileCard
 from src.pages.user_management.logic import LogicController
 from src.pages.user_management.view import UserManagementView, get_user_management_view
 
@@ -15,6 +16,7 @@ __all__ = [
     "MenuSectionCard",
     "ProfileCard",
     "UserList",
+    "UserManagementCard",
     "UserManagementDialog",
     "LogicController",
     "UserManagementView",

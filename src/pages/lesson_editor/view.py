@@ -3,18 +3,19 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import flet as ft
+
 import json
 import os
 import re
 
 from src.pages.global_components import Menu
-from src.utils import Color, create_text, Text, UISettings
+from src.utils import Color, Page, create_text, Text, UISettings
 from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, LogicController, safe_float, calculate_pan_position
 from src.pages.lesson_editor.components import EditorToolbar, PropertiesTabs, SlideSidebarLayout
 
 
 class LessonEditorView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
@@ -22,11 +23,11 @@ class LessonEditorView(ft.View):
         self.logic = LogicController()
 
         # Input Fields
-        self.lesson_id_input = ft.TextField(label="Lesson ID", value="1", width=100, color=Color.DEFAULT_TEXT)
-        self.title_input = ft.TextField(label="Lesson Title", color=Color.DEFAULT_TEXT, expand=True)
-        self.subtitle_input = ft.TextField(label="Lesson Subtitle", color=Color.DEFAULT_TEXT, expand=True)
-        self.cover_image_input = ft.TextField(label="Cover Image Path/URL", color=Color.DEFAULT_TEXT, expand=True)
-        self.slide_number_title = Text.MEDIUM(f"Slide {self.logic.current_slide_index + 1}", weight=ft.FontWeight.BOLD)
+        self.lesson_id_input = ft.TextField(label=self.lang["lesson_editor.lesson_id"], value="1", width=100, color=Color.DEFAULT_TEXT)
+        self.title_input = ft.TextField(label=self.lang["lesson_editor.lesson_title"], color=Color.DEFAULT_TEXT, expand=True)
+        self.subtitle_input = ft.TextField(label=self.lang["lesson_editor.lesson_subtitle"], color=Color.DEFAULT_TEXT, expand=True)
+        self.cover_image_input = ft.TextField(label=self.lang["lesson_editor.cover_image"], color=Color.DEFAULT_TEXT, expand=True)
+        self.slide_number_title = Text.MEDIUM(f"{self.lang['lesson_editor.slide']} {self.logic.current_slide_index + 1}", weight=ft.FontWeight.BOLD)
 
         # Core Layout Setup (components are provided by components.py)
         self.sidebar_column = ft.Column(spacing=10, scroll=ft.ScrollMode.AUTO, expand=True)
@@ -115,9 +116,9 @@ class LessonEditorView(ft.View):
             try:
                 with open(path, "w", encoding="utf-8") as f:
                     json.dump(data, f, ensure_ascii=False, indent=2)
-                self.show_snackbar("Lesson saved successfully!", ft.Colors.GREEN_700)
+                self.show_snackbar(self.lang["lesson_editor.saved_successfully"], ft.Colors.GREEN_700)
             except Exception as ex:
-                self.show_snackbar(f"Failed to save: {ex}", ft.Colors.RED_700)
+                self.show_snackbar(f"{self.lang['lesson_editor.failed_to_save']}: {ex}", ft.Colors.RED_700)
 
     async def load_file(self, e):
         files = await ft.FilePicker().pick_files(allowed_extensions=["json"])
@@ -126,13 +127,13 @@ class LessonEditorView(ft.View):
                 with open(files[0].path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     self.lesson_id_input.value = str(data.get("lesson_id", 1))
-                    self.title_input.value = data.get("title", "no title")
-                    self.subtitle_input.value = data.get("subtitle", "no subtitle")
+                    self.title_input.value = data.get("title", self.lang["lesson_editor.no_title"])
+                    self.subtitle_input.value = data.get("subtitle", self.lang["lesson_editor.no_subtitle"])
                     self.logic.process_loaded_data(data)
                     self.refresh_editor()
-                    self.show_snackbar("Lesson loaded successfully!", ft.Colors.GREEN_700)
+                    self.show_snackbar(self.lang["lesson_editor.loaded_successfully"], ft.Colors.GREEN_700)
             except Exception as ex:
-                self.show_snackbar(f"Failed to load: {ex}", ft.Colors.RED_700)
+                self.show_snackbar(f"{self.lang['lesson_editor.failed_to_load']}: {ex}", ft.Colors.RED_700)
 
     async def pick_image(self, e, tf_control, key):
         files = await ft.FilePicker().pick_files(allow_multiple=False, allowed_extensions=["png", "jpg", "jpeg", "gif", "webp", "svg"])
@@ -215,7 +216,7 @@ class LessonEditorView(ft.View):
 
             if is_text:
                 raw_text = el.get("content", "")
-                display_text = re.sub(r'\{pause:[\d.]+}', '', raw_text) or "[Empty Text]"
+                display_text = re.sub(r'\{pause:[\d.]+}', '', raw_text) or self.lang["lesson_editor.empty_text"]
                 w_val = safe_float(el.get("width"), 300.0)
                 font_size = int(el.get("size")) or 16
                 visual = ft.Container(content=create_text(display_text, size=font_size, color=Color.DEFAULT_TEXT), width=w_val)
@@ -382,5 +383,5 @@ class LessonEditorView(ft.View):
         self.canvas_container.height = int(available_height * 0.75)
 
 
-def get_lesson_editor_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+def get_lesson_editor_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     return LessonEditorView(page, lang, user_info)

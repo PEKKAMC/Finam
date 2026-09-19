@@ -8,14 +8,14 @@ import re
 
 import flet as ft
 
-from src.utils import Color, create_text, Text
+from src.utils import Color, Page, create_text, Text
 from src.pages.lesson_player.logic import LogicController, AudioController, AnimationController, ENTRANCE_EFFECTS
 from src.pages.lesson_player.components import TopNavigationMenu, SlideCanvas, LessonHeader, LessonControls, PresentationBoard
 from src.utils import UISettings
 
 
 class LessonPlayerView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_info_information: dict, target_lesson_filename: str = ""):
+    def __init__(self, page: Page, lang: dict, user_info_information: dict, target_lesson_filename: str = ""):
         self._page = page
         self.lang = lang
         self.user_info_information = user_info_information
@@ -306,5 +306,5 @@ class LessonPlayerView(ft.View):
 
         return event
 
-def get_lesson_player_view(page: ft.Page, lang: dict, user_info_information: dict, target_lesson_filename: str = "") -> ft.View:
+def get_lesson_player_view(page: Page, lang: dict, user_info_information: dict, target_lesson_filename: str = "") -> ft.View:
     return LessonPlayerView(page, lang, user_info_information, target_lesson_filename)

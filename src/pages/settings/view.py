@@ -7,13 +7,13 @@ import flet as ft
 from src.logger import Logger
 from src.pages.global_components import Menu
 from src.pages.settings.components import SettingsHeader, SettingCard, SettingRow, SettingDropdown
-from src.utils import Color, navigate_to, get_safe_page_size, UISettings
+from src.utils import Color, Page, get_safe_page_size, UISettings
 
 Logger.info("Initializing Settings page...")
 
 
 class SettingsView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
@@ -36,7 +36,7 @@ class SettingsView(ft.View):
             padding=16,
             border_radius=25,
             margin=ft.Margin.only(top=10),
-            on_click=navigate_to(self._page, "/user_management")
+            on_click=self._page.navigate_to("/user_management")
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -51,7 +51,7 @@ class SettingsView(ft.View):
                             spacing=18,
                             expand=True,
                             controls=[
-                                SettingsHeader(on_close=navigate_to(self._page, "/user_management")),
+                                SettingsHeader(on_close=self._page.navigate_to("/user_management")),
                                 ft.Divider(height=10, thickness=1, color=Color.INPUT_BORDER),
 
                                 SettingCard(
@@ -135,5 +135,5 @@ class SettingsView(ft.View):
 
         return e
 
-def get_settings_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+def get_settings_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     return SettingsView(page, lang, user_info)

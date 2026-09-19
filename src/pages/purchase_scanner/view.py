@@ -8,13 +8,13 @@ from src.logger import Logger
 from src.pages.global_components import Menu
 from src.pages.purchase_scanner.logic import LogicController
 from src.pages.purchase_scanner.components import ScannerForm, ScannerResult
-from src.utils import Color, get_safe_page_size, Text, UISettings
+from src.utils import Color, Page, get_safe_page_size, Text, UISettings
 
 Logger.info("Initializing Purchase Scanner page...")
 
 
 class PurchaseScannerView(ft.View):
-    def __init__(self, page: ft.Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
         self.user_info = user_info
@@ -126,5 +126,5 @@ class PurchaseScannerView(ft.View):
 
         return e
 
-def get_scanner_view(page: ft.Page, lang: dict, user_info: dict) -> ft.View:
+def get_scanner_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     return PurchaseScannerView(page, lang, user_info)

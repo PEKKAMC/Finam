@@ -1,17 +1,17 @@
-# Finam - Financial Learning App
+# Finam - Financial Learning/Management App
 
 A comprehensive financial literacy application built with **Flet** and **Python**, designed to help users learn about budgeting, savings, spending management, and financial planning through interactive lessons and real-time tracking.
 
 ## Features
 
-- **Interactive Lessons** - Engaging lessons with built-in lesson player
+- **Interactive Lessons** - Engaging lessons which helps users have a better understanding on financial management
 - **Savings Tracker** - Monitor and manage your savings goals
 - **Spending Analysis** - Track and analyze your spending patterns
 - **Purchase Scanner** - Scan receipts and track purchases
-- **AI Integration** - Powered by Google Generative AI for smart insights
+- **AI Integration** - Powered by Google Generative AI for deep insights
 - **Charts & Analytics** - Visual representation of financial data
 - **Responsive Design** - Mobile-first UI that works across all platforms
-- **Multi-language Support** - Currently supports Vietnamese with extensibility for more languages
+- **Multi-language Support** - Currently supports Vietnamese and English, with more languages coming in the future.
 - **Local Database** - SQLite database for offline data persistence
 
 ## Prerequisites
