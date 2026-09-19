@@ -4,6 +4,9 @@
 
 class DefaultSettings:
     DEFAULT_USERNAME: str = "Admin"
+    THEME: str = "light"
+    CURRENCY: str = "VND"
+    LANGUAGE: str = "vi"
 
 
 class UISettings:
@@ -19,9 +22,3 @@ class UISettings:
     MENU_HEIGHT: int = 72
     SHADOW_BLUR: int = 10
     SHADOW_SPREAD: int = 1
-    
-
-class UserSettings:
-    THEME: str = "light"
-    CURRENCY: str = "VND"
-    LANGUAGE: str = "vi"

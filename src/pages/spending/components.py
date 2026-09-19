@@ -51,7 +51,7 @@ class MetricCards(ft.ResponsiveRow):
                 spacing=16,
                 controls=[
                     card(
-                        "TỔNG THU NHẬP",
+                        self.lang["ui.spending.total_income"].upper(),
                         f"+{total_income}",
                         "#1A4734",
                         "#1A4734",
@@ -59,7 +59,7 @@ class MetricCards(ft.ResponsiveRow):
                         "#DAF1DE"
                     ),
                     card(
-                        "TỔNG CHI TIÊU",
+                        self.lang["ui.spending.total_expense"].upper(),
                         f"-{total_expense}",
                         "#E90C00",
                         "#E90C00",
@@ -67,7 +67,7 @@ class MetricCards(ft.ResponsiveRow):
                         "#FEE2E2",
                     ),
                     card(
-                        "SỐ DƯ RÒNG",
+                        self.lang["ui.spending.net_balance"].upper(),
                         net_balance,
                         Color.PRIMARY_TEXT,
                         "#059669",
@@ -112,7 +112,7 @@ class TransactionToolbar(ft.Container):
                 )
             )
 
-        category_options = [ft.dropdown.Option("all", "Tất cả danh mục chi/thu")] + [ft.dropdown.Option(c, c) for c in (categories or [])]
+        category_options = [ft.dropdown.Option("all", self.lang["ui.spending.all_categories"])] + [ft.dropdown.Option(c, c) for c in (categories or [])]
         valid_cat_keys = [opt.key for opt in category_options]
         dropdown_value = self.selected_category if self.selected_category in valid_cat_keys else "all"
 
@@ -126,9 +126,9 @@ class TransactionToolbar(ft.Container):
                         ft.Row(
                             spacing=6,
                             controls=[
-                                filter_btn("Tất cả", "all", "#1A4734"),
-                                filter_btn("Khoản chi (-)", "expense", "#E90C00"),
-                                filter_btn("Khoản thu (+)", "income", "#1A4734")
+                                filter_btn(self.lang["ui.spending.all"], "all", "#1A4734"),
+                                filter_btn(self.lang["ui.spending.expense_label"], "expense", "#E90C00"),
+                                filter_btn(self.lang["ui.spending.income_label"], "income", "#1A4734")
                             ]
                         ),
                         ft.Row(
@@ -139,7 +139,7 @@ class TransactionToolbar(ft.Container):
                                         spacing=8,
                                         controls=[
                                             ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=18),
-                                            Text.MEDIUM("Thêm Khoản Chi", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+                                            Text.MEDIUM(self.lang["ui.spending.add_expense"], color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
                                         ],
                                         tight=True
                                     ),
@@ -155,7 +155,7 @@ class TransactionToolbar(ft.Container):
                                         spacing=8,
                                         controls=[
                                             ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=18),
-                                            Text.MEDIUM("Thêm Khoản Thu", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+                                            Text.MEDIUM(self.lang["ui.spending.add_income"], color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
                                         ],
                                         tight=True
                                     ),
@@ -178,7 +178,7 @@ class TransactionToolbar(ft.Container):
                             col={"xs": 12, "sm": 6},
                             content=ft.TextField(
                                 value=self.search_query,
-                                hint_text="Tìm theo từ khóa, ghi chú, số tiền...",
+                                hint_text=self.lang["ui.spending.search"],
                                 prefix_icon=ft.Icons.SEARCH,
                                 on_change=lambda e: self.on_search(e.control.value) if self.on_search else None,
                                 bgcolor=Color.CARD_BACKGROUND,
@@ -257,7 +257,7 @@ class TransactionItemCard(ft.Container):
                                     controls=[
                                         Text.MEDIUM(self.tx["title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
                                         ft.Container(
-                                            content=Text.SMALL("Thu nhập" if is_income else "Chi tiêu", color=ft.Colors.SLATE_700 if hasattr(ft.Colors, 'SLATE_700') else "#334155", weight=ft.FontWeight.BOLD),
+                                            content=Text.SMALL(self.lang["ui.spending.income"] if is_income else self.lang["ui.spending.expense"], color=ft.Colors.SLATE_700 if hasattr(ft.Colors, 'SLATE_700') else "#334155", weight=ft.FontWeight.BOLD),
                                             bgcolor=ft.Colors.SLATE_100 if hasattr(ft.Colors, 'SLATE_100') else "#F1F5F9",
                                             padding=ft.Padding(8, 2, 8, 2),
                                             border_radius=10
@@ -288,7 +288,7 @@ class TransactionItemCard(ft.Container):
                                     icon_color=ft.Colors.RED_400,
                                     icon_size=18,
                                     on_click=lambda e: self.on_delete(self.tx.get("id")) if self.on_delete else None,
-                                    tooltip="Xóa giao dịch"
+                                    tooltip=self.lang["ui.spending.delete"]
                                 )
                             ] if self.on_delete else []
                         )

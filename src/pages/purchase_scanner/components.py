@@ -18,10 +18,8 @@ class SelectableOptionGroup(ft.Container):
         grid_controls = []
         for val_id, label in self.options:
             btn = ft.Container(
-                content=ft.Text(
+                content=Text.BADGE(
                     label,
-                    size=12,
-                    weight=ft.FontWeight.BOLD,
                     text_align=ft.TextAlign.CENTER
                 ),
                 padding=ft.Padding(12, 10, 12, 10),
@@ -115,19 +113,19 @@ class ScannerForm(ft.Container):
 
         # Triggers selection grid
         trigger_options = [
-            ("need", "Nhu cầu dùng thực tế"),
-            ("sale", "Săn Flash sale / Giảm giá"),
-            ("tiktok", "TikTok / Mạng xã hội"),
-            ("social", "Bạn bè rủ mua"),
-            ("emotion", "Cảm xúc (Stress, hưng phấn)")
+            ("need", self.lang.get("ui.scanner.trigger_actual_need", "Nhu cầu dùng thực tế")),
+            ("sale", self.lang.get("ui.scanner.trigger_flash_sale", "Săn Flash sale / Giảm giá")),
+            ("tiktok", self.lang.get("ui.scanner.trigger_social_media", "TikTok / Mạng xã hội")),
+            ("social", self.lang.get("ui.scanner.trigger_friends", "Bạn bè rủ mua")),
+            ("emotion", self.lang.get("ui.scanner.trigger_emotion", "Cảm xúc (Stress, hưng phấn)"))
         ]
         self.trigger = SelectableOptionGroup(trigger_options, initial_value="tiktok", is_dark_selected=False)
 
         # Thinking time selection grid
         thinking_options = [
-            ("short", "Dưới 1 giờ"),
-            ("medium", "Trong 24h"),
-            ("long", "Trên 3 ngày")
+            ("short", self.lang.get("ui.scanner.thinking_under_1h", "Dưới 1 giờ")),
+            ("medium", self.lang.get("ui.scanner.thinking_within_24h", "Trong 24h")),
+            ("long", self.lang.get("ui.scanner.thinking_over_3_days", "Trên 3 ngày"))
         ]
         self.thinking_time = SelectableOptionGroup(thinking_options, initial_value="short", is_dark_selected=True)
 
@@ -135,7 +133,7 @@ class ScannerForm(ft.Container):
             content=ft.Row(
                 controls=[
                     ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.LIGHT_ACCENT, size=18),
-                    ft.Text("Quét & Đánh Giá Chi Tiêu", color=Color.WHITE, weight=ft.FontWeight.BOLD, size=14)
+                    Text.BUTTON(self.lang.get("ui.scanner.scan_assess", "Quét & Đánh Giá Chi Tiêu"), color=Color.WHITE)
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=8
@@ -159,38 +157,38 @@ class ScannerForm(ft.Container):
                     spacing=8,
                     controls=[
                         ft.Icon(ft.Icons.SHOPPING_BAG_OUTLINED, color=Color.PRIMARY, size=20),
-                        Text.H4(self.lang.get("purchase_scanner.title", "Thông Tin Món Đồ Sắp Mua"), color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+                        Text.H4(self.lang["purchase_scanner.title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
                     ]
                 ),
                 ft.Divider(height=1, color=Color.CARD_DIVIDER),
 
                 # Name
                 ft.Column([
-                    ft.Text("TÊN MÓN ĐỒ / SẢN PHẨM *", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    Text.H6(self.lang.get("ui.scanner.product_name", "TÊN MÓN ĐỒ / SẢN PHẨM *").upper(), color=Color.DEFAULT_TEXT),
                     self.item_name
                 ], spacing=6),
 
                 # Price
                 ft.Column([
-                    ft.Text("GIÁ TIỀN DỰ KIẾN (VNĐ) *", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    Text.H6(self.lang.get("ui.scanner.price", "GIÁ TIỀN DỰ KIẾN (VNĐ) *").upper(), color=Color.DEFAULT_TEXT),
                     self.item_price
                 ], spacing=6),
 
                 # Trigger
                 ft.Column([
-                    ft.Text("YẾU TỐ THÔI THÚC BẠN MUA?", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    Text.H6(self.lang.get("ui.scanner.trigger_question", "YẾU TỐ THÔI THÚC BẠN MUA?").upper(), color=Color.DEFAULT_TEXT),
                     self.trigger
                 ], spacing=6),
 
                 # Thinking time
                 ft.Column([
-                    ft.Text("THỜI GIAN BẠN ĐÃ ĐẮN ĐO SUY NGHĨ?", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    Text.H6(self.lang.get("ui.scanner.thinking_time_question", "THỜI GIAN BẠN ĐÃ ĐẮN ĐO SUY NGHĨ?").upper(), color=Color.DEFAULT_TEXT),
                     self.thinking_time
                 ], spacing=6),
 
                 # Reason
                 ft.Column([
-                    ft.Text("LÝ DO NGẮN GỌN", size=11, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                    Text.H6(self.lang.get("ui.scanner.reason_label", "LÝ DO NGẮN GỌN").upper(), color=Color.DEFAULT_TEXT),
                     self.item_reason
                 ], spacing=6),
 
@@ -252,10 +250,9 @@ class ScannerResult(ft.Container):
             spacing=12,
             controls=[
                 ft.Icon(ft.Icons.SHIELD_OUTLINED, color=Color.PRIMARY, size=52),
-                ft.Text("Chưa có kết quả quét", size=15, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
-                ft.Text(
-                    "Điền thông tin sản phẩm bên trái để AI đánh giá mức độ bốc đồng và bảo vệ ví tiền của bạn.",
-                    size=12,
+                Text.H4(self.lang.get("ui.scanner.no_results", "Chưa có kết quả quét"), color=Color.DEFAULT_TEXT),
+                Text.SMALL(
+                    self.lang.get("ui.scanner.fill_info", "Điền thông tin sản phẩm bên trái để AI đánh giá mức độ bốc đồng và bảo vệ ví tiền của bạn."),
                     color=Color.SECONDARY_TEXT,
                     text_align=ft.TextAlign.CENTER
                 )
@@ -263,9 +260,9 @@ class ScannerResult(ft.Container):
         )
 
         # Dynamic results controls
-        self.risk_badge_text = ft.Text("24 giờ", size=11, weight=ft.FontWeight.BOLD, color=Color.LIGHT_ACCENT)
-        self.risk_score_text = ft.Text("0%", size=36, weight=ft.FontWeight.BOLD, color=Color.PROGRESS_ACTIVE)
-        self.risk_status_text = ft.Text("Đánh giá rủi ro", size=12, color=Color.BLAND_TEXT)
+        self.risk_badge_text = Text.H6("24 giờ", color=Color.LIGHT_ACCENT)
+        self.risk_score_text = Text.H1("0%", color=Color.PROGRESS_ACTIVE)
+        self.risk_status_text = Text.SMALL(self.lang.get("ui.scanner.risk_assessment", "Đánh giá rủi ro"), color=Color.BLAND_TEXT)
         self.progress_bar = ft.ProgressBar(value=0.0, color=Color.PROGRESS_ACTIVE, bgcolor=Color.DARK_BUTTON, height=8)
 
         # Gauge Score Header Card
@@ -280,7 +277,7 @@ class ScannerResult(ft.Container):
                     ft.Row(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         controls=[
-                            ft.Text("CHỈ SỐ RỦI RO BỐC ĐỒNG", size=10, weight=ft.FontWeight.BOLD, color=Color.BLAND_TEXT),
+                            Text.LABEL(self.lang.get("ui.scanner.risk_index", "Chỉ số rủi ro bốc đồng").upper(), color=Color.BLAND_TEXT),
                             ft.Container(
                                 content=self.risk_badge_text,
                                 bgcolor=Color.DARK_BUTTON,
@@ -315,7 +312,7 @@ class ScannerResult(ft.Container):
                 controls=[
                     ft.Row([
                         ft.Icon(ft.Icons.LIGHTBULB_OUTLINE, color=Color.PRIMARY, size=18),
-                        ft.Text("Góc nhìn từ chuyên gia Finam:", size=12, weight=ft.FontWeight.BOLD, color=Color.PRIMARY)
+                        Text.SMALL(self.lang.get("ui.scanner.expert_perspective", "Góc nhìn từ chuyên gia Finam:"), color=Color.PRIMARY)
                     ], spacing=6),
                     self.advice_text
                 ]
@@ -331,7 +328,7 @@ class ScannerResult(ft.Container):
                 self.gauge_card,
                 self.advice_box,
                 ft.Column([
-                    ft.Text("QUY TẮC CAN THIỆP ĐỀ XUẤT:", size=11, weight=ft.FontWeight.BOLD, color=Color.SECONDARY_TEXT),
+                    Text.LABEL(self.lang.get("ui.scanner.intervention_rules", "Quy tắc can thiệp đề xuất:").upper(), color=Color.SECONDARY_TEXT),
                     self.interventions_col
                 ], spacing=8)
             ]
@@ -361,7 +358,7 @@ class ScannerResult(ft.Container):
     def set_loading_state(self):
         self.empty_state.visible = False
         self.result_container.visible = True
-        self.advice_text.value = self.lang.get("purchase_scanner.waiting", "AI Đang Phân Tích Mua Sắm...")
+        self.advice_text.value = self.lang["purchase_scanner.waiting"]
         self.update()
 
     def update_result(self, risk: int, trigger_display: str, price: float, item_name: str, ai_advice: str = ""):
@@ -370,16 +367,16 @@ class ScannerResult(ft.Container):
 
         if risk > 65:
             risk_color = Color.NEGATIVE_ACTION
-            status_desc = "Rủi ro phung phí RẤT CAO"
-            pause_time = "24 giờ"
+            status_desc = self.lang.get("ui.scanner.risk_very_high", "Rủi ro phung phí rất cao").upper()
+            pause_time = self.lang.get("ui.scanner.time_24h", "24 giờ")
         elif risk > 35:
             risk_color = "#F59E0B"
-            status_desc = "Mức độ vừa phải"
-            pause_time = "60 giây"
+            status_desc = self.lang.get("ui.scanner.risk_moderate", "Mức độ vừa phải")
+            pause_time = self.lang.get("ui.scanner.time_60s", "60 giây")
         else:
             risk_color = Color.PROGRESS_ACTIVE
-            status_desc = "Quyết định hợp lý"
-            pause_time = "60 giây"
+            status_desc = self.lang.get("ui.scanner.risk_rational", "Quyết định hợp lý")
+            pause_time = self.lang.get("ui.scanner.time_60s", "60 giây")
 
         self.risk_score_text.value = f"{risk}%"
         self.risk_score_text.color = risk_color
@@ -393,9 +390,9 @@ class ScannerResult(ft.Container):
         formatted_price = f"{int(price):,}đ" if price > 0 else "chưa nhập"
 
         interventions = [
-            InterventionItem(self._page, self.lang, self.lang.get("purchase_scanner.pause_rule", "Quy tắc trì hoãn"), f"Đợi ít nhất {pause_time} trước khi thanh toán."),
-            InterventionItem(self._page, self.lang, self.lang.get("purchase_scanner.budget_check", "Kiểm tra ngân sách"), f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),
-            InterventionItem(self._page, self.lang, self.lang.get("purchase_scanner.reflection", "So sánh động lực"), f"Bạn mua vì cần thật, hay vì {trigger_display}?")
+            InterventionItem(self._page, self.lang, self.lang.get("ui.scanner.pause_rule", "Quy tắc tạm dừng"), f"Đợi ít nhất {pause_time} trước khi thanh toán."),
+            InterventionItem(self._page, self.lang, self.lang.get("ui.scanner.budget_check", "Kiểm tra ngân sách"), f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),
+            InterventionItem(self._page, self.lang, self.lang.get("ui.scanner.reflection", "Sự phản ánh"), f"Bạn mua vì cần thật, hay vì {trigger_display}?")
         ]
 
         self.interventions_col.controls = interventions

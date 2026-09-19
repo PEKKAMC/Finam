@@ -6,11 +6,13 @@ from collections.abc import Callable
 
 import flet as ft
 
-from src.utils import Color
+from src.utils import Color, Text
 
 
 class SettingsHeader(ft.Container):
-    def __init__(self, on_close: Callable | None):
+    def __init__(self, on_close: Callable | None, lang: dict = None):
+        # ...existing code...
+        header_lang = lang if lang else {}
         super().__init__(
             padding=ft.Padding.only(bottom=5, top=10),
             content=ft.Row(
@@ -34,8 +36,8 @@ class SettingsHeader(ft.Container):
                             ft.Column(
                                 spacing=4,
                                 controls=[
-                                    ft.Text("Cài đặt hệ thống", size=22, weight=ft.FontWeight.W_700, color=Color.PRIMARY_TEXT),
-                                    ft.Text("Tùy chỉnh ngôn ngữ, bảo mật & thông báo", size=14, color=Color.SECONDARY_TEXT),
+                                    Text.H2(header_lang.get("ui.settings.title", "Cài đặt hệ thống"), color=Color.PRIMARY_TEXT),
+                                    Text.BUTTON(header_lang.get("ui.settings.desc", "Tùy chỉnh ngôn ngữ, bảo mật & thông báo"), color=Color.SECONDARY_TEXT),
                                 ]
                             )
                         ]
@@ -64,7 +66,8 @@ class SettingDropdown(ft.Container):
                 width=130,
                 border=ft.InputBorder.NONE,
                 color=Color.PRIMARY_TEXT,
-                text_style=ft.TextStyle(size=14, weight=ft.FontWeight.W_600),
+                bgcolor=Color.CARD_BACKGROUND,
+                text_style=ft.TextStyle(size=14, color=Color.PRIMARY_TEXT ,weight=ft.FontWeight.W_600),
                 content_padding=ft.Padding.symmetric(horizontal=8, vertical=8),
             )
         )
@@ -86,8 +89,8 @@ class SettingRow(ft.Container):
                             ft.Column(
                                 spacing=2,
                                 controls=[
-                                    ft.Text(title, size=16, weight=ft.FontWeight.W_600, color=Color.PRIMARY_TEXT),
-                                    ft.Text(subtitle, size=14, color=Color.SECONDARY_TEXT),
+                                    Text.H4(title, color=Color.PRIMARY_TEXT),
+                                    Text.BUTTON(subtitle, color=Color.SECONDARY_TEXT),
                                 ]
                             )
                         ]

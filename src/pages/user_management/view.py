@@ -86,7 +86,7 @@ class DialogManager:
             self.add_form.clear()
             self.refresh_view()
         else:
-            self.add_form.show_error(self.lang.get(error_msg, error_msg))
+            self.add_form.show_error("error")
 
     def handle_change_user(self, username: str):
         self.user_dialog.close_most_recent_dialog(self._page)
@@ -126,7 +126,7 @@ class UserManagementView(ft.View):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                Text.SMALL("HỒ SƠ & TUỲ CHỌN", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD),
+                Text.SMALL(self.lang["ui.profile_and_options"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD),
             ]
         )
 
@@ -136,7 +136,7 @@ class UserManagementView(ft.View):
             on_change_user=self.dialogs.show_user_management_dialog
         )
 
-        services_section_title = Text.SMALL("DỊCH VỤ & TÍNH NĂNG", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+        services_section_title = Text.SMALL(self.lang["ui.services_and_features"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
 
         services_card = MenuSectionCard(
             items=[
@@ -144,9 +144,9 @@ class UserManagementView(ft.View):
                     icon=ft.Icons.THUMB_UP_OUTLINED,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title="Giới thiệu cho bạn bè",
-                    subtitle="Nhận ngay 30 ngày VIP cho cả hai",
-                    badge_text="+30 Ngày",
+                    title=self.lang["ui.refer_friend"],
+                    subtitle=self.lang["ui.get_vip_30_days"],
+                    badge_text=self.lang["ui.badge_30days"],
                     badge_bg=Color.LIGHT_ACCENT,
                     badge_color=Color.PRIMARY
                 ),
@@ -154,22 +154,22 @@ class UserManagementView(ft.View):
                     icon=ft.Icons.SHIELD_OUTLINED,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title="Tắt quảng cáo",
-                    subtitle="Trải nghiệm mượt mà không quảng cáo",
+                    title=self.lang["ui.disable_ads"],
+                    subtitle=self.lang["ui.smooth_experience"],
                     trailing=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
                 ),
                 MenuItem(
                     icon=ft.Icons.SETTINGS_OUTLINED,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title="Cài đặt",
-                    subtitle="Ngôn ngữ (VI), bảo mật, tiền tệ",
+                    title=self.lang["ui.settings"],
+                    subtitle=self.lang["ui.language_security_currency"],
                     on_click=self._page.navigate_to("/settings")
                 )
             ]
         )
 
-        support_section_title = Text.SMALL("HỖ TRỢ & THÔNG TIN", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+        support_section_title = Text.SMALL(self.lang["ui.support_and_info"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
         user_email = "temp@gmail.com"
 
         support_card = MenuSectionCard(
@@ -178,21 +178,21 @@ class UserManagementView(ft.View):
                     icon=ft.Icons.STAR_OUTLINE,
                     icon_color=Color.GOAL_HEADER_ICON_COLOR,
                     icon_bg_color=Color.GOAL_HEADER_ICON_BACKGROUND,
-                    title="Đánh giá ứng dụng",
-                    subtitle="Góp ý 5 sao trên cửa hàng ứng dụng"
+                    title=self.lang["ui.rate_app"],
+                    subtitle=self.lang["ui.rate_5_stars"]
                 ),
                 MenuItem(
                     icon=ft.Icons.HELP_OUTLINE,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title="Trung tâm trợ giúp & FAQ",
-                    subtitle="Hướng dẫn quản lý chi tiêu hiệu quả"
+                    title=self.lang["ui.help_faq"],
+                    subtitle=self.lang["ui.guide_expense_mgmt"]
                 ),
                 MenuItem(
                     icon=ft.Icons.LOGOUT,
                     icon_color=Color.NEGATIVE_ACTION,
                     icon_bg_color=Color.ACTIVITY_BACKGROUND,
-                    title="Đăng xuất tài khoản",
+                    title=self.lang["ui.logout"],
                     subtitle=user_email
                 ),
             ]
@@ -214,10 +214,10 @@ class UserManagementView(ft.View):
                             border_radius=4,
                             bgcolor=Color.PRIMARY_ACTION
                         ),
-                        Text.SMALL("Phiên bản v0.2.2-alpha", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+                        Text.SMALL(self.lang["ui.version"], color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
                     ]
                 ),
-                Text.SMALL("Bảo vệ quyền riêng tư & Mã hóa dữ liệu an toàn", color=Color.SUBTITLE_TEXT, text_align=ft.TextAlign.CENTER)
+                Text.SMALL(self.lang["ui.privacy_encryption"], color=Color.SUBTITLE_TEXT, text_align=ft.TextAlign.CENTER)
             ]
         )
 

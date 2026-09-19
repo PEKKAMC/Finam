@@ -44,7 +44,7 @@ class PurchaseScannerView(ft.View):
                                 content=ft.Row(
                                     controls=[
                                         ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PROGRESS_ACTIVE, size=14),
-                                        Text.SMALL("Finam AI Impulse Scanner", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+                                        Text.SMALL(self.lang["ui.scanner.ai_title"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
                                     ],
                                     tight=True,
                                     spacing=6
@@ -56,9 +56,9 @@ class PurchaseScannerView(ft.View):
                             )
                         ]
                     ),
-                    Text.H2("Đánh Giá Mua Sắm Bốc Đồng", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                    Text.H2(self.lang["ui.scanner.title"], color=Color.WHITE, weight=ft.FontWeight.BOLD),
                     Text.SMALL(
-                        "Nhập thông tin món đồ bạn đang muốn xuống tiền để AI phân tích chỉ số rủi ro phung phí và đưa ra quy tắc trì hoãn mua sắm thông minh.",
+                        self.lang["ui.scanner.description"],
                         color=Color.LIGHT_ACCENT
                     )
                 ]
@@ -108,7 +108,7 @@ class PurchaseScannerView(ft.View):
 
     def handle_scan_click(self, name, price, reason, trigger, time):
         self.result_card.set_loading_state()
-        item_name = name if name else "Món hàng"
+        item_name = name if name else self.lang.get("ui.scanner.item", "Món hàng")
         risk, trigger_display, price_val, ai_advice = self.controller.analyze_purchase(item_name, price, reason, trigger, time)
         self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
 

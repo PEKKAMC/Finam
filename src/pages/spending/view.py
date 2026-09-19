@@ -288,7 +288,7 @@ class SpendingView(ft.View):
         history_header = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                Text.H4(f"Lịch Sử Giao Dịch ({len(filtered_txs)})", color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
+                Text.H4(self.lang["ui.spending.transaction_history"].format(len=len(filtered_txs)), color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
             ],
         )
 
@@ -312,8 +312,8 @@ class SpendingView(ft.View):
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=6,
                         controls=[
-                            Text.MEDIUM("Không tìm thấy giao dịch nào phù hợp.", color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                            Text.SMALL("Hãy thử thay đổi bộ lọc hoặc thêm giao dịch mới.", color=Color.SECONDARY_TEXT),
+                            Text.MEDIUM(self.lang["ui.spending.no_transactions"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                            Text.SMALL(self.lang["ui.spending.try_filter"], color=Color.SECONDARY_TEXT),
                         ],
                     ),
                 )
