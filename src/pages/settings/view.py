@@ -5,7 +5,6 @@
 import flet as ft
 
 from src.logger import Logger
-from src.pages.global_components import Menu
 from src.pages.settings.components import SettingsHeader, SettingCard, SettingRow, SettingDropdown
 from src.utils import Color, Page, get_safe_page_size, UISettings, Text
 
@@ -22,12 +21,6 @@ class SettingsView(ft.View):
         self.get_safe_page_size = get_safe_page_size
 
         # INITIALIZE PAGE COMPONENTS
-        self.menu = Menu(
-            page=self._page,
-            lang=self.lang,
-            user_info=self.user_info
-        )
-        # Done Button (Xong)
         self.done_btn = ft.Container(
             content=Text.H4(self.lang["ui.settings.done"], color=Color.WHITE),
             alignment=ft.Alignment.CENTER,
@@ -79,7 +72,7 @@ class SettingsView(ft.View):
                             spacing=18,
                             expand=True,
                             controls=[
-                                SettingsHeader(on_close=self._page.navigate_to("/user_management"), lang=self.lang),
+                                SettingsHeader(lang=self.lang),
                                 ft.Divider(height=10, thickness=1, color=Color.INPUT_BORDER),
 
                                 SettingCard(
@@ -141,8 +134,7 @@ class SettingsView(ft.View):
             controls=ft.Stack(
                 expand=True,
                 controls=[
-                    self.main_container,
-                    self.menu
+                    self.main_container
                 ]
             )
         )
@@ -156,10 +148,7 @@ class SettingsView(ft.View):
         )
 
         self.main_container.width = page_width
-
-        self.menu.resize(
-            width=page_width
-        )
+        self.main_container.height = page_height
 
         return e
 
