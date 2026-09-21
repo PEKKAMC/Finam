@@ -57,7 +57,7 @@ class SavingView(ft.View):
                 "objective_id": objective_id, "title": title, "reason": reason,
                 "current_value": f"{int(objective_savings):,}".replace(",", ".") + " đ",
                 "target_value": f"{int(target_amount):,}".replace(",", ".") + " đ",
-                "remaining_value": f"Còn lại: {int(remaining_amt):,}".replace(",", ".") + " đ",
+                "remaining_value": self.lang.get("ui.saving.remaining", "Còn lại: {amount}").format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
                 "percentage": card_percentage, "progress": card_progress, "completed": bool(completed_at)
             })
 
@@ -102,7 +102,7 @@ class SavingView(ft.View):
                 "objective_id": objective_id, "title": title, "reason": reason,
                 "current_value": f"{int(objective_savings):,}".replace(",", ".") + " đ",
                 "target_value": f"{int(target_amount):,}".replace(",", ".") + " đ",
-                "remaining_value": f"Còn lại: {int(remaining_amt):,}".replace(",", ".") + " đ",
+                "remaining_value": self.lang.get("ui.saving.remaining", "Còn lại: {amount}").format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
                 "percentage": card_percentage, "progress": card_progress, "completed": bool(completed_at)
             })
 

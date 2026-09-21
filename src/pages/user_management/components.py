@@ -18,7 +18,7 @@ class ProfileCard(ft.Container):
         user_display = self.username if self.username else ""
         self.user_name_text = Text.H4(user_display, color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.active_user_text = Text.MEDIUM(
-            self.username if self.username else "Chưa chọn người dùng",
+            self.username if self.username else self.lang.get("ui.no_user_selected", "Chưa chọn người dùng"),
             color=Color.WHITE,
             weight=ft.FontWeight.BOLD
         )
@@ -29,23 +29,8 @@ class ProfileCard(ft.Container):
                     radius=26,
                     bgcolor=Color.LIGHT_ACCENT,
                     content=ft.Icon(ft.Icons.PERSON, color=Color.PRIMARY, size=32)
-                ),
-                ft.Container(
-                    content=ft.Icon(ft.Icons.PERSON, color=Color.SAVINGS_VALUE_TEXT, size=12),
-                    bgcolor=Color.PRIMARY,
-                    border_radius=10,
-                    padding=2,
-                    bottom=0,
-                    right=0
                 )
             ]
-        )
-
-        vip_badge = ft.Container(
-            content=Text.SMALL("VIP", color=Color.WHITE, weight=ft.FontWeight.BOLD),
-            bgcolor=Color.METRIC_PILL_BACKGROUND,
-            padding=ft.Padding.symmetric(horizontal=8, vertical=2),
-            border_radius=10
         )
 
         user_info = ft.Column(
@@ -54,9 +39,9 @@ class ProfileCard(ft.Container):
                 ft.Row(
                     spacing=8,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[self.user_name_text, vip_badge]
+                    controls=[self.user_name_text]
                 ),
-                Text.SMALL("Tài khoản Cá nhân (Chính)", color=Color.LIGHT_ACCENT)
+                Text.SMALL(self.lang.get("ui.personal_account", "Tài khoản Cá nhân (Chính)"), color=Color.LIGHT_ACCENT)
             ]
         )
 
@@ -66,7 +51,7 @@ class ProfileCard(ft.Container):
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
                     ft.Icon(ft.Icons.PEOPLE_OUTLINE, color=Color.WHITE, size=16),
-                    Text.SMALL("Đổi", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                    Text.SMALL(self.lang.get("ui.change", "Đổi"), color=Color.WHITE, weight=ft.FontWeight.BOLD),
                     ft.Icon(ft.Icons.CHEVRON_RIGHT, color=Color.WHITE, size=16)
                 ]
             ),
@@ -101,7 +86,7 @@ class ProfileCard(ft.Container):
     def update_user(self, username: str):
         self.username = username
         self.user_name_text.value = username if username else ""
-        self.active_user_text.value = username if username else "Chưa chọn người dùng"
+        self.active_user_text.value = username if username else self.lang.get("ui.no_user_selected", "Chưa chọn người dùng")
 
 
 class MenuItem(ft.Container):

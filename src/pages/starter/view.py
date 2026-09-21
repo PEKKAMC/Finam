@@ -75,7 +75,7 @@ class DialogManager:
             self.add_form.clear()
             self.refresh_view()
         else:
-            self.add_form.show_error(self.lang.get(error_msg, error_msg))
+            self.add_form.show_error("error")
 
     def handle_change_user(self, username: str):
         self.user_dialog.close_most_recent_dialog(self._page)

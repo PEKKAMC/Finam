@@ -31,7 +31,6 @@ class Text(Enum):
         """
         size, weight = TEXT_STYLES.get(self, TEXT_STYLES[Text.P])
 
-        # Apply default weight from our styles, unless overridden in kwargs
         kwargs.setdefault("weight", weight)
 
         return create_text(value, size=size, **kwargs)

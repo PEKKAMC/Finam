@@ -61,7 +61,7 @@ class ObjectiveCard(ft.Container):
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     controls=[
-                        Text.MEDIUM("Đã tích lũy", color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                        Text.MEDIUM(self.lang["ui.saving.accumulated"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
                         Text.H4(self.current_value, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
                     ]
                 ),
@@ -69,7 +69,7 @@ class ObjectiveCard(ft.Container):
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     controls=[
-                        Text.SMALL(f"Mục tiêu: {self.target_value}", color=Color.SECONDARY_TEXT, weight=ft.FontWeight.W_500),
+                        Text.SMALL(self.lang["ui.saving.target"].format(target_value=self.target_value), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.W_500),
                         Text.SMALL(self.remaining_value, color=Color.SECONDARY_TEXT, weight=ft.FontWeight.W_500)
                     ]
                 )
@@ -83,13 +83,13 @@ class ObjectiveCard(ft.Container):
                     spacing=8,
                     controls=[
                         ft.Container(
-                            content=Text.MEDIUM("+ Nạp Tiền", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                            content=Text.MEDIUM(self.lang["ui.saving.deposit"], color=Color.WHITE, weight=ft.FontWeight.BOLD),
                             bgcolor=Color.PRIMARY,
                             padding=ft.Padding(12, 8, 12, 8),
                             border_radius=12,
                         ),
                         ft.Container(
-                            content=Text.MEDIUM("- Rút Tiền", color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
+                            content=Text.MEDIUM(self.lang["ui.saving.withdraw"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
                             bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND,
                             padding=ft.Padding(12, 8, 12, 8),
                             border_radius=12,
@@ -169,7 +169,7 @@ class AggregateCard(ft.Container):
                             spacing=8,
                             controls=[
                                 ft.Container(
-                                    content=Text.MEDIUM("QUẢN LÝ QUỸ TIẾT KIỆM", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                                    content=Text.MEDIUM(self.lang["ui.saving.fund_management"].upper(), color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
                                     bgcolor=Color.DARK_SURFACE,
                                     padding=ft.Padding(12, 6, 12, 6),
                                     border_radius=20,
@@ -181,7 +181,7 @@ class AggregateCard(ft.Container):
                                 ),
                                 ft.Row(
                                     controls=[
-                                        Text.MEDIUM("Tổng tiến độ tích lũy các mục tiêu đạt", color=Color.WHITE),
+                                        Text.MEDIUM(self.lang["ui.saving.progress"], color=Color.WHITE),
                                         self.percentage_text,
                                     ]
                                 )
