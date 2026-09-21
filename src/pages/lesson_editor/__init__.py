@@ -21,5 +21,5 @@ __all__ = [
     "safe_float",
     "calculate_pan_position",
     "LessonEditorView",
-    "get_lesson_editor_view",
+    "get_lesson_editor_view"
 ]

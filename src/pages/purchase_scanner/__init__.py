@@ -15,5 +15,5 @@ __all__ = [
     "ScannerForm",
     "InterventionItem",
     "ScannerResult",
-    "SelectableOptionGroup",
+    "SelectableOptionGroup"
 ]

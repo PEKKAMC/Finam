@@ -20,5 +20,5 @@ __all__ = [
     "UserManagementDialog",
     "LogicController",
     "UserManagementView",
-    "get_user_management_view",
+    "get_user_management_view"
 ]

@@ -21,5 +21,5 @@ __all__ = [
     "LogicController",
     "AnimationController",
     "LessonPlayerView",
-    "get_lesson_player_view",
+    "get_lesson_player_view"
 ]
