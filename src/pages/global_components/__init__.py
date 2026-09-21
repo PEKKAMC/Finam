@@ -27,5 +27,5 @@ __all__ = [
     "UserManagementCard",
     "UserManagementDialog",
     "AddUserField",
-    "DeleteUserDialog"
+    "DeleteUserDialog",
 ]
