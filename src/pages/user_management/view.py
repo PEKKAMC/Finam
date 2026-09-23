@@ -2,6 +2,8 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from collections.abc import Callable
+
 import flet as ft
 
 from src.logger import Logger
@@ -14,22 +16,28 @@ Logger.info("Initializing User Management page...")
 
 
 class DialogManager:
-    def __init__(self, page: Page, lang: dict, user_info: dict, controller: LogicController, refresh_callback):
+    """Handles all dialog instantiation, states, and callbacks for the User Management View."""
+    def __init__(self, page: Page, lang: dict, user_info: dict, controller: LogicController, refresh_callback: Callable):
         self._page = page
         self.lang = lang
         self.user_info = user_info
         self.controller = controller
-        self.refresh_view = refresh_callback
+        self._refresh_view = refresh_callback
 
+        # INITIALIZE DIALOG COMPONENTS
         self.user_list = UserList(
             page=self._page,
             lang=self.lang,
             current_user=self.user_info.get("username", ""),
-            on_select_callback=self.handle_change_user,
+            on_select_callback=self._handle_change_user,
             on_delete_callback=self.show_delete_prompt
         )
 
-        self.add_form = AddUserField(page=self._page, lang=self.lang, on_submit_callback=self.handle_add_user)
+        self.add_form = AddUserField(
+            page=self._page,
+            lang=self.lang,
+            on_submit_callback=self._handle_add_user
+        )
 
         self.user_dialog = UserManagementDialog(
             page=self._page,
@@ -45,22 +53,45 @@ class DialogManager:
             on_confirm_callback=self._handle_delete_confirm
         )
 
+        self._add_dialogs_to_overlay()
+
+    # USER MANAGEMENT DIALOG
     def show_user_management_dialog(self) -> int:
         try:
             self.user_dialog.show(self._page)
             return 0
-
         except Exception as e:
             Logger.warn(f"Failed to show user management prompt {e}")
             return -1
 
+    def _close_user_management_dialog(self, e: ft.ControlEvent | None = None) -> ft.ControlEvent | None:
+        self.user_dialog.close_most_recent_dialog(self._page)
+        return e
+
+    # USER ACTIONS
+    def _handle_add_user(self, input_username: str):
+        if not input_username:
+            return
+        success, error_msg = self.controller.add_user(input_username)
+
+        if success:
+            self.add_form.clear()
+            self._refresh_view()
+        else:
+            self.add_form.show_error("error")
+
+    def _handle_change_user(self, username: str):
+        self.user_dialog.close_most_recent_dialog(self._page)
+        self.controller.change_user(username)
+        self._refresh_view()
+
+    # DELETE DIALOG
     def show_delete_prompt(self, username: str = "") -> int:
         try:
             if username:
                 self.delete_dialog.selected_user = username
             self.delete_dialog.show(self._page)
             return 0
-
         except Exception as e:
             Logger.warn(f"Failed to show delete prompt {e}")
             return -1
@@ -68,30 +99,28 @@ class DialogManager:
     def _handle_delete_confirm(self, username: str) -> int:
         try:
             self.controller.delete_user(username)
-            self.refresh_view()
+            self._refresh_view()
             return 0
-
         except Exception as e:
             Logger.warn(f"Cannot delete user {username}, {e}")
             return -1
 
-    def _close_user_management_dialog(self):
-        self.user_dialog.close_most_recent_dialog(self._page)
+    # OVERLAY MANAGEMENT
+    def _add_dialogs_to_overlay(self) -> None:
+        dialogs = [
+            self.user_dialog,
+            self.delete_dialog
+        ]
+        for d in dialogs:
+            d.add_to_overlay(self._page)
 
-    def handle_add_user(self, input_username: str):
-        if not input_username:
-            return
-        success, error_msg = self.controller.add_user(input_username)
-        if success:
-            self.add_form.clear()
-            self.refresh_view()
-        else:
-            self.add_form.show_error("error")
-
-    def handle_change_user(self, username: str):
-        self.user_dialog.close_most_recent_dialog(self._page)
-        self.controller.change_user(username)
-        self.refresh_view()
+    def _remove_dialogs_from_overlay(self) -> None:
+        dialogs = [
+            self.user_dialog,
+            self.delete_dialog
+        ]
+        for d in dialogs:
+            d.remove_from_overlay(self._page)
 
 
 class UserManagementView(ft.View):
@@ -136,9 +165,9 @@ class UserManagementView(ft.View):
             on_change_user=self.dialogs.show_user_management_dialog
         )
 
-        services_section_title = Text.SMALL(self.lang["ui.services_and_features"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+        self.services_section_title = Text.SMALL(self.lang["ui.services_and_features"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
 
-        services_card = MenuSectionCard(
+        self.services_card = MenuSectionCard(
             items=[
                 MenuItem(
                     icon=ft.Icons.THUMB_UP_OUTLINED,
@@ -169,10 +198,9 @@ class UserManagementView(ft.View):
             ]
         )
 
-        support_section_title = Text.SMALL(self.lang["ui.support_and_info"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
-        user_email = "temp@gmail.com"
+        self.support_section_title = Text.SMALL(self.lang["ui.support_and_info"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
 
-        support_card = MenuSectionCard(
+        self.support_card = MenuSectionCard(
             items=[
                 MenuItem(
                     icon=ft.Icons.STAR_OUTLINE,
@@ -193,13 +221,12 @@ class UserManagementView(ft.View):
                     icon_color=Color.NEGATIVE_ACTION,
                     icon_bg_color=Color.ACTIVITY_BACKGROUND,
                     title=self.lang["ui.logout"],
-                    subtitle=user_email
+                    subtitle=""
                 ),
             ]
         )
 
-        # Footer
-        footer = ft.Column(
+        self.footer = ft.Column(
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=4,
             controls=[
@@ -208,12 +235,7 @@ class UserManagementView(ft.View):
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     spacing=6,
                     controls=[
-                        ft.Container(
-                            width=8,
-                            height=8,
-                            border_radius=4,
-                            bgcolor=Color.PRIMARY_ACTION
-                        ),
+                        ft.Container(width=8, height=8, border_radius=4, bgcolor=Color.PRIMARY_ACTION),
                         Text.SMALL(self.lang["ui.version"], color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
                     ]
                 ),
@@ -235,12 +257,12 @@ class UserManagementView(ft.View):
                             controls=[
                                 self.top_header,
                                 self.profile_card,
-                                services_section_title,
-                                services_card,
-                                support_section_title,
-                                support_card,
+                                self.services_section_title,
+                                self.services_card,
+                                self.support_section_title,
+                                self.support_card,
                                 ft.Container(height=8),
-                                footer
+                                self.footer
                             ]
                         )
                     )
@@ -268,31 +290,39 @@ class UserManagementView(ft.View):
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
 
-        # INITIAL DATA LOAD
-        self.refresh_view()
-
-    def refresh_view(self):
-        self.dialogs.user_list.refresh(self.controller.get_all_users(), self.user_info.get("username", ""))
-        self.profile_card.update_user(self.user_info.get("username", ""))
+    def refresh_view(self) -> int:
         try:
-            self._page.update()
-        except RuntimeError:
-            pass
+            self.dialogs.user_list.update_data(self.controller.get_all_users(), self.user_info.get("username", ""))
+            self.profile_card.update_data(self.user_info.get("username", ""))
+            return 0
+        except RuntimeError as e:
+            Logger.warn(f"Failed to refresh view {e}")
+            return -1
 
-    def _on_page_resize(self, e=None) -> ft.PageResizeEvent | None:
+    def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
         page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
 
+        # Resizing main container
         self.main_container.width = page_width
         self.main_container.height = page_height
 
+        # Resizing other components
         self.menu.resize(
+            width=page_width
+        )
+        self.profile_card.resize(
+            width=page_width
+        )
+        self.services_card.resize(
+            width=page_width
+        )
+        self.support_card.resize(
             width=page_width
         )
 
         return e
-
 
 def get_user_management_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     return UserManagementView(page, lang, user_info)

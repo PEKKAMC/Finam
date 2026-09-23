@@ -57,7 +57,7 @@ class SavingView(ft.View):
                 "objective_id": objective_id, "title": title, "reason": reason,
                 "current_value": f"{int(objective_savings):,}".replace(",", ".") + " đ",
                 "target_value": f"{int(target_amount):,}".replace(",", ".") + " đ",
-                "remaining_value": self.lang.get("ui.saving.remaining", "Còn lại: {amount}").format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
+                "remaining_value": self.lang["ui.saving.remaining"].format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
                 "percentage": card_percentage, "progress": card_progress, "completed": bool(completed_at)
             })
 
@@ -87,9 +87,6 @@ class SavingView(ft.View):
         )
 
     def refresh_view(self) -> None:
-        for control in self._page.overlay:
-            control.open = False
-
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
         existing_objectives = self.controller.get_user_objectives()
 
@@ -102,7 +99,7 @@ class SavingView(ft.View):
                 "objective_id": objective_id, "title": title, "reason": reason,
                 "current_value": f"{int(objective_savings):,}".replace(",", ".") + " đ",
                 "target_value": f"{int(target_amount):,}".replace(",", ".") + " đ",
-                "remaining_value": self.lang.get("ui.saving.remaining", "Còn lại: {amount}").format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
+                "remaining_value": self.lang["ui.saving.remaining"].format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
                 "percentage": card_percentage, "progress": card_progress, "completed": bool(completed_at)
             })
 

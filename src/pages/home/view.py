@@ -101,8 +101,8 @@ class DialogManager:
     def _handle_save_expense(self, e: ft.ControlEvent) -> ft.ControlEvent:
         success, message = self.controller.add_expense_entry(self.expense_dialog.get_values())
 
-        self._page.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-        self._page.snack_bar.open = True
+        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self.snack_bar.open = True
 
         if success:
             self.expense_dialog.clear()
@@ -125,8 +125,8 @@ class DialogManager:
     def _handle_save_income(self, e: ft.ControlEvent) -> ft.ControlEvent:
         success, message = self.controller.add_income_entry(self.income_dialog.get_values())
 
-        self._page.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-        self._page.snack_bar.open = True
+        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self.snack_bar.open = True
 
         if success:
             self.income_dialog.clear()
@@ -309,7 +309,7 @@ class HomeView(ft.View):
             return 0
 
         except Exception as e:
-            Logger.error(f"Error refreshing Home view: {e}")
+            Logger.warn(f"Failed to refresh view {e}")
             return -1
 
     def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:

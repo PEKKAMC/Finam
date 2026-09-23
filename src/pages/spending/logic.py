@@ -13,6 +13,7 @@ from src.utils import Page, Text
 
 class LogicController:
     def __init__(self, current_user: str, page: Page, lang: dict, user_info: dict, refresh_callback):
+        self.snack_bar = None
         self.cached_expenses = None
         self.cached_incomes = None
         self.page = page
@@ -173,13 +174,43 @@ class LogicController:
         """Deletes an expense or income entry by ID."""
         username = self.user_info.get("username")
         try:
-            # Attempt to delete from both tables or handle based on ID type
             success = db.spending.delete_entry(username, transaction_id)
             if success:
                 if self.refresh_callback:
                     self.refresh_callback()
-                self.page.snack_bar = ft.SnackBar(Text.MEDIUM("Xóa giao dịch thành công!"))
-                self.page.snack_bar.open = True
+                self.snack_bar = ft.SnackBar(Text.MEDIUM("Xóa giao dịch thành công!"))
+                self.snack_bar.open = True
                 self.page.update()
         except Exception as e:
             Logger.error(f"Error deleting transaction: {e}")
+
+    @staticmethod
+    def filter_transactions(raw_transactions: dict, filter_type: str = "all", selected_category: str = "all", search_query: str = "") -> list:
+        all_txs = [item for items in raw_transactions.values() for item in items]
+        filtered_txs = []
+        q = search_query.strip().lower()
+        q_digits = "".join(c for c in q if c.isdigit())
+
+        for tx in all_txs:
+            is_income = tx.get("positive", False)
+            t_type = "income" if is_income else "expense"
+
+            if filter_type != "all" and t_type != filter_type:
+                continue
+            if selected_category != "all" and tx.get("title") != selected_category:
+                continue
+            if q:
+                title = (tx.get("title") or "").lower()
+                subtitle = (tx.get("subtitle") or "").lower()
+                amount_str = str(tx.get("amount") or "").lower()
+                amt_digits = "".join(c for c in amount_str if c.isdigit())
+
+                match_title = q in title
+                match_sub = q in subtitle
+                match_amt = q in amount_str
+                match_num = q_digits in amt_digits if q_digits else False
+
+                if not (match_title or match_sub or match_amt or match_num):
+                    continue
+            filtered_txs.append(tx)
+        return filtered_txs

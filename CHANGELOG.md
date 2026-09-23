@@ -1,6 +1,6 @@
 # Finam v0.2.2-alpha
 
-**Release Date:** Unknown
+**Release Date:** September 23, 2026
 
 > **⚠️ ALPHA WARNING: Read Before Using**
 >
@@ -13,13 +13,14 @@
 *   Added dialog, page utility packages.
 *   Renamed "login" page to "user_management" page, with some features being added to the page, including option to go to settings.
 *   Removed the top navigation bar, which served no purpose.
-*   Added options to settings page that doesn't to anything yet
+*   Added options to settings page.
+*   Improved overall UI consistency and user experience.
 
 ## Bug fixes in this version
 
 *   Fixed actions not updating displays that they are supposed to.
-*   Fxied A LOT of broken dialogs.
-*   Lesson player and lesson editor can now be accessed, but its still heavily unusable.
+*   Fixed A LOT of broken dialogs.
+*   Lesson player and lesson editor can now be accessed, but it's still heavily unusable.
 *   Updated purchase scanner page to use the new v0.2.0 UI.
 
 ## Known Issues & Instability

@@ -131,7 +131,7 @@ class StarterView(ft.View):
         self.dialogs.show_user_management_dialog()
 
     def refresh_view(self) -> int:
-        self.dialogs.user_list.refresh(
+        self.dialogs.user_list.update_data(
             self.controller.get_all_users(),
             self.user_info.get("username", "")
         )

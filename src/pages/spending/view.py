@@ -7,16 +7,16 @@ from collections.abc import Callable
 import flet as ft
 
 from src.logger import Logger
-from src.pages.global_components import CategorySelectionDialog, ExpenseInputDialog, IncomeInputDialog, FinancialChart, Menu
+from src.pages.global_components import CategorySelectionDialog, ExpenseInputDialog, FinancialChart, IncomeInputDialog, Menu
+from src.pages.spending.components import MetricCards, TransactionHistoryCard, TransactionToolbar
 from src.pages.spending.logic import LogicController
-from src.pages.spending.components import MetricCards, TransactionToolbar, TransactionItemCard
-from src.utils import Color, Page, get_safe_page_size, UISettings, Text
+from src.utils import Color, Page, get_safe_page_size, Text, UISettings
 
 Logger.info("Initializing Spending page...")
 
 
 class DialogManager:
-    """Handles all dialog instantiation, states, and callbacks for the Home View."""
+    """Handles all dialog instantiation, states, and callbacks for the Spending View."""
     def __init__(self, page: Page, lang: dict, controller: LogicController, refresh_callback: Callable):
         self._page = page
         self.lang = lang
@@ -97,8 +97,8 @@ class DialogManager:
     def _handle_save_expense(self, e: ft.ControlEvent) -> ft.ControlEvent:
         success, message = self.controller.add_expense_entry(self.expense_dialog.get_values())
 
-        self._page.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-        self._page.snack_bar.open = True
+        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self.snack_bar.open = True
 
         if success:
             self.expense_dialog.clear()
@@ -121,8 +121,8 @@ class DialogManager:
     def _handle_save_income(self, e: ft.ControlEvent) -> ft.ControlEvent:
         success, message = self.controller.add_income_entry(self.income_dialog.get_values())
 
-        self._page.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-        self._page.snack_bar.open = True
+        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self.snack_bar.open = True
 
         if success:
             self.income_dialog.clear()
@@ -159,20 +159,37 @@ class SpendingView(ft.View):
         self.lang = lang
         self.user_info = user_info
 
+        # IMPORTED FUNCTIONS
+        self.get_safe_page_size = get_safe_page_size
+
         self.filter_type = "all"
         self.search_query = ""
         self.selected_category = "all"
-        self.raw_transactions = {}
 
+        # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(user_info["username"], self._page, self.lang, self.user_info, self.refresh_view)
+
+        # FETCH INITIAL DATA
+        balance_data, self.raw_transactions = self.controller.get_transaction_data()
         self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
 
+        all_categories = sorted(list({
+            tx["title"] for items in self.raw_transactions.values() for tx in items if "title" in tx
+        }))
+        filtered_txs = self.controller.filter_transactions(
+            self.raw_transactions, self.filter_type, self.selected_category, self.search_query
+        )
+
+        # INITIALIZE DIALOG MANAGER
         self.dialogs = DialogManager(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
             refresh_callback=self.refresh_view,
         )
+
+        # INITIALIZE PAGE COMPONENTS
+        self.menu = Menu(self._page, self.lang, self.user_info)
 
         self.financial_chart = FinancialChart(
             lang=self.lang,
@@ -181,15 +198,14 @@ class SpendingView(ft.View):
             chart_type=self.chart_type
         )
 
-        self.menu = Menu(self._page, self.lang, self.user_info)
-
         self.metric_cards = MetricCards(
             page=self._page,
             lang=self.lang,
-            total_income="0",
-            total_expense="0",
-            net_balance="0 VND",
+            total_income=balance_data["incomes"].replace("+", "").replace(" VND", ""),
+            total_expense=balance_data["expenses"].replace("-", "").replace(" VND", ""),
+            net_balance=balance_data["current"],
         )
+
         self.toolbar = TransactionToolbar(
             page=self._page,
             lang=self.lang,
@@ -197,21 +213,21 @@ class SpendingView(ft.View):
             on_filter_change=self.on_filter_change,
             on_search_change=self.on_search_change,
             on_category_change=self.on_category_change,
-            categories=[],
+            categories=all_categories,
             on_add_expense_click=self.dialogs.open_expense_dialog,
             on_add_income_click=self.dialogs.open_income_dialog,
             search_query=self.search_query,
             selected_category=self.selected_category
         )
-        self.history_container = ft.Container(
-            bgcolor=Color.WHITE,
-            border_radius=24,
-            padding=20,
-            border=ft.Border.all(1, Color.INPUT_BORDER),
-            shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
-            content=ft.Column(spacing=12, controls=[]),
+
+        self.history_card = TransactionHistoryCard(
+            page=self._page,
+            lang=self.lang,
+            transactions=filtered_txs,
+            on_delete=lambda tid: self.controller.delete_transaction(tid)
         )
 
+        # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
@@ -226,7 +242,7 @@ class SpendingView(ft.View):
                                 self.metric_cards,
                                 self.financial_chart,
                                 self.toolbar,
-                                self.history_container
+                                self.history_card
                             ]
                         )
                     )
@@ -251,16 +267,53 @@ class SpendingView(ft.View):
             )
         )
 
-        self._page.on_resize = self.on_page_resize
-        self.on_page_resize()
+        self._page.on_resize = self._on_page_resize
+        self._on_page_resize()
 
-    def refresh_view(self) -> None:
-        self.refresh_content()
-        self._page.update()
+    def refresh_view(self) -> int:
+        try:
+            balance_data, self.raw_transactions = self.controller.get_transaction_data()
+            self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
+
+            all_categories = sorted(list({
+                tx["title"] for items in self.raw_transactions.values() for tx in items if "title" in tx
+            }))
+            filtered_txs = self.controller.filter_transactions(
+                self.raw_transactions, self.filter_type, self.selected_category, self.search_query
+            )
+
+            self.metric_cards.update_data(
+                total_income=balance_data["incomes"].replace("+", "").replace(" VND", ""),
+                total_expense=balance_data["expenses"].replace("-", "").replace(" VND", ""),
+                net_balance=balance_data["current"],
+            )
+
+            self.toolbar.update_data(
+                filter_type=self.filter_type,
+                search_query=self.search_query,
+                selected_category=self.selected_category,
+                categories=all_categories
+            )
+
+            self.history_card.update_data(filtered_txs)
+
+            self.financial_chart.update_data(
+                chart_date=self.chart_date,
+                chart_data=self.chart_data,
+                chart_type=self.chart_type
+            )
+
+            if self._page:
+                self._page.update()
+
+            return 0
+        except RuntimeError as e:
+            Logger.warn(f"Failed to refresh view {e}")
+            return -1
 
     def on_filter_change(self, f_type: str):
         self.filter_type = f_type
-        self.refresh_content()
+        self.update_history_list()
 
     def on_search_change(self, query: str):
         self.search_query = query
@@ -271,143 +324,37 @@ class SpendingView(ft.View):
         self.update_history_list()
 
     def update_history_list(self):
-        filtered_txs = self._filter_transactions(self.raw_transactions)
-        self.history_container.content = ft.Column(
-            spacing=12,
-            controls=self._build_history_controls(filtered_txs),
+        filtered_txs = self.controller.filter_transactions(
+            self.raw_transactions, self.filter_type, self.selected_category, self.search_query
         )
-        try:
-            self.history_container.update()
-        except Exception as e:
-            try:
-                self._page.update()
-            except RuntimeError:
-                pass
+        self.history_card.update_data(filtered_txs)
 
-    def _build_history_controls(self, filtered_txs):
-        history_header = ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            controls=[
-                Text.H4(self.lang["ui.spending.transaction_history"].format(len=len(filtered_txs)), color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
-            ],
+    def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
+        page_width, page_height = self.get_safe_page_size(
+            page=self._page
         )
 
-        tx_list_controls = [history_header]
-        if filtered_txs:
-            for tx in filtered_txs:
-                tx_list_controls.append(
-                    TransactionItemCard(
-                        page=self._page,
-                        lang=self.lang,
-                        tx=tx,
-                        on_delete=lambda tid: self.controller.delete_transaction(tid),
-                    )
-                )
-        else:
-            tx_list_controls.append(
-                ft.Container(
-                    padding=40,
-                    alignment=ft.Alignment.CENTER,
-                    content=ft.Column(
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        spacing=6,
-                        controls=[
-                            Text.MEDIUM(self.lang["ui.spending.no_transactions"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                            Text.SMALL(self.lang["ui.spending.try_filter"], color=Color.SECONDARY_TEXT),
-                        ],
-                    ),
-                )
-            )
-        return tx_list_controls
+        # Resizing main container
+        self.main_container.width = page_width
+        self.main_container.height = page_height
 
-    def _filter_transactions(self, raw_transactions):
-        all_txs = []
-        for date_key, items in raw_transactions.items():
-            for item in items:
-                item["date_group"] = date_key
-                all_txs.append(item)
-
-        filtered_txs = []
-        for tx in all_txs:
-            is_income = tx.get("positive", False)
-            t_type = "income" if is_income else "expense"
-
-            if self.filter_type != "all" and t_type != self.filter_type:
-                continue
-            if self.selected_category != "all" and tx.get("title") != self.selected_category:
-                continue
-            if self.search_query.strip():
-                q = self.search_query.strip().lower()
-                title = (tx.get("title") or "").lower()
-                subtitle = (tx.get("subtitle") or "").lower()
-                amount_str = str(tx.get("amount") or "").lower()
-
-                q_digits = "".join(c for c in q if c.isdigit())
-                amt_digits = "".join(c for c in amount_str if c.isdigit())
-
-                match_title = q in title
-                match_sub = q in subtitle
-                match_amt = q in amount_str
-                match_num = q_digits in amt_digits if q_digits else False
-
-                if not (match_title or match_sub or match_amt or match_num):
-                    continue
-            filtered_txs.append(tx)
-        return filtered_txs
-
-    def refresh_content(self):
-        balance_data, raw_transactions = self.controller.get_transaction_data()
-        self.raw_transactions = raw_transactions
-
-        self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
-
-        all_categories = sorted(list({
-            tx["title"] for items in raw_transactions.values() for tx in items if "title" in tx
-        }))
-
-        self.metric_cards = MetricCards(
-            page=self._page,
-            lang=self.lang,
-            total_income=balance_data["incomes"].replace("+", "").replace(" VND", ""),
-            total_expense=balance_data["expenses"].replace("-", "").replace(" VND", ""),
-            net_balance=balance_data["current"],
+        # Resizing other components
+        self.menu.resize(
+            width=page_width
         )
 
-        self.toolbar = TransactionToolbar(
-            page=self._page,
-            lang=self.lang,
-            filter_type=self.filter_type,
-            on_filter_change=self.on_filter_change,
-            on_search_change=self.on_search_change,
-            on_category_change=self.on_category_change,
-            categories=all_categories,
-            on_add_expense_click=self.dialogs.open_expense_dialog,
-            on_add_income_click=self.dialogs.open_income_dialog,
-            search_query=self.search_query,
-            selected_category=self.selected_category
+        self.metric_cards.resize(
+            width=page_width
         )
 
-        filtered_txs = self._filter_transactions(self.raw_transactions)
-        self.history_container.content = ft.Column(
-            spacing=12,
-            controls=self._build_history_controls(filtered_txs),
+        self.toolbar.resize(
+            width=page_width
         )
 
-        self.financial_chart.update_data(
-            chart_date=self.chart_date,
-            chart_data=self.chart_data,
-            chart_type=self.chart_type
+        self.history_card.resize(
+            width=page_width
         )
 
-        try:
-            self._page.update()
-        except RuntimeError:
-            pass
-
-    def on_page_resize(self, e=None):
-        safe_width, safe_height = get_safe_page_size(self._page)
-        self.main_container.width = safe_width
-        self.menu.resize(safe_width)
         return e
 
 

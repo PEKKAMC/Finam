@@ -116,18 +116,6 @@ class UserList(ft.Container):
 
         super().__init__(content=self.main_container)
 
-    def refresh(self, current_users: list, current_user: str = ""):
-        self.current_user = current_user
-        self.list_column.controls.clear()
-
-        if not current_users:
-            self.list_column.controls.append(
-                Text.P(self.lang["user_management.no_user"], color=Color.SECONDARY_TEXT, text_align=ft.TextAlign.CENTER)
-            )
-        else:
-            for username in current_users:
-                self.list_column.controls.append(self.create_user_box(username))
-
     def create_user_box(self, username: str):
         is_active = (username == self.current_user)
         initial = username[0].upper() if username else ""
@@ -194,6 +182,18 @@ class UserList(ft.Container):
             )
         )
 
+    def update_data(self, current_users: list, current_user: str = ""):
+        self.current_user = current_user
+        self.list_column.controls.clear()
+
+        if not current_users:
+            self.list_column.controls.append(
+                Text.P(self.lang["user_management.no_user"], color=Color.SECONDARY_TEXT, text_align=ft.TextAlign.CENTER)
+            )
+        else:
+            for username in current_users:
+                self.list_column.controls.append(self.create_user_box(username))
+
     def resize(self, height: int):
         pass
 
@@ -252,6 +252,7 @@ class AddUserField(ft.Container):
     def _handle_submit(self, e=None):
         input_username = self.input_field.value.strip()
         self.on_submit_callback(input_username)
+        return e
 
     def show_error(self, message: str):
         self.error_message.value = message

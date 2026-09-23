@@ -108,7 +108,7 @@ class PurchaseScannerView(ft.View):
 
     def handle_scan_click(self, name, price, reason, trigger, time):
         self.result_card.set_loading_state()
-        item_name = name if name else self.lang.get("ui.scanner.item", "Món hàng")
+        item_name = name if name else self.lang["ui.scanner.item"]
         risk, trigger_display, price_val, ai_advice = self.controller.analyze_purchase(item_name, price, reason, trigger, time)
         self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
 
