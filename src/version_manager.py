@@ -19,9 +19,12 @@ def get_version(package: str, rc: int = 0) -> str:
     version_suffix = ""
 
     if nversion[0] == 0:
-        version_suffix = "-alpha"
+        if 0 <= nversion[1] <= 2:
+            version_suffix = "-alpha"
+        elif nversion[1] >= 3:
+            version_suffix = "-beta"
+
     elif rc > 0:
         version_suffix = f"-rc{rc}"
 
-    final_version = f"v{app_version}{version_suffix}"
-    return final_version
+    return f"v{app_version}{version_suffix}"
