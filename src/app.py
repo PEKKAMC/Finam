@@ -10,9 +10,9 @@ from src.utils import Page, UISettings, get_language
 from src.logger import Logger
 from src.pages.fallback import get_fallback_view
 from src.pages.home import get_home_view
-from src.pages.lesson import get_lesson_view
+from src.pages.lessons import get_lessons_view
 from src.pages.lesson_player import get_lesson_player_view
-from src.pages.saving import get_savings_view
+from src.pages.savings import get_savings_view
 from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.purchase_scanner import get_scanner_view
@@ -27,7 +27,7 @@ if ENABLE_EDITOR:
 
 
 async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> None:
-    Logger.info("Redirecting to fallback page")
+    Logger.info("Redirecting to fallback page...")
     await page.push_route("/fallback")
     page.views.append(get_fallback_view(page, lang, fallback_reason))
 
@@ -57,59 +57,74 @@ async def main(page: Page):
 
     page.update()
 
+    views_cache: dict[str, ft.View] = {}
+
     async def route_change(e: ft.RouteChangeEvent) -> ft.RouteChangeEvent:
         try:
             page.views.clear()
+
+            if page.route in views_cache:
+                Logger.info(f"Loading view for route '{page.route}' from cache...")
+                page.views.append(views_cache[page.route])
+                page.update()
+                return e
+
             troute = ft.TemplateRoute(page.route)
 
             if troute.match("/user_management"):
-                Logger.info("Redirecting to user management page")
-                page.views.append(get_user_management_view(page, lang, user_info))
+                Logger.info("Redirecting to user management page...")
+                view = get_user_management_view(page, lang, user_info)
 
             elif troute.match("/home"):
-                Logger.info("Redirecting to home page")
-                page.views.append(get_home_view(page, lang, user_info))
+                Logger.info("Redirecting to home page...")
+                view = get_home_view(page, lang, user_info)
 
             elif troute.match("/lessons"):
-                Logger.info("Redirecting to lessons page")
-                page.views.append(get_lesson_view(page, lang, user_info))
+                Logger.info("Redirecting to lessons page...")
+                view = get_lessons_view(page, lang, user_info)
 
             elif troute.match("/saving"):
-                Logger.info("Redirecting to saving page")
-                page.views.append(get_savings_view(page, lang, user_info))
+                Logger.info("Redirecting to saving page...")
+                view = get_savings_view(page, lang, user_info)
 
             elif troute.match("/lesson-player/:lesson_id"):
-                lesson_id = troute.lesson_id
-                Logger.info(f"Redirecting to {lesson_id} page")
-                page.views.append(get_lesson_player_view(page, lang, user_info, lesson_id))
+                lesson_id = getattr(troute, "lesson_id", None)
+                Logger.info(f"Redirecting to {lesson_id} page...")
+                view = get_lesson_player_view(page, lang, user_info, lesson_id)
 
             elif troute.match("/lesson-player"):
-                Logger.info("Redirecting to lesson loader page")
-                page.views.append(get_lesson_player_view(page, lang, user_info))
+                Logger.info("Redirecting to lesson loader page...")
+                view = get_lesson_player_view(page, lang, user_info)
 
             elif troute.match("/spending"):
-                Logger.info("Redirecting to spending page")
-                page.views.append(get_spending_view(page, lang, user_info))
+                Logger.info("Redirecting to spending page...")
+                view = get_spending_view(page, lang, user_info)
 
             elif troute.match("/purchase_scanner"):
-                Logger.info("Redirecting to purchase scanner page")
-                page.views.append(get_scanner_view(page, lang, user_info))
+                Logger.info("Redirecting to purchase scanner page...")
+                view = get_scanner_view(page, lang, user_info)
 
             elif troute.match("/settings"):
-                Logger.info("Redirecting to settings page")
-                page.views.append(get_settings_view(page, lang, user_info))
+                Logger.info("Redirecting to settings page...")
+                view = get_settings_view(page, lang, user_info)
 
             elif ENABLE_EDITOR and troute.match("/lesson-editor"):
-                Logger.info("Redirecting to lesson editor page")
-                page.views.append(get_lesson_editor_view(page, lang, user_info))
+                Logger.info("Redirecting to lesson editor page...")
+                view = get_lesson_editor_view(page, lang, user_info)
 
             elif troute.match("/starter"):
-                Logger.info("Redirecting to starter page")
-                page.views.append(get_starter_view(page, lang, user_info))
+                Logger.info("Redirecting to starter page...")
+                view = get_starter_view(page, lang, user_info)
 
             else:
                 Logger.info("Page not found")
                 await redirect_to_fallback(page, lang, "page_not_found")
+                page.update()
+                return e
+
+            if view is not None:
+                views_cache[page.route] = view
+                page.views.append(view)
 
             page.update()
             return e
@@ -119,7 +134,7 @@ async def main(page: Page):
             await on_error(e)
             return e
 
-    async def on_error(e: ft.ControlEvent) -> ft.ControlEvent:
+    async def on_error(e) -> None:
         if e == ft.Event(name='error', data='Bad state: No element', control=page):
             print("there is like 5-15% chance you'll see this message on launch, depends on")
             print("your computer. it's because of a bug that makes 2 processes racing for control,")
@@ -134,8 +149,6 @@ async def main(page: Page):
             os.environ["RESTART_FINAM"] = "1"
 
             await page.window.close()
-
-        return e
 
     page.on_error = on_error
     page.on_route_change = route_change
