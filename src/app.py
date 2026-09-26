@@ -136,11 +136,11 @@ async def main(page: Page):
 
     async def on_error(e) -> None:
         if e == ft.Event(name='error', data='Bad state: No element', control=page):
-            print("there is like 5-15% chance you'll see this message on launch, depends on")
+            print("\nthere is like 5-15% chance you'll see this message on launch, depends on")
             print("your computer. it's because of a bug that makes 2 processes racing for control,")
             print("and if that one specifically wins the race, it causes this to happen.")
             print("currently the bug doesn't affect the application much, so i'll be fixing")
-            print("it later. consider yourself lucky.\n")
+            print("it later. consider yourself lucky if this happens first try.\n")
             Logger.error("PEKKAMC")
         else:
             Logger.critical(f"Unexpected error occurred: {e.control}")

@@ -8,21 +8,24 @@ import re
 
 import flet as ft
 
-from src.utils import Color, Page, create_text, Text
+from src.logger import Logger
 from src.pages.lesson_player.logic import LogicController, AudioController, AnimationController, ENTRANCE_EFFECTS
 from src.pages.lesson_player.components import TopNavigationMenu, SlideCanvas, LessonHeader, LessonControls, PresentationBoard
-from src.utils import UISettings
+from src.utils import Color, Page, create_text, get_safe_page_size, Text
+
+Logger.info("Initializing Lesson Player page...")
 
 
 class LessonPlayerView(ft.View):
-    def __init__(self, page: Page, lang: dict, user_info_information: dict, target_lesson_filename: str = ""):
+    def __init__(self, page: Page, lang: dict, user_info: dict, target_lesson_filename: str | None):
         self._page = page
         self.lang = lang
-        self.user_info_information = user_info_information
+        self.user_info = user_info
         self.is_constructing_slide = False
 
+        self.get_safe_page_size = get_safe_page_size
         self.audio_controller = AudioController(self._page)
-        self.lesson_logic = LogicController(target_lesson_filename)
+        self.lesson_logic = LogicController(target_lesson_filename or "")
         self.animation_controller = AnimationController(self._page, self.audio_controller)
 
         self.top_navigation_menu = TopNavigationMenu(page=self._page, lang=self.lang, on_return_click=self.handle_return_click)
@@ -41,7 +44,7 @@ class LessonPlayerView(ft.View):
             padding=20
         )
 
-        self.main_page_content = ft.Container(
+        self.main_container = ft.Container(
             content=ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[self.center_alignment_container]),
             expand=True, padding=0
         )
@@ -52,15 +55,14 @@ class LessonPlayerView(ft.View):
             route=routing_path,
             padding=0,
             bgcolor="#FAFAF8",
-            controls=[ft.Stack(controls=[self.main_page_content], expand=True)]
+            controls=[ft.Stack(controls=[self.main_container], expand=True)]
         )
 
-        self._page.on_resize = self.handle_page_resize
-        self.handle_page_resize(None)
+        self._page.on_resize = self._on_page_resize
+        self._on_page_resize(None)
 
         if target_lesson_filename:
-            current_directory = os.path.dirname(__file__)
-            project_root_directory = os.path.abspath(os.path.join(current_directory, "..", "..", ".."))
+            project_root_directory = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), "..", "..", ".."))
             full_target_path = os.path.join(project_root_directory, "assets", "lessons", target_lesson_filename)
             self._page.run_task(self.initialize_lesson_from_path, full_target_path)
 
@@ -104,7 +106,7 @@ class LessonPlayerView(ft.View):
                 target_width = self.animation_controller.safe_convert_to_float(element_data.get("width"), 300.0)
                 font_size = int(element_data.get("size")) or 16
                 raw_text_content = element_data.get("content", "")
-                clean_text_content = re.sub(r'\{pause:[\d.]+\}', '', raw_text_content)
+                clean_text_content = re.sub(r'\{pause:[\d.]+}', '', raw_text_content)
 
                 if entrance_effect == "Wipe":
                     visual_control = create_text("", size=font_size, color=Color.DEFAULT_TEXT, width=target_width)
@@ -139,7 +141,7 @@ class LessonPlayerView(ft.View):
                     if image_source_path.startswith("http"):
                         final_image_source = image_source_path
                     else:
-                        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+                        project_root = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), "..", "..", ".."))
                         resolved_path = os.path.join(project_root, "assets", "images", image_source_path)
                         if os.path.isfile(resolved_path):
                             final_image_source = resolved_path
@@ -267,29 +269,15 @@ class LessonPlayerView(ft.View):
                 self._page.update()
 
         if self.original_route_change_event and event.name == "route_change":
-            try:
-                await self.original_route_change_event(event)
-            except TypeError:
-                await self.original_route_change_event()
+            await self.original_route_change_event(event)
         elif self.original_disconnect_event and event.name == "disconnect":
-            try:
-                self.original_disconnect_event(event)
-            except TypeError:
-                self.original_disconnect_event()
+            self.original_disconnect_event(event)
 
         if self.audio_controller.active_audio and self.audio_controller.active_audio in self._page.services:
             self._page.services.remove(self.audio_controller.active_audio)
 
-    def get_safe_page_size(self) -> tuple[int, int]:
-        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
-        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
-
-        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
-        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
-        return safe_width, safe_height
-
-    def handle_page_resize(self, event) -> None:
-        page_width, page_height = self.get_safe_page_size()
+    def _on_page_resize(self, event) -> None:
+        page_width, page_height = self.get_safe_page_size(self._page)
 
         # Keep legacy safe caps for content sizing
         safe_width_value = min(page_width, 650)
@@ -306,5 +294,6 @@ class LessonPlayerView(ft.View):
 
         return event
 
-def get_lesson_player_view(page: Page, lang: dict, user_info_information: dict, target_lesson_filename: str = "") -> ft.View:
-    return LessonPlayerView(page, lang, user_info_information, target_lesson_filename)
+def get_lesson_player_view(page: Page, lang: dict, user_info: dict, target_lesson_filename: str | None = None) -> ft.View:
+    Logger.info("Loading Lesson Player page...")
+    return LessonPlayerView(page, lang, user_info, target_lesson_filename)

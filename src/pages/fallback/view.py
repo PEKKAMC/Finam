@@ -92,4 +92,5 @@ class FallbackView(ft.View):
 
 
 def get_fallback_view(page: Page, lang: dict, fallback_reason: str) -> ft.View:
+    Logger.info("Loading Fallback page...")
     return FallbackView(page, lang, fallback_reason)

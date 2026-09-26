@@ -2,16 +2,19 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import flet as ft
-
 import json
 import os
 import re
 
+import flet as ft
+
+from src.logger import Logger
 from src.pages.global_components import Menu
-from src.utils import Color, Page, create_text, Text, UISettings
 from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, LogicController, safe_float, calculate_pan_position
 from src.pages.lesson_editor.components import EditorToolbar, PropertiesTabs, SlideSidebarLayout
+from src.utils import Color, Page, create_text, Text, UISettings
+
+Logger.info("Loading Lesson Editor page...")
 
 
 class LessonEditorView(ft.View):
@@ -79,12 +82,24 @@ class LessonEditorView(ft.View):
         )
 
         super().__init__(
-            route="/lesson-editor", padding=0, bgcolor="#FAFAF8",
-            controls=[ft.Stack(controls=[self.main_container, self.menu], expand=True)]
+            route="/lesson-editor",
+            padding=0,
+            bgcolor=Color.PAGE_BACKGROUND,
+            horizontal_alignment=ft.MainAxisAlignment.CENTER,
+            controls=ft.SafeArea(
+                expand=True,
+                content=ft.Stack(
+                    expand=True,
+                    controls=[
+                        self.main_container,
+                        self.menu
+                    ]
+                )
+            )
         )
 
         self._page.on_resize = self.on_page_resize
-        self.on_page_resize(None)
+        self.on_page_resize()
         self.refresh_editor()
 
     def get_safe_page_size(self) -> tuple[int, int]:
@@ -373,7 +388,7 @@ class LessonEditorView(ft.View):
         self.logic.move_slide_down()
         self.refresh_editor()
 
-    def on_page_resize(self, e) -> None:
+    def on_page_resize(self, e = None) -> None:
         w, h = self.get_safe_page_size()
         if not w or not h: return
 
@@ -384,4 +399,5 @@ class LessonEditorView(ft.View):
 
 
 def get_lesson_editor_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+    Logger.info("Loading Lesson Editor page...")
     return LessonEditorView(page, lang, user_info)

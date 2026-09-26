@@ -258,12 +258,15 @@ class SpendingView(ft.View):
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.Stack(
+            controls=ft.SafeArea(
                 expand=True,
-                controls=[
-                    self.main_container,
-                    self.menu
-                ]
+                content=ft.Stack(
+                    expand=True,
+                    controls=[
+                        self.main_container,
+                        self.menu
+                    ]
+                )
             )
         )
 
@@ -359,4 +362,5 @@ class SpendingView(ft.View):
 
 
 def get_spending_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+    Logger.info("Loading Spending page...")
     return SpendingView(page, lang, user_info)

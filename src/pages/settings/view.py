@@ -115,11 +115,14 @@ class SettingsView(ft.View):
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.Stack(
+            controls=ft.SafeArea(
                 expand=True,
-                controls=[
-                    self.main_container
-                ]
+                content=ft.Stack(
+                    expand=True,
+                    controls=[
+                        self.main_container
+                    ]
+                )
             )
         )
 
@@ -153,4 +156,5 @@ class SettingsView(ft.View):
 
 
 def get_settings_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+    Logger.info("Loading Settings page...")
     return SettingsView(page, lang, user_info)

@@ -91,31 +91,7 @@ class SavingsView(ft.View):
             trigger_export_callback=self.trigger_export
         )
 
-        # INITIALIZE PAGE COMPONENTS
-        self.menu = Menu(self._page, self.lang, self.user_info)
-
-        # BUILD UI
-        self._load_and_build()
-
-        super().__init__(
-            route="/saving",
-            padding=0,
-            bgcolor=Color.PAGE_BACKGROUND,
-            horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.Stack(
-                expand=True,
-                controls=[
-                    self.main_container,
-                    self.menu
-                ]
-            )
-        )
-
-        self._page.on_resize = self.on_page_resize
-        self.on_page_resize()
-
-    def _load_and_build(self):
-        Logger.info("Rendering UI for saving page...")
+        # FETCH DASHBOARD DATA
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
         existing_objectives = self.controller.get_user_objectives()
 
@@ -136,6 +112,13 @@ class SavingsView(ft.View):
                 "completed": bool(completed_at)
             })
 
+        # INITIALIZE PAGE COMPONENTS
+        self.menu = Menu(
+            page=self._page,
+            lang=self.lang,
+            user_info=self.user_info
+        )
+
         self.objective_grid = ObjectiveGrid(
             page=self._page,
             lang=self.lang,
@@ -153,6 +136,7 @@ class SavingsView(ft.View):
             on_create_click=lambda e: self.dialogs.create_objective_dialog.show(self._page)
         )
 
+        # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
@@ -174,6 +158,26 @@ class SavingsView(ft.View):
             padding=0,
             margin=ft.Margin(bottom=UISettings.MENU_HEIGHT)
         )
+
+        super().__init__(
+            route="/saving",
+            padding=0,
+            bgcolor=Color.PAGE_BACKGROUND,
+            horizontal_alignment=ft.MainAxisAlignment.CENTER,
+            controls=ft.SafeArea(
+                expand=True,
+                content=ft.Stack(
+                    expand=True,
+                    controls=[
+                        self.main_container,
+                        self.menu
+                    ]
+                )
+            )
+        )
+
+        self._page.on_resize = self.on_page_resize
+        self.on_page_resize()
 
     def refresh_view(self) -> None:
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()

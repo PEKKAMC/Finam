@@ -100,7 +100,16 @@ class PurchaseScannerView(ft.View):
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.Stack(expand=True, controls=[self.main_container, self.menu])
+            controls=ft.SafeArea(
+                expand=True,
+                content=ft.Stack(
+                    expand=True,
+                    controls=[
+                        self.main_container,
+                        self.menu
+                    ]
+                )
+            )
         )
 
         self._page.on_resize = self._on_page_resize
@@ -127,4 +136,5 @@ class PurchaseScannerView(ft.View):
         return e
 
 def get_scanner_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+    Logger.info("Loading Purchase Scanner page...")
     return PurchaseScannerView(page, lang, user_info)

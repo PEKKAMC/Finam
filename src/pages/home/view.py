@@ -261,12 +261,15 @@ class HomeView(ft.View):
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.Stack(
+            controls=ft.SafeArea(
                 expand=True,
-                controls=[
-                    self.main_container,
-                    self.menu
-                ]
+                content=ft.Stack(
+                    expand=True,
+                    controls=[
+                        self.main_container,
+                        self.menu
+                    ]
+                )
             )
         )
 
@@ -334,4 +337,5 @@ class HomeView(ft.View):
         return e
 
 def get_home_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+    Logger.info("Loading Home page...")
     return HomeView(page, lang, user_info)

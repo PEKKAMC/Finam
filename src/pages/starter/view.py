@@ -11,7 +11,7 @@ from src.pages.global_components import AddUserField, DeleteUserDialog, UserList
 from src.pages.starter.logic import LogicController
 from src.utils import Color, Page, get_safe_page_size
 
-Logger.info("Initializing Home page...")
+Logger.info("Initializing Starter page...")
 
 
 class DialogManager:
@@ -117,11 +117,14 @@ class StarterView(ft.View):
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.Stack(
+            controls=ft.SafeArea(
                 expand=True,
-                controls=[
-                    self.main_container,
-                ]
+                content=ft.Stack(
+                    expand=True,
+                    controls=[
+                        self.main_container
+                    ]
+                )
             )
         )
 
@@ -153,4 +156,5 @@ class StarterView(ft.View):
         return e
 
 def get_starter_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+    Logger.info("Loading Starter page...")
     return StarterView(page, lang, user_info)
