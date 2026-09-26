@@ -78,19 +78,19 @@ class LogicController:
     def delete_objective(objective_id: int):
         db.saving.delete_objective(objective_id)
 
-    def process_quick_action(self, objective_id: int, action: str, amount: int, time: str, note: str = "") -> tuple[bool, str]:
+    def process_quick_action(self, objective_id: int, action: str, amount: int, time: str, note: str = "") -> tuple[bool, str, int]:
         current_saved = db.saving.get_objective_progress(objective_id)
         if action == "remove":
             if amount > current_saved:
-                return False, "saving.error.not_enough_balance"
+                return False, "saving.error.not_enough_balance", current_saved
             amount = -amount
         else:
             remaining = db.saving.get_objective_target(objective_id) - current_saved
             if amount > remaining:
-                return False, "saving.error.exceeding_amount"
+                return False, "saving.error.exceeding_amount", remaining
 
         db.saving.add_saving_entry(self.current_user, amount, time, objective_id, note)
-        return True, ""
+        return True, "", 0
 
     def clear_activity_history(self):
         db.saving.clear_activity_history(self.current_user)
@@ -100,7 +100,8 @@ class LogicController:
         try:
             workbook = openpyxl.Workbook()
             worksheet = workbook.active
-            if isinstance(worksheet, NoneType): raise RuntimeError(worksheet)
+            if isinstance(worksheet, NoneType):
+                raise RuntimeError(worksheet)
             worksheet.title = lang["saving.savings_ledger"]
             worksheet.append([lang["generic.date"], lang["saving.ledger.action_type"], lang["saving.ledger.description"]])
             for activity in activities:

@@ -4,15 +4,15 @@
 
 """Lesson page - Educational modules and user statistics tracking."""
 
-from src.pages.lesson.components import LessonGrid, LessonItemCard, LessonSummaryBanner
-from src.pages.lesson.logic import LogicController
-from src.pages.lesson.view import LessonView, get_lesson_view
+from src.pages.lessons.components import LessonGrid, LessonItemCard, LessonSummaryBanner
+from src.pages.lessons.logic import LogicController
+from src.pages.lessons.view import LessonsView, get_lessons_view
 
 __all__ = [
     "LessonGrid",
     "LessonItemCard",
     "LessonSummaryBanner",
     "LogicController",
-    "LessonView",
-    "get_lesson_view"
+    "LessonsView",
+    "get_lessons_view"
 ]
