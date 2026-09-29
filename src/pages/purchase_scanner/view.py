@@ -118,8 +118,26 @@ class PurchaseScannerView(ft.View):
     def handle_scan_click(self, name, price, reason, trigger, time):
         self.result_card.set_loading_state()
         item_name = name if name else self.lang["ui.scanner.item"]
-        risk, trigger_display, price_val, ai_advice = self.controller.analyze_purchase(item_name, price, reason, trigger, time)
-        self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
+
+        def worker():
+            try:
+                risk, trigger_display, price_val, ai_advice = self.controller.analyze_purchase(
+                    item_name, price, reason, trigger, time
+                )
+
+                self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
+
+            except Exception as e:
+                Logger.error(f"Error during background analysis: {e}")
+                self.result_card.update_result(
+                    30,
+                    "yếu tố bên ngoài",
+                    0.0,
+                    item_name,
+                    "Không thể hiển thị kết quả do lỗi giao diện. Vui lòng thử lại."
+                )
+
+        self._page.run_thread(worker)
 
     def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
         page_width, page_height = self.get_safe_page_size(

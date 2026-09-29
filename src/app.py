@@ -62,6 +62,10 @@ async def main(page: Page):
     async def route_change(e: ft.RouteChangeEvent) -> ft.RouteChangeEvent:
         try:
             page.views.clear()
+            if page.route:
+                Logger.info(f"Redirecting to {page.route} route...")
+            else:
+                Logger.info("Page not found")
 
             if page.route in views_cache:
                 Logger.info(f"Loading view for route '{page.route}' from cache...")
@@ -72,54 +76,41 @@ async def main(page: Page):
             troute = ft.TemplateRoute(page.route)
 
             if troute.match("/user_management"):
-                Logger.info("Redirecting to user management page...")
                 view = get_user_management_view(page, lang, user_info)
 
             elif troute.match("/home"):
-                Logger.info("Redirecting to home page...")
                 view = get_home_view(page, lang, user_info)
 
             elif troute.match("/lessons"):
-                Logger.info("Redirecting to lessons page...")
                 view = get_lessons_view(page, lang, user_info)
 
             elif troute.match("/saving"):
-                Logger.info("Redirecting to saving page...")
                 view = get_savings_view(page, lang, user_info)
 
             elif troute.match("/lesson-player/:lesson_id"):
                 lesson_id = getattr(troute, "lesson_id", None)
-                Logger.info(f"Redirecting to {lesson_id} page...")
                 view = get_lesson_player_view(page, lang, user_info, lesson_id)
 
             elif troute.match("/lesson-player"):
-                Logger.info("Redirecting to lesson loader page...")
                 view = get_lesson_player_view(page, lang, user_info)
 
             elif troute.match("/spending"):
-                Logger.info("Redirecting to spending page...")
                 view = get_spending_view(page, lang, user_info)
 
             elif troute.match("/purchase_scanner"):
-                Logger.info("Redirecting to purchase scanner page...")
                 view = get_scanner_view(page, lang, user_info)
 
             elif troute.match("/settings"):
-                Logger.info("Redirecting to settings page...")
                 view = get_settings_view(page, lang, user_info)
 
             elif ENABLE_EDITOR and troute.match("/lesson-editor"):
-                Logger.info("Redirecting to lesson editor page...")
                 view = get_lesson_editor_view(page, lang, user_info)
 
             elif troute.match("/starter"):
-                Logger.info("Redirecting to starter page...")
                 view = get_starter_view(page, lang, user_info)
 
             else:
-                Logger.info("Page not found")
                 await redirect_to_fallback(page, lang, "page_not_found")
-                page.update()
                 return e
 
             if view is not None:
@@ -143,7 +134,7 @@ async def main(page: Page):
             print("it later. consider yourself lucky if this happens first try.\n")
             Logger.error("PEKKAMC")
         else:
-            Logger.critical(f"Unexpected error occurred: {e.control}")
+            Logger.critical(f"Unexpected error occurred: {e.data}")
             Logger.info("Attempting to restart application...")
 
             os.environ["RESTART_FINAM"] = "1"

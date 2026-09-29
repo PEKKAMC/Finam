@@ -92,8 +92,7 @@ class ScannerForm(ft.Container):
             filled=True,
             bgcolor=Color.PAGE_BACKGROUND,
             height=48,
-            text_size=14,
-            text_style=ft.TextStyle(weight=ft.FontWeight.BOLD),
+            text_size=13,
             content_padding=ft.Padding(16, 12, 16, 12)
         )
 
@@ -219,7 +218,7 @@ class InterventionItem(ft.Container):
                     Text.MEDIUM(title, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT)
                 ], spacing=6),
                 ft.Container(
-                    content=Text.P(description, color=Color.SECONDARY_TEXT, size=12),
+                    content=Text.P(description, color=Color.SECONDARY_TEXT),
                     padding=ft.Padding(22, 0, 0, 0)
                 )
             ]
@@ -290,7 +289,7 @@ class ScannerResult(ft.Container):
                             self.risk_status_text
                         ],
                         alignment=ft.MainAxisAlignment.START,
-                        vertical_alignment=ft.CrossAxisAlignment.BASELINE,
+                        vertical_alignment=ft.CrossAxisAlignment.END,
                         spacing=10
                     ),
                     self.progress_bar
@@ -363,11 +362,13 @@ class ScannerResult(ft.Container):
         self.empty_state.visible = False
         self.result_container.visible = True
 
-        if risk > 65:
+        risk_val = max(0, min(100, int(risk)))
+
+        if risk_val > 65:
             risk_color = Color.NEGATIVE_ACTION
-            status_desc = self.lang["ui.scanner.risk_very_high"].upper()
+            status_desc = self.lang["ui.scanner.risk_very_high"]
             pause_time = self.lang["ui.scanner.time_24h"]
-        elif risk > 35:
+        elif risk_val > 35:
             risk_color = "#F59E0B"
             status_desc = self.lang["ui.scanner.risk_moderate"]
             pause_time = self.lang["ui.scanner.time_60s"]
@@ -376,11 +377,11 @@ class ScannerResult(ft.Container):
             status_desc = self.lang["ui.scanner.risk_rational"]
             pause_time = self.lang["ui.scanner.time_60s"]
 
-        self.risk_score_text.value = f"{risk}%"
+        self.risk_score_text.value = f"{risk_val}%"
         self.risk_score_text.color = risk_color
         self.risk_status_text.value = status_desc
         self.risk_badge_text.value = pause_time
-        self.progress_bar.value = risk / 100.0
+        self.progress_bar.value = risk_val / 100.0
         self.progress_bar.color = risk_color
 
         self.advice_text.value = ai_advice if ai_advice else f"Món đồ {item_name} đang chịu ảnh hưởng từ {trigger_display}."
@@ -393,5 +394,6 @@ class ScannerResult(ft.Container):
             InterventionItem(self._page, self.lang, self.lang["ui.scanner.reflection"], f"Bạn mua vì cần thật, hay vì {trigger_display}?")
         ]
 
-        self.interventions_col.controls = interventions
+        self.interventions_col.controls.clear()
+        self.interventions_col.controls.extend(interventions)
         self.update()
