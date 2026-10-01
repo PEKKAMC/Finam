@@ -57,12 +57,8 @@ class DialogManager:
 
     # USER MANAGEMENT DIALOG
     def show_user_management_dialog(self) -> int:
-        try:
-            self.user_dialog.show(self._page)
-            return 0
-        except Exception as e:
-            Logger.warn(f"Failed to show user management prompt {e}")
-            return -1
+        self.user_list.update_data(self.controller.get_all_users(), self.user_info.get("username", ""))
+        return self.user_dialog.show(self._page)
 
     def _close_user_management_dialog(self, e: ft.ControlEvent | None = None) -> ft.ControlEvent | None:
         self.user_dialog.close_most_recent_dialog(self._page)

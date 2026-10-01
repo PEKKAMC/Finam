@@ -48,11 +48,7 @@ class DialogManager:
         )
 
     def show_user_management_dialog(self) -> int:
-        try:
-            return self.user_dialog.show(self._page)
-        except Exception as e:
-            Logger.warn(f"Failed to show user management prompt {e}")
-            return -1
+        return self.user_dialog.show(self._page)
 
     def show_delete_prompt(self, username: str = "") -> int:
         if username:
