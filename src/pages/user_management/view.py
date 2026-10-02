@@ -2,13 +2,14 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import os
 from collections.abc import Callable
 
 import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import AddUserField, DeleteUserDialog, Menu, UserList, UserManagementDialog
-from src.pages.user_management.components import MenuItem, MenuSectionCard, ProfileCard
+from src.pages.user_management.components import MenuItem, MenuSectionCard, ProfileCard, DeleteAllDataDialog
 from src.pages.user_management.logic import LogicController
 from src.utils import Color, Page, get_safe_page_size, Text, UISettings
 
@@ -53,6 +54,12 @@ class DialogManager:
             on_confirm_callback=self._handle_delete_confirm
         )
 
+        self.delete_all_data_dialog = DeleteAllDataDialog(
+            page=self._page,
+            lang=self.lang,
+            on_confirm_callback=self._handle_delete_all_data_confirm
+        )
+
         self._add_dialogs_to_overlay()
 
     # USER MANAGEMENT DIALOG
@@ -81,7 +88,7 @@ class DialogManager:
         self.controller.change_user(username)
         self._refresh_view()
 
-    # DELETE DIALOG
+    # DELETE USER DIALOG
     def show_delete_prompt(self, username: str = "") -> int:
         try:
             if username:
@@ -101,11 +108,31 @@ class DialogManager:
             Logger.warn(f"Cannot delete user {username}, {e}")
             return -1
 
+    # DELETE ALL DATA DIALOG
+    def show_delete_all_data_prompt(self) -> int:
+        try:
+            self.delete_all_data_dialog.show(self._page)
+            return 0
+        except Exception as e:
+            Logger.warn(f"Failed to show delete all data prompt {e}")
+            return -1
+
+    async def _handle_delete_all_data_confirm(self, e=None) -> int:
+        try:
+            self.controller.delete_all_data()
+            os.environ["RESTART_FINAM"] = "1"
+            await self._page.window.close()
+            return 0
+        except Exception as e:
+            Logger.error(f"Failed to delete all data and restart app: {e}")
+            return -1
+
     # OVERLAY MANAGEMENT
     def _add_dialogs_to_overlay(self) -> None:
         dialogs = [
             self.user_dialog,
-            self.delete_dialog
+            self.delete_dialog,
+            self.delete_all_data_dialog
         ]
         for d in dialogs:
             d.add_to_overlay(self._page)
@@ -113,7 +140,8 @@ class DialogManager:
     def _remove_dialogs_from_overlay(self) -> None:
         dialogs = [
             self.user_dialog,
-            self.delete_dialog
+            self.delete_dialog,
+            self.delete_all_data_dialog
         ]
         for d in dialogs:
             d.remove_from_overlay(self._page)
@@ -217,8 +245,17 @@ class UserManagementView(ft.View):
                     icon_color=Color.NEGATIVE_ACTION,
                     icon_bg_color=Color.ACTIVITY_BACKGROUND,
                     title=self.lang["ui.logout"],
-                    subtitle=""
+                    subtitle="",
+                    on_click=self.logout
                 ),
+                MenuItem(
+                    icon=ft.Icons.DELETE_FOREVER,
+                    icon_color=Color.NEGATIVE_ACTION,
+                    icon_bg_color=Color.ACTIVITY_BACKGROUND,
+                    title=self.lang["ui.delete_all_data"],
+                    subtitle="",
+                    on_click=lambda e: self.dialogs.show_delete_all_data_prompt()
+                )
             ]
         )
 
@@ -288,6 +325,13 @@ class UserManagementView(ft.View):
 
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
+
+    async def logout(self, e=None) -> None:
+        try:
+            self.user_info["username"] = ""
+            await self._page.navigate_to("/starter")(e)
+        except Exception as ex:
+            Logger.warn(f"Failed to logout: {ex}")
 
     def refresh_view(self) -> int:
         try:

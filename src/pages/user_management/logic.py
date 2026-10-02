@@ -2,6 +2,8 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import os
+
 from src.database import db
 from src.logger import Logger
 
@@ -29,3 +31,16 @@ class LogicController:
 
     def change_user(self, username: str):
         self.user_info["username"] = username
+
+    @staticmethod
+    def delete_all_data():
+        """Deletes data.db and any associated SQLite database files."""
+        db_path = db.connection.database_name
+        for suffix in ["", "-wal", "-shm"]:
+            file_path = f"{db_path}{suffix}"
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                    Logger.info(f"Deleted database file: {file_path}")
+                except Exception as e:
+                    Logger.error(f"Error deleting database file {file_path}: {e}")

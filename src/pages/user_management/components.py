@@ -2,11 +2,12 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import asyncio
 from collections.abc import Callable
 
 import flet as ft
 
-from src.utils import Color, Text, UISettings
+from src.utils import Color, Dialog, Page, Text, UISettings
 
 
 class ProfileCard(ft.Container):
@@ -214,3 +215,76 @@ class MenuSectionCard(ft.Container):
         self.width = width
         self.main_container.width = width
         self.main_container.content.width = width
+
+
+class DeleteAllDataCard(ft.Container):
+    def __init__(self, page: Page, lang: dict, on_confirm_callback: Callable, on_cancel_callback: Callable):
+        self._page = page
+        self.lang = lang
+        self.on_confirm = on_confirm_callback
+        self.on_cancel = on_cancel_callback
+
+        cancel_text = self.lang["generic.cancel"]
+        delete_text = self.lang["generic.delete"]
+        title_text = self.lang["user_management.confirm_delete_all_data_title"]
+        content_text = self.lang["user_management.confirm_delete_all_data_content"]
+
+        self.main_container = ft.Column(
+            tight=True,
+            spacing=16,
+            controls=[
+                Text.H3(title_text, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
+                Text.P(content_text, color=Color.SECONDARY_TEXT),
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.END,
+                    spacing=12,
+                    controls=[
+                        ft.TextButton(
+                            content=Text.BUTTON(cancel_text, color=Color.SECONDARY_TEXT),
+                            on_click=self.on_cancel
+                        ),
+                        ft.TextButton(
+                            content=Text.BUTTON(delete_text, color=Color.DELETE_ACTION, weight=ft.FontWeight.BOLD),
+                            on_click=self.on_confirm
+                        )
+                    ]
+                )
+            ]
+        )
+
+        super().__init__(
+            bgcolor=Color.WHITE,
+            border_radius=20,
+            padding=24,
+            width=380,
+            content=self.main_container
+        )
+
+
+class DeleteAllDataDialog(Dialog):
+    def __init__(self, page: Page, lang: dict, on_confirm_callback: Callable):
+        self._page = page
+        self.lang = lang
+        self.on_confirm = on_confirm_callback
+
+        self.card = DeleteAllDataCard(
+            page=page,
+            lang=lang,
+            on_confirm_callback=self._handle_confirm,
+            on_cancel_callback=lambda e: self.close_most_recent_dialog(self._page)
+        )
+
+        super().__init__(
+            color=Color.DIALOG_BACKGROUND,
+            dialog_content=self.card
+        )
+
+    async def _handle_confirm(self, e=None):
+        self.close_most_recent_dialog(self._page)
+        if self.on_confirm:
+            res = self.on_confirm(e)
+            if asyncio.iscoroutine(res):
+                await res
+
+    def resize(self, width: int) -> None:
+        self.card.width = min(width - 40, 380)

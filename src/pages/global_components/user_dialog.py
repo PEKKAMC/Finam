@@ -273,31 +273,65 @@ class AddUserField(ft.Container):
         pass
 
 
+class DeleteUserCard(ft.Container):
+    def __init__(self, page: Page, lang: dict, on_confirm_callback: Callable, on_cancel_callback: Callable):
+        self._page = page
+        self.lang = lang
+        self.on_confirm = on_confirm_callback
+        self.on_cancel = on_cancel_callback
+
+        cancel_text = self.lang.get("generic.cancel", "Hủy")
+        delete_text = self.lang.get("generic.delete", "Xóa")
+
+        self.main_container = ft.Column(
+            tight=True,
+            spacing=16,
+            controls=[
+                Text.H3(self.lang.get("user_management.confirm_delete_user_title", "Xóa người dùng"), color=Color.PRIMARY_TEXT),
+                Text.P(self.lang.get("user_management.confirm_delete_user_content", "Bạn có chắc chắn muốn xóa người dùng này?"), color=Color.SECONDARY_TEXT),
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.END,
+                    spacing=12,
+                    controls=[
+                        ft.TextButton(
+                            content=Text.BUTTON(cancel_text, color=Color.SECONDARY_TEXT),
+                            on_click=self.on_cancel
+                        ),
+                        ft.TextButton(
+                            content=Text.BUTTON(delete_text, color=Color.DELETE_ACTION, weight=ft.FontWeight.BOLD),
+                            on_click=self.on_confirm
+                        )
+                    ]
+                )
+            ]
+        )
+
+        super().__init__(
+            bgcolor=Color.WHITE,
+            border_radius=20,
+            padding=24,
+            width=380,
+            content=self.main_container
+        )
+
+
 class DeleteUserDialog(Dialog):
-    def __init__(self, page: Page, lang: dict, on_confirm_callback):
+    def __init__(self, page: Page, lang: dict, on_confirm_callback: Callable):
         self._page = page
         self.lang = lang
         self.on_confirm = on_confirm_callback
         self.selected_user: str = ""
 
-        cancel_text = self.lang["generic.cancel"]
-        delete_text = self.lang["generic.delete"]
-
-        self.main_container = ft.AlertDialog(
-            modal=True,
-            bgcolor=Color.WHITE,
-            title=Text.H3(self.lang["user_management.confirm_delete_user_title"], color=Color.PRIMARY_TEXT),
-            content=Text.P(self.lang["user_management.confirm_delete_user_content"], color=Color.SECONDARY_TEXT),
-            actions=[
-                ft.TextButton(Text.BUTTON(cancel_text, color=Color.SECONDARY_TEXT), on_click=lambda e: self.close_most_recent_dialog),
-                ft.TextButton(Text.BUTTON(delete_text, color=Color.DELETE_ACTION), on_click=lambda e: self.confirm()),
-            ],
-            actions_alignment=ft.MainAxisAlignment.END,
+        self.card = DeleteUserCard(
+            page=page,
+            lang=lang,
+            on_confirm_callback=lambda e: self.confirm(),
+            on_cancel_callback=lambda e: self.close_most_recent_dialog(self._page)
         )
 
         super().__init__(
             color=Color.DIALOG_BACKGROUND,
-            dialog_content=self.main_container
+            dialog_content=self.card
         )
 
     def confirm(self):
@@ -306,4 +340,4 @@ class DeleteUserDialog(Dialog):
         self.close_most_recent_dialog(self._page)
 
     def resize(self, width: int) -> None:
-        self.main_container.width = width
+        self.card.width = min(width - 40, 380)

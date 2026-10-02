@@ -27,6 +27,7 @@ def main() -> int:
 
         # POST RUN CLEANUP
         if os.environ.get("RESTART_FINAM") == "1":
+            os.environ["RESTART_FINAM"] = "0"
             Logger.info("Restarting...")
             return 1
 
