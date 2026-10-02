@@ -7,7 +7,7 @@
 from src.pages.global_components.category_selection import CategorySelectionDialog, ExpenseInputDialog, IncomeInputDialog
 from src.pages.global_components.financial_chart import FinancialChart
 from src.pages.global_components.menu import Menu
-from src.pages.global_components.user_dialog import AddUserField, DeleteUserDialog, UserList, UserManagementCard, UserManagementDialog
+from src.pages.global_components.user_dialog import AddUserField, DeleteUserCard, DeleteUserDialog, UserList, UserManagementCard, UserManagementDialog
 
 __all__ = [
     "CategorySelectionDialog",
@@ -19,5 +19,6 @@ __all__ = [
     "UserManagementCard",
     "UserManagementDialog",
     "AddUserField",
+    "DeleteUserCard",
     "DeleteUserDialog"
 ]

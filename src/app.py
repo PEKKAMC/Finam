@@ -67,7 +67,7 @@ async def main(page: Page):
             else:
                 Logger.info("Page not found")
 
-            if page.route in views_cache:
+            if page.route != "/starter" and page.route in views_cache:
                 Logger.info(f"Loading view for route '{page.route}' from cache...")
                 page.views.append(views_cache[page.route])
                 page.update()
