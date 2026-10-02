@@ -23,4 +23,4 @@ class Page(ft.Page):
         return handler
 
 
-ft.Page.navigate_to = Page.navigate_to
+setattr(ft.Page, "navigate_to", Page.navigate_to)
