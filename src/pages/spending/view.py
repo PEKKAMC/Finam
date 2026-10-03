@@ -171,7 +171,8 @@ class SpendingView(ft.View):
 
         # FETCH INITIAL DATA
         balance_data, self.raw_transactions = self.controller.get_transaction_data()
-        self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
+        self.current_chart_type = "daily"
+        self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data(self.current_chart_type)
 
         all_categories = sorted(list({
             tx["title"] for items in self.raw_transactions.values() for tx in items if "title" in tx
@@ -193,9 +194,9 @@ class SpendingView(ft.View):
 
         self.financial_chart = FinancialChart(
             lang=self.lang,
-            chart_date=self.chart_date,
-            chart_data=self.chart_data,
-            chart_type=self.chart_type
+            username=user_info["username"],
+            chart_type=self.chart_type,
+            show_mode_buttons=True
         )
 
         self.metric_cards = MetricCards(
@@ -273,10 +274,23 @@ class SpendingView(ft.View):
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
 
-    def refresh_view(self) -> int:
+    def refresh_view(self, e=None) -> int:
         try:
+            self.current_chart_type = self.financial_chart.chart_type
+
+            date_offset = 0
+            target_year = None
+            if self.financial_chart.chart_type == self.current_chart_type:
+                date_offset = self.financial_chart.date_offset
+                target_year = self.financial_chart.monthly_year
+
             balance_data, self.raw_transactions = self.controller.get_transaction_data()
-            self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
+
+            self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data(
+                self.current_chart_type,
+                date_offset=date_offset,
+                target_year=target_year
+            )
 
             all_categories = sorted(list({
                 tx["title"] for items in self.raw_transactions.values() for tx in items if "title" in tx
@@ -300,16 +314,10 @@ class SpendingView(ft.View):
 
             self.history_card.update_data(filtered_txs)
 
-            self.financial_chart.update_data(
-                chart_date=self.chart_date,
-                chart_data=self.chart_data,
-                chart_type=self.chart_type
-            )
-
-            if self._page:
-                self._page.update()
+            self.financial_chart.update_data()
 
             return 0
+
         except RuntimeError as e:
             Logger.warn(f"Failed to refresh view {e}")
             return -1

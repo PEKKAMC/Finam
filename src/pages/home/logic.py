@@ -12,13 +12,10 @@ class LogicController:
     def __init__(self, current_user: str):
         self.current_user = current_user
 
-    def get_dashboard_data(self):
-        Logger.info("Loading dashboard & chart data...")
+    def get_dashboard_data(self) -> dict:
+        Logger.info("Loading dashboard data...")
         total_savings = db.saving.get_total_savings(self.current_user)
         total_target = db.saving.get_total_target_amount(self.current_user)
-        now = datetime.now()
-        chart_date = {"month": now.month, "year": now.year, "week": now.isocalendar().week}
-        chart_data = [{"day": i + 1, "income": 0, "expense": 0} for i in range(7)]
 
         expenses = db.spending.get_user_expenses(self.current_user) or []
         incomes = db.spending.get_user_incomes(self.current_user) or []
@@ -34,21 +31,16 @@ class LogicController:
                 total_expense += amount
                 category_expenses[category] = category_expenses.get(category, 0) + amount
 
-                exp_date = datetime.strptime(str(expense["date"])[:16], "%Y-%m-%d %H:%M")
-                chart_data[exp_date.weekday()]["expense"] += amount
-
             for income in incomes:
                 amount = int(income.get("amount", 0))
                 total_income += amount
-                inc_date = datetime.strptime(str(income["date"])[:16], "%Y-%m-%d %H:%M")
-                chart_data[inc_date.weekday()]["income"] += amount
 
         except Exception as e:
             Logger.error(f"Error formatting dashboard data: {e}")
 
         net_balance = total_income - total_expense
 
-        metrics = {
+        data = {
             "total_income": total_income,
             "total_expense": total_expense,
             "net_balance": net_balance,
@@ -57,7 +49,7 @@ class LogicController:
             "category_expenses": category_expenses
         }
 
-        return metrics, chart_date, chart_data, "daily"
+        return data
 
     @staticmethod # Temporary static messages until AI integration is implemented
     def get_ai_advice(net_balance: float, total_income: float, total_expense: float) -> str:
@@ -160,12 +152,12 @@ class LogicController:
         current_saved = db.saving.get_objective_progress(objective_id)
         if action == "remove":
             if amount > current_saved:
-                return False, "saving.error.not_enough_balance"
+                return False, "savings.error.not_enough_balance"
             amount = -amount
         else:
             remaining = db.saving.get_objective_target(objective_id) - current_saved
             if amount > remaining:
-                return False, "saving.error.exceeding_amount"
+                return False, "savings.error.exceeding_amount"
 
         db.saving.add_saving_entry(self.current_user, amount, time, objective_id, note)
         return True, ""

@@ -8,7 +8,7 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import CategorySelectionDialog, ExpenseInputDialog, FinancialChart, IncomeInputDialog, Menu
-from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChartCard, FeaturedLessonCard
+from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChart, FeaturedLessonCard
 from src.pages.home.logic import LogicController
 from src.utils import Color, Page, get_safe_page_size, Text, UISettings
 
@@ -178,7 +178,7 @@ class HomeView(ft.View):
 
         # FETCH DASHBOARD DATA
         self.objectives = self.controller.get_user_objectives()
-        self.metrics, self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
+        self.metrics = self.controller.get_dashboard_data()
 
         self.ai_advice = self.controller.get_ai_advice(
             net_balance=self.metrics["net_balance"],
@@ -206,9 +206,9 @@ class HomeView(ft.View):
 
         self.financial_chart = FinancialChart(
             lang=self.lang,
-            chart_date=self.chart_date,
-            chart_data=self.chart_data,
-            chart_type=self.chart_type
+            username=self.user_info["username"],
+            chart_type="daily",
+            show_mode_buttons=False
         )
 
         self.savings_progress_card = SavingsProgressCard(
@@ -217,7 +217,7 @@ class HomeView(ft.View):
             on_view_all_click=self._page.navigate_to("/saving")
         )
 
-        self.expense_pie_chart = ExpensePieChartCard(
+        self.expense_pie_chart = ExpensePieChart(
             lang=self.lang,
             category_data=self.metrics["category_expenses"],
             on_details_click=self._page.navigate_to("/spending")
@@ -279,7 +279,7 @@ class HomeView(ft.View):
     def refresh_view(self) -> int:
         try:
             self.objectives = self.controller.get_user_objectives()
-            self.metrics, self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data()
+            self.metrics = self.controller.get_dashboard_data()
 
             self.ai_advice = self.controller.get_ai_advice(
                 self.metrics["net_balance"],
@@ -295,11 +295,7 @@ class HomeView(ft.View):
                 ai_advice=self.ai_advice
             )
 
-            self.financial_chart.update_data(
-                chart_date=self.chart_date,
-                chart_data=self.chart_data,
-                chart_type=self.chart_type
-            )
+            self.financial_chart.update_data()
 
             self.savings_progress_card.update_data(
                 objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang)
@@ -332,6 +328,35 @@ class HomeView(ft.View):
         self.dialogs.category_dialog.resize(
             dialog_width=int(page_width * 0.9),
             dialog_height=int(page_height * 0.9)
+        )
+
+        self.balance_card.resize(
+            width=page_width,
+            height=page_height
+        )
+
+        self.featured_lesson_card.resize(
+            width=page_width,
+            height=page_height
+        )
+
+        self.balance_card.resize(
+            width=page_width,
+            height=page_height
+        )
+
+        self.savings_progress_card.resize(
+            width=page_width,
+            height=page_height
+        )
+
+        self.expense_pie_chart.resize(
+            width=page_width,
+            height=page_height
+        )
+        self.featured_lesson_card.resize(
+            width=page_width,
+            height=page_height
         )
 
         return e
