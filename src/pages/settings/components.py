@@ -12,8 +12,8 @@ class SettingsHeader(ft.Container):
         self.lang = lang
 
         # TEXT AND ICON COMPONENTS
-        self.title_text = Text.H2(self.lang["ui.settings.title"])
-        self.desc_text = Text.P(self.lang["ui.settings.desc"], color=Color.LIGHT_ACCENT)
+        self.title_text = Text.H2(self.lang["settings.title"])
+        self.desc_text = Text.P(self.lang["settings.desc"], color=Color.LIGHT_ACCENT)
 
         # CONTAINER COMPONENTS
         self.text_column = ft.Column(

@@ -50,18 +50,18 @@ class LogicController:
             if item["type"] == "saving":
                 target = item.get("target_name")
                 if target:
-                    action = lang["saving.added_to"] if item.get("amount", 0) > 0 else lang["saving.removed_from"]
+                    action = lang["savings.added_to"] if item.get("amount", 0) > 0 else lang["savings.removed_from"]
                     item["desc"] = f"{action} {target}"
                 else:
-                    item["desc"] = f"{lang['saving.transaction']} ({item.get('amount'):,} VND)"
+                    item["desc"] = f"{lang['savings.transaction']} ({item.get('amount'):,} VND)"
 
             match item["type"]:
                 case "completed":
-                    item["desc"] = f"{lang['saving.completed_objective']} {item.get('title')}"
+                    item["desc"] = f"{lang['savings.completed_objective']} {item.get('title')}"
                 case "deleted":
-                    item["desc"] = f"{lang['saving.deleted_objective']} {item.get('title')}"
+                    item["desc"] = f"{lang['savings.deleted_objective']} {item.get('title')}"
                 case "objective":
-                    item["desc"] = f"{lang['saving.created_objective']} {item.get('title')}"
+                    item["desc"] = f"{lang['savings.created_objective']} {item.get('title')}"
 
             if len(item.get("date", "")) > 16:
                 item["date"] = item["date"][:16]
@@ -82,12 +82,12 @@ class LogicController:
         current_saved = db.saving.get_objective_progress(objective_id)
         if action == "remove":
             if amount > current_saved:
-                return False, "saving.error.not_enough_balance", current_saved
+                return False, "savings.error.not_enough_balance", current_saved
             amount = -amount
         else:
             remaining = db.saving.get_objective_target(objective_id) - current_saved
             if amount > remaining:
-                return False, "saving.error.exceeding_amount", remaining
+                return False, "savings.error.exceeding_amount", remaining
 
         db.saving.add_saving_entry(self.current_user, amount, time, objective_id, note)
         return True, "", 0
@@ -102,8 +102,8 @@ class LogicController:
             worksheet = workbook.active
             if isinstance(worksheet, NoneType):
                 raise RuntimeError(worksheet)
-            worksheet.title = lang["saving.savings_ledger"]
-            worksheet.append([lang["generic.date"], lang["saving.ledger.action_type"], lang["saving.ledger.description"]])
+            worksheet.title = lang["savings.savings_ledger"]
+            worksheet.append([lang["generic.date"], lang["savings.ledger.action_type"], lang["savings.ledger.description"]])
             for activity in activities:
                 worksheet.append([activity["date"], activity["type"], activity["desc"]])
             workbook.save(file_path)

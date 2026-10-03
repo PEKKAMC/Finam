@@ -47,13 +47,13 @@ class ObjectiveCard(ft.Container):
         self.subtitle_text = Text.MEDIUM(self.subtitle, color=Color.SECONDARY_TEXT)
         self.badge_text = Text.BADGE(self.percentage, color=badge_text_color, weight=ft.FontWeight.BOLD)
 
-        self.accumulated_label = Text.MEDIUM(self.lang["ui.saving.accumulated"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.accumulated_label = Text.MEDIUM(self.lang["savings.accumulated"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
         self.current_value_text = Text.H4(self.current_value, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
-        self.target_text = Text.SMALL(self.lang["ui.saving.target"].format(target_value=self.target_value), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.W_500)
+        self.target_text = Text.SMALL(self.lang["savings.target"].format(target_value=self.target_value), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.W_500)
         self.remaining_text = Text.SMALL(self.remaining_value, color=Color.SECONDARY_TEXT, weight=ft.FontWeight.W_500)
 
-        self.deposit_label = Text.MEDIUM(self.lang["ui.saving.deposit"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.withdraw_label = Text.MEDIUM(self.lang["ui.saving.withdraw"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.deposit_label = Text.MEDIUM(self.lang["savings.deposit"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.withdraw_label = Text.MEDIUM(self.lang["savings.withdraw"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
 
         self.progress_bar = ft.ProgressBar(
             value=self.progress,
@@ -205,10 +205,10 @@ class AggregateCard(ft.Container):
         self.lang = lang
 
         # TEXT AND ICON COMPONENTS
-        self.title_text = Text.MEDIUM(self.lang["ui.saving.fund_management"].upper(), color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.title_text = Text.MEDIUM(self.lang["savings.fund_management"].upper(), color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.savings_text = Text.H3(f"{int(total_savings):,}".replace(",", "."), color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.target_text = Text.H5(f" / {int(total_target):,}".replace(",", ".") + " đ", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.progress_label = Text.MEDIUM(self.lang["ui.saving.progress"], color=Color.WHITE)
+        self.progress_label = Text.MEDIUM(self.lang["savings.progress"], color=Color.WHITE)
         self.percentage_text = Text.MEDIUM(f"{percentage}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.add_icon = ft.Icon(ft.Icons.ADD, color=Color.PRIMARY, size=16)
 
@@ -297,10 +297,10 @@ class CreateObjectiveDialog(Dialog):
             on_click=lambda e: Dialog.close_most_recent_dialog(e.page),
             icon_color=Color.PRIMARY_TEXT,
         )
-        self.title_text = Text.H3(self.lang["saving.create_objectives"], color=Color.DEFAULT_TEXT)
+        self.title_text = Text.H3(self.lang["savings.create_objectives"], color=Color.DEFAULT_TEXT)
 
         self.goal_title_input = ft.TextField(
-            label=self.lang["saving.goal_title"],
+            label=self.lang["savings.goal_title"],
             color=Color.DEFAULT_TEXT,
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[a-zA-Z0-9À-ỹ\s]{0,50}$", replacement_string=""),
             border_radius=10,
@@ -309,7 +309,7 @@ class CreateObjectiveDialog(Dialog):
         )
 
         self.goal_amount_input = ft.TextField(
-            label=self.lang["saving.target_amount"],
+            label=self.lang["savings.target_amount"],
             color=Color.DEFAULT_TEXT,
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]{0,12}$", replacement_string=""),
             border_radius=10,
@@ -318,7 +318,7 @@ class CreateObjectiveDialog(Dialog):
         )
 
         self.reason_input = ft.TextField(
-            label=self.lang["saving.reason"],
+            label=self.lang["savings.reason"],
             color=Color.DEFAULT_TEXT,
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[a-zA-Z0-9À-ỹ\s]{0,50}$", replacement_string=""),
             border_radius=10,
@@ -327,7 +327,7 @@ class CreateObjectiveDialog(Dialog):
         )
 
         self.submit_button = ft.Button(
-            self.lang["saving.save_objective"],
+            self.lang["savings.save_objective"],
             icon=ft.Icons.ADD_CIRCLE,
             on_click=self._process_add,
             bgcolor=Color.PRIMARY_ACTION,
@@ -380,8 +380,8 @@ class CreateObjectiveDialog(Dialog):
         self.content_padding = 0
 
     def _process_add(self, e):
-        title = self.goal_title_input.value if self.goal_title_input.value else self.lang["saving.untitled_goal"]
-        subtitle = self.reason_input.value if self.reason_input.value else self.lang["saving.no_reason"]
+        title = self.goal_title_input.value if self.goal_title_input.value else self.lang["savings.untitled_goal"]
+        subtitle = self.reason_input.value if self.reason_input.value else self.lang["savings.no_reason"]
         try:
             target = int(self.goal_amount_input.value)
         except ValueError:
@@ -410,7 +410,7 @@ class QuickActionDialog(Dialog):
             focused_border_color=Color.PRIMARY_ACTION,
         )
 
-        self.title_text = Text.H3(self.lang["saving.update_savings"], color=Color.PRIMARY_TEXT)
+        self.title_text = Text.H3(self.lang["savings.update_savings"], color=Color.PRIMARY_TEXT)
 
         self.cancel_button = ft.TextButton(self.lang["generic.cancel"], on_click=lambda e: Dialog.close_most_recent_dialog(e.page))
         self.save_button = ft.Button(self.lang["generic.save"], on_click=self._process, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE)
@@ -428,7 +428,7 @@ class QuickActionDialog(Dialog):
     def trigger(self, page: Page, objective_id: int, action: str):
         self.current_action_objective = {"id": objective_id, "action": action}
         self.quick_amount_input.value = ""
-        self.title_text.value = self.lang["saving.add_money"] if action == "add" else self.lang["saving.remove_money"]
+        self.title_text.value = self.lang["savings.add_money"] if action == "add" else self.lang["savings.remove_money"]
         self.title = self.title_text
         self.show(page)
 
@@ -442,14 +442,14 @@ class QuickActionDialog(Dialog):
                 objective_id, action, amount, datetime.now().strftime("%Y-%m-%d %H:%M")
             )
             if not success:
-                if error_key == "saving.error.not_enough_balance":
+                if error_key == "savings.error.not_enough_balance":
                     msg = (
                         f"Not enough balance. Current: {extra_val:,} VND"
                         if "format" not in self.lang[error_key]
                         else self.lang[error_key].format(remaining=f"{extra_val:,}")
                     )
                     e.page.snack_bar = ft.SnackBar(Text.MEDIUM(msg))
-                elif error_key == "saving.error.exceeding_amount":
+                elif error_key == "savings.error.exceeding_amount":
                     msg = (
                         f"Amount exceeds target! Remaining: {extra_val:,} VND"
                         if "format" not in self.lang[error_key]
@@ -475,8 +475,8 @@ class CompleteConfirmDialog(Dialog):
         self.current_id = 0
 
         # TEXT AND BUTTON COMPONENTS
-        self.desc_text = Text.P(self.lang["saving.complete_objective_desc"], color=Color.DEFAULT_TEXT)
-        self.title_text = Text.H3(self.lang["saving.complete_objective_title"], color=Color.PRIMARY_TEXT)
+        self.desc_text = Text.P(self.lang["savings.complete_objective_desc"], color=Color.DEFAULT_TEXT)
+        self.title_text = Text.H3(self.lang["savings.complete_objective_title"], color=Color.PRIMARY_TEXT)
 
         self.cancel_button = ft.TextButton(self.lang["generic.cancel"], on_click=lambda e: Dialog.close_most_recent_dialog(e.page))
         self.complete_button = ft.Button(self.lang["generic.complete"], on_click=self._process, bgcolor=Color.COMPLETED_ACTION, color=Color.WHITE)
@@ -508,8 +508,8 @@ class DeleteConfirmDialog(Dialog):
         self.current_id = 0
 
         # TEXT AND BUTTON COMPONENTS
-        self.desc_text = Text.P(self.lang["saving.delete_objective_desc"], color=Color.DEFAULT_TEXT)
-        self.title_text = Text.H3(self.lang["saving.delete_objective_title"], color=Color.PRIMARY_TEXT)
+        self.desc_text = Text.P(self.lang["savings.delete_objective_desc"], color=Color.DEFAULT_TEXT)
+        self.title_text = Text.H3(self.lang["savings.delete_objective_title"], color=Color.PRIMARY_TEXT)
 
         self.cancel_button = ft.TextButton(self.lang["generic.cancel"], on_click=lambda e: Dialog.close_most_recent_dialog(e.page))
         self.delete_button = ft.Button(self.lang["generic.delete"], on_click=self._process, bgcolor=Color.NEGATIVE_ACTION, color=Color.WHITE)
@@ -540,12 +540,12 @@ class ClearHistoryDialog(Dialog):
         self.on_success = on_success
 
         # TEXT AND BUTTON COMPONENTS
-        self.desc_text = Text.P(self.lang["saving.clear_history_desc"])
-        self.title_text = Text.H3(self.lang["saving.clear_history_title"])
+        self.desc_text = Text.P(self.lang["savings.clear_history_desc"])
+        self.title_text = Text.H3(self.lang["savings.clear_history_title"])
 
         self.cancel_button = ft.TextButton(self.lang["generic.cancel"], on_click=lambda e: Dialog.close_most_recent_dialog(e.page))
-        self.export_button = ft.Button(self.lang["saving.export_ledger"], on_click=trigger_export, bgcolor=Color.PROGRESS_ACTIVE, color=Color.WHITE)
-        self.clear_button = ft.Button(self.lang["saving.clear_history"], on_click=self._process, bgcolor=Color.NEGATIVE_ACTION, color=Color.WHITE)
+        self.export_button = ft.Button(self.lang["savings.export_ledger"], on_click=trigger_export, bgcolor=Color.PROGRESS_ACTIVE, color=Color.WHITE)
+        self.clear_button = ft.Button(self.lang["savings.clear_history"], on_click=self._process, bgcolor=Color.NEGATIVE_ACTION, color=Color.WHITE)
 
         super().__init__(dialog_content=self.desc_text, color=Color.DIALOG_BACKGROUND)
 
@@ -575,7 +575,7 @@ class GoalDetailsDialog(Dialog):
         bg_ring = ft.ProgressRing(value=1.0, stroke_width=18, color=Color.PROGRESS_BACKGROUND, width=250, height=250)
         fg_ring = ft.ProgressRing(value=progress, stroke_width=18, color=Color.PROGRESS_COMPLETED if completed else Color.PROGRESS_ACTIVE, width=250, height=250)
 
-        saved_label = Text.SMALL(self.lang["saving.saved"], color=Color.SECONDARY_TEXT)
+        saved_label = Text.SMALL(self.lang["savings.saved"], color=Color.SECONDARY_TEXT)
         current_val_text = Text.MEDIUM(current_value, color=Color.BLACK)
         target_val_text = Text.P(f"/ {target_value}", color=Color.SUBTITLE_TEXT)
 
@@ -606,7 +606,7 @@ class GoalDetailsDialog(Dialog):
             if progress >= 1.0:
                 buttons_column.controls.append(
                     ft.Button(
-                        self.lang["saving.complete_objective_tooltip"],
+                        self.lang["savings.complete_objective_tooltip"],
                         icon=ft.Icons.CHECK_CIRCLE,
                         on_click=lambda e: self._handle_complete(page, objective_id),
                         bgcolor=Color.COMPLETED_ACTION,
@@ -619,7 +619,7 @@ class GoalDetailsDialog(Dialog):
             else:
                 buttons_column.controls.append(
                     ft.Button(
-                        self.lang["saving.add_money"],
+                        self.lang["savings.add_money"],
                         icon=ft.Icons.ADD_CIRCLE_OUTLINE,
                         on_click=lambda e: self._handle_quick(page, objective_id, "add"),
                         bgcolor=Color.DARK_BUTTON,
@@ -631,7 +631,7 @@ class GoalDetailsDialog(Dialog):
                 )
                 buttons_column.controls.append(
                     ft.OutlinedButton(
-                        self.lang["saving.remove_money"],
+                        self.lang["savings.remove_money"],
                         icon=ft.Icons.REMOVE_CIRCLE_OUTLINE,
                         on_click=lambda e: self._handle_quick(page, objective_id, "remove"),
                         width=400,
@@ -656,7 +656,7 @@ class GoalDetailsDialog(Dialog):
         history_controls = []
         if not history_data:
             history_controls.append(
-                Text.SMALL(self.lang["saving.no_recent_activity"], italic=True, color=Color.SUBTITLE_TEXT)
+                Text.SMALL(self.lang["savings.no_recent_activity"], italic=True, color=Color.SUBTITLE_TEXT)
             )
         else:
             for item in history_data:
@@ -676,7 +676,7 @@ class GoalDetailsDialog(Dialog):
             on_click=lambda e: Dialog.close_most_recent_dialog(page),
             icon_color=Color.PRIMARY_TEXT,
         )
-        title_text = Text.H3(self.lang["saving.objective_details"], color=Color.BLACK)
+        title_text = Text.H3(self.lang["savings.objective_details"], color=Color.BLACK)
         header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
@@ -688,7 +688,7 @@ class GoalDetailsDialog(Dialog):
 
         goal_title_text = Text.MEDIUM(goal_title, color=Color.BLACK)
         subtitle_text = Text.P(subtitle, color=Color.SUBTITLE_TEXT)
-        recent_activity_title = Text.H3(self.lang["saving.recent_activity"], color=Color.PRIMARY_TEXT)
+        recent_activity_title = Text.H3(self.lang["savings.recent_activity"], color=Color.PRIMARY_TEXT)
 
         history_scroll_box = ft.Container(
             content=ft.Column(history_controls, scroll=ft.ScrollMode.AUTO),

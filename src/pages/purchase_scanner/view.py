@@ -44,7 +44,7 @@ class PurchaseScannerView(ft.View):
                                 content=ft.Row(
                                     controls=[
                                         ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PROGRESS_ACTIVE, size=14),
-                                        Text.SMALL(self.lang["ui.scanner.ai_title"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+                                        Text.SMALL(self.lang["purchase_scanner.ai_title"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
                                     ],
                                     tight=True,
                                     spacing=6
@@ -56,9 +56,9 @@ class PurchaseScannerView(ft.View):
                             )
                         ]
                     ),
-                    Text.H2(self.lang["ui.scanner.title"], color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                    Text.H2(self.lang["purchase_scanner.title"], color=Color.WHITE, weight=ft.FontWeight.BOLD),
                     Text.SMALL(
-                        self.lang["ui.scanner.description"],
+                        self.lang["purchase_scanner.description"],
                         color=Color.LIGHT_ACCENT
                     )
                 ]
@@ -117,7 +117,7 @@ class PurchaseScannerView(ft.View):
 
     def handle_scan_click(self, name, price, reason, trigger, time):
         self.result_card.set_loading_state()
-        item_name = name if name else self.lang["ui.scanner.item"]
+        item_name = name if name else self.lang["purchase_scanner.item"]
 
         def worker():
             try:

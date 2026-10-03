@@ -20,9 +20,9 @@ class MetricCards(ft.ResponsiveRow):
 
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.income_title_text = Text.SMALL(self.lang["ui.spending.total_income"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
-        self.expense_title_text = Text.SMALL(self.lang["ui.spending.total_expense"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
-        self.balance_title_text = Text.SMALL(self.lang["ui.spending.net_balance"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.income_title_text = Text.SMALL(self.lang["spending.total_income"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.expense_title_text = Text.SMALL(self.lang["spending.total_expense"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.balance_title_text = Text.SMALL(self.lang["spending.net_balance"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
 
         # Static icons
         self.expense_icon = ft.Icon(ft.Icons.SOUTH_EAST, color="#E90C00", size=20)
@@ -173,16 +173,16 @@ class TransactionToolbar(ft.Container):
             )
 
         # TEXT AND ICON COMPONENTS
-        self.all_filter_button = create_filter_button(self.lang["ui.spending.all"], "all", "#1A4734")
-        self.expense_filter_button = create_filter_button(self.lang["ui.spending.expense_label"], "expense", "#E90C00")
-        self.income_filter_button = create_filter_button(self.lang["ui.spending.income_label"], "income", "#1A4734")
+        self.all_filter_button = create_filter_button(self.lang["generic.all"], "all", "#1A4734")
+        self.expense_filter_button = create_filter_button(self.lang["spending.expense_label"], "expense", "#E90C00")
+        self.income_filter_button = create_filter_button(self.lang["spending.income_label"], "income", "#1A4734")
 
         self.add_expense_button = ft.Button(
             content=ft.Row(
                 spacing=8,
                 controls=[
                     ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=18),
-                    Text.MEDIUM(self.lang["ui.spending.add_expense"], color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+                    Text.MEDIUM(self.lang["spending.add_expense"], color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
                 ],
                 tight=True
             ),
@@ -199,7 +199,7 @@ class TransactionToolbar(ft.Container):
                 spacing=8,
                 controls=[
                     ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=18),
-                    Text.MEDIUM(self.lang["ui.spending.add_income"], color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+                    Text.MEDIUM(self.lang["spending.add_income"], color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
                 ],
                 tight=True
             ),
@@ -212,7 +212,7 @@ class TransactionToolbar(ft.Container):
         )
 
         # DROPDOWN & SEARCH INPUTS
-        category_options = [ft.dropdown.Option("all", self.lang["ui.spending.all_categories"])] + [
+        category_options = [ft.dropdown.Option("all", self.lang["generic.all"])] + [
             ft.dropdown.Option(c, c) for c in (categories or [])
         ]
         valid_cat_keys = [opt.key for opt in category_options]
@@ -220,7 +220,7 @@ class TransactionToolbar(ft.Container):
 
         self.search_field = ft.TextField(
             value=self.search_query,
-            hint_text=self.lang["ui.spending.search"],
+            hint_text=self.lang["spending.search"],
             prefix_icon=ft.Icons.SEARCH,
             on_change=lambda e: self.on_search(e.control.value) if self.on_search else None,
             bgcolor=Color.CARD_BACKGROUND,
@@ -326,7 +326,7 @@ class TransactionToolbar(ft.Container):
 
         self.search_field.value = self.search_query
 
-        category_options = [ft.dropdown.Option("all", self.lang["ui.spending.all_categories"])] + [
+        category_options = [ft.dropdown.Option("all", self.lang["generic.all"])] + [
             ft.dropdown.Option(c, c) for c in (categories or [])
         ]
         valid_cat_keys = [opt.key for opt in category_options]
@@ -366,7 +366,7 @@ class TransactionHistoryCard(ft.Container):
         history_header = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                Text.H4(self.lang["ui.spending.transaction_history"].format(len=len(self.transactions)), color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
+                Text.H4(self.lang["spending.transaction_history"].format(len=len(self.transactions)), color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
             ],
         )
 
@@ -391,8 +391,8 @@ class TransactionHistoryCard(ft.Container):
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=6,
                         controls=[
-                            Text.MEDIUM(self.lang["ui.spending.no_transactions"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                            Text.SMALL(self.lang["ui.spending.try_filter"], color=Color.SECONDARY_TEXT),
+                            Text.MEDIUM(self.lang["spending.no_transactions"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                            Text.SMALL(self.lang["spending.try_filter"], color=Color.SECONDARY_TEXT),
                         ],
                     ),
                 )
@@ -426,7 +426,7 @@ class TransactionItemCard(ft.Container):
 
         # TEXT AND ICON COMPONENTS
         self.type_badge_text = Text.SMALL(
-            self.lang["ui.spending.income"] if is_income else self.lang["ui.spending.expense"],
+            self.lang["spending.income"] if is_income else self.lang["spending.expense"],
             color="#334155",
             weight=ft.FontWeight.BOLD
         )
@@ -496,7 +496,7 @@ class TransactionItemCard(ft.Container):
                 icon_color=ft.Colors.RED_400,
                 icon_size=18,
                 on_click=lambda e: self.on_delete(self.tx.get("id")) if self.on_delete else None,
-                tooltip=self.lang["ui.spending.delete"]
+                tooltip=self.lang["spending.delete"]
             )
             right_controls = [self.amount_text, self.delete_button]
         else:

@@ -34,8 +34,8 @@ class SettingsView(ft.View):
             controls=[
                 SettingRow(
                     icon=ft.Icons.LANGUAGE,
-                    title=self.lang["ui.settings.language"],
-                    subtitle=self.lang["ui.settings.language_options"],
+                    title=self.lang["settings.language"],
+                    subtitle=self.lang["settings.language_options"],
                     control=SettingDropdown(["Tiếng Việt", "English"], active_index=0)
                 )
             ]
@@ -45,8 +45,8 @@ class SettingsView(ft.View):
             controls=[
                 SettingRow(
                     icon=ft.Icons.PAID_OUTLINED,
-                    title=self.lang["ui.settings.currency"],
-                    subtitle=self.lang["ui.settings.currency_format"],
+                    title=self.lang["settings.currency"],
+                    subtitle=self.lang["settings.currency_format"],
                     control=SettingDropdown(self.currencies, active_index=self.currencies.index("VND (đ)"))
                 )
             ]
@@ -56,21 +56,21 @@ class SettingsView(ft.View):
             controls=[
                 SettingRow(
                     icon=ft.Icons.FINGERPRINT,
-                    title=self.lang["ui.settings.app_lock"],
-                    subtitle=self.lang["ui.settings.lock_requirement"],
+                    title=self.lang["settings.app_lock"],
+                    subtitle=self.lang["settings.lock_requirement"],
                     control=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
                 ),
                 ft.Container(height=4),
                 SettingRow(
                     icon=ft.Icons.VOLUME_UP_OUTLINED,
-                    title=self.lang["ui.settings.sound_haptic"],
-                    subtitle=self.lang["ui.settings.touch_effect"],
+                    title=self.lang["settings.sound_haptic"],
+                    subtitle=self.lang["settings.touch_effect"],
                     control=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
                 )
             ]
         )
 
-        self.done_btn_text = Text.H4(self.lang["ui.settings.done"], color=Color.WHITE)
+        self.done_btn_text = Text.H4(self.lang["settings.done"], color=Color.WHITE)
 
         self.done_btn = ft.Container(
             content=self.done_btn_text,

@@ -69,11 +69,27 @@ class LogicController:
             return True, "spending.expense_added_success"
         return False, "home.error.save_expense_failed"
 
-    def get_dashboard_data(self):
+    def get_dashboard_data(self, chart_type: str, date_offset: int = 0, target_year: int | None = None):
+        self.current_chart_type = chart_type
         now = datetime.now()
-        iso_year, iso_week, iso_day = now.isocalendar()
 
-        chart_date = {"month": now.month, "year": now.year, "week": iso_week}
+        if self.current_chart_type == "daily":
+            target_date = now + timedelta(weeks=date_offset)
+        elif self.current_chart_type == "weekly":
+            total_months = (now.year * 12 + (now.month - 1)) + date_offset
+            year = total_months // 12
+            month = (total_months % 12) + 1
+            target_date = now.replace(year=year, month=month, day=1)
+        elif self.current_chart_type == "monthly":
+            tgt_year = target_year if target_year is not None else now.year
+            tgt_month = now.month if tgt_year == now.year else 1
+            target_date = now.replace(year=tgt_year, month=tgt_month, day=1)
+        else:
+            target_date = now
+
+        iso_year, iso_week, iso_day = target_date.isocalendar()
+
+        chart_date = {"month": target_date.month, "year": target_date.year, "week": iso_week}
         chart_data = []
 
         if self.current_chart_type == "daily":
@@ -83,7 +99,8 @@ class LogicController:
         elif self.current_chart_type == "monthly":
             chart_data = [{"month": i + 1, "income": 0, "expense": 0} for i in range(12)]
 
-        start_of_week = now - timedelta(days=now.weekday())
+        # Calculate Monday-Sunday week bounds based on target_date
+        start_of_week = target_date - timedelta(days=target_date.weekday())
         start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59)
 
@@ -96,10 +113,10 @@ class LogicController:
                     exp_date = datetime.strptime(str(expense["date"])[:16], "%Y-%m-%d %H:%M")
                     if self.current_chart_type == "daily" and start_of_week <= exp_date <= end_of_week:
                         chart_data[exp_date.weekday()]["expense"] += expense["amount"]
-                    elif self.current_chart_type == "weekly" and exp_date.year == now.year and exp_date.month == now.month:
+                    elif self.current_chart_type == "weekly" and exp_date.year == target_date.year and exp_date.month == target_date.month:
                         week_of_month = min((exp_date.day - 1) // 7, 3)
                         chart_data[week_of_month]["expense"] += expense["amount"]
-                    elif self.current_chart_type == "monthly" and exp_date.year == now.year:
+                    elif self.current_chart_type == "monthly" and exp_date.year == target_date.year:
                         chart_data[exp_date.month - 1]["expense"] += expense["amount"]
                 except (ValueError, TypeError): pass
 
@@ -108,10 +125,10 @@ class LogicController:
                     inc_date = datetime.strptime(str(income["date"])[:16], "%Y-%m-%d %H:%M")
                     if self.current_chart_type == "daily" and start_of_week <= inc_date <= end_of_week:
                         chart_data[inc_date.weekday()]["income"] += income["amount"]
-                    elif self.current_chart_type == "weekly" and inc_date.year == now.year and inc_date.month == now.month:
+                    elif self.current_chart_type == "weekly" and inc_date.year == target_date.year and inc_date.month == target_date.month:
                         week_of_month = min((inc_date.day - 1) // 7, 3)
                         chart_data[week_of_month]["income"] += income["amount"]
-                    elif self.current_chart_type == "monthly" and inc_date.year == now.year:
+                    elif self.current_chart_type == "monthly" and inc_date.year == target_date.year:
                         chart_data[inc_date.month - 1]["income"] += income["amount"]
                 except (ValueError, TypeError): pass
         except Exception as e:

@@ -106,7 +106,7 @@ class SavingsView(ft.View):
                 "reason": reason,
                 "current_value": f"{int(objective_savings):,}".replace(",", ".") + " đ",
                 "target_value": f"{int(target_amount):,}".replace(",", ".") + " đ",
-                "remaining_value": self.lang["ui.saving.remaining"].format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
+                "remaining_value": self.lang["savings.remaining"].format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
                 "percentage": card_percentage,
                 "progress": card_progress,
                 "completed": bool(completed_at)
@@ -194,7 +194,7 @@ class SavingsView(ft.View):
                 "reason": reason,
                 "current_value": f"{int(objective_savings):,}".replace(",", ".") + " đ",
                 "target_value": f"{int(target_amount):,}".replace(",", ".") + " đ",
-                "remaining_value": self.lang["ui.saving.remaining"].format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
+                "remaining_value": self.lang["savings.remaining"].format(amount=f"{int(remaining_amt):,}".replace(",", ".") + " đ"),
                 "percentage": card_percentage,
                 "progress": card_progress,
                 "completed": bool(completed_at)
@@ -209,7 +209,7 @@ class SavingsView(ft.View):
         file_path = await ft.FilePicker().save_file(allowed_extensions=["xlsx", "xls"], file_name="savings.xlsx")
         if file_path:
             success, error_message = self.controller.export_ledger_to_excel(file_path, self.lang)
-            self._page.show_dialog(ft.SnackBar(Text.MEDIUM(self.lang["saving.export_succeeded"] if success else self.lang["saving.error.export_failed"].format(error=error_message))))
+            self._page.show_dialog(ft.SnackBar(Text.MEDIUM(self.lang["savings.export_succeeded"] if success else self.lang["savings.error.export_failed"].format(error=error_message))))
             self._page.update()
         return e
 

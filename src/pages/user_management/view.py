@@ -179,7 +179,7 @@ class UserManagementView(ft.View):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                Text.SMALL(self.lang["ui.profile_and_options"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD),
+                Text.SMALL(self.lang["user_managementprofile_and_options"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD),
             ]
         )
 
@@ -189,7 +189,7 @@ class UserManagementView(ft.View):
             on_change_user=self.dialogs.show_user_management_dialog
         )
 
-        self.services_section_title = Text.SMALL(self.lang["ui.services_and_features"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+        self.services_section_title = Text.SMALL(self.lang["user_managementservices_and_features"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
 
         self.services_card = MenuSectionCard(
             items=[
@@ -197,9 +197,9 @@ class UserManagementView(ft.View):
                     icon=ft.Icons.THUMB_UP_OUTLINED,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title=self.lang["ui.refer_friend"],
-                    subtitle=self.lang["ui.get_vip_30_days"],
-                    badge_text=self.lang["ui.badge_30days"],
+                    title=self.lang["user_managementrefer_friend"],
+                    subtitle=self.lang["user_managementget_vip_30_days"],
+                    badge_text=self.lang["user_managementbadge_30days"],
                     badge_bg=Color.LIGHT_ACCENT,
                     badge_color=Color.PRIMARY
                 ),
@@ -207,22 +207,22 @@ class UserManagementView(ft.View):
                     icon=ft.Icons.SHIELD_OUTLINED,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title=self.lang["ui.disable_ads"],
-                    subtitle=self.lang["ui.smooth_experience"],
+                    title=self.lang["user_managementdisable_ads"],
+                    subtitle=self.lang["user_managementsmooth_experience"],
                     trailing=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
                 ),
                 MenuItem(
                     icon=ft.Icons.SETTINGS_OUTLINED,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title=self.lang["ui.settings"],
-                    subtitle=self.lang["ui.language_security_currency"],
+                    title=self.lang["settings.settings"],
+                    subtitle=self.lang["user_managementlanguage_security_currency"],
                     on_click=self._page.navigate_to("/settings")
                 )
             ]
         )
 
-        self.support_section_title = Text.SMALL(self.lang["ui.support_and_info"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+        self.support_section_title = Text.SMALL(self.lang["user_managementsupport_and_info"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
 
         self.support_card = MenuSectionCard(
             items=[
@@ -230,21 +230,21 @@ class UserManagementView(ft.View):
                     icon=ft.Icons.STAR_OUTLINE,
                     icon_color=Color.GOAL_HEADER_ICON_COLOR,
                     icon_bg_color=Color.GOAL_HEADER_ICON_BACKGROUND,
-                    title=self.lang["ui.rate_app"],
-                    subtitle=self.lang["ui.rate_5_stars"]
+                    title=self.lang["user_managementrate_app"],
+                    subtitle=self.lang["user_managementrate_5_stars"]
                 ),
                 MenuItem(
                     icon=ft.Icons.HELP_OUTLINE,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title=self.lang["ui.help_faq"],
-                    subtitle=self.lang["ui.guide_expense_mgmt"]
+                    title=self.lang["user_managementhelp_faq"],
+                    subtitle=self.lang["user_managementguide_expense_mgmt"]
                 ),
                 MenuItem(
                     icon=ft.Icons.LOGOUT,
                     icon_color=Color.NEGATIVE_ACTION,
                     icon_bg_color=Color.ACTIVITY_BACKGROUND,
-                    title=self.lang["ui.logout"],
+                    title=self.lang["user_managementlogout"],
                     subtitle="",
                     on_click=self.logout
                 ),
@@ -252,7 +252,7 @@ class UserManagementView(ft.View):
                     icon=ft.Icons.DELETE_FOREVER,
                     icon_color=Color.NEGATIVE_ACTION,
                     icon_bg_color=Color.ACTIVITY_BACKGROUND,
-                    title=self.lang["ui.delete_all_data"],
+                    title=self.lang["user_managementdelete_all_data"],
                     subtitle="",
                     on_click=lambda e: self.dialogs.show_delete_all_data_prompt()
                 )
@@ -269,10 +269,10 @@ class UserManagementView(ft.View):
                     spacing=6,
                     controls=[
                         ft.Container(width=8, height=8, border_radius=4, bgcolor=Color.PRIMARY_ACTION),
-                        Text.SMALL(self.lang["ui.version"], color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+                        Text.SMALL(self.lang["user_managementversion"], color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
                     ]
                 ),
-                Text.SMALL(self.lang["ui.privacy_encryption"], color=Color.SUBTITLE_TEXT, text_align=ft.TextAlign.CENTER)
+                Text.SMALL(self.lang["user_managementprivacy_encryption"], color=Color.SUBTITLE_TEXT, text_align=ft.TextAlign.CENTER)
             ]
         )
 

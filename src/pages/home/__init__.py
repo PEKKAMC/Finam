@@ -4,14 +4,14 @@
 
 """Home page - Dashboard and main financial overview."""
 
-from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChartCard, FeaturedLessonCard
+from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChart, FeaturedLessonCard
 from src.pages.home.logic import LogicController
 from src.pages.home.view import DialogManager, HomeView, get_home_view
 
 __all__ = [
     "BalanceCard",
     "SavingsProgressCard",
-    "ExpensePieChartCard",
+    "ExpensePieChart",
     "FeaturedLessonCard",
     "LogicController",
     "DialogManager",
