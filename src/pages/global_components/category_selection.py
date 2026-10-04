@@ -141,7 +141,7 @@ class CategorySelectionDialog(Dialog):
     def switch_type(self, category_type: str) -> None:
         self.load_categories(category_type)
         if self._page is not None:
-            self._page.update()
+            self.main_container.update()
 
     # TODO: Use language instead of hardcoding name.
     def load_categories(self, category_type: str) -> None:
