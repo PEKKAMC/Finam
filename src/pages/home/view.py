@@ -331,23 +331,19 @@ class HomeView(ft.View):
         )
 
         self.balance_card.resize(
-            width=page_width,
-            height=page_height
+            width=page_width
         )
 
         self.featured_lesson_card.resize(
-            width=page_width,
-            height=page_height
+            width=page_width
         )
 
         self.balance_card.resize(
-            width=page_width,
-            height=page_height
+            width=page_width
         )
 
         self.savings_progress_card.resize(
-            width=page_width,
-            height=page_height
+            width=page_width
         )
 
         self.expense_pie_chart.resize(
@@ -355,8 +351,7 @@ class HomeView(ft.View):
             height=page_height
         )
         self.featured_lesson_card.resize(
-            width=page_width,
-            height=page_height
+            width=page_width
         )
 
         return e

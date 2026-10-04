@@ -238,10 +238,10 @@ class BalanceCard(ft.Container):
 
         self.update()
 
-    def resize(self, width: int, height: int):
+    def resize(self, width: int):
         self.main_container.width = width
 
-        inner_width = max(0, width - (UISettings.CARD_PADDING * 2))
+        inner_width = width - (UISettings.CARD_PADDING * 2)
         self.balance_top_row.width = inner_width
         self.metrics_row.width = inner_width
         self.ai_banner_container.width = inner_width
@@ -260,36 +260,46 @@ class SavingsGoalItem(ft.Container):
         self.contributed_label_display = Text.SMALL(item["contributed_label"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
         self.target_label_display = Text.SMALL(item["target_label"], color=Color.BLAND_TEXT)
 
+        self.progress_badge_container = ft.Container(
+            content=self.progress_text_display,
+            bgcolor=Color.PRIMARY,
+            padding=ft.Padding(8, 2, 8, 2),
+            border_radius=12
+        )
+
+        self.header_row = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            controls=[
+                self.title_text,
+                self.progress_badge_container
+            ]
+        )
+
+        self.footer_row = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            controls=[
+                self.contributed_label_display,
+                self.target_label_display
+            ]
+        )
+
+        self.main_container = ft.Container(
+            content=ft.Column(
+                spacing=6,
+                controls=[
+                    self.header_row,
+                    self.progress_bar,
+                    self.footer_row
+                ]
+            )
+        )
+
         super().__init__(
             bgcolor=Color.GOAL_ITEM_BACKGROUND,
             border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
             border_radius=16,
             padding=12,
-            content=ft.Column(
-                spacing=6,
-                controls=[
-                    ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[
-                            self.title_text,
-                            ft.Container(
-                                content=self.progress_text_display,
-                                bgcolor=Color.PRIMARY,
-                                padding=ft.Padding(8, 2, 8, 2),
-                                border_radius=12
-                            )
-                        ]
-                    ),
-                    self.progress_bar,
-                    ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[
-                            self.contributed_label_display,
-                            self.target_label_display
-                        ]
-                    )
-                ]
-            )
+            content=self.main_container
         )
 
     def update_data(self, item: dict):
@@ -299,8 +309,12 @@ class SavingsGoalItem(ft.Container):
         self.contributed_label_display.value = item["contributed_label"]
         self.target_label_display.value = item["target_label"]
 
-    def resize(self, width: int, height: int):
-        pass
+    def resize(self, width: int):
+        self.main_container.width = width
+
+        self.header_row.width = width
+        self.progress_bar.width = width
+        self.footer_row.width = width
 
 
 class SavingsProgressCard(ft.Container):
@@ -426,7 +440,7 @@ class SavingsProgressCard(ft.Container):
 
         self.update()
 
-    def resize(self, width: int, height: int):
+    def resize(self, width: int):
         self.main_container.width = width
 
         inner_width = max(0, width - (UISettings.CARD_PADDING * 2))
@@ -434,7 +448,7 @@ class SavingsProgressCard(ft.Container):
         self.goal_items_column.width = inner_width
 
         for item in self.goal_items:
-            item.resize(inner_width, height)
+            item.resize(inner_width)
 
 
 class ExpenseCategoryItem(ft.Row):
@@ -443,16 +457,18 @@ class ExpenseCategoryItem(ft.Row):
         self.name_display = Text.SMALL(name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
         self.value_display = Text.SMALL(f"{int(val):,} {currency_lang}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
 
+        self.category_label = ft.Row(
+            spacing=8,
+            controls=[
+                self.color_box,
+                self.name_display
+            ]
+        )
+
         super().__init__(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                ft.Row(
-                    spacing=8,
-                    controls=[
-                        self.color_box,
-                        self.name_display
-                    ]
-                ),
+                self.category_label,
                 self.value_display
             ]
         )
@@ -462,8 +478,8 @@ class ExpenseCategoryItem(ft.Row):
         self.name_display.value = name
         self.value_display.value = f"{int(val):,} {currency_lang}"
 
-    def resize(self, width: int, height: int):
-        pass
+    def resize(self, width: int):
+        self.width = width
 
 
 class ExpensePieChart(ft.Container):
@@ -494,12 +510,11 @@ class ExpensePieChart(ft.Container):
         self.view_details_icon = ft.Icon(ft.Icons.ARROW_FORWARD, color=Color.PRIMARY, size=14)
         self.no_data_icon = ft.Icon(ft.Icons.ERROR_OUTLINE, color=Color.DEFAULT_BORDER, size=32)
 
-        # Dynamic controls
         self.pie_chart = fc.PieChart(
             sections=[
                 fc.PieChartSection(val, color=self.pie_colors[idx % len(self.pie_colors)], radius=45)
                 for idx, val in enumerate(self.category_data.values())
-            ] if self.category_data else [],
+            ] if self.category_data else [fc.PieChartSection(1, color=Color.TRANSPARENT, radius=45)],
             sections_space=2,
             center_space_radius=40,
             expand=True
@@ -604,9 +619,13 @@ class ExpensePieChart(ft.Container):
         if not self.category_data:
             self.legend_items.clear()
             self.chart_content_area.content = self.empty_state_container
+            self.pie_chart.sections = [fc.PieChartSection(1, color=Color.TRANSPARENT, radius=45)]
         else:
             self.chart_content_area.content = self.active_chart_layout
             categories = list(self.category_data.items())
+
+            if len(self.pie_chart.sections) == 1 and self.pie_chart.sections[0].color == Color.TRANSPARENT:
+                self.pie_chart.sections.clear()
 
             while len(self.pie_chart.sections) > len(categories):
                 self.pie_chart.sections.pop()
@@ -638,20 +657,21 @@ class ExpensePieChart(ft.Container):
     def resize(self, width: int, height: int):
         self.main_container.width = width
 
-        inner_width = max(0, width - (UISettings.CARD_PADDING * 2))
+        inner_width = width - (UISettings.CARD_PADDING * 2)
         self.chart_header_row.width = inner_width
         self.chart_content_area.width = inner_width
 
-        chart_radius = max(30, min(65, int(height * 0.06)))
-        center_radius = max(25, min(50, int(height * 0.045)))
-        self.pie_chart.center_space_radius = center_radius
+        chart_radius = int(height * 0.06)
+        center_radius = int(height * 0.045)
+
         for section in self.pie_chart.sections:
             section.radius = chart_radius
 
-        self.legend_list.height = max(80, min(180, int(height * 0.15)))
+        self.pie_chart.center_space_radius = center_radius
+        self.legend_list.height = int(height * 0.15)
 
         for item in self.legend_items:
-            item.resize(inner_width, height)
+            item.resize(inner_width)
 
 
 class FeaturedLessonCard(ft.Container):
@@ -781,9 +801,10 @@ class FeaturedLessonCard(ft.Container):
             content=self.main_container
         )
 
-    def resize(self, width: int, height: int):
+    def resize(self, width: int):
         self.main_container.width = width
-        inner_width = max(0, width - (UISettings.CARD_PADDING * 2))
+
+        inner_width = width - (UISettings.CARD_PADDING * 2)
         self.lesson_header_row.width = inner_width
         self.lesson_banner_container.width = inner_width
         self.footer_row.width = inner_width
