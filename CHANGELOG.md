@@ -1,6 +1,6 @@
 # Finam v0.3.0-beta
 
-**Release Date:** October 7, 2026
+**Release Date:** October 8, 2026
 
 > **⚠️ BETA WARNING: Read Before Using**
 >
