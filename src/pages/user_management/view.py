@@ -12,6 +12,7 @@ from src.pages.global_components import AddUserField, DeleteUserDialog, Menu, Us
 from src.pages.user_management.components import MenuItem, MenuSectionCard, ProfileCard, DeleteAllDataDialog
 from src.pages.user_management.logic import LogicController
 from src.utils import Color, Page, get_safe_page_size, Text, UISettings
+from src.version_manager import get_version
 
 Logger.info("Initializing User Management page...")
 
@@ -155,6 +156,7 @@ class UserManagementView(ft.View):
 
         # IMPORTED FUNCTIONS
         self.get_safe_page_size = get_safe_page_size
+        self.get_version = get_version
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info)
@@ -167,6 +169,9 @@ class UserManagementView(ft.View):
             controller=self.controller,
             refresh_callback=self.refresh_view
         )
+
+        # FETCH DASHBOARD DATA
+        self.app_version = self.get_version("Finam")
 
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
@@ -269,7 +274,7 @@ class UserManagementView(ft.View):
                     spacing=6,
                     controls=[
                         ft.Container(width=8, height=8, border_radius=4, bgcolor=Color.PRIMARY_ACTION),
-                        Text.SMALL(self.lang["user_management.version"], color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
+                        Text.SMALL(f"{self.lang["user_management.version"]} {self.app_version}", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
                     ]
                 ),
                 Text.SMALL(self.lang["user_management.privacy_encryption"], color=Color.SUBTITLE_TEXT, text_align=ft.TextAlign.CENTER)
