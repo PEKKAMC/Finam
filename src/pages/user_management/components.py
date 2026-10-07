@@ -18,8 +18,8 @@ class ProfileCard(ft.Container):
 
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.account_type_text = Text.SMALL(self.lang["user_managementpersonal_account"], color=Color.LIGHT_ACCENT)
-        self.change_btn_text = Text.SMALL(self.lang["user_managementchange"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.account_type_text = Text.SMALL(self.lang["user_management.personal_account"], color=Color.LIGHT_ACCENT)
+        self.change_btn_text = Text.SMALL(self.lang["user_management.change"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
 
         # Static icons
         self.avatar_icon = ft.Icon(ft.Icons.PERSON, color=Color.PRIMARY, size=32)
@@ -30,7 +30,7 @@ class ProfileCard(ft.Container):
         user_display = self.username if self.username else ""
         self.user_name_text = Text.H4(user_display, color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.active_user_text = Text.MEDIUM(
-            self.username if self.username else self.lang["user_managementno_user_selected"],
+            self.username if self.username else self.lang["user_management.no_user_selected"],
             color=Color.WHITE,
             weight=ft.FontWeight.BOLD
         )
@@ -111,7 +111,7 @@ class ProfileCard(ft.Container):
     def update_data(self, username: str):
         self.username = username
         self.user_name_text.value = username if username else ""
-        self.active_user_text.value = username if username else self.lang["user_managementno_user_selected"]
+        self.active_user_text.value = username if username else self.lang["user_management.no_user_selected"]
         self.update()
 
     def resize(self, width: int):
