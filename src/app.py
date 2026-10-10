@@ -8,6 +8,7 @@ import flet as ft
 from src.database import db
 from src.utils import Page, UISettings, get_language
 from src.logger import Logger
+from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
 from src.pages.home import get_home_view
 from src.pages.lessons import get_lessons_view
@@ -100,6 +101,9 @@ async def main(page: Page):
 
             elif troute.match("/settings"):
                 view = get_settings_view(page, lang, user_info)
+
+            elif troute.match("/category_selection"):
+                view = get_category_selection_view(page, lang, user_info)
 
             elif ENABLE_EDITOR and troute.match("/lesson-editor"):
                 view = get_lesson_editor_view(page, lang, user_info)
