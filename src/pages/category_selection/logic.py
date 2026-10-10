@@ -16,6 +16,7 @@ class LogicController:
         amount = vals.get("amount", '0')
         category = vals.get("category")
         note = vals.get("note", "")
+        selected_date = vals.get("date") or datetime.now().strftime("%Y-%m-%d")
 
         if not amount or not category:
             Logger.warning("Amount or Category missing.")
@@ -29,7 +30,7 @@ class LogicController:
             Logger.error("Invalid amount provided")
             return False, "home.error.invalid_amount"
 
-        date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        date = f"{selected_date} 00:00"
         if db.spending.add_income_entry(self.current_user, amount_val, category, date, note):
             return True, "spending.income_added_success"
         return False, "home.error.save_income_failed"
@@ -38,6 +39,7 @@ class LogicController:
         amount = vals.get("amount", '0')
         category = vals.get("category")
         note = vals.get("note", "")
+        selected_date = vals.get("date") or datetime.now().strftime("%Y-%m-%d")
 
         if not amount or not category:
             Logger.warning("Amount or Category missing.")
@@ -51,7 +53,7 @@ class LogicController:
             Logger.error("Invalid amount provided")
             return False, "home.error.invalid_amount"
 
-        date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        date = f"{selected_date} 00:00"
         if db.spending.add_expense_entry(self.current_user, amount_val, category, date, note):
             return True, "spending.expense_added_success"
         return False, "home.error.save_expense_failed"

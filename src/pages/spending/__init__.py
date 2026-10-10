@@ -6,14 +6,13 @@
 
 from src.pages.spending.components import MetricCards, TransactionItemCard, TransactionToolbar
 from src.pages.spending.logic import LogicController
-from src.pages.spending.view import DialogManager, SpendingView, get_spending_view
+from src.pages.spending.view import SpendingView, get_spending_view
 
 __all__ = [
     "MetricCards",
     "TransactionToolbar",
     "TransactionItemCard",
     "LogicController",
-    "DialogManager",
     "SpendingView",
-    "get_spending_view",
+    "get_spending_view"
 ]

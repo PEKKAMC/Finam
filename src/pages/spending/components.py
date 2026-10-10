@@ -425,11 +425,7 @@ class TransactionItemCard(ft.Container):
         icon = ft.Icons.NORTH_EAST if is_income else ft.Icons.SOUTH_EAST
 
         # TEXT AND ICON COMPONENTS
-        self.type_badge_text = Text.SMALL(
-            self.lang["spending.income"] if is_income else self.lang["spending.expense"],
-            color="#334155",
-            weight=ft.FontWeight.BOLD
-        )
+        self.type_badge_text = Text.SMALL(self.lang["spending.income"] if is_income else self.lang["spending.expense"], color="#334155", weight=ft.FontWeight.BOLD)
         self.title_text = Text.MEDIUM(self.tx["title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
         self.subtitle_text = Text.SMALL(self.tx.get("subtitle", ""), color=Color.SECONDARY_TEXT)
         self.date_text = Text.SMALL(self.tx.get("date", ""), color=Color.SECONDARY_TEXT)

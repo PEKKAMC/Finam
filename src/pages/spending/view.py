@@ -7,142 +7,12 @@ from collections.abc import Callable
 import flet as ft
 
 from src.logger import Logger
-from src.pages.global_components import CategorySelectionDialog, ExpenseInputDialog, FinancialChart, IncomeInputDialog, Menu
+from src.pages.global_components import FinancialChart, Menu
 from src.pages.spending.components import MetricCards, TransactionHistoryCard, TransactionToolbar
 from src.pages.spending.logic import LogicController
 from src.utils import Color, Page, get_safe_page_size, Text, UISettings
 
 Logger.info("Initializing Spending page...")
-
-
-class DialogManager:
-    """Handles all dialog instantiation, states, and callbacks for the Spending View."""
-    def __init__(self, page: Page, lang: dict, controller: LogicController, refresh_callback: Callable):
-        self._page = page
-        self.lang = lang
-        self.controller = controller
-        self._refresh_view = refresh_callback
-        self.current_category_type = "expense"
-
-        # INITIALIZE DIALOG COMPONENTS
-        self.category_dialog = CategorySelectionDialog(
-            page=self._page,
-            lang=self.lang,
-            on_select=self._handle_category_selected,
-            on_cancel=self._cancel_category_selector_dialog
-        )
-        self.category_dialog.load_categories("expense")
-
-        self.expense_dialog = ExpenseInputDialog(
-            page=self._page,
-            lang=self.lang,
-            on_save=self._handle_save_expense,
-            on_cancel=self._cancel_expense_dialog,
-            on_category_click=lambda e=None: self._load_category_selector_data()
-        )
-
-        self.income_dialog = IncomeInputDialog(
-            page=self._page,
-            lang=self.lang,
-            on_save=self._handle_save_income,
-            on_cancel=self._cancel_income_dialog,
-            on_category_click=lambda e=None: self._load_category_selector_data()
-        )
-
-        self._add_dialogs_to_overlay()
-
-    # CATEGORY SELECTOR DIALOG
-    def _load_category_selector_data(self) -> int:
-        try:
-            if self.expense_dialog.open:
-                self.expense_dialog.close_most_recent_dialog(self._page)
-            if self.income_dialog.open:
-                self.income_dialog.close_most_recent_dialog(self._page)
-
-            self.category_dialog.load_categories(self.current_category_type)
-            self.category_dialog.show(self._page)
-            return 0
-
-        except Exception as e:
-            Logger.error(f"Error loading category selector data: {e}")
-            return -1
-
-    def _cancel_category_selector_dialog(self, e: ft.ControlEvent) -> None:
-        self.category_dialog.close_most_recent_dialog(self._page)
-
-    def _handle_category_selected(self, category_name: str, category_type: str, e = None) -> None:
-        self.category_dialog.close_most_recent_dialog(self._page)
-
-        if category_type == "expense":
-            self.expense_dialog.set_category(category_name)
-            self.expense_dialog.show(self._page)
-        elif category_type == "income":
-            self.income_dialog.set_category(category_name)
-            self.income_dialog.show(self._page)
-
-        self.current_category_type = category_type
-
-    # EXPENSE DIALOG
-    def open_expense_dialog(self, e: ft.ControlEvent) -> None:
-        self.expense_dialog.show(self._page)
-
-    def _cancel_expense_dialog(self, e: ft.ControlEvent) -> None:
-        self.expense_dialog.close_most_recent_dialog(self._page)
-
-    def _handle_save_expense(self, e: ft.ControlEvent) -> None:
-        success, message = self.controller.add_expense_entry(self.expense_dialog.get_values())
-
-        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-        self._page.overlay.append(self.snack_bar)
-        self.snack_bar.open = True
-
-        if success:
-            self.expense_dialog.clear()
-            self._refresh_view()
-            self.expense_dialog.close_most_recent_dialog(self._page)
-        else:
-            self._page.update()
-
-    # INCOME DIALOG
-    def open_income_dialog(self, e: ft.ControlEvent) -> None:
-        self.income_dialog.show(self._page)
-
-    def _cancel_income_dialog(self, e: ft.ControlEvent) -> None:
-        self.income_dialog.close_most_recent_dialog(self._page)
-
-    def _handle_save_income(self, e: ft.ControlEvent) -> None:
-        success, message = self.controller.add_income_entry(self.income_dialog.get_values())
-
-        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-        self._page.overlay.append(self.snack_bar)
-        self.snack_bar.open = True
-
-        if success:
-            self.income_dialog.clear()
-            self._refresh_view()
-            self.income_dialog.close_most_recent_dialog(self._page)
-        else:
-            self._page.update()
-
-
-    # OVERLAY MANAGEMENT
-    def _add_dialogs_to_overlay(self) -> None:
-        dialogs = [
-            self.category_dialog,
-            self.expense_dialog,
-            self.income_dialog
-        ]
-        for d in dialogs:
-            d.add_to_overlay(self._page)
-
-    def _remove_dialogs_from_overlay(self) -> None:
-        dialogs = [
-            self.category_dialog,
-            self.expense_dialog,
-            self.income_dialog
-        ]
-        for d in dialogs:
-            d.remove_from_overlay(self._page)
 
 
 class SpendingView(ft.View):
@@ -173,14 +43,6 @@ class SpendingView(ft.View):
             self.raw_transactions, self.filter_type, self.selected_category, self.search_query
         )
 
-        # INITIALIZE DIALOG MANAGER
-        self.dialogs = DialogManager(
-            page=self._page,
-            lang=self.lang,
-            controller=self.controller,
-            refresh_callback=self.refresh_view,
-        )
-
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(self._page, self.lang, self.user_info)
 
@@ -207,8 +69,8 @@ class SpendingView(ft.View):
             on_search_change=self.on_search_change,
             on_category_change=self.on_category_change,
             categories=all_categories,
-            on_add_expense_click=self.dialogs.open_expense_dialog,
-            on_add_income_click=self.dialogs.open_income_dialog,
+            on_add_expense_click=self._page.navigate_to("/category_selection"),
+            on_add_income_click=self._page.navigate_to("/category_selection"),
             search_query=self.search_query,
             selected_category=self.selected_category
         )
