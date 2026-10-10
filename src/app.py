@@ -36,12 +36,12 @@ async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> 
 async def main(page: Page):
     db.initialize_database()
 
-    lang: dict = get_language("vi")
     user_info: dict[str, str] = {
         "username": ""
     }
 
     page.title = "Finam"
+    page.theme_mode = ft.ThemeMode.LIGHT
     page.theme = ft.Theme(
         page_transitions=ft.PageTransitionsTheme(
             android=ft.PageTransitionTheme.FADE_UPWARDS,
@@ -58,7 +58,52 @@ async def main(page: Page):
 
     page.update()
 
-    views_cache: dict[str, ft.View] = {}
+    views_cache: dict[str, tuple[ft.View, str]] = {}
+
+    def get_view_cache_key(route: str, language_code: str, currency: str) -> str:
+        return f"{route}|{language_code}|{currency}"
+
+    def build_view_for_route(route: str, lang: dict, user_info: dict) -> ft.View | None:
+        troute = ft.TemplateRoute(route)
+
+        if troute.match("/user_management"):
+            return get_user_management_view(page, lang, user_info)
+
+        if troute.match("/home"):
+            return get_home_view(page, lang, user_info)
+
+        if troute.match("/lessons"):
+            return get_lessons_view(page, lang, user_info)
+
+        if troute.match("/saving"):
+            return get_savings_view(page, lang, user_info)
+
+        if troute.match("/lesson-player/:lesson_id"):
+            lesson_id = getattr(troute, "lesson_id", None)
+            return get_lesson_player_view(page, lang, user_info, lesson_id)
+
+        if troute.match("/lesson-player"):
+            return get_lesson_player_view(page, lang, user_info)
+
+        if troute.match("/spending"):
+            return get_spending_view(page, lang, user_info)
+
+        if troute.match("/purchase_scanner"):
+            return get_scanner_view(page, lang, user_info)
+
+        if troute.match("/settings"):
+            return get_settings_view(page, lang, user_info)
+
+        if troute.match("/category_selection"):
+            return get_category_selection_view(page, lang, user_info)
+
+        if ENABLE_EDITOR and troute.match("/lesson-editor"):
+            return get_lesson_editor_view(page, lang, user_info)
+
+        if troute.match("/starter"):
+            return get_starter_view(page, lang, user_info)
+
+        return None
 
     async def route_change(e: ft.RouteChangeEvent) -> None:
         try:
@@ -70,54 +115,25 @@ async def main(page: Page):
 
             current_username = user_info.get("username", "") or "Admin"
             current_language_code = db.users.get_language(current_username) if current_username else "vi"
+            current_currency = db.users.get_currency(current_username) if current_username else "VND (đ)"
             lang = get_language(current_language_code)
 
-            troute = ft.TemplateRoute(page.route)
+            route_name = page.route or "/"
+            cache_key = get_view_cache_key(route_name, current_language_code, current_currency)
+            cached_entry = views_cache.get(route_name)
 
-            if troute.match("/user_management"):
-                view = get_user_management_view(page, lang, user_info)
-
-            elif troute.match("/home"):
-                view = get_home_view(page, lang, user_info)
-
-            elif troute.match("/lessons"):
-                view = get_lessons_view(page, lang, user_info)
-
-            elif troute.match("/saving"):
-                view = get_savings_view(page, lang, user_info)
-
-            elif troute.match("/lesson-player/:lesson_id"):
-                lesson_id = getattr(troute, "lesson_id", None)
-                view = get_lesson_player_view(page, lang, user_info, lesson_id)
-
-            elif troute.match("/lesson-player"):
-                view = get_lesson_player_view(page, lang, user_info)
-
-            elif troute.match("/spending"):
-                view = get_spending_view(page, lang, user_info)
-
-            elif troute.match("/purchase_scanner"):
-                view = get_scanner_view(page, lang, user_info)
-
-            elif troute.match("/settings"):
-                view = get_settings_view(page, lang, user_info)
-
-            elif troute.match("/category_selection"):
-                view = get_category_selection_view(page, lang, user_info)
-
-            elif ENABLE_EDITOR and troute.match("/lesson-editor"):
-                view = get_lesson_editor_view(page, lang, user_info)
-
-            elif troute.match("/starter"):
-                view = get_starter_view(page, lang, user_info)
-
+            if cached_entry and cached_entry[1] == cache_key:
+                view = cached_entry[0]
             else:
+                view = build_view_for_route(route_name, lang, user_info)
+                if view is not None:
+                    views_cache[route_name] = (view, cache_key)
+
+            if view is None:
                 await redirect_to_fallback(page, lang, "page_not_found")
                 return
 
-            if view is not None:
-                page.views.append(view)
-
+            page.views.append(view)
             page.update()
 
         except Exception as ex:
@@ -143,6 +159,4 @@ async def main(page: Page):
     page.on_error = on_error
     page.on_route_change = route_change
 
-    # Flet 1.0.4: route changes must be scheduled with push_route(), not go().
-    # Use the shared helper for the project-wide route change API.
     page.navigate_to("/starter")()
