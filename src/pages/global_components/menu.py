@@ -32,11 +32,10 @@ class Menu(ft.Container):
             )
 
         self.main_container = ft.Container(
-            width=360,
             height=72,
             bgcolor=Color.NAVIGATION_BACKGROUND,
             border_radius=20,
-            padding=ft.Padding(10, 10, 10, 10),
+            padding=10,
             shadow=ft.BoxShadow(blur_radius=10, spread_radius=1, color=Color.SHADOW),
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_AROUND,
@@ -50,7 +49,6 @@ class Menu(ft.Container):
             content=self.main_container,
             padding=0,
             bottom=0,
-            height=72,
             alignment=ft.Alignment.CENTER,
         )
 
