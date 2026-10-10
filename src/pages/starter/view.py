@@ -30,7 +30,12 @@ class DialogManager:
             on_delete_callback=self.show_delete_prompt
         )
 
-        self.add_form = AddUserField(page=self._page, lang=self.lang, on_submit_callback=self.handle_add_user)
+        self.add_form = AddUserField(
+            page=self._page,
+            lang=self.lang,
+            on_submit_callback=self.handle_add_user,
+            currencies=self.controller.get_world_currencies()
+        )
 
         self.user_dialog = UserManagementDialog(
             page=self._page,
@@ -50,7 +55,6 @@ class DialogManager:
         self._add_dialogs_to_overlay()
 
     def _add_dialogs_to_overlay(self) -> None:
-        """Add all dialogs to page overlay (required for Flet 1.0.4+)"""
         dialogs = [
             self.user_dialog,
             self.delete_dialog
@@ -74,10 +78,10 @@ class DialogManager:
         self.refresh_view()
         return 0
 
-    def handle_add_user(self, input_username: str):
+    def handle_add_user(self, input_username: str, currency: str):
         if not input_username:
             return
-        success, error_msg = self.controller.add_user(input_username)
+        success, error_msg = self.controller.add_user(input_username, currency)
         if success:
             self.add_form.clear()
             self.refresh_view()

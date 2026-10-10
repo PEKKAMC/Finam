@@ -147,12 +147,13 @@ class UserDatabase:
         )
         return [row[0] for row in rows]
 
-    def add_user(self, username: str) -> bool:
+    def add_user(self, username: str, currency: str) -> bool:
         try:
             self.db.execute(
                 "INSERT INTO users (name) VALUES (?)",
                 (username,)
             )
+            self.set_currency(username, currency)
             return True
         except sqlite3.IntegrityError:
             return False

@@ -14,11 +14,11 @@ class LogicController:
     def get_all_users() -> list:
         return db.users.get_all_users()
 
-    def add_user(self, input_username: str) -> tuple[bool, str]:
+    def add_user(self, input_username: str, currency: str) -> tuple[bool, str]:
         current_users = self.get_all_users()
         if input_username not in current_users:
-            db.users.add_user(input_username)
-            Logger.info(f"Created user: {input_username}")
+            db.users.add_user(input_username, currency)
+            Logger.info(f"Created user: {input_username}, currency: {currency}")
             return True, ""
         return False, "user_management.user_already_exists"
 
@@ -29,3 +29,34 @@ class LogicController:
 
     def change_user(self, username: str):
         self.user_info["username"] = username
+
+    @staticmethod
+    def get_world_currencies() -> list[str]:
+        return [
+            "AED (د.إ)", "AFN (؋)", "ALL (L)", "AMD (֏)", "ANG (ƒ)", "AOA (Kz)",
+            "ARS ($)", "AUD (A$)", "AWG (ƒ)", "AZN (₼)", "BAM (KM)", "BBD ($)",
+            "BDT (৳)", "BGN (лв)", "BHD (.د.ب)", "BIF (FBu)", "BMD ($)", "BND (B$)",
+            "BOB (Bs.)", "BRL (R$)", "BSD (B$)", "BTN (Nu.)", "BWP (P)", "BYN (Br)",
+            "BZD (BZ$)", "CAD (C$)", "CDF (FC)", "CHF (CHF)", "CLP ($)", "CNY (¥)",
+            "COP ($)", "CRC (₡)", "CUP ($)", "CVE (Esc)", "CZK (Kč)", "DJF (Fdj)",
+            "DKK (kr)", "DOP (RD$)", "DZD (د.ج)", "EGP (£)", "ERN (Nfk)", "ETB (Br)",
+            "EUR (€)", "FJD (FJ$)", "FKP (£)", "GBP (£)", "GEL (₾)", "GHS (GH₵)",
+            "GIP (£)", "GMD (D)", "GNF (FG)", "GTQ (Q)", "GYD (G$)", "HKD (HK$)",
+            "HNL (L)", "HTG (G)", "HUF (Ft)", "IDR (Rp)", "ILS (₪)", "INR (₹)",
+            "IQD (ع.د)", "IRR (﷼)", "ISK (kr)", "JMD (J$)", "JOD (د.ا)", "JPY (¥)",
+            "KES (KSh)", "KGS (с)", "KHR (៛)", "KMF (CF)", "KPW (₩)", "KRW (₩)",
+            "KWD (د.ك)", "KYD (CI$)", "KZT (₸)", "LAK (₭)", "LBP (ل.ل)", "LKR (Rs)",
+            "LRD (L$)", "LSL (L)", "LYD (ل.د)", "MAD (د.م.)", "MDL (L)", "MGA (Ar)",
+            "MKD (ден)", "MMK (K)", "MNT (₮)", "MOP (MOP$)", "MRU (UM)", "MUR (₨)",
+            "MVR (Rf)", "MWK (MK)", "MXN ($)", "MYR (RM)", "MZN (MT)", "NAD (N$)",
+            "NGN (₦)", "NIO (C$)", "NOK (kr)", "NPR (रु)", "NZD (NZ$)", "OMR (ر.ع.)",
+            "PAB (B/.)", "PEN (S/.)", "PGK (K)", "PHP (₱)", "PKR (₨)", "PLN (zł)",
+            "PYG (₲)", "QAR (ر.ق)", "RON (lei)", "RSD (дин.)", "RUB (₽)", "RWF (FRw)",
+            "SAR (ر.س)", "SBD (SI$)", "SCR (₨)", "SDG (ج.س.)", "SEK (kr)", "SGD (S$)",
+            "SHP (£)", "SLL (Le)", "SOS (Sh)", "SRD ($)", "SSP (£)", "STN (Db)",
+            "SYP (£S)", "SZL (L)", "THB (฿)", "TJS (ЅМ)", "TMT (T)", "TND (د.ت)",
+            "TOP (T$)", "TRY (₺)", "TTD (TT$)", "TWD (NT$)", "TZS (TSh)", "UAH (₴)",
+            "UGX (USh)", "USD ($)", "UYU ($U)", "UZS (сўм)", "VES (Bs.S)", "VND (đ)",
+            "VUV (VT)", "WST (WS$)", "XAF (FCFA)", "XCD (EC$)", "XOF (CFA)", "XPF (₣)",
+            "YER (﷼)", "ZAR (R)", "ZMW (ZK)", "ZWL (Z$)"
+        ]

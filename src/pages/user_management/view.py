@@ -38,7 +38,8 @@ class DialogManager:
         self.add_form = AddUserField(
             page=self._page,
             lang=self.lang,
-            on_submit_callback=self._handle_add_user
+            on_submit_callback=self._handle_add_user,
+            currencies=self.controller.get_world_currencies()
         )
 
         self.user_dialog = UserManagementDialog(
@@ -72,10 +73,10 @@ class DialogManager:
         self.user_dialog.close_most_recent_dialog(self._page)
 
     # USER ACTIONS
-    def _handle_add_user(self, input_username: str):
+    def _handle_add_user(self, input_username: str, currency: str):
         if not input_username:
             return
-        success, error_msg = self.controller.add_user(input_username)
+        success, error_msg = self.controller.add_user(input_username, currency)
 
         if success:
             self.add_form.clear()

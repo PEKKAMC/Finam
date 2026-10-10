@@ -27,7 +27,7 @@ class UserManagementCard(ft.Container):
             )
 
         self.main_container = ft.Column(
-            height=375,
+            height=400,
             controls=[
                 ft.Row(controls=header_controls),
                 ft.Row(
@@ -76,15 +76,7 @@ class UserManagementCard(ft.Container):
         self.main_container.width = width
 
 class UserManagementDialog(Dialog):
-    def __init__(
-        self,
-        page: Page,
-        lang: dict,
-        user_list: "UserList",
-        add_form,
-        on_close_callback: Callable,
-        has_cancel_button: bool = True
-    ):
+    def __init__(self, page: Page, lang: dict, user_list: "UserList", add_form, on_close_callback: Callable, has_cancel_button: bool = True):
         self.card = UserManagementCard(
             page=page,
             lang=lang,
@@ -198,10 +190,11 @@ class UserList(ft.Container):
 
 
 class AddUserField(ft.Container):
-    def __init__(self, page: Page, lang: dict, on_submit_callback):
+    def __init__(self, page: Page, lang: dict, on_submit_callback, currencies: list[str]):
         self._page = page
         self.lang = lang
         self.on_submit_callback = on_submit_callback
+        self.currencies = currencies
 
         self.input_field = ft.TextField(
             hint_text=self.lang["user_management.username_hint"],
@@ -215,6 +208,20 @@ class AddUserField(ft.Container):
             expand=True,
             on_submit=self._handle_submit
         )
+
+        self.currency_dropdown = ft.Dropdown(
+            value="VND (đ)",
+            options=[ft.dropdown.Option(currency) for currency in self.currencies],
+            color=Color.DEFAULT_TEXT,
+            bgcolor=Color.DIALOG_BACKGROUND,
+            border_color=Color.INPUT_BORDER,
+            border_radius=16,
+            text_size=13,
+            content_padding=12,
+            filled=True,
+            width=120,
+        )
+
         self.error_message = Text.SMALL("", color=Color.ERROR_TEXT)
         self.submit_button = ft.Button(
             content=ft.Row(
@@ -238,7 +245,13 @@ class AddUserField(ft.Container):
                 ft.Row(
                     spacing=12,
                     controls=[
-                        self.input_field,
+                        self.input_field
+                    ]
+                ),
+                ft.Row(
+                    spacing=12,
+                    controls=[
+                        self.currency_dropdown,
                         self.submit_button
                     ]
                 ),
@@ -250,7 +263,8 @@ class AddUserField(ft.Container):
 
     def _handle_submit(self, e=None) -> None:
         input_username = self.input_field.value.strip()
-        self.on_submit_callback(input_username)
+        selected_currency = self.currency_dropdown.value or "VND (đ)"
+        self.on_submit_callback(input_username, selected_currency)
 
     def show_error(self, message: str):
         self.error_message.value = message
@@ -261,6 +275,7 @@ class AddUserField(ft.Container):
 
     def clear(self):
         self.input_field.value = ""
+        self.currency_dropdown.value = "VND (đ)"
         self.error_message.value = ""
         try:
             self.update()
