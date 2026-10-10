@@ -6,7 +6,7 @@ import re
 
 import flet as ft
 
-from logger import Logger
+from src.logger import Logger
 from src.utils import Color, Page
 
 class Dialog(ft.AlertDialog):
