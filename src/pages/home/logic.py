@@ -6,6 +6,14 @@ from datetime import datetime
 
 from src.database import db
 from src.logger import Logger
+from src.utils.settings import DefaultSettings
+
+
+def _get_user_currency(username: str = "Admin") -> str:
+    try:
+        return db.users.get_currency(username)
+    except Exception:
+        return DefaultSettings.CURRENCY
 
 
 class LogicController:
@@ -107,10 +115,12 @@ class LogicController:
         return db.saving.get_user_objectives(self.current_user)
 
     @staticmethod
-    def get_saving_progress_items(objectives: list, lang: dict):
+    def get_saving_progress_items(objectives: list, lang: dict, username: str = ""):
         goal_items = []
         if not objectives:
             return goal_items
+
+        currency = _get_user_currency(username or "Admin")
 
         for objective in objectives[:3]:
             objective_id, objective_title, objective_reason, target_amount, completed_at = objective
@@ -126,8 +136,8 @@ class LogicController:
                 "target_amount": target_value,
                 "progress_ratio": progress_ratio,
                 "progress_text": f"{int(progress_ratio * 100)}%",
-                "contributed_label": f"{lang['home.contributed']}: {int(current_amount):,} {lang['generic.currency']}",
-                "target_label": f"{lang['home.target']}: {int(target_value):,} {lang['generic.currency']}",
+                "contributed_label": f"{lang['home.contributed']}: {int(current_amount):,} {currency}",
+                "target_label": f"{lang['home.target']}: {int(target_value):,} {currency}",
             })
 
         return goal_items

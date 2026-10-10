@@ -7,7 +7,15 @@ from collections.abc import Callable
 import flet as ft
 import flet_charts as fc
 
-from src.utils import Color, Text, UISettings
+from src.utils import Color, Text, UISettings, DefaultSettings
+
+
+def _get_user_currency(username: str = "Admin") -> str:
+    try:
+        from src.database import db
+        return db.users.get_currency(username)
+    except Exception:
+        return DefaultSettings.CURRENCY
 
 
 class BalanceCard(ft.Container):
@@ -20,11 +28,12 @@ class BalanceCard(ft.Container):
         self.ai_advice = ai_advice
         self.on_add_click = on_add_click
         self.on_scan_click = on_scan_click
+        self.currency = _get_user_currency()
 
         # TEXT AND ICON COMPONENTS
         # Static texts
         self.balance_label_title = Text.SMALL(self.lang["home.available_balance"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.currency_label = Text.P(self.lang["generic.currency"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.currency_label = Text.P(self.currency, color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.add_transaction_button_label = Text.MEDIUM(self.lang["home.add_transaction"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
         self.purchase_scanner_title = Text.MEDIUM(self.lang["home.ai_scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.income_title = Text.H6(self.lang["home.total_income"], color=Color.LIGHT_ACCENT)
@@ -39,9 +48,9 @@ class BalanceCard(ft.Container):
 
         # Dynamic texts
         self.balance_amount_display = Text.H1(f"{int(self.net_balance):,}", color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.income_display = Text.MEDIUM(f"{int(self.income):,} {self.lang['generic.currency']}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.expense_display = Text.MEDIUM(f"-{int(self.expense):,} {self.lang['generic.currency']}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
-        self.saving_display = Text.MEDIUM(f"{int(self.savings):,} {self.lang['generic.currency']}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.income_display = Text.MEDIUM(f"{int(self.income):,} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.expense_display = Text.MEDIUM(f"-{int(self.expense):,} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.saving_display = Text.MEDIUM(f"{int(self.savings):,} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
         self.ai_advice_display = Text.SMALL(self.ai_advice, color=Color.WHITE)
 
         # CONTAINER COMPONENTS
@@ -229,11 +238,13 @@ class BalanceCard(ft.Container):
         self.expense = expense
         self.savings = savings
         self.ai_advice = ai_advice
+        self.currency = _get_user_currency()
 
         self.balance_amount_display.value = f"{int(self.net_balance):,}"
-        self.income_display.value = f"{int(self.income):,} {self.lang['generic.currency']}"
-        self.expense_display.value = f"-{int(self.expense):,} {self.lang['generic.currency']}"
-        self.saving_display.value = f"{int(self.savings):,} {self.lang['generic.currency']}"
+        self.currency_label.value = self.currency
+        self.income_display.value = f"{int(self.income):,} {self.currency}"
+        self.expense_display.value = f"-{int(self.expense):,} {self.currency}"
+        self.saving_display.value = f"{int(self.savings):,} {self.currency}"
         self.ai_advice_display.value = self.ai_advice
 
         self.update()
@@ -487,6 +498,7 @@ class ExpensePieChart(ft.Container):
         self.lang = lang
         self.category_data = category_data or {}
         self.on_details_click = on_details_click
+        self.currency = _get_user_currency()
 
         self.pie_colors = [
             Color.EXPENSE_ACTION_BACKGROUND,
@@ -521,7 +533,7 @@ class ExpensePieChart(ft.Container):
         )
 
         self.legend_items: list[ExpenseCategoryItem] = [
-            ExpenseCategoryItem(name, val, self.lang["generic.currency"], self.pie_colors[idx % len(self.pie_colors)])
+            ExpenseCategoryItem(name, val, self.currency, self.pie_colors[idx % len(self.pie_colors)])
             for idx, (name, val) in enumerate(self.category_data.items())
         ] if self.category_data else []
 
@@ -644,10 +656,10 @@ class ExpensePieChart(ft.Container):
                     )
 
                 if idx < len(self.legend_items):
-                    self.legend_items[idx].update_data(name, val, self.lang["generic.currency"], color)
+                    self.legend_items[idx].update_data(name, val, self.currency, color)
                 else:
                     self.legend_items.append(
-                        ExpenseCategoryItem(name, val, self.lang["generic.currency"], color)
+                        ExpenseCategoryItem(name, val, self.currency, color)
                     )
 
             self.legend_list.controls = list(self.legend_items)

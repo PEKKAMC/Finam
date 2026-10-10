@@ -3,10 +3,37 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 class DefaultSettings:
-    DEFAULT_USERNAME: str = "Admin"
+    USERNAME: str = "Admin"
     THEME: str = "light"
-    CURRENCY: str = "VND"
+    CURRENCY: str = "VND (đ)"
     LANGUAGE: str = "vi"
+
+    @classmethod
+    def get_language(cls, username: str = "Admin") -> str:
+        """Get the language setting for a user from the database."""
+        try:
+            from src.database import db
+            return db.users.get_language(username)
+        except:
+            return cls.LANGUAGE
+
+    @classmethod
+    def get_currency(cls, username: str = "Admin") -> str:
+        """Get the currency setting for a user from the database."""
+        try:
+            from src.database import db
+            return db.users.get_currency(username)
+        except:
+            return cls.CURRENCY
+
+
+def get_user_currency(username: str = "Admin") -> str:
+    """Return the saved currency for the current user."""
+    try:
+        from src.database import db
+        return db.users.get_currency(username)
+    except Exception:
+        return DefaultSettings.CURRENCY
 
 
 class UISettings:

@@ -46,9 +46,27 @@ class DatabaseConnection:
                 CREATE TABLE IF NOT EXISTS user_settings (
                     user_id INTEGER PRIMARY KEY,
                     history_cleared_at TEXT,
+                    language TEXT DEFAULT 'vi',
+                    currency TEXT DEFAULT 'VND (đ)',
                     FOREIGN KEY (user_id) REFERENCES users (id)
                  )
             ''')
+            
+            # MIGRATION: Add language and currency columns to existing user_settings tables
+            try:
+                self.execute("ALTER TABLE user_settings ADD COLUMN language TEXT DEFAULT 'vi'")
+                Logger.info("Added language column to user_settings table")
+            except sqlite3.OperationalError:
+                # Column already exists
+                pass
+            
+            try:
+                self.execute("ALTER TABLE user_settings ADD COLUMN currency TEXT DEFAULT 'VND (đ)'")
+                Logger.info("Added currency column to user_settings table")
+            except sqlite3.OperationalError:
+                # Column already exists
+                pass
+            
             self.execute('''
                 CREATE TABLE IF NOT EXISTS objectives (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,7 +123,7 @@ class DatabaseConnection:
             if count == 0:
                 self.execute(
                     "INSERT INTO users (name) VALUES (?)",
-                    (DefaultSettings.DEFAULT_USERNAME,)
+                    (DefaultSettings.USERNAME,)
                 )
 
             Logger.info("Database initialized successfully.")
@@ -174,6 +192,88 @@ class UserDatabase:
                 "INSERT INTO user_settings (user_id, history_cleared_at) VALUES (?, ?)",
                 (user_id, cleared_date)
             )
+
+    def get_language(self, username: str) -> str:
+        """Get the language setting for a user. Returns 'vi' by default."""
+        user_id = self.get_user_id(username)
+        if not user_id: return 'vi'
+
+        result = self.db.execute(
+            "SELECT language FROM user_settings WHERE user_id = ?",
+            (user_id,),
+            fetch_one=True
+        )
+        if result and result[0]:
+            return result[0]
+        return 'vi'
+
+    def set_language(self, username: str, language: str) -> bool:
+        """Set the language for a user."""
+        user_id = self.get_user_id(username)
+        if not user_id: return False
+
+        exists = self.db.execute(
+            "SELECT user_id FROM user_settings WHERE user_id = ?",
+            (user_id,),
+            fetch_one=True
+        )
+
+        try:
+            if exists:
+                self.db.execute(
+                    "UPDATE user_settings SET language = ? WHERE user_id = ?",
+                    (language, user_id)
+                )
+            else:
+                self.db.execute(
+                    "INSERT INTO user_settings (user_id, language) VALUES (?, ?)",
+                    (user_id, language)
+                )
+            return True
+        except Exception as e:
+            Logger.error(f"Failed to set language: {e}")
+            return False
+
+    def get_currency(self, username: str) -> str:
+        """Get the currency setting for a user. Returns 'VND (đ)' by default."""
+        user_id = self.get_user_id(username)
+        if not user_id: return 'VND (đ)'
+
+        result = self.db.execute(
+            "SELECT currency FROM user_settings WHERE user_id = ?",
+            (user_id,),
+            fetch_one=True
+        )
+        if result and result[0]:
+            return result[0]
+        return 'VND (đ)'
+
+    def set_currency(self, username: str, currency: str) -> bool:
+        """Set the currency for a user."""
+        user_id = self.get_user_id(username)
+        if not user_id: return False
+
+        exists = self.db.execute(
+            "SELECT user_id FROM user_settings WHERE user_id = ?",
+            (user_id,),
+            fetch_one=True
+        )
+
+        try:
+            if exists:
+                self.db.execute(
+                    "UPDATE user_settings SET currency = ? WHERE user_id = ?",
+                    (currency, user_id)
+                )
+            else:
+                self.db.execute(
+                    "INSERT INTO user_settings (user_id, currency) VALUES (?, ?)",
+                    (user_id, currency)
+                )
+            return True
+        except Exception as e:
+            Logger.error(f"Failed to set currency: {e}")
+            return False
 
 # ==========================================
 # SAVING PAGE LOGIC

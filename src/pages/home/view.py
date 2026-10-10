@@ -213,7 +213,7 @@ class HomeView(ft.View):
 
         self.savings_progress_card = SavingsProgressCard(
             lang=self.lang,
-            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang),
+            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang, self.user_info.get("username", "Admin")),
             on_view_all_click=self._page.navigate_to("/saving")
         )
 

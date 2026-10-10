@@ -67,11 +67,9 @@ async def main(page: Page):
             else:
                 Logger.info("Page not found")
 
-            if page.route != "/starter" and page.route in views_cache:
-                Logger.info(f"Loading view for route '{page.route}' from cache...")
-                page.views.append(views_cache[page.route])
-                page.update()
-                return e
+            current_username = user_info.get("username", "") or "Admin"
+            current_language_code = db.users.get_language(current_username) if current_username else "vi"
+            lang = get_language(current_language_code)
 
             troute = ft.TemplateRoute(page.route)
 
@@ -114,7 +112,6 @@ async def main(page: Page):
                 return e
 
             if view is not None:
-                views_cache[page.route] = view
                 page.views.append(view)
 
             page.update()
