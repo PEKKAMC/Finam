@@ -51,10 +51,9 @@ jobs:
           python-version: '3.14'
 
       - name: Install Flet
-        # flet==0.86.5 is temporary, should be changed later
         run: |
           python -m pip install --upgrade pip
-          pip install flet==0.86.5
+          pip install flet
 
       - name: Build APK
         run: flet build apk --build-version ${{ needs.prepare.outputs.raw_version }} --module-name main --yes -v
@@ -97,10 +96,9 @@ jobs:
           python-version: '3.14'
 
       - name: Install Flet
-        # flet==0.86.5 is temporary, should be changed later
         run: |
           python -m pip install --upgrade pip
-          pip install flet==0.86.5
+          pip install flet
 
       - name: Build AAB
         run: flet build aab --build-version ${{ needs.prepare.outputs.raw_version }} --module-name main --yes -v
@@ -134,10 +132,9 @@ jobs:
           python-version: '3.14'
 
       - name: Install Flet
-        # flet==0.86.5 is temporary, should be changed later
         run: |
           python -m pip install --upgrade pip
-          pip install flet==0.86.5
+          pip install flet
 
       - name: Build IPA (Generates xcarchive)
         run: flet build ipa --build-version ${{ needs.prepare.outputs.raw_version }} --module-name main --yes -v
