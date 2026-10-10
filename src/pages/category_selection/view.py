@@ -7,7 +7,11 @@ from typing import TypedDict
 
 import flet as ft
 
-from src.utils import Color, Dialog, Page, Text, UISettings
+from src.logger import Logger
+from src.pages.category_selection.logic import LogicController
+from src.utils import Color, Page, Text, UISettings, get_safe_page_size
+
+Logger.info("Initializing Category Selection page...")
 
 
 class _Category(TypedDict):
@@ -35,7 +39,6 @@ class CategoryItem(ft.Container):
 
         self.icon_label = Text.LABEL(value=self.category_name, color=Color.DEFAULT_TEXT, text_align=ft.TextAlign.CENTER)
 
-        # ITEM CONTAINER
         self.main_container = ft.Container(
             width=75,
             height=75,
@@ -70,24 +73,22 @@ class CategoryItem(ft.Container):
             pass
 
 
-class CategorySelectionDialog(Dialog):
-    def __init__(self, page: Page, lang: dict, on_select: Callable, on_cancel: Callable):
+class CategorySelectionView(ft.View):
+    def __init__(self, page: Page, lang: dict, user_info: dict):
         self._page = page
         self.lang = lang
-        self._on_select = on_select
-        self._on_cancel = on_cancel
-        self.current_type = "expense"
+        self.user_info = user_info
+        self.get_safe_page_size = get_safe_page_size
 
-        self.category_list = ft.Column(
-            spacing=10,
-            alignment=ft.MainAxisAlignment.START,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            scroll=ft.ScrollMode.AUTO
-        )
+        self.controller = LogicController(self.user_info["username"])
+        self.current_type = "expense"
+        self.selected_category = ""
+        self.amount_value = "0"
+        self.category_items: list[CategoryItem] = []
 
         self.cancel_button = ft.TextButton(
             content=Text.P(self.lang["generic.cancel"], color=Color.DEFAULT_TEXT),
-            on_click=self._on_cancel
+            on_click=self._page.navigate_to("/home")
         )
 
         self.title_text = Text.H3(value="Thêm", color=Color.DEFAULT_TEXT)
@@ -123,10 +124,65 @@ class CategorySelectionDialog(Dialog):
                 controls=[self.expense_button, self.income_button],
                 spacing=0,
                 alignment=ft.MainAxisAlignment.CENTER
+            ),
+            width=400
+        )
+
+        self.category_list = ft.Column(
+            spacing=10,
+            alignment=ft.MainAxisAlignment.START,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            scroll=ft.ScrollMode.AUTO,
+            height=340
+        )
+
+        self.amount_display = ft.Text(value="0", size=32, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+
+        self.note_input = ft.TextField(
+            hint_text="Enter a note...",
+            label="Note : Enter a note...",
+            label_style=ft.TextStyle(color=ft.Colors.GREY_400, size=13),
+            color=ft.Colors.WHITE,
+            border_color=ft.Colors.TRANSPARENT,
+            focused_border_color=ft.Colors.TRANSPARENT,
+            bgcolor=ft.Colors.TRANSPARENT,
+            prefix_icon=ft.Icons.NOTES,
+            suffix_icon=ft.Icons.CAMERA_ALT,
+            text_size=14,
+            content_padding=10
+        )
+
+        self.keyboard_container = ft.Container(
+            bgcolor="#121212",
+            padding=10,
+            border_radius=ft.BorderRadius.only(top_left=16, top_right=16),
+            visible=False,
+            content=ft.Column(
+                spacing=8,
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[
+                            ft.IconButton(icon=ft.Icons.CREDIT_CARD, icon_color=ft.Colors.WHITE, icon_size=20),
+                            self.amount_display
+                        ]
+                    ),
+                    ft.Container(
+                        bgcolor="#1E1E1E",
+                        border_radius=8,
+                        padding=ft.Padding.symmetric(horizontal=8, vertical=2),
+                        content=self.note_input
+                    ),
+                    self._build_keypad()
+                ]
             )
         )
 
+        self.load_categories("expense")
+
         self.main_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=UISettings.CARD_PADDING,
             content=ft.Column(
                 tight=True,
                 spacing=15,
@@ -141,25 +197,37 @@ class CategorySelectionDialog(Dialog):
                         ]
                     ),
                     self.segment_control,
-                    self.category_list
+                    self.category_list,
+                    self.keyboard_container
                 ]
             )
         )
 
         super().__init__(
-            color=Color.DIALOG_BACKGROUND,
-            dialog_content=self.main_container
+            route="/category_selection",
+            padding=0,
+            bgcolor=Color.DIALOG_BACKGROUND,
+            horizontal_alignment=ft.MainAxisAlignment.CENTER,
+            controls=[
+                ft.SafeArea(
+                    expand=True,
+                    content=self.main_container
+                )
+            ]
         )
-        self.load_categories("expense")
+
+        self._page.on_resize = self._on_page_resize
+        self._on_page_resize()
 
     def switch_type(self, category_type: str) -> None:
+        self.current_type = category_type
+        self.selected_category = ""
+        self.keyboard_container.visible = False
         self.load_categories(category_type)
         if self._page is not None:
-            self.main_container.update()
+            self.update()
 
     def load_categories(self, category_type: str) -> None:
-        self.current_type = category_type
-
         if category_type == "expense":
             self.expense_button.bgcolor = Color.WHITE
             self.expense_text.color = Color.BLACK
@@ -238,137 +306,7 @@ class CategorySelectionDialog(Dialog):
                 ]
 
         self.category_list.controls.clear()
-        for row in categories:
-            category_row = ft.Row(
-                vertical_alignment=ft.CrossAxisAlignment.CENTER
-            )
-            for category in row:
-                category_row.controls.append(CategoryItem(
-                    page=self._page,
-                    lang=self.lang,
-                    name=category["name"],
-                    icon=category["icon"],
-                    on_click=self._create_handler(category["name"])
-                ))
-
-            while len(category_row.controls) < 4:
-                category_row.controls.append(ft.Container(expand=True))
-
-            self.category_list.controls.append(category_row)
-
-    def _create_handler(self, name: str):
-        def handler(e=None) -> None:
-            self._on_select(name, self.current_type)
-        return handler
-
-    def resize(self, dialog_width: int, dialog_height: int) -> None:
-        self.main_container.width = dialog_width
-        self.main_container.height = dialog_height
-
-
-class _BaseTransactionKeyboardDialog(Dialog):
-    def __init__(self, page: Page, lang: dict, title: str, categories: list[list[_Category]], on_save: Callable, on_cancel: Callable):
-        self._page = page
-        self.lang = lang
-        self._on_save = on_save
-        self._on_cancel = on_cancel
-
-        self.selected_category = ""
-        self.amount_value = "0"
-        self.category_items: list[CategoryItem] = []
-
-        self.title_text = Text.H3(value=title, color=Color.DEFAULT_TEXT)
-        self.amount_display = ft.Text(value="0", size=32, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
-
-        self.note_input = ft.TextField(
-            hint_text="Enter a note...",
-            label="Note : Enter a note...",
-            label_style=ft.TextStyle(color=ft.Colors.GREY_400, size=13),
-            color=ft.Colors.WHITE,
-            border_color=ft.Colors.TRANSPARENT,
-            focused_border_color=ft.Colors.TRANSPARENT,
-            bgcolor=ft.Colors.TRANSPARENT,
-            prefix_icon=ft.Icons.NOTES,
-            suffix_icon=ft.Icons.CAMERA_ALT,
-            text_size=14,
-            content_padding=10
-        )
-
-        self.category_list = ft.Column(
-            spacing=10,
-            alignment=ft.MainAxisAlignment.START,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            scroll=ft.ScrollMode.AUTO,
-            height=320
-        )
-
-        # Keyboard Container (hidden initially, shown when category selected)
-        self.keyboard_container = ft.Container(
-            bgcolor="#121212",
-            padding=10,
-            border_radius=ft.BorderRadius.only(top_left=16, top_right=16),
-            visible=False,
-            content=ft.Column(
-                spacing=8,
-                controls=[
-                    # Amount & Top Bar
-                    ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[
-                            ft.IconButton(icon=ft.Icons.CREDIT_CARD, icon_color=ft.Colors.WHITE, icon_size=20),
-                            self.amount_display
-                        ]
-                    ),
-                    # Note Input Container
-                    ft.Container(
-                        bgcolor="#1E1E1E",
-                        border_radius=8,
-                        padding=ft.Padding.symmetric(horizontal=8, vertical=2),
-                        content=self.note_input
-                    ),
-                    # Keypad Grid
-                    self._build_keypad()
-                ]
-            )
-        )
-
-        self.main_content_column = ft.Column(
-            tight=True,
-            spacing=10,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            controls=[
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    controls=[
-                        ft.IconButton(ft.Icons.CLOSE, on_click=self._handle_close, icon_color=Color.PRIMARY_TEXT),
-                        self.title_text,
-                        ft.Container(width=40)
-                    ]
-                ),
-                self.category_list,
-                self.keyboard_container
-            ]
-        )
-
-        self.main_container = ft.Container(
-            width=UISettings.MAX_APP_WIDTH,
-            padding=15,
-            bgcolor=Color.DIALOG_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
-            content=self.main_content_column
-        )
-
-        super().__init__(
-            color=Color.TRANSPARENT,
-            dialog_content=self.main_container
-        )
-
-        self._load_category_widgets(categories)
-
-    def _load_category_widgets(self, categories: list[list[_Category]]):
-        self.category_list.controls.clear()
         self.category_items.clear()
-
         for row in categories:
             category_row = ft.Row(vertical_alignment=ft.CrossAxisAlignment.CENTER)
             for category in row:
@@ -400,7 +338,7 @@ class _BaseTransactionKeyboardDialog(Dialog):
 
         self.keyboard_container.visible = True
         if self._page is not None:
-            self.main_container.update()
+            self.update()
 
     def _build_keypad(self) -> ft.Column:
         btn_bg = "#252B36"
@@ -497,98 +435,30 @@ class _BaseTransactionKeyboardDialog(Dialog):
             self.amount_display.update()
 
     def _on_save_clicked(self):
-        if self._on_save is not None:
-            try:
-                self._on_save()
-            except TypeError:
-                pass
-
-    def _handle_close(self, e=None) -> None:
-        page = e.page if e is not None and hasattr(e, "page") else self._page
-        self.close_most_recent_dialog(page)
-        if self._on_cancel is not None:
-            try:
-                self._on_cancel(e)
-            except TypeError:
-                self._on_cancel()
-
-    def get_values(self):
-        return {
+        vals = {
             "amount": self.amount_value,
             "category": self.selected_category,
             "note": self.note_input.value or ""
         }
+        if self.current_type == "expense":
+            success, message = self.controller.add_expense_entry(vals)
+        else:
+            success, message = self.controller.add_income_entry(vals)
 
-    def clear(self):
-        self.selected_category = ""
-        self.amount_value = "0"
-        self.amount_display.value = "0"
-        self.note_input.value = ""
-        self.keyboard_container.visible = False
-        for item in self.category_items:
-            item.update_selection(False)
+        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self._page.overlay.append(self.snack_bar)
+        self.snack_bar.open = True
 
-    def resize(self, width: int) -> None:
-        self.main_container.width = width
+        if success:
+            self._page.navigate_to("/home")()
+        else:
+            self.update()
 
-
-class ExpenseInputDialog(_BaseTransactionKeyboardDialog):
-    def __init__(self, page: Page, lang: dict, on_save: Callable, on_cancel: Callable, on_category_click: Callable = None):
-        expense_categories = [
-            [
-                {"name": "Mua sắm", "icon": ft.Icons.SHOPPING_CART},
-                {"name": "Đồ ăn", "icon": ft.Icons.RESTAURANT},
-                {"name": "Điện thoại", "icon": ft.Icons.SMARTPHONE},
-                {"name": "Giải trí", "icon": ft.Icons.SPORTS_ESPORTS}
-            ],
-            [
-                {"name": "Giáo dục", "icon": ft.Icons.SCHOOL},
-                {"name": "Làm đẹp", "icon": ft.Icons.CONTENT_CUT},
-                {"name": "Thể thao", "icon": ft.Icons.DIRECTIONS_RUN},
-                {"name": "Giao lưu", "icon": ft.Icons.PEOPLE}
-            ],
-            [
-                {"name": "Đi lại", "icon": ft.Icons.DIRECTIONS_BUS},
-                {"name": "Quần áo", "icon": ft.Icons.CHECKROOM},
-                {"name": "Ô tô", "icon": ft.Icons.DIRECTIONS_CAR},
-                {"name": "Thiết bị điện tử", "icon": ft.Icons.COMPUTER}
-            ],
-            [
-                {"name": "Du lịch", "icon": ft.Icons.FLIGHT},
-                {"name": "Sức khỏe", "icon": ft.Icons.FAVORITE},
-                {"name": "Thú cưng", "icon": ft.Icons.PETS},
-                {"name": "Sửa chữa", "icon": ft.Icons.BUILD}
-            ]
-        ]
-        super().__init__(
-            page=page,
-            lang=lang,
-            title="Add Expense",
-            categories=expense_categories,
-            on_save=on_save,
-            on_cancel=on_cancel
-        )
+    def _on_page_resize(self, e = None) -> None:
+        page_width, page_height = self.get_safe_page_size(page=self._page)
+        self.main_container.width = page_width
 
 
-class IncomeInputDialog(_BaseTransactionKeyboardDialog):
-    def __init__(self, page: Page, lang: dict, on_save: Callable, on_cancel: Callable, on_category_click: Callable = None):
-        income_categories = [
-            [
-                {"name": "Lương", "icon": ft.Icons.WORK},
-                {"name": "Khoản đầu tư", "icon": ft.Icons.TRENDING_UP},
-                {"name": "Làm thêm", "icon": ft.Icons.MONEY},
-                {"name": "Tiền thưởng", "icon": ft.Icons.EMOJI_EVENTS}
-            ],
-            [
-                {"name": "Khác", "icon": ft.Icons.MONETIZATION_ON},
-                {"name": "Thêm", "icon": ft.Icons.ADD}
-            ]
-        ]
-        super().__init__(
-            page=page,
-            lang=lang,
-            title="Add Income",
-            categories=income_categories,
-            on_save=on_save,
-            on_cancel=on_cancel
-        )
+def get_category_selection_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+    Logger.info("Loading Category Selection page...")
+    return CategorySelectionView(page, lang, user_info)

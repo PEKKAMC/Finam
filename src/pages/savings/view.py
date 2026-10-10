@@ -205,15 +205,16 @@ class SavingsView(ft.View):
 
         self._page.update()
 
-    async def trigger_export(self, e=None):
+    async def trigger_export(self, e=None) -> None:
         file_path = await ft.FilePicker().save_file(allowed_extensions=["xlsx", "xls"], file_name="savings.xlsx")
         if file_path:
             success, error_message = self.controller.export_ledger_to_excel(file_path, self.lang)
-            self._page.show_dialog(ft.SnackBar(Text.MEDIUM(self.lang["savings.export_succeeded"] if success else self.lang["savings.error.export_failed"].format(error=error_message))))
+            snack_bar = ft.SnackBar(Text.MEDIUM(self.lang["savings.export_succeeded"] if success else self.lang["savings.error.export_failed"].format(error=error_message)))
+            self._page.overlay.append(snack_bar)
+            snack_bar.open = True
             self._page.update()
-        return e
 
-    def on_page_resize(self, e=None) -> ft.PageResizeEvent | None:
+    def on_page_resize(self, e=None) -> None:
         page_width, page_height = self.get_safe_page_size(page=self._page)
 
         self.main_container.width = page_width
@@ -231,7 +232,6 @@ class SavingsView(ft.View):
             width=page_width
         )
 
-        return e
 
 
 def get_savings_view(page: Page, lang: dict, user_info: dict) -> ft.View:

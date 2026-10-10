@@ -2,31 +2,108 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-from datetime import datetime, timedelta
+from __future__ import annotations
 
-import flet as ft
+from datetime import datetime
 
 from src.database import db
 from src.logger import Logger
-from src.utils import Page, Text
+from src.pages.global_components.financial_chart import get_financial_chart_data
 
 
 class LogicController:
-    def __init__(self, current_user: str, page: Page, lang: dict, user_info: dict, refresh_callback):
-        self.snack_bar = None
-        self.cached_expenses = None
-        self.cached_incomes = None
-        self.page = page
-        self.lang = lang
-        self.current_user = current_user
-        self.user_info = user_info
-        self.refresh_callback = refresh_callback
+    """Business logic for the Spending page."""
 
-        self.current_chart_type = "daily"
-        self.current_category_type = None
+    def __init__(self, current_user: str):
+        self.current_user = current_user
+
+    def get_transaction_data(self) -> tuple[dict, dict]:
+        expenses = db.spending.get_user_expenses(self.current_user) or []
+        incomes = db.spending.get_user_incomes(self.current_user) or []
+
+        total_income = sum(int(item.get("amount", 0)) for item in incomes)
+        total_expense = sum(int(item.get("amount", 0)) for item in expenses)
+        net_balance = total_income - total_expense
+
+        balance_data = {
+            "incomes": f"+{total_income:,} VND",
+            "expenses": f"-{total_expense:,} VND",
+            "current": f"{net_balance:,} VND",
+        }
+
+        transactions: dict[str, list[dict]] = {}
+        for item in incomes:
+            tx = {
+                "id": item.get("id"),
+                "title": item.get("category", "Lương"),
+                "subtitle": item.get("note") or "",
+                "amount": int(item.get("amount", 0)),
+                "date": item.get("date", ""),
+                "positive": True,
+            }
+            transactions.setdefault(str(tx["date"])[:10], []).append(tx)
+
+        for item in expenses:
+            tx = {
+                "id": item.get("id"),
+                "title": item.get("category", "Khác"),
+                "subtitle": item.get("note") or "",
+                "amount": int(item.get("amount", 0)),
+                "date": item.get("date", ""),
+                "positive": False,
+            }
+            transactions.setdefault(str(tx["date"])[:10], []).append(tx)
+
+        for day_key in transactions:
+            transactions[day_key].sort(key=lambda tx: str(tx.get("date", "")), reverse=True)
+
+        return balance_data, transactions
+
+    def get_dashboard_data(self, chart_type: str = "daily", date_offset: int = 0, target_year: int | None = None) -> tuple[dict, list, str]:
+        chart_date, chart_data = get_financial_chart_data(
+            username=self.current_user,
+            chart_type=chart_type,
+            date_offset=date_offset,
+            target_year=target_year,
+        )
+        return chart_date, chart_data, chart_type
+
+    def filter_transactions(self, raw_transactions: dict, filter_type: str, selected_category: str, search_query: str) -> list:
+        filtered: list[dict] = []
+        query = (search_query or "").strip().lower()
+
+        for txs in raw_transactions.values():
+            for tx in txs:
+                if filter_type != "all":
+                    is_income = bool(tx.get("positive"))
+                    if filter_type == "income" and not is_income:
+                        continue
+                    if filter_type == "expense" and is_income:
+                        continue
+
+                category_name = str(tx.get("title", ""))
+                if selected_category not in ("all", "") and category_name != selected_category:
+                    continue
+
+                if query:
+                    haystack = f"{category_name} {tx.get('subtitle', '')}".lower()
+                    if query not in haystack:
+                        continue
+
+                filtered.append(tx)
+
+        filtered.sort(key=lambda tx: str(tx.get("date", "")), reverse=True)
+        return filtered
+
+    def delete_transaction(self, transaction_id: int) -> bool:
+        try:
+            return db.spending.delete_entry(self.current_user, int(transaction_id))
+        except (TypeError, ValueError):
+            Logger.warning(f"Invalid transaction id: {transaction_id}")
+            return False
 
     def add_income_entry(self, vals: dict) -> tuple[bool, str]:
-        amount = vals.get("amount", '0')
+        amount = vals.get("amount", "0")
         category = vals.get("category")
         note = vals.get("note", "")
 
@@ -38,7 +115,7 @@ class LogicController:
             amount_val = int(amount)
             if amount_val <= 0:
                 return False, "home.error.amount_less_than_zero"
-        except ValueError:
+        except (TypeError, ValueError):
             Logger.error("Invalid amount provided")
             return False, "home.error.invalid_amount"
 
@@ -48,7 +125,7 @@ class LogicController:
         return False, "home.error.save_income_failed"
 
     def add_expense_entry(self, vals: dict) -> tuple[bool, str]:
-        amount = vals.get("amount", '0')
+        amount = vals.get("amount", "0")
         category = vals.get("category")
         note = vals.get("note", "")
 
@@ -60,7 +137,7 @@ class LogicController:
             amount_val = int(amount)
             if amount_val <= 0:
                 return False, "home.error.amount_less_than_zero"
-        except ValueError:
+        except (TypeError, ValueError):
             Logger.error("Invalid amount provided")
             return False, "home.error.invalid_amount"
 
@@ -69,165 +146,5 @@ class LogicController:
             return True, "spending.expense_added_success"
         return False, "home.error.save_expense_failed"
 
-    def get_dashboard_data(self, chart_type: str, date_offset: int = 0, target_year: int | None = None):
-        self.current_chart_type = chart_type
-        now = datetime.now()
 
-        if self.current_chart_type == "daily":
-            target_date = now + timedelta(weeks=date_offset)
-        elif self.current_chart_type == "weekly":
-            total_months = (now.year * 12 + (now.month - 1)) + date_offset
-            year = total_months // 12
-            month = (total_months % 12) + 1
-            target_date = now.replace(year=year, month=month, day=1)
-        elif self.current_chart_type == "monthly":
-            tgt_year = target_year if target_year is not None else now.year
-            tgt_month = now.month if tgt_year == now.year else 1
-            target_date = now.replace(year=tgt_year, month=tgt_month, day=1)
-        else:
-            target_date = now
-
-        iso_year, iso_week, iso_day = target_date.isocalendar()
-
-        chart_date = {"month": target_date.month, "year": target_date.year, "week": iso_week}
-        chart_data = []
-
-        if self.current_chart_type == "daily":
-            chart_data = [{"day": i + 1, "income": 0, "expense": 0} for i in range(7)]
-        elif self.current_chart_type == "weekly":
-            chart_data = [{"week": i + 1, "income": 0, "expense": 0} for i in range(4)]
-        elif self.current_chart_type == "monthly":
-            chart_data = [{"month": i + 1, "income": 0, "expense": 0} for i in range(12)]
-
-        # Calculate Monday-Sunday week bounds based on target_date
-        start_of_week = target_date - timedelta(days=target_date.weekday())
-        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
-        end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59)
-
-        expenses = getattr(self, 'cached_expenses', None) or db.spending.get_user_expenses(self.current_user)
-        incomes = getattr(self, 'cached_incomes', None) or db.spending.get_user_incomes(self.current_user)
-
-        try:
-            for expense in expenses:
-                try:
-                    exp_date = datetime.strptime(str(expense["date"])[:16], "%Y-%m-%d %H:%M")
-                    if self.current_chart_type == "daily" and start_of_week <= exp_date <= end_of_week:
-                        chart_data[exp_date.weekday()]["expense"] += expense["amount"]
-                    elif self.current_chart_type == "weekly" and exp_date.year == target_date.year and exp_date.month == target_date.month:
-                        week_of_month = min((exp_date.day - 1) // 7, 3)
-                        chart_data[week_of_month]["expense"] += expense["amount"]
-                    elif self.current_chart_type == "monthly" and exp_date.year == target_date.year:
-                        chart_data[exp_date.month - 1]["expense"] += expense["amount"]
-                except (ValueError, TypeError): pass
-
-            for income in incomes:
-                try:
-                    inc_date = datetime.strptime(str(income["date"])[:16], "%Y-%m-%d %H:%M")
-                    if self.current_chart_type == "daily" and start_of_week <= inc_date <= end_of_week:
-                        chart_data[inc_date.weekday()]["income"] += income["amount"]
-                    elif self.current_chart_type == "weekly" and inc_date.year == target_date.year and inc_date.month == target_date.month:
-                        week_of_month = min((inc_date.day - 1) // 7, 3)
-                        chart_data[week_of_month]["income"] += income["amount"]
-                    elif self.current_chart_type == "monthly" and inc_date.year == target_date.year:
-                        chart_data[inc_date.month - 1]["income"] += income["amount"]
-                except (ValueError, TypeError): pass
-        except Exception as e:
-            Logger.error(f"Error formatting dashboard data: {e}")
-
-        return chart_date, chart_data, self.current_chart_type
-
-    def get_transaction_data(self):
-        username = self.user_info.get("username")
-        total_incomes = db.spending.get_total_income(username)
-        total_expenses = db.spending.get_total_expense(username)
-        current_balance = total_incomes - total_expenses
-
-        balance_data = {
-            "current": f"{current_balance:,} VND",
-            "growth": "Active",
-            "incomes": f"+{total_incomes:,} VND",
-            "expenses": f"-{total_expenses:,} VND"
-        }
-
-        expenses = db.spending.get_user_expenses(username)
-        incomes = db.spending.get_user_incomes(username)
-        self.cached_expenses = expenses
-        self.cached_incomes = incomes
-
-        transactions = {}
-        combined_list = []
-        for expense in expenses:
-            combined_list.append({"id": expense["id"], "date": expense["date"], "title": expense["category"], "subtitle": expense["note"] if expense["note"] else "Expense", "amount": expense["amount"], "is_income": False})
-        for income in incomes:
-            combined_list.append({"id": income["id"], "date": income["date"], "title": income["category"], "subtitle": income.get("note", ""), "amount": income.get("amount", 0), "is_income": True})
-
-        combined_list.sort(key=lambda x: x["date"], reverse=True)
-        today = datetime.now().date()
-        yesterday = today - timedelta(days=1)
-
-        for item in combined_list:
-            try:
-                item_date = datetime.strptime(item["date"][:16] if len(item["date"]) > 16 else item["date"], "%Y-%m-%d %H:%M").date()
-                if item_date == today: date_key = "TODAY"
-                elif item_date == yesterday: date_key = "YESTERDAY"
-                else: date_key = item_date.strftime("%b %d").upper()
-            except ValueError:
-                date_key = "UNKNOWN DATE"
-
-            if date_key not in transactions: transactions[date_key] = []
-            title, subtitle = item["title"], item["subtitle"]
-            icon = ft.Icons.ACCOUNT_BALANCE
-
-            transactions[date_key].append({
-                "id": item["id"],
-                "title": title, "subtitle": subtitle,
-                "amount": f"+{item['amount']:,} VND" if item["is_income"] else f"-{item['amount']:,} VND",
-                "icon": icon, "positive": item["is_income"]
-            })
-
-        return balance_data, transactions
-
-    def delete_transaction(self, transaction_id):
-        """Deletes an expense or income entry by ID."""
-        username = self.user_info.get("username")
-        try:
-            success = db.spending.delete_entry(username, transaction_id)
-            if success:
-                if self.refresh_callback:
-                    self.refresh_callback()
-                self.snack_bar = ft.SnackBar(Text.MEDIUM("Xóa giao dịch thành công!"))
-                self.snack_bar.open = True
-                self.page.update()
-        except Exception as e:
-            Logger.error(f"Error deleting transaction: {e}")
-
-    @staticmethod
-    def filter_transactions(raw_transactions: dict, filter_type: str = "all", selected_category: str = "all", search_query: str = "") -> list:
-        all_txs = [item for items in raw_transactions.values() for item in items]
-        filtered_txs = []
-        q = search_query.strip().lower()
-        q_digits = "".join(c for c in q if c.isdigit())
-
-        for tx in all_txs:
-            is_income = tx.get("positive", False)
-            t_type = "income" if is_income else "expense"
-
-            if filter_type != "all" and t_type != filter_type:
-                continue
-            if selected_category != "all" and tx.get("title") != selected_category:
-                continue
-            if q:
-                title = (tx.get("title") or "").lower()
-                subtitle = (tx.get("subtitle") or "").lower()
-                amount_str = str(tx.get("amount") or "").lower()
-                amt_digits = "".join(c for c in amount_str if c.isdigit())
-
-                match_title = q in title
-                match_sub = q in subtitle
-                match_amt = q in amount_str
-                match_num = q_digits in amt_digits if q_digits else False
-
-                if not (match_title or match_sub or match_amt or match_num):
-                    continue
-            filtered_txs.append(tx)
-        return filtered_txs
+__all__ = ["LogicController"]

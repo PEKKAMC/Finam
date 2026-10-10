@@ -67,9 +67,8 @@ class DialogManager:
             Logger.error(f"Error loading category selector data: {e}")
             return -1
 
-    def _cancel_category_selector_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+    def _cancel_category_selector_dialog(self, e: ft.ControlEvent) -> None:
         self.category_dialog.close_most_recent_dialog(self._page)
-        return e
 
     def _handle_category_selected(self, category_name: str, category_type: str, e = None) -> None:
         self.category_dialog.close_most_recent_dialog(self._page)
@@ -83,21 +82,18 @@ class DialogManager:
 
         self.current_category_type = category_type
 
-        return e
-
     # EXPENSE DIALOG
-    def open_expense_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+    def open_expense_dialog(self, e: ft.ControlEvent) -> None:
         self.expense_dialog.show(self._page)
-        return e
 
-    def _cancel_expense_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+    def _cancel_expense_dialog(self, e: ft.ControlEvent) -> None:
         self.expense_dialog.close_most_recent_dialog(self._page)
-        return e
 
-    def _handle_save_expense(self, e: ft.ControlEvent) -> ft.ControlEvent:
+    def _handle_save_expense(self, e: ft.ControlEvent) -> None:
         success, message = self.controller.add_expense_entry(self.expense_dialog.get_values())
 
         self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self._page.overlay.append(self.snack_bar)
         self.snack_bar.open = True
 
         if success:
@@ -107,21 +103,18 @@ class DialogManager:
         else:
             self._page.update()
 
-        return e
-
     # INCOME DIALOG
-    def open_income_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+    def open_income_dialog(self, e: ft.ControlEvent) -> None:
         self.income_dialog.show(self._page)
-        return e
 
-    def _cancel_income_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
+    def _cancel_income_dialog(self, e: ft.ControlEvent) -> None:
         self.income_dialog.close_most_recent_dialog(self._page)
-        return e
 
-    def _handle_save_income(self, e: ft.ControlEvent) -> ft.ControlEvent:
+    def _handle_save_income(self, e: ft.ControlEvent) -> None:
         success, message = self.controller.add_income_entry(self.income_dialog.get_values())
 
         self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
+        self._page.overlay.append(self.snack_bar)
         self.snack_bar.open = True
 
         if success:
@@ -131,7 +124,6 @@ class DialogManager:
         else:
             self._page.update()
 
-        return e
 
     # OVERLAY MANAGEMENT
     def _add_dialogs_to_overlay(self) -> None:
@@ -167,7 +159,7 @@ class SpendingView(ft.View):
         self.selected_category = "all"
 
         # INITIALIZE PAGE CONTROLLER
-        self.controller = LogicController(user_info["username"], self._page, self.lang, self.user_info, self.refresh_view)
+        self.controller = LogicController(user_info["username"])
 
         # FETCH INITIAL DATA
         balance_data, self.raw_transactions = self.controller.get_transaction_data()
@@ -340,7 +332,7 @@ class SpendingView(ft.View):
         )
         self.history_card.update_data(filtered_txs)
 
-    def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
+    def _on_page_resize(self, e = None) -> None:
         page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
@@ -366,7 +358,6 @@ class SpendingView(ft.View):
             width=page_width
         )
 
-        return e
 
 
 def get_spending_view(page: Page, lang: dict, user_info: dict) -> ft.View:

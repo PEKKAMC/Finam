@@ -102,7 +102,7 @@ class LessonItemCard(ft.Container):
                             tight=True
                         ),
                         bgcolor=Color.PRIMARY,
-                        on_click=lambda e: self._page.go(self.route) if self._page else None,
+                        on_click=lambda e: self._page.navigate_to(self.route)(),
                         style=ft.ButtonStyle(
                             shape=ft.RoundedRectangleBorder(radius=16),
                             padding=12
@@ -122,7 +122,7 @@ class LessonItemCard(ft.Container):
             border_radius=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             ink=True,
-            on_click=lambda e: self._page.go(self.route),
+            on_click=lambda e: self._page.navigate_to(self.route)(),
             content=self.main_container,
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
             padding=0,

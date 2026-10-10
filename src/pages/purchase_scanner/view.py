@@ -139,7 +139,7 @@ class PurchaseScannerView(ft.View):
 
         self._page.run_thread(worker)
 
-    def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
+    def _on_page_resize(self, e = None) -> None:
         page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
@@ -151,7 +151,6 @@ class PurchaseScannerView(ft.View):
             width=page_width
         )
 
-        return e
 
 def get_scanner_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     Logger.info("Loading Purchase Scanner page...")

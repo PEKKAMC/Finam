@@ -47,6 +47,17 @@ class DialogManager:
             on_confirm_callback=self._handle_delete_confirm
         )
 
+        self._add_dialogs_to_overlay()
+
+    def _add_dialogs_to_overlay(self) -> None:
+        """Add all dialogs to page overlay (required for Flet 1.0.4+)"""
+        dialogs = [
+            self.user_dialog,
+            self.delete_dialog
+        ]
+        for d in dialogs:
+            d.add_to_overlay(self._page)
+
     def show_user_management_dialog(self) -> int:
         return self.user_dialog.show(self._page)
 
@@ -76,7 +87,7 @@ class DialogManager:
     def handle_change_user(self, username: str):
         self.user_dialog.close_most_recent_dialog(self._page)
         self.controller.change_user(username)
-        self._page.go("/home")
+        self._page.navigate_to("/home")()
 
 class StarterView(ft.View):
     def __init__(self, page: Page, lang: dict, user_info: dict):
@@ -140,7 +151,7 @@ class StarterView(ft.View):
             pass
         return 0
 
-    def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
+    def _on_page_resize(self, e = None) -> None:
         page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
@@ -149,7 +160,6 @@ class StarterView(ft.View):
         self.main_container.width = page_width
         self.main_container.height = page_height
 
-        return e
 
 def get_starter_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     Logger.info("Loading Starter page...")

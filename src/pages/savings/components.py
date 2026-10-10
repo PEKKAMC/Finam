@@ -448,15 +448,19 @@ class QuickActionDialog(Dialog):
                         if "format" not in self.lang[error_key]
                         else self.lang[error_key].format(remaining=f"{extra_val:,}")
                     )
-                    e.page.snack_bar = ft.SnackBar(Text.MEDIUM(msg))
+                    snack_bar = ft.SnackBar(Text.MEDIUM(msg))
                 elif error_key == "savings.error.exceeding_amount":
                     msg = (
                         f"Amount exceeds target! Remaining: {extra_val:,} VND"
                         if "format" not in self.lang[error_key]
                         else self.lang[error_key].format(remaining=f"{extra_val:,}")
                     )
-                    e.page.snack_bar = ft.SnackBar(Text.MEDIUM(msg))
-                e.page.snack_bar.open = True
+                    snack_bar = ft.SnackBar(Text.MEDIUM(msg))
+                else:
+                    snack_bar = ft.SnackBar(Text.MEDIUM("An error occurred"))
+                
+                e.page.overlay.append(snack_bar)
+                snack_bar.open = True
                 e.page.update()
                 return
 

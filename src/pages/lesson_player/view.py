@@ -221,13 +221,11 @@ class LessonPlayerView(ft.View):
         finally:
             self.is_constructing_slide = False
 
-    async def handle_next_slide(self, e):
+    async def handle_next_slide(self, e) -> None:
         await self.change_slide_wrapper(1)
-        return e
 
-    async def handle_previous_slide(self, e):
+    async def handle_previous_slide(self, e) -> None:
         await self.change_slide_wrapper(-1)
-        return e
 
     async def initialize_lesson_from_path(self, filepath: str):
         success = self.lesson_logic.load_lesson_data(filepath)
@@ -251,11 +249,10 @@ class LessonPlayerView(ft.View):
         initial_sequence_identifier = self.animation_controller.start_new_sequence()
         await self.build_and_play_current_slide(initial_sequence_identifier)
 
-    async def handle_return_click(self, e):
+    async def handle_return_click(self, e) -> None:
         self.animation_controller.start_new_sequence()
         await self.audio_controller.pause()
         await self._page.push_route("/lessons")
-        return e
 
     async def cleanup_audio_resources(self, event):
         self.animation_controller.start_new_sequence()
@@ -292,7 +289,6 @@ class LessonPlayerView(ft.View):
         except Exception:
             pass
 
-        return event
 
 def get_lesson_player_view(page: Page, lang: dict, user_info: dict, target_lesson_filename: str | None = None) -> ft.View:
     Logger.info("Loading Lesson Player page...")

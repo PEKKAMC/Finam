@@ -31,7 +31,7 @@ class FallbackView(ft.View):
         self.return_button = ReturnButton(
             page=self._page,
             lang=self.lang,
-            on_click=lambda e: self._page.go("/home")
+            on_click=self._page.navigate_to("/home")
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -79,7 +79,7 @@ class FallbackView(ft.View):
 
         return safe_width, safe_height
 
-    def on_page_resize(self, e=None):
+    def on_page_resize(self, e=None) -> None:
         page_width, page_height = self.get_safe_page_size()
 
         self.main_container.width = page_width
@@ -88,7 +88,6 @@ class FallbackView(ft.View):
             size=int(min(page_width, page_height) * 0.7)
         )
 
-        return e
 
 
 def get_fallback_view(page: Page, lang: dict, fallback_reason: str) -> ft.View:

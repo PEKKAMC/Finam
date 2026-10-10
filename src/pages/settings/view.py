@@ -173,7 +173,7 @@ class SettingsView(ft.View):
             Logger.warn(f"Failed to refresh view {e}")
             return -1
 
-    def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
+    def _on_page_resize(self, e = None) -> None:
         page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
@@ -188,7 +188,6 @@ class SettingsView(ft.View):
         self.currency_card.resize(width=page_width)
         self.system_prefs_card.resize(width=page_width)
 
-        return e
 
 
 def get_settings_view(page: Page, lang: dict, user_info: dict) -> ft.View:

@@ -112,7 +112,6 @@ class LessonsView(ft.View):
             width=page_width
         )
 
-        return e
 
 
 def get_lessons_view(page: Page, lang: dict, user_info: dict) -> ft.View:

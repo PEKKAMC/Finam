@@ -121,9 +121,8 @@ class UserList(ft.Container):
         initial = username[0].upper() if username else ""
         created_prefix = self.lang["user_management.created_date"]
 
-        def handle_select(e, name=username):
+        def handle_select(e, name=username) -> None:
             self.on_select(name)
-            return e
 
         return ft.Container(
             bgcolor=Color.WHITE,
@@ -249,10 +248,9 @@ class AddUserField(ft.Container):
 
         super().__init__(content=self.main_container)
 
-    def _handle_submit(self, e=None):
+    def _handle_submit(self, e=None) -> None:
         input_username = self.input_field.value.strip()
         self.on_submit_callback(input_username)
-        return e
 
     def show_error(self, message: str):
         self.error_message.value = message
@@ -280,15 +278,15 @@ class DeleteUserCard(ft.Container):
         self.on_confirm = on_confirm_callback
         self.on_cancel = on_cancel_callback
 
-        cancel_text = self.lang.get("generic.cancel", "Hủy")
-        delete_text = self.lang.get("generic.delete", "Xóa")
+        cancel_text = self.lang["generic.cancel"]
+        delete_text = self.lang["generic.delete"]
 
         self.main_container = ft.Column(
             tight=True,
             spacing=16,
             controls=[
-                Text.H3(self.lang.get("user_management.confirm_delete_user_title", "Xóa người dùng"), color=Color.PRIMARY_TEXT),
-                Text.P(self.lang.get("user_management.confirm_delete_user_content", "Bạn có chắc chắn muốn xóa người dùng này?"), color=Color.SECONDARY_TEXT),
+                ft.Text(self.lang["user_management.confirm_delete_user_title"], color=Color.PRIMARY_TEXT),
+                ft.Text(self.lang["user_management.confirm_delete_user_content"], color=Color.SECONDARY_TEXT),
                 ft.Row(
                     alignment=ft.MainAxisAlignment.END,
                     spacing=12,

@@ -59,7 +59,7 @@ async def main(page: Page):
 
     views_cache: dict[str, ft.View] = {}
 
-    async def route_change(e: ft.RouteChangeEvent) -> ft.RouteChangeEvent:
+    async def route_change(e: ft.RouteChangeEvent) -> None:
         try:
             page.views.clear()
             if page.route:
@@ -109,18 +109,16 @@ async def main(page: Page):
 
             else:
                 await redirect_to_fallback(page, lang, "page_not_found")
-                return e
+                return
 
             if view is not None:
                 page.views.append(view)
 
             page.update()
-            return e
 
         except Exception as ex:
             Logger.critical(f"Failed to change route: {ex}")
             await on_error(e)
-            return e
 
     async def on_error(e) -> None:
         if e == ft.Event(name='error', data='Bad state: No element', control=page):
@@ -141,4 +139,6 @@ async def main(page: Page):
     page.on_error = on_error
     page.on_route_change = route_change
 
-    await page.push_route("/starter")
+    # Flet 1.0.4: route changes must be scheduled with push_route(), not go().
+    # Use the shared helper for the project-wide route change API.
+    page.navigate_to("/starter")()

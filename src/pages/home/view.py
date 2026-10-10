@@ -7,154 +7,13 @@ from collections.abc import Callable
 import flet as ft
 
 from src.logger import Logger
-from src.pages.global_components import CategorySelectionDialog, ExpenseInputDialog, FinancialChart, IncomeInputDialog, Menu
+from src.pages.global_components import FinancialChart, Menu
 from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChart, FeaturedLessonCard
 from src.pages.home.logic import LogicController
-from src.utils import Color, Page, get_safe_page_size, Text, UISettings
+from src.utils import Color, Page, get_safe_page_size, UISettings
 
 Logger.info("Initializing Home page...")
 
-
-class DialogManager:
-    """Handles all dialog instantiation, states, and callbacks for the Home View."""
-    def __init__(self, page: Page, lang: dict, controller: LogicController, refresh_callback: Callable):
-        self._page = page
-        self.lang = lang
-        self.controller = controller
-        self._refresh_view = refresh_callback
-        self.current_category_type = "expense"
-
-        # INITIALIZE DIALOG COMPONENTS
-        self.category_dialog = CategorySelectionDialog(
-            page=self._page,
-            lang=self.lang,
-            on_select=self._handle_category_selected,
-            on_cancel=self._cancel_category_selector_dialog
-        )
-        self.category_dialog.load_categories("expense")
-
-        self.expense_dialog = ExpenseInputDialog(
-            page=self._page,
-            lang=self.lang,
-            on_save=self._handle_save_expense,
-            on_cancel=self._cancel_expense_dialog,
-            on_category_click=lambda e=None: self._load_category_selector_data()
-        )
-
-        self.income_dialog = IncomeInputDialog(
-            page=self._page,
-            lang=self.lang,
-            on_save=self._handle_save_income,
-            on_cancel=self._cancel_income_dialog,
-            on_category_click=lambda e=None: self._load_category_selector_data()
-        )
-
-        self._add_dialogs_to_overlay()
-
-    # CATEGORY SELECTOR DIALOG
-    def _load_category_selector_data(self) -> int:
-        try:
-            if self.expense_dialog.open:
-                self.expense_dialog.close_most_recent_dialog(self._page)
-            if self.income_dialog.open:
-                self.income_dialog.close_most_recent_dialog(self._page)
-
-            self.category_dialog.load_categories(self.current_category_type)
-            self.category_dialog.show(self._page)
-            return 0
-
-        except Exception as e:
-            Logger.error(f"Error loading category selector data: {e}")
-            return -1
-
-    def open_category_selector_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
-        self._load_category_selector_data()
-        return e
-
-    def _cancel_category_selector_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
-        self.category_dialog.close_most_recent_dialog(self._page)
-        return e
-
-    def _handle_category_selected(self, category_name: str, category_type: str, e = None) -> None:
-        self.category_dialog.close_most_recent_dialog(self._page)
-
-        if category_type == "expense":
-            self.expense_dialog.set_category(category_name)
-            self.expense_dialog.show(self._page)
-        elif category_type == "income":
-            self.income_dialog.set_category(category_name)
-            self.income_dialog.show(self._page)
-
-        self.current_category_type = category_type
-
-        return e
-
-    # EXPENSE DIALOG
-    def open_expense_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
-        self.expense_dialog.show(self._page)
-        return e
-
-    def _cancel_expense_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
-        self.expense_dialog.close_most_recent_dialog(self._page)
-        return e
-
-    def _handle_save_expense(self, e: ft.ControlEvent) -> ft.ControlEvent:
-        success, message = self.controller.add_expense_entry(self.expense_dialog.get_values())
-
-        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-        self.snack_bar.open = True
-
-        if success:
-            self.expense_dialog.clear()
-            self._refresh_view()
-            self.expense_dialog.close_most_recent_dialog(self._page)
-        else:
-            self._page.update()
-
-        return e
-
-    # INCOME DIALOG
-    def open_income_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
-        self.income_dialog.show(self._page)
-        return e
-
-    def _cancel_income_dialog(self, e: ft.ControlEvent) -> ft.ControlEvent:
-        self.income_dialog.close_most_recent_dialog(self._page)
-        return e
-
-    def _handle_save_income(self, e: ft.ControlEvent) -> ft.ControlEvent:
-        success, message = self.controller.add_income_entry(self.income_dialog.get_values())
-
-        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-        self.snack_bar.open = True
-
-        if success:
-            self.income_dialog.clear()
-            self._refresh_view()
-            self.income_dialog.close_most_recent_dialog(self._page)
-        else:
-            self._page.update()
-
-        return e
-
-    # OVERLAY MANAGEMENT
-    def _add_dialogs_to_overlay(self) -> None:
-        dialogs = [
-            self.category_dialog,
-            self.expense_dialog,
-            self.income_dialog
-        ]
-        for d in dialogs:
-            d.add_to_overlay(self._page)
-
-    def _remove_dialogs_from_overlay(self) -> None:
-        dialogs = [
-            self.category_dialog,
-            self.expense_dialog,
-            self.income_dialog
-        ]
-        for d in dialogs:
-            d.remove_from_overlay(self._page)
 
 class HomeView(ft.View):
     def __init__(self, page: Page, lang: dict, user_info: dict):
@@ -167,14 +26,6 @@ class HomeView(ft.View):
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info["username"])
-
-        # INITIALIZE DIALOG MANAGER
-        self.dialogs = DialogManager(
-            page=self._page,
-            lang=self.lang,
-            controller=self.controller,
-            refresh_callback=self.refresh_view
-        )
 
         # FETCH DASHBOARD DATA
         self.objectives = self.controller.get_user_objectives()
@@ -200,7 +51,7 @@ class HomeView(ft.View):
             expense=self.metrics["total_expense"],
             savings=self.metrics["total_savings"],
             ai_advice=self.ai_advice,
-            on_add_click=self.dialogs.open_category_selector_dialog,
+            on_add_click=self._page.navigate_to("/category_selection"),
             on_scan_click=self._page.navigate_to("/purchase_scanner")
         )
 
@@ -311,7 +162,7 @@ class HomeView(ft.View):
             Logger.warn(f"Failed to refresh view {e}")
             return -1
 
-    def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
+    def _on_page_resize(self, e = None) -> None:
         page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
@@ -323,11 +174,6 @@ class HomeView(ft.View):
         # Resizing other components
         self.menu.resize(
             width=page_width
-        )
-
-        self.dialogs.category_dialog.resize(
-            dialog_width=int(page_width * 0.9),
-            dialog_height=int(page_height * 0.9)
         )
 
         self.balance_card.resize(
@@ -354,7 +200,6 @@ class HomeView(ft.View):
             width=page_width
         )
 
-        return e
 
 def get_home_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     Logger.info("Loading Home page...")

@@ -68,9 +68,8 @@ class DialogManager:
         self.user_list.update_data(self.controller.get_all_users(), self.user_info.get("username", ""))
         return self.user_dialog.show(self._page)
 
-    def _close_user_management_dialog(self, e: ft.ControlEvent | None = None) -> ft.ControlEvent | None:
+    def _close_user_management_dialog(self, e: ft.ControlEvent | None = None) -> None:
         self.user_dialog.close_most_recent_dialog(self._page)
-        return e
 
     # USER ACTIONS
     def _handle_add_user(self, input_username: str):
@@ -334,7 +333,7 @@ class UserManagementView(ft.View):
     async def logout(self, e=None) -> None:
         try:
             self.user_info["username"] = ""
-            await self._page.navigate_to("/starter")(e)
+            self._page.navigate_to("/starter")()
         except Exception as ex:
             Logger.warn(f"Failed to logout: {ex}")
 

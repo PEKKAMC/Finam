@@ -9,16 +9,16 @@ from src.logger import Logger
 
 class Page(ft.Page):
     def navigate_to(self, route: str):
-        async def handler(e: ft.ControlEvent) -> ft.ControlEvent | None:
+        def handler(e: ft.ControlEvent | None = None) -> None:
             try:
-                await self.push_route(route)
-            except Exception as ex_push_route:
-                Logger.error(f"Failed to navigate to {route} through push_route(), using go() instead: {ex_push_route}")
-                try:
-                    self.go(route)
-                except Exception as ex_go:
-                    Logger.error(f"Failed to navigate to {route} through go(): {ex_go}")
-            return e
+                normalized_route = str(route or "")
+                current_route = str(self.route or "")
+                if normalized_route == current_route:
+                    Logger.info(f"Skipping route navigation to '{normalized_route}' because we are already there.")
+                    return
+                self.run_task(self.push_route, normalized_route)
+            except Exception as ex:
+                Logger.error(f"Failed to navigate to {route}: {ex}")
 
         return handler
 
