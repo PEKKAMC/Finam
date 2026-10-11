@@ -309,7 +309,7 @@ class LessonEditorView(ft.View):
                 ent = ENTRANCE_EFFECTS.get(el.get("entrance", 0), "None")
                 has_anim = (ent != "None") or (EXIT_EFFECTS.get(el.get("exit", 0), "None") != "None") or el.get("timer_in")
                 anim_desc = f"Delay: {el.get('timer_in', 0)}s | In: {ent}" if has_anim else "No animation assigned"
-                anim_item = ft.Container(content=ft.Row([ft.Icon(icon_name, size=18, color=ft.Colors.BLUE_600 if is_sel else ft.Colors.BLUE_GREY_400), ft.Column([Text.MEDIUM(f"{preview}", weight=ft.FontWeight.BOLD if is_sel else ft.FontWeight.NORMAL, scale=0.043, min_size=11), Text.MEDIUM(anim_desc, color=ft.Colors.GREY_600 if has_anim else ft.Colors.GREY_400)], spacing=2, expand=True), ft.Icon(ft.Icons.STAR, size=14, color=ft.Colors.AMBER_400 if has_anim else ft.Colors.TRANSPARENT)]), padding=10, bgcolor=ft.Colors.BLUE_50 if is_sel else ft.Colors.WHITE, border=ft.Border.all(1, ft.Colors.BLUE_400 if is_sel else ft.Colors.GREY_300), border_radius=8, ink=True, on_click=lambda e, i_idx=i: self.select_element_by_index(i_idx))
+                anim_item = ft.Container(content=ft.Row([ft.Icon(icon_name, size=18, color=ft.Colors.BLUE_600 if is_sel else ft.Colors.BLUE_GREY_400), ft.Column([Text.MEDIUM(f"{preview}", weight=ft.FontWeight.BOLD if is_sel else ft.FontWeight.NORMAL), Text.MEDIUM(anim_desc, color=ft.Colors.GREY_600 if has_anim else ft.Colors.GREY_400)], spacing=2, expand=True), ft.Icon(ft.Icons.STAR, size=14, color=ft.Colors.AMBER_400 if has_anim else ft.Colors.TRANSPARENT)]), padding=10, bgcolor=ft.Colors.BLUE_50 if is_sel else ft.Colors.WHITE, border=ft.Border.all(1, ft.Colors.BLUE_400 if is_sel else ft.Colors.GREY_300), border_radius=8, ink=True, on_click=lambda e, i_idx=i: self.select_element_by_index(i_idx))
                 self.animation_pane.controls.append(anim_item)
 
             if idx is not None and elements[idx].get("type") != "audio":
@@ -332,7 +332,7 @@ class LessonEditorView(ft.View):
             return
 
         el = elements[idx]
-        self.element_properties.controls.append(Text.MEDIUM("Element Properties", weight=ft.FontWeight.BOLD, scale=0.06, min_size=12, color=ft.Colors.BLUE_GREY_900))
+        self.element_properties.controls.append(Text.MEDIUM("Element Properties", weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_GREY_900))
         if el["type"] == "text":
             self.element_properties.controls.append(ft.TextField(label="Text", multiline=True, value=el.get("content", ""), on_change=lambda e: update_prop(e, "content", needs_canvas_update=True), color=Color.DEFAULT_TEXT))
             self.element_properties.controls.append(ft.Row([ft.TextField(label="Width (px)", value=str(el.get("width", 300.0)), on_change=lambda e: update_prop(e, "width", needs_canvas_update=True), color=Color.DEFAULT_TEXT, input_filter=float_filter, expand=True), ft.TextField(label="Font Size", value=str(el.get("size", 16.0)), on_change=lambda e: update_prop(e, "size", needs_canvas_update=True), color=Color.DEFAULT_TEXT, input_filter=float_filter, expand=True)]))
