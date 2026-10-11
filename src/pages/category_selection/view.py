@@ -4,7 +4,7 @@
 
 import ast
 import math
-from datetime import date, datetime
+from datetime import datetime
 
 from collections.abc import Callable
 from typing import TypedDict
@@ -88,6 +88,7 @@ class CategorySelectionView(ft.View):
         self.controller = LogicController(self.user_info["username"])
         self.current_type = "expense"
         self.selected_category = ""
+        self.snack_bar = ft.SnackBar
         self.amount_value = "0"
         self.category_items: list[CategoryItem] = []
 
@@ -460,12 +461,12 @@ class CategorySelectionView(ft.View):
             ]
         )
 
-    def _safe_eval_expression(self, expression: str):
+    @staticmethod
+    def _safe_eval_expression(expression: str):
         try:
             if not expression:
                 return None
             cleaned = expression.replace("×", "*").replace("÷", "/")
-            allowed_names = {"__builtins__": {} }
             parsed = ast.parse(cleaned, mode="eval")
             for node in ast.walk(parsed):
                 if isinstance(node, ast.BinOp):
