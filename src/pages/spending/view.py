@@ -2,15 +2,13 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-from collections.abc import Callable
-
 import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import FinancialChart, Menu
 from src.pages.spending.components import MetricCards, TransactionHistoryCard, TransactionToolbar
 from src.pages.spending.logic import LogicController
-from src.utils import Color, Page, get_safe_page_size, Text, UISettings
+from src.utils import Color, Page, get_safe_page_size, UISettings
 
 Logger.info("Initializing Spending page...")
 
