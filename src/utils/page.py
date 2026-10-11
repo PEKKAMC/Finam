@@ -18,7 +18,7 @@ class Page(ft.Page):
                     return
                 self.run_task(self.push_route, normalized_route)
             except Exception as ex:
-                Logger.error(f"Failed to navigate to {route}: {ex}")
+                Logger.error(f"Failed to navigate to {route}: {ex}\nEvent details: {e}")
 
         return handler
 
