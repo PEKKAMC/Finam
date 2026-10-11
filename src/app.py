@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import os
+
 import flet as ft
 
 from src.database import db
@@ -36,7 +37,7 @@ async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> 
 async def main(page: Page):
     db.initialize_database()
 
-    user_info: dict[str, str] = {
+    info: dict[str, str] = {
         "username": ""
     }
 
@@ -113,7 +114,7 @@ async def main(page: Page):
             else:
                 Logger.info("Page not found")
 
-            current_username = user_info.get("username", "") or "Admin"
+            current_username = info.get("username", "") or "Admin"
             current_language_code = db.users.get_language(current_username) if current_username else "vi"
             current_currency = db.users.get_currency(current_username) if current_username else "VND (đ)"
             lang = get_language(current_language_code)
@@ -125,7 +126,7 @@ async def main(page: Page):
             if cached_entry and cached_entry[1] == cache_key:
                 view = cached_entry[0]
             else:
-                view = build_view_for_route(route_name, lang, user_info)
+                view = build_view_for_route(route_name, lang, info)
                 if view is not None:
                     views_cache[route_name] = (view, cache_key)
 
@@ -137,7 +138,7 @@ async def main(page: Page):
             page.update()
 
         except Exception as ex:
-            Logger.critical(f"Failed to change route: {ex}")
+            Logger.critical(f"Failed to change route: {ex}", exc_info=True)
             await on_error(e)
 
     async def on_error(e) -> None:
@@ -149,7 +150,7 @@ async def main(page: Page):
             print("it later. consider yourself lucky if this happens first try.\n")
             Logger.error("PEKKAMC")
         else:
-            Logger.critical(f"Unexpected error occurred: {e.data}")
+            Logger.critical(f"Unexpected error occurred: {e.data}", exc_info=True)
             Logger.info("Attempting to restart application...")
 
             os.environ["RESTART_FINAM"] = "1"
