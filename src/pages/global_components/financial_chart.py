@@ -77,7 +77,7 @@ def get_financial_chart_data(username: str, chart_type: str = "daily", date_offs
                     week_of_month = min((inc_date.day - 1) // 7, 3)
                     chart_data[week_of_month]["income"] += amount
                 elif chart_type == "monthly" and inc_date.year == target_date.year:
-                    chart_data[chart_data.month - 1]["income"] += amount
+                    chart_data[inc_date.month - 1]["income"] += amount
             except (ValueError, TypeError):
                 pass
     except Exception as e:
@@ -279,7 +279,7 @@ class FinancialChart(ft.Container):
         self._apply_next_state()
         self.update_data()
 
-    def _handle_pan_start(self, e: ft.DragStartEvent):
+    def _handle_pan_start(self, e: ft.DragStartEvent) -> ft.DragStartEvent:
         """Resets accumulated drag distance and makes adjacent charts visible for dragging."""
         self.total_pan_x = 0.0
         self.is_dragging = True
@@ -301,9 +301,11 @@ class FinancialChart(ft.Container):
             self.next_container.offset = ft.Offset(1.0, 0.0)
             self.next_container.update()
 
+        return e
+
     def _handle_pan_update(self, e: ft.DragUpdateEvent):
         """Accumulates horizontal delta and updates container offsets for live preview dragging."""
-        delta = getattr(e, "delta_x", None)
+        delta = getattr(e, "delta_x", 0)
         if delta is None and getattr(e, "local_delta", None) is not None:
             delta = getattr(e.local_delta, "x", None)
 
@@ -333,10 +335,10 @@ class FinancialChart(ft.Container):
                     if self.next_container and self.next_container.visible:
                         self.next_container.offset = ft.Offset(1.0 + fraction, 0.0)
                         self.next_container.update()
-            except Exception:
-                pass
+            except Exception as ex:
+                Logger.error(f"Error occurred while handling pan update: {ex}")
 
-    def _handle_pan_end(self, e: ft.DragEndEvent):
+    def _handle_pan_end(self, e: ft.DragEndEvent) -> ft.DragEndEvent:
         """Triggers previous/next navigation or snaps back based on drag threshold."""
         threshold = 35
         direction = None
@@ -389,6 +391,8 @@ class FinancialChart(ft.Container):
                 self.page.run_task(self._reset_drag_state)
 
         self.total_pan_x = 0.0
+
+        return e
 
     async def _complete_navigation(self, direction: str):
         await asyncio.sleep(0.2)
