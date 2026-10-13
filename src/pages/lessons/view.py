@@ -27,7 +27,7 @@ class LessonsView(ft.View):
 
         # LOAD LESSON DATA
         self.available_lessons = []
-        self.load_data()
+        self._load_data()
         stats = self.controller.get_user_statistics(self.available_lessons)
 
         # INITIALIZE PAGE COMPONENTS
@@ -94,24 +94,38 @@ class LessonsView(ft.View):
             )
         )
 
-        self._page.on_resize = self.on_page_resize
-        self.on_page_resize()
+        self._page.on_resize = self._on_page_resize
+        self._on_page_resize()
 
-    def load_data(self):
+    def _load_data(self):
         Logger.info("Loading lesson data...")
         self.available_lessons = self.controller.load_available_lessons()
 
-    def on_page_resize(self, e=None) -> None:
-        page_width, page_height = self.get_safe_page_size(
-            page=self._page
-        )
+    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+        try:
+            page_width, page_height = self.get_safe_page_size(
+                page=self._page
+            )
 
-        self.main_container.width = page_width
+            self.main_container.width = page_width
 
-        self.menu.resize(
-            width=page_width
-        )
+            self.menu.resize(
+                width=page_width
+            )
 
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_lessons_view(page: Page, lang: dict, user_info: dict) -> ft.View:

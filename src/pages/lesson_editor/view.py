@@ -98,8 +98,8 @@ class LessonEditorView(ft.View):
             )
         )
 
-        self._page.on_resize = self.on_page_resize
-        self.on_page_resize()
+        self._page.on_resize = self._on_page_resize
+        self._on_page_resize()
         self.refresh_editor()
 
     def get_safe_page_size(self) -> tuple[int, int]:
@@ -388,14 +388,28 @@ class LessonEditorView(ft.View):
         self.logic.move_slide_down()
         self.refresh_editor()
 
-    def on_page_resize(self, e = None) -> None:
-        w, h = self.get_safe_page_size()
-        if not w or not h: return
+    def _on_page_resize(self, e = None) -> int:
+        try:
+            w, h = self.get_safe_page_size()
 
-        available_height = max(500, h - 130)
-        self.editor_layout.height = available_height
-        self.canvas_container.width = min(550, int(w * 0.35))
-        self.canvas_container.height = int(available_height * 0.75)
+            available_height = max(500, h - 130)
+            self.editor_layout.height = available_height
+            self.canvas_container.width = min(550, int(w * 0.35))
+            self.canvas_container.height = int(available_height * 0.75)
+
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_lesson_editor_view(page: Page, lang: dict, user_info: dict) -> ft.View:

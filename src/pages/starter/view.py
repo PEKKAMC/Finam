@@ -111,7 +111,7 @@ class StarterView(ft.View):
             lang=self.lang,
             user_info=self.user_info,
             controller=self.controller,
-            refresh_callback=self.refresh_view
+            refresh_callback=self._refresh_view
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -141,10 +141,10 @@ class StarterView(ft.View):
 
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
-        self.refresh_view()
+        self._refresh_view()
         self.dialogs.show_user_management_dialog()
 
-    def refresh_view(self) -> int:
+    def _refresh_view(self) -> int:
         self.dialogs.user_list.update_data(
             self.controller.get_all_users(),
             self.user_info.get("username", "")
@@ -155,14 +155,29 @@ class StarterView(ft.View):
             pass
         return 0
 
-    def _on_page_resize(self, e = None) -> None:
-        page_width, page_height = self.get_safe_page_size(
-            page=self._page
-        )
+    def _on_page_resize(self, e = None) -> int:
+        try:
+            page_width, page_height = self.get_safe_page_size(
+                page=self._page
+            )
 
-        # Resizing main container
-        self.main_container.width = page_width
-        self.main_container.height = page_height
+            # Resizing main container
+            self.main_container.width = page_width
+            self.main_container.height = page_height
+
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_starter_view(page: Page, lang: dict, user_info: dict) -> ft.View:

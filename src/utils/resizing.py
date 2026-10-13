@@ -2,7 +2,6 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-from src.logger import Logger
 from src.utils import Page
 from src.utils.settings import UISettings
 
@@ -19,9 +18,5 @@ def get_safe_page_size(page: Page) -> tuple[int, int]: # -> (width, height)
 
         return safe_width, safe_height
 
-    except (AttributeError, TypeError, ValueError) as e:
-        raise e
-
     except Exception as e:
-        Logger.error(f"Unexpected error occurred: {e}")
         raise e

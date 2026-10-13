@@ -139,17 +139,32 @@ class PurchaseScannerView(ft.View):
 
         self._page.run_thread(worker)
 
-    def _on_page_resize(self, e = None) -> None:
-        page_width, page_height = self.get_safe_page_size(
-            page=self._page
-        )
+    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+        try:
+            page_width, page_height = self.get_safe_page_size(
+                page=self._page
+            )
 
-        self.main_container.width = page_width
-        self.main_container.height = page_height
+            self.main_container.width = page_width
+            self.main_container.height = page_height
 
-        self.menu.resize(
-            width=page_width
-        )
+            self.menu.resize(
+                width=page_width
+            )
+
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_scanner_view(page: Page, lang: dict, user_info: dict) -> ft.View:

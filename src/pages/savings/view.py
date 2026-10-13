@@ -87,7 +87,7 @@ class SavingsView(ft.View):
             page=self._page,
             lang=self.lang,
             controller=self.controller,
-            refresh_callback=self.refresh_view,
+            refresh_callback=self._refresh_view,
             trigger_export_callback=self.trigger_export
         )
 
@@ -176,10 +176,10 @@ class SavingsView(ft.View):
             )
         )
 
-        self._page.on_resize = self.on_page_resize
-        self.on_page_resize()
+        self._page.on_resize = self._on_page_resize
+        self._on_page_resize()
 
-    def refresh_view(self) -> None:
+    def _refresh_view(self) -> None:
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
         existing_objectives = self.controller.get_user_objectives()
 
@@ -214,24 +214,38 @@ class SavingsView(ft.View):
             snack_bar.open = True
             self._page.update()
 
-    def on_page_resize(self, e=None) -> None:
-        page_width, page_height = self.get_safe_page_size(page=self._page)
+    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+        try:
+            page_width, page_height = self.get_safe_page_size(page=self._page)
 
-        self.main_container.width = page_width
-        self.main_container.height = page_height
+            self.main_container.width = page_width
+            self.main_container.height = page_height
 
-        self.menu.resize(
-            width=page_width
-        )
+            self.menu.resize(
+                width=page_width
+            )
 
-        self.summary_banner.resize(
-            width=page_width
-        )
+            self.summary_banner.resize(
+                width=page_width
+            )
 
-        self.objective_grid.resize(
-            width=page_width
-        )
+            self.objective_grid.resize(
+                width=page_width
+            )
 
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_savings_view(page: Page, lang: dict, user_info: dict) -> ft.View:

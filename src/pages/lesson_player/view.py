@@ -181,8 +181,8 @@ class LessonPlayerView(ft.View):
 
         try:
             self._page.update()
-        except Exception:
-            pass
+        except Exception as e:
+            Logger.error(f"Error updating page after adding visual controls: {e}")
 
         asyncio.create_task(self.animation_controller.execute_all_animations(user_interface_elements, sequence_identifier))
 
@@ -273,21 +273,33 @@ class LessonPlayerView(ft.View):
         if self.audio_controller.active_audio and self.audio_controller.active_audio in self._page.services:
             self._page.services.remove(self.audio_controller.active_audio)
 
-    def _on_page_resize(self, event) -> None:
-        page_width, page_height = self.get_safe_page_size(self._page)
-
-        # Keep legacy safe caps for content sizing
-        safe_width_value = min(page_width, 650)
-        safe_height_value = max(600, page_height - 100)
-
+    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
         try:
+            page_width, page_height = self.get_safe_page_size(self._page)
+
+            # Keep legacy safe caps for content sizing
+            safe_width_value = min(page_width, 650)
+            safe_height_value = max(600, page_height - 100)
+
             self.center_alignment_container.width = safe_width_value
             self.slide_canvas.width = max(400, safe_width_value * 0.9)
             self.slide_canvas.height = max(500, safe_height_value * 0.6)
             self.presentation_board.width = safe_width_value * 0.95
             self.presentation_board.height = safe_height_value
-        except Exception:
-            pass
+
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_lesson_player_view(page: Page, lang: dict, user_info: dict, target_lesson_filename: str | None = None) -> ft.View:

@@ -165,7 +165,7 @@ class SettingsView(ft.View):
 
         await self._page.push_route("/user_management")
 
-    def refresh_view(self) -> int:
+    def _refresh_view(self) -> int:
         try:
             self._page.update()
             return 0
@@ -173,21 +173,35 @@ class SettingsView(ft.View):
             Logger.warn(f"Failed to refresh view {e}")
             return -1
 
-    def _on_page_resize(self, e = None) -> None:
-        page_width, page_height = self.get_safe_page_size(
-            page=self._page
-        )
+    def _on_page_resize(self, e = None) -> int:
+        try:
+            page_width, page_height = self.get_safe_page_size(
+                page=self._page
+            )
 
-        # Resizing main container
-        self.main_container.width = page_width
-        self.main_container.height = page_height
+            # Resizing main container
+            self.main_container.width = page_width
+            self.main_container.height = page_height
 
-        # Resizing other components
-        self.settings_header.resize(width=page_width)
-        self.language_card.resize(width=page_width)
-        self.currency_card.resize(width=page_width)
-        self.system_prefs_card.resize(width=page_width)
+            # Resizing other components
+            self.settings_header.resize(width=page_width)
+            self.language_card.resize(width=page_width)
+            self.currency_card.resize(width=page_width)
+            self.system_prefs_card.resize(width=page_width)
 
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_settings_view(page: Page, lang: dict, user_info: dict) -> ft.View:

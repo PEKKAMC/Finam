@@ -125,7 +125,7 @@ class HomeView(ft.View):
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
 
-    def refresh_view(self) -> int:
+    def _refresh_view(self) -> int:
         try:
             self.objectives = self.controller.get_user_objectives()
             self.metrics = self.controller.get_dashboard_data()
@@ -160,47 +160,62 @@ class HomeView(ft.View):
             Logger.warn(f"Failed to refresh view {e}")
             return -1
 
-    def _on_page_resize(self, e = None) -> None:
+    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
         page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
 
-        # Resizing main container
-        self.main_container.width = page_width
-        self.main_container.height = page_height
+        try:
+            # Resizing main container
+            self.main_container.width = page_width
+            self.main_container.height = page_height
 
-        # Resizing other components
-        self.menu.resize(
-            width=page_width
-        )
+            # Resizing other components
+            self.menu.resize(
+                width=page_width
+            )
 
-        self.balance_card.resize(
-            width=page_width
-        )
+            self.balance_card.resize(
+                width=page_width
+            )
 
-        self.featured_lesson_card.resize(
-            width=page_width
-        )
+            self.featured_lesson_card.resize(
+                width=page_width
+            )
 
-        self.balance_card.resize(
-            width=page_width
-        )
+            self.balance_card.resize(
+                width=page_width
+            )
 
-        self.financial_chart.resize(
-            width=page_width
-        )
+            self.financial_chart.resize(
+                width=page_width
+            )
 
-        self.savings_progress_card.resize(
-            width=page_width
-        )
+            self.savings_progress_card.resize(
+                width=page_width
+            )
 
-        self.expense_pie_chart.resize(
-            width=page_width,
-            height=page_height
-        )
-        self.featured_lesson_card.resize(
-            width=page_width
-        )
+            self.expense_pie_chart.resize(
+                width=page_width,
+                height=page_height
+            )
+            self.featured_lesson_card.resize(
+                width=page_width
+            )
+
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_home_view(page: Page, lang: dict, user_info: dict) -> ft.View:

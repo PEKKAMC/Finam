@@ -6,7 +6,7 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.fallback.components import NotSupportedMessageBox, ReturnButton
-from src.utils import Color, Page, UISettings
+from src.utils import Color, get_safe_page_size, Page
 
 Logger.info("Initializing Fallback page...")
 
@@ -16,6 +16,9 @@ class FallbackView(ft.View):
         self._page = page
         self.lang = lang
         self.fallback_reason = fallback_reason
+
+        # IMPORTED FUNCTIONS
+        self.get_safe_page_size = get_safe_page_size
 
         # INITIALIZE PAGE COMPONENTS
         self.message = self.get_fallback_message(
@@ -54,8 +57,8 @@ class FallbackView(ft.View):
             controls=[self.main_container]
         )
 
-        self._page.on_resize = self.on_page_resize
-        self.on_page_resize()
+        self._page.on_resize = self._on_page_resize
+        self._on_page_resize()
 
     def get_fallback_message(self, reason) -> str:
         match reason:
@@ -68,26 +71,29 @@ class FallbackView(ft.View):
             case _:
                 return self.lang["fallback.default"]
 
-    def get_safe_page_size(self) -> tuple[int, int]: # -> (width, height)
-        # Get page width and height if available, return fallback values otherwise
-        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
-        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
+    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+        try:
+            page_width, page_height = self.get_safe_page_size(self._page)
 
-        # Make sure width and height don't exceed max values
-        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
-        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
+            self.main_container.width = page_width
 
-        return safe_width, safe_height
+            self.message_box.resize(
+                size=int(min(page_width, page_height) * 0.7)
+            )
 
-    def on_page_resize(self, e=None) -> None:
-        page_width, page_height = self.get_safe_page_size()
+            return 0
 
-        self.main_container.width = page_width
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
 
-        self.message_box.resize(
-            size=int(min(page_width, page_height) * 0.7)
-        )
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
 
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_fallback_view(page: Page, lang: dict, fallback_reason: str) -> ft.View:
