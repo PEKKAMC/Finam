@@ -121,14 +121,18 @@ async def main(page: Page):
 
             route_name = page.route or "/"
             cache_key = get_view_cache_key(route_name, current_language_code, current_currency)
-            cached_entry = views_cache.get(route_name)
 
-            if cached_entry and cached_entry[1] == cache_key:
-                view = cached_entry[0]
-            else:
+            if route_name == "/starter":
                 view = build_view_for_route(route_name, lang, info)
-                if view is not None:
-                    views_cache[route_name] = (view, cache_key)
+            else:
+                cached_entry = views_cache.get(route_name)
+
+                if cached_entry and cached_entry[1] == cache_key:
+                    view = cached_entry[0]
+                else:
+                    view = build_view_for_route(route_name, lang, info)
+                    if view is not None:
+                        views_cache[route_name] = (view, cache_key)
 
             if view is None:
                 await redirect_to_fallback(page, lang, "page_not_found")
