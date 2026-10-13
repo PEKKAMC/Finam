@@ -64,13 +64,63 @@ class SelectableOptionGroup(ft.Container):
                 text_ctrl.color = Color.DEFAULT_TEXT
 
 
+class ThinkingTimeUnitContainer(ft.Container):
+    """Input field for thinking time value combined with a time unit dropdown."""
+    def __init__(self, lang: dict, default_val, default_unit):
+        self.lang = lang
+
+        self.value_field = ft.TextField(
+            hint_text="0",
+            value=default_val,
+            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
+            border_color=Color.INPUT_BORDER,
+            color=Color.DEFAULT_TEXT,
+            border_radius=16,
+            filled=True,
+            bgcolor=Color.PAGE_BACKGROUND,
+            height=48,
+            text_size=13,
+            content_padding=ft.Padding(16, 12, 16, 12),
+            expand=True
+        )
+
+        self.unit_dropdown = ft.Dropdown(
+            options=[
+                ft.dropdown.Option("minute", self.lang["generic.minute"]),
+                ft.dropdown.Option("hour", self.lang["generic.hour"]),
+                ft.dropdown.Option("day", self.lang["generic.day"]),
+                ft.dropdown.Option("week", self.lang["generic.week"]),
+            ],
+            value=default_unit,
+            border_color=Color.INPUT_BORDER,
+            color=Color.DEFAULT_TEXT,
+            border_radius=16,
+            filled=True,
+            bgcolor=Color.PAGE_BACKGROUND,
+            height=48,
+            width=225,
+            text_size=13,
+            content_padding=ft.Padding(16, 12, 16, 12)
+        )
+        row = ft.Row(
+            spacing=10,
+            controls=[self.value_field, self.unit_dropdown]
+        )
+        super().__init__(content=row)
+
+    @property
+    def value(self):
+        val = self.value_field.value.strip() if self.value_field.value else "1"
+        unit = self.unit_dropdown.value or "hour"
+        return f"{val} {unit}"
+
+
 class ScannerForm(ft.Container):
     def __init__(self, page: Page, lang: dict, on_scan_click):
         self._page = page
         self.lang = lang
         self.on_scan_click = on_scan_click
 
-        # Input fields matching React design specifications
         self.item_name = ft.TextField(
             hint_text="Ví dụ: Giày Sneaker, Áo khoác sale, Tai nghe bluetooth...",
             border_color=Color.INPUT_BORDER,
@@ -84,7 +134,7 @@ class ScannerForm(ft.Container):
         )
 
         self.item_price = ft.TextField(
-            hint_text="0 đ",
+            hint_text="0",
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
@@ -97,7 +147,7 @@ class ScannerForm(ft.Container):
         )
 
         self.item_reason = ft.TextField(
-            hint_text="Tại sao bạn lại cần sản phẩm này ngay lúc này?",
+            hint_text=self.lang["purchase_scanner.reason_hint"],
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
             border_radius=16,
@@ -118,13 +168,7 @@ class ScannerForm(ft.Container):
         ]
         self.trigger = SelectableOptionGroup(trigger_options, initial_value="tiktok", is_dark_selected=False)
 
-        # Thinking time selection grid
-        thinking_options = [
-            ("short", self.lang["purchase_scanner.thinking_under_1h"]),
-            ("medium", self.lang["purchase_scanner.thinking_within_24h"]),
-            ("long", self.lang["purchase_scanner.thinking_over_3_days"])
-        ]
-        self.thinking_time = SelectableOptionGroup(thinking_options, initial_value="short", is_dark_selected=True)
+        self.thinking_time = ThinkingTimeUnitContainer(lang=self.lang, default_val="0", default_unit="hour")
 
         self.submit_btn = ft.Container(
             content=ft.Row(
@@ -207,9 +251,8 @@ class ScannerForm(ft.Container):
 
 
 class InterventionItem(ft.Container):
-    def __init__(self, page: Page, lang: dict, title: str, description: str):
+    def __init__(self, page: Page, title: str, description: str):
         self._page = page
-        self.lang = lang
         self.main_container = ft.Column(
             spacing=4,
             controls=[
@@ -367,15 +410,15 @@ class ScannerResult(ft.Container):
         if risk_val > 65:
             risk_color = Color.NEGATIVE_ACTION
             status_desc = self.lang["purchase_scanner.risk_very_high"]
-            pause_time = self.lang["purchase_scanner.time_24h"]
+            pause_time = f"24 {self.lang["generic.hour"]}"
         elif risk_val > 35:
             risk_color = "#F59E0B"
             status_desc = self.lang["purchase_scanner.risk_moderate"]
-            pause_time = self.lang["purchase_scanner.time_60s"]
+            pause_time = f"60 {self.lang["generic.second"]}"
         else:
             risk_color = Color.PROGRESS_ACTIVE
             status_desc = self.lang["purchase_scanner.risk_rational"]
-            pause_time = self.lang["purchase_scanner.time_60s"]
+            pause_time = f"60 {self.lang["generic.second"]}"
 
         self.risk_score_text.value = f"{risk_val}%"
         self.risk_score_text.color = risk_color
@@ -389,9 +432,9 @@ class ScannerResult(ft.Container):
         formatted_price = f"{int(price):,}đ" if price > 0 else "chưa nhập"
 
         interventions = [
-            InterventionItem(self._page, self.lang, self.lang["purchase_scanner.pause_rule"], f"Đợi ít nhất {pause_time} trước khi thanh toán."),
-            InterventionItem(self._page, self.lang, self.lang["purchase_scanner.budget_check"], f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),
-            InterventionItem(self._page, self.lang, self.lang["purchase_scanner.reflection"], f"Bạn mua vì cần thật, hay vì {trigger_display}?")
+            InterventionItem(self._page, self.lang["purchase_scanner.pause_rule"], f"Đợi ít nhất {pause_time} trước khi thanh toán."),
+            InterventionItem(self._page, self.lang["purchase_scanner.budget_check"], f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),
+            InterventionItem(self._page, self.lang["purchase_scanner.reflection"], f"Bạn mua vì cần thật, hay vì {trigger_display}?")
         ]
 
         self.interventions_col.controls.clear()

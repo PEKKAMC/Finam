@@ -40,8 +40,35 @@ class LogicController:
         elif trigger == 'sale': local_risk += 20
         elif trigger == 'emotion': local_risk += 25
 
-        if time == 'short': local_risk += 22
-        elif time == 'medium': local_risk += 10
+        thinking_lower = (time or "").lower()
+        try:
+            parts = thinking_lower.split()
+            val = float(parts[0]) if parts and parts[0].replace('.', '', 1).isdigit() else 1.0
+            unit = parts[1] if len(parts) > 1 else "hour"
+
+            total_hours = val
+            if "day" in unit :
+                total_hours = val * 24
+            elif "week" in unit:
+                total_hours = val * 24 * 7
+            elif "minute" in unit:
+                total_hours = val / 60.0
+            elif "month" in unit:
+                total_hours = val * 24 * 30
+
+            if total_hours < 1:
+                local_risk += 25
+            elif total_hours < 24:
+                local_risk += 18
+            elif total_hours < 72:
+                local_risk += 10
+            else:
+                local_risk += 2
+        except Exception:
+            if "minute" in thinking_lower or "hour" in thinking_lower:
+                local_risk += 22
+            elif "day" in thinking_lower or "tuần" in thinking_lower:
+                local_risk += 10
 
         keywords = ['sale', 'trend', 'tiktok', 'bạn bè', 'sợ hết', 'hot', 'review', 'chán', 'buồn', 'stress', 'fomo']
         reason_lower = (reason or "").lower()
@@ -51,7 +78,6 @@ class LogicController:
 
         local_risk = min(100, local_risk)
 
-        # Call AI backend proxy
         try:
             endpoint = f"{BACKEND_URL.rstrip('/')}/api/v1/purchase-advice"
             payload = {
