@@ -55,7 +55,7 @@ class LogicController:
             transactions.setdefault(str(tx["date"])[:10], []).append(tx)
 
         for day_key in transactions:
-            transactions[day_key].sort(key=lambda tx: str(tx.get("date", "")), reverse=True)
+            transactions[day_key].sort(key=lambda t: str(t.get("date", "")), reverse=True)
 
         return balance_data, transactions
 
@@ -68,7 +68,8 @@ class LogicController:
         )
         return chart_date, chart_data, chart_type
 
-    def filter_transactions(self, raw_transactions: dict, filter_type: str, selected_category: str, search_query: str) -> list:
+    @staticmethod
+    def filter_transactions(raw_transactions: dict, filter_type: str, selected_category: str, search_query: str) -> list:
         filtered: list[dict] = []
         query = (search_query or "").strip().lower()
 
@@ -92,7 +93,7 @@ class LogicController:
 
                 filtered.append(tx)
 
-        filtered.sort(key=lambda tx: str(tx.get("date", "")), reverse=True)
+        filtered.sort(key=lambda t: str(t.get("date", "")), reverse=True)
         return filtered
 
     def delete_transaction(self, transaction_id: int) -> bool:
