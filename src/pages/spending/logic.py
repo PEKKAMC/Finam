@@ -2,8 +2,6 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from src.database import db
@@ -69,7 +67,7 @@ class LogicController:
         return chart_date, chart_data, chart_type
 
     @staticmethod
-    def filter_transactions(raw_transactions: dict, filter_type: str, selected_category: str, search_query: str) -> list:
+    def filter_transactions(raw_transactions: dict, filter_type: str, sort_by: str, search_query: str) -> list:
         filtered: list[dict] = []
         query = (search_query or "").strip().lower()
 
@@ -82,18 +80,16 @@ class LogicController:
                     if filter_type == "expense" and is_income:
                         continue
 
-                category_name = str(tx.get("title", ""))
-                if selected_category not in ("all", "") and category_name != selected_category:
-                    continue
-
                 if query:
+                    category_name = str(tx.get("title", ""))
                     haystack = f"{category_name} {tx.get('subtitle', '')}".lower()
                     if query not in haystack:
                         continue
 
                 filtered.append(tx)
 
-        filtered.sort(key=lambda t: str(t.get("date", "")), reverse=True)
+        reverse_sort = (sort_by != "oldest")
+        filtered.sort(key=lambda t: str(t.get("date", "")), reverse=reverse_sort)
         return filtered
 
     def delete_transaction(self, transaction_id: int) -> bool:
@@ -146,6 +142,3 @@ class LogicController:
         if db.spending.add_expense_entry(self.current_user, amount_val, category, date, note):
             return True, "spending.expense_added_success"
         return False, "home.error.save_expense_failed"
-
-
-__all__ = ["LogicController"]

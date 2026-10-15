@@ -228,6 +228,8 @@
     "spending.search": "Tìm theo từ khóa, ghi chú, số tiền...",
     "spending.search_transactions": "Tìm kiếm giao dịch...",
     "spending.select_category": "Chọn Danh mục",
+    "spending.sort_newest": "Sắp xếp theo mới nhất",
+    "spending.sort_oldest": "Sắp xếp theo cũ nhất",
     "spending.this_month": "tháng này",
     "spending.today": "HÔM NAY",
     "spending.total_expense": "Tổng chi tiêu",

@@ -147,17 +147,18 @@ class MetricCards(ft.ResponsiveRow):
         self.width = width
         self.main_container.width = width
 
+
 class TransactionToolbar(ft.Container):
     """Filter, Search, and Action Toolbar"""
-    def __init__(self, page: Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_category_change: Callable, categories: list, on_add_expense_click: Callable, on_add_income_click: Callable, search_query: str = "", selected_category: str = "all"):
+    def __init__(self, page: Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_sort_change: Callable, on_add_expense_click: Callable, on_add_income_click: Callable, search_query: str = "", sort_by: str = "newest"):
         self._page = page
         self.lang = lang
         self.on_filter = on_filter_change
         self.on_search = on_search_change
-        self.on_category = on_category_change
+        self.on_sort = on_sort_change
         self.filter_type = filter_type
         self.search_query = search_query
-        self.selected_category = selected_category
+        self.sort_by = sort_by
 
         def create_filter_button(label: str, f_type: str, active_bg: str):
             is_active = (self.filter_type == f_type)
@@ -211,12 +212,12 @@ class TransactionToolbar(ft.Container):
             )
         )
 
-        # DROPDOWN & SEARCH INPUTS
-        category_options = [ft.dropdown.Option("all", self.lang["generic.all"])] + [
-            ft.dropdown.Option(c, c) for c in (categories or [])
+        sort_options = [
+            ft.dropdown.Option("newest", lang["spending.sort_newest"]),
+            ft.dropdown.Option("oldest", lang["spending.sort_oldest"]),
         ]
-        valid_cat_keys = [opt.key for opt in category_options]
-        dropdown_value = self.selected_category if self.selected_category in valid_cat_keys else "all"
+        valid_sort_keys = [opt.key for opt in sort_options]
+        dropdown_value = self.sort_by if self.sort_by in valid_sort_keys else "newest"
 
         self.search_field = ft.TextField(
             value=self.search_query,
@@ -231,11 +232,11 @@ class TransactionToolbar(ft.Container):
             filled=True
         )
 
-        self.category_dropdown = ft.Dropdown(
-            leading_icon=ft.Icons.TAG,
-            options=category_options,
+        self.sort_dropdown = ft.Dropdown(
+            leading_icon=ft.Icons.ACCESS_TIME,
+            options=sort_options,
             value=dropdown_value,
-            on_select=lambda e: self.on_category(e.control.value) if self.on_category else None,
+            on_select=lambda e: self.on_sort(e.control.value) if self.on_sort else None,
             bgcolor=Color.CARD_BACKGROUND,
             border_color=Color.INPUT_BORDER,
             border_radius=16,
@@ -276,9 +277,9 @@ class TransactionToolbar(ft.Container):
             content=self.search_field
         )
 
-        self.category_box_container = ft.Container(
+        self.sort_box_container = ft.Container(
             col={"xs": 12, "sm": 6},
-            content=self.category_dropdown
+            content=self.sort_dropdown
         )
 
         self.inputs_row = ft.ResponsiveRow(
@@ -286,7 +287,7 @@ class TransactionToolbar(ft.Container):
             run_spacing=12,
             controls=[
                 self.search_box_container,
-                self.category_box_container
+                self.sort_box_container
             ]
         )
 
@@ -307,10 +308,10 @@ class TransactionToolbar(ft.Container):
             content=self.main_container
         )
 
-    def update_data(self, filter_type: str, search_query: str, selected_category: str, categories: list):
+    def update_data(self, filter_type: str, search_query: str, sort_by: str):
         self.filter_type = filter_type
         self.search_query = search_query
-        self.selected_category = selected_category
+        self.sort_by = sort_by
 
         buttons_info = [
             (self.all_filter_button, "all", "#1A4734"),
@@ -325,15 +326,7 @@ class TransactionToolbar(ft.Container):
             button.style.bgcolor = active_bg if is_active else ft.Colors.with_opacity(0.05, ft.Colors.BLACK)
 
         self.search_field.value = self.search_query
-
-        category_options = [ft.dropdown.Option("all", self.lang["generic.all"])] + [
-            ft.dropdown.Option(c, c) for c in (categories or [])
-        ]
-        valid_cat_keys = [opt.key for opt in category_options]
-        dropdown_value = self.selected_category if self.selected_category in valid_cat_keys else "all"
-
-        self.category_dropdown.options = category_options
-        self.category_dropdown.value = dropdown_value
+        self.sort_dropdown.value = self.sort_by if self.sort_by in ["newest", "oldest"] else "newest"
 
         self.update()
 

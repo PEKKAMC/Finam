@@ -24,7 +24,7 @@ class SpendingView(ft.View):
 
         self.filter_type = "all"
         self.search_query = ""
-        self.selected_category = "all"
+        self.sort_by = "newest"
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(user_info["username"])
@@ -34,11 +34,8 @@ class SpendingView(ft.View):
         self.current_chart_type = "daily"
         self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data(self.current_chart_type)
 
-        all_categories = sorted(list({
-            tx["title"] for items in self.raw_transactions.values() for tx in items if "title" in tx
-        }))
         filtered_txs = self.controller.filter_transactions(
-            self.raw_transactions, self.filter_type, self.selected_category, self.search_query
+            self.raw_transactions, self.filter_type, self.sort_by, self.search_query
         )
 
         # INITIALIZE PAGE COMPONENTS
@@ -65,12 +62,11 @@ class SpendingView(ft.View):
             filter_type=self.filter_type,
             on_filter_change=self.on_filter_change,
             on_search_change=self.on_search_change,
-            on_category_change=self.on_category_change,
-            categories=all_categories,
+            on_sort_change=self.on_sort_change,
             on_add_expense_click=self._page.navigate_to("/category_selection"),
             on_add_income_click=self._page.navigate_to("/category_selection"),
             search_query=self.search_query,
-            selected_category=self.selected_category
+            sort_by=self.sort_by
         )
 
         self.history_card = TransactionHistoryCard(
@@ -126,15 +122,16 @@ class SpendingView(ft.View):
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
 
-    def _refresh_view(self, e=None) -> int:
+    def _refresh_view(self) -> int:
         try:
             self.current_chart_type = self.financial_chart.chart_type
 
-            date_offset = 0
-            target_year = None
             if self.financial_chart.chart_type == self.current_chart_type:
                 date_offset = self.financial_chart.date_offset
                 target_year = self.financial_chart.monthly_year
+            else:
+                date_offset = 0
+                target_year = None
 
             balance_data, self.raw_transactions = self.controller.get_transaction_data()
 
@@ -144,11 +141,8 @@ class SpendingView(ft.View):
                 target_year=target_year
             )
 
-            all_categories = sorted(list({
-                tx["title"] for items in self.raw_transactions.values() for tx in items if "title" in tx
-            }))
             filtered_txs = self.controller.filter_transactions(
-                self.raw_transactions, self.filter_type, self.selected_category, self.search_query
+                self.raw_transactions, self.filter_type, self.sort_by, self.search_query
             )
 
             self.metric_cards.update_data(
@@ -160,8 +154,7 @@ class SpendingView(ft.View):
             self.toolbar.update_data(
                 filter_type=self.filter_type,
                 search_query=self.search_query,
-                selected_category=self.selected_category,
-                categories=all_categories
+                sort_by=self.sort_by
             )
 
             self.history_card.update_data(filtered_txs)
@@ -170,7 +163,7 @@ class SpendingView(ft.View):
 
             return 0
 
-        except RuntimeError as e:
+        except Exception as e:
             Logger.warn(f"Failed to refresh view {e}")
             return -1
 
@@ -182,13 +175,13 @@ class SpendingView(ft.View):
         self.search_query = query
         self.update_history_list()
 
-    def on_category_change(self, cat: str):
-        self.selected_category = cat
+    def on_sort_change(self, sort_by: str):
+        self.sort_by = sort_by
         self.update_history_list()
 
     def update_history_list(self):
         filtered_txs = self.controller.filter_transactions(
-            self.raw_transactions, self.filter_type, self.selected_category, self.search_query
+            self.raw_transactions, self.filter_type, self.sort_by, self.search_query
         )
         self.history_card.update_data(filtered_txs)
 

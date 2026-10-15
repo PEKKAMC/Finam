@@ -228,6 +228,8 @@
     "spending.search": "Search by keyword, notes, amount...",
     "spending.search_transactions": "Search transactions...",
     "spending.select_category": "Select Category",
+    "spending.sort_newest": "Sort by newest",
+    "spending.sort_oldest": "Sort by oldest",
     "spending.this_month": "this month",
     "spending.today": "TODAY",
     "spending.total_expense": "Total Expenses",
