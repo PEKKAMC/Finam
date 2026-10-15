@@ -20,20 +20,20 @@ class LogicController:
 
         if not amount or not category:
             Logger.warning("Amount or Category missing.")
-            return False, "home.error.missing_amount_category"
+            return False, "MISSING_AMOUNT_CATEGORY"
 
         try:
             amount_val = int(amount)
             if amount_val <= 0:
-                return False, "home.error.amount_less_than_zero"
+                return False, "AMOUNT_LESS_THAN_ZERO"
         except ValueError:
             Logger.error("Invalid amount provided")
-            return False, "home.error.invalid_amount"
+            return False, "INVALID_AMOUNT"
 
         date = f"{selected_date} 00:00"
         if db.spending.add_income_entry(self.current_user, amount_val, category, date, note):
-            return True, "spending.income_added_success"
-        return False, "home.error.save_income_failed"
+            return True, "INCOME_ADDED_SUCCESS"
+        return False, "SAVE_INCOME_FAILED"
 
     def add_expense_entry(self, vals: dict) -> tuple[bool, str]:
         amount = vals.get("amount", '0')
@@ -43,17 +43,17 @@ class LogicController:
 
         if not amount or not category:
             Logger.warning("Amount or Category missing.")
-            return False, "home.error.missing_amount_category"
+            return False, "MISSING_AMOUNT_CATEGORY"
 
         try:
             amount_val = int(amount)
             if amount_val <= 0:
-                return False, "home.error.amount_less_than_zero"
+                return False, "AMOUNT_LESS_THAN_ZERO"
         except ValueError:
             Logger.error("Invalid amount provided")
-            return False, "home.error.invalid_amount"
+            return False, "INVALID_AMOUNT"
 
         date = f"{selected_date} 00:00"
         if db.spending.add_expense_entry(self.current_user, amount_val, category, date, note):
-            return True, "spending.expense_added_success"
-        return False, "home.error.save_expense_failed"
+            return True, "EXPENSE_ADDED_SUCCESS"
+        return False, "SAVE_EXPENSE_FAILED"

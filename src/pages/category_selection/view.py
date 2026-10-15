@@ -3,15 +3,14 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import ast
-import math
 from datetime import datetime
-
-from collections.abc import Callable
+import math
 from typing import TypedDict
 
 import flet as ft
 
 from src.logger import Logger
+from src.pages.category_selection.components import CategoryItem
 from src.pages.category_selection.logic import LogicController
 from src.utils import Color, Page, Text, UISettings, get_safe_page_size
 
@@ -21,61 +20,6 @@ Logger.info("Initializing Category Selection page...")
 class _Category(TypedDict):
     name: str
     icon: ft.IconData
-
-
-class CategoryItem(ft.Container):
-    def __init__(self, page: Page, lang: dict, name: str, icon: ft.IconData, on_click: Callable, is_selected: bool = False):
-        self._page = page
-        self.lang = lang
-        self.category_name = name
-        self.icon = icon
-        self._on_click = on_click
-        self.is_selected = is_selected
-
-        self.icon_circle = ft.Container(
-            width=60,
-            height=60,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
-            bgcolor=Color.LIGHT_ACCENT if self.is_selected else None,
-            alignment=ft.Alignment.CENTER,
-            content=ft.Icon(icon=self.icon, color=Color.BLACK if self.is_selected else Color.PRIMARY, size=30)
-        )
-
-        self.icon_label = Text.LABEL(value=self.category_name, color=Color.DEFAULT_TEXT, text_align=ft.TextAlign.CENTER)
-
-        self.main_container = ft.Container(
-            width=75,
-            height=75,
-            content=ft.Column(
-                alignment=ft.MainAxisAlignment.START,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=-10,
-                controls=[
-                    self.icon_circle,
-                    self.icon_label
-                ],
-            ),
-            on_click=self._on_click,
-            ink=True,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
-            bgcolor=Color.LIGHT_ACCENT if self.is_selected else Color.TRANSPARENT
-        )
-
-        super().__init__(
-            content=self.main_container,
-            expand=True,
-            alignment=ft.Alignment.CENTER
-        )
-
-    def update_selection(self, selected: bool):
-        self.is_selected = selected
-        self.main_container.bgcolor = Color.LIGHT_ACCENT if self.is_selected else Color.TRANSPARENT
-        self.icon_circle.content.color = Color.BLACK if self.is_selected else Color.PRIMARY
-        try:
-            if self.icon_circle.page:
-                self.icon_circle.update()
-        except Exception:
-            pass
 
 
 class CategorySelectionView(ft.View):
@@ -93,11 +37,9 @@ class CategorySelectionView(ft.View):
         self.category_items: list[CategoryItem] = []
 
         self.cancel_button = ft.TextButton(
-            content=Text.P(self.lang["generic.cancel"], color=Color.DEFAULT_TEXT),
+            content=ft.Icon(ft.Icons.ARROW_BACK, color=Color.DEFAULT_BUTTON),
             on_click=self._page.navigate_to("/home")
         )
-
-        self.title_text = Text.H3(value="Thêm", color=Color.DEFAULT_TEXT)
 
         self.expense_text = Text.P(self.lang["generic.expense"], color=Color.BLACK, weight=ft.FontWeight.BOLD)
         self.income_text = Text.P(self.lang["generic.income"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.NORMAL)
@@ -145,15 +87,14 @@ class CategorySelectionView(ft.View):
         self.amount_display = ft.Text(value="0", size=32, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
 
         self.note_input = ft.TextField(
-            hint_text="Enter a note...",
-            label="Note : Enter a note...",
+            hint_text=self.lang["category_selection.note_hint"],
+            label=self.lang["generic.note"],
             label_style=ft.TextStyle(color=Color.SECONDARY_TEXT, size=13),
             color=Color.DEFAULT_TEXT,
             border_color=ft.Colors.TRANSPARENT,
             focused_border_color=ft.Colors.TRANSPARENT,
             bgcolor=Color.WHITE,
             prefix_icon=ft.Icons.NOTES,
-            suffix_icon=ft.Icons.CAMERA_ALT,
             text_size=14,
             content_padding=10
         )
@@ -229,11 +170,9 @@ class CategorySelectionView(ft.View):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
                     ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        alignment=ft.MainAxisAlignment.START,
                         controls=[
-                            self.cancel_button,
-                            self.title_text,
-                            ft.Container(width=50)
+                            self.cancel_button
                         ]
                     ),
                     self.segment_control,
@@ -469,30 +408,33 @@ class CategorySelectionView(ft.View):
             cleaned = expression.replace("×", "*").replace("÷", "/")
             parsed = ast.parse(cleaned, mode="eval")
             for node in ast.walk(parsed):
-                if isinstance(node, ast.BinOp):
-                    if not isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)):
-                        raise ValueError
-                elif isinstance(node, ast.UnaryOp):
-                    if not isinstance(node.op, (ast.UAdd, ast.USub)):
-                        raise ValueError
-                elif isinstance(node, ast.Constant):
-                    if not isinstance(node.value, (int, float)):
-                        raise ValueError
-                elif isinstance(node, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod, ast.UAdd, ast.USub)):
-                    pass
-                elif isinstance(node, ast.Expression):
-                    pass
-                else:
-                    raise ValueError
+                allowed_bin_ops = (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)
+                allowed_unary_ops = (ast.UAdd, ast.USub)
+                pass_nodes = (*allowed_bin_ops, *allowed_unary_ops, ast.Expression)
+
+                error_data = (
+                    isinstance(node, ast.BinOp) and not isinstance(node.op, allowed_bin_ops) or
+                    isinstance(node, ast.UnaryOp) and not isinstance(node.op, allowed_unary_ops) or
+                    isinstance(node, ast.Constant) and not isinstance(node.value, (int, float)) or
+                    isinstance(node, pass_nodes)
+                )
+
+                if error_data:
+                    raise ValueError(f"Invalid expression: {cleaned}")
+
             value = eval(compile(parsed, "<expr>", "eval"), {"__builtins__": {}}, {"math": math})
             if isinstance(value, float) and value.is_integer():
                 return str(int(value))
             return str(value)
-        except Exception:
+        except Exception as ex:
+            Logger.error(f"Failed to evaluate expression '{expression}': {ex}")
             return None
 
     def _on_key_press(self, val: str):
-        if self.amount_value == "0" and val not in "+-*/.":
+        operators = "+-*/"
+        if val in operators and self.amount_value and self.amount_value[-1] in operators:
+            self.amount_value = self.amount_value[:-1] + val
+        elif self.amount_value == "0" and val not in "+-*/.":
             self.amount_value = val
         else:
             self.amount_value += val
@@ -526,27 +468,47 @@ class CategorySelectionView(ft.View):
                 self.amount_display.value = self.amount_value
                 self.update()
             else:
-                self.snack_bar = ft.SnackBar(Text.MEDIUM("home.error.invalid_amount"))
+                message = self.lang["category_selection.error.invalid_amount"]
+                self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
                 self._page.overlay.append(self.snack_bar)
                 self.snack_bar.open = True
                 return
 
-        vals = {
+        values = {
             "amount": self.amount_value,
             "category": self.selected_category,
             "note": self.note_input.value or "",
             "date": self.selected_date,
         }
+
         if self.current_type == "expense":
-            success, message = self.controller.add_expense_entry(vals)
+            success, code = self.controller.add_expense_entry(values)
         else:
-            success, message = self.controller.add_income_entry(vals)
+            success, code = self.controller.add_income_entry(values)
+
+        if code == "MISSING_AMOUNT_CATEGORY":
+            message = self.lang["category_selection.error.missing_amount_category"]
+        elif code == "AMOUNT_LESS_THAN_ZERO":
+            message = self.lang["category_selection.error.amount_less_than_zero"]
+        elif code == "INCOME_ADDED_SUCCESS":
+            message = self.lang["category_selection.income_added_success"]
+        elif code == "EXPENSE_ADDED_SUCCESS":
+            message = self.lang["category_selection.expense_added_success"]
+        elif code == "SAVE_INCOME_FAILED":
+            message = self.lang["category_selection.error.save_income_failed"]
+        elif code == "SAVE_EXPENSE_FAILED":
+            message = self.lang["category_selection.error.save_expense_failed"]
+        else:
+            message = ""
 
         self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
         self._page.overlay.append(self.snack_bar)
         self.snack_bar.open = True
 
         if success:
+            if hasattr(self._page, "delete_cached_view"):
+                self._page.delete_cached_view("/home")
+                self._page.delete_cached_view("/spending")
             self._page.navigate_to("/home")()
         else:
             self.update()

@@ -106,6 +106,15 @@ async def main(page: Page):
 
         return None
 
+    def delete_cached_view(route: str) -> None:
+        if route in views_cache:
+            del views_cache[route]
+            Logger.info(f"Deleted cached view for route: {route}")
+        else:
+            Logger.info(f"No cached view found for route: {route}")
+
+    page.delete_cached_view = delete_cached_view
+
     async def route_change(e: ft.RouteChangeEvent) -> None:
         try:
             page.views.clear()
