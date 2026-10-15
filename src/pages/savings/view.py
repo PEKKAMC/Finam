@@ -69,6 +69,20 @@ class DialogManager:
             on_delete=self.delete_dialog.trigger
         )
 
+        self._add_dialogs_to_overlay()
+
+    def _add_dialogs_to_overlay(self) -> None:
+        dialogs = [
+            self.create_objective_dialog,
+            self.quick_action_dialog,
+            self.complete_dialog,
+            self.delete_dialog,
+            self.clear_history_dialog,
+            self.goal_details_dialog,
+        ]
+        for dialog in dialogs:
+            dialog.add_to_overlay(self._page)
+
 
 class SavingsView(ft.View):
     def __init__(self, page: Page, lang: dict, user_info: dict):

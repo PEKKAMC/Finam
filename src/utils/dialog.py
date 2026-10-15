@@ -67,7 +67,6 @@ class Dialog(ft.AlertDialog):
     def show(self, page: Page) -> int:
         try:
             if not self.open:
-                # In flet 1.0.4+, use overlay instead of deprecated page.show_dialog()
                 self.open = True
                 page.update()
                 return 0
@@ -79,26 +78,10 @@ class Dialog(ft.AlertDialog):
             Logger.error(f"Error showing dialog: {e}")
             return -1
 
-    def close(self, page: Page) -> int:
-        """Close this dialog (replaces deprecated page.pop_dialog())"""
-        try:
-            if self.open:
-                self.open = False
-                page.update()
-                return 0
-            else:
-                Logger.warn("Dialog is already closed")
-                return 1
-
-        except Exception as e:
-            Logger.error(f"Error closing dialog: {e}")
-            return -1
-
     @staticmethod
     def close_most_recent_dialog(page: Page) -> int:
         """Deprecated: use individual dialog.close() instead. This method remains for compatibility."""
         try:
-            # In flet 1.0.4+, find and close the most recent open dialog from overlay
             if page.overlay:
                 for control in reversed(page.overlay):
                     if isinstance(control, ft.AlertDialog) and control.open:
