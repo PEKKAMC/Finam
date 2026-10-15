@@ -183,10 +183,6 @@ class HomeView(ft.View):
                 width=page_width
             )
 
-            self.balance_card.resize(
-                width=page_width
-            )
-
             self.financial_chart.resize(
                 width=page_width
             )
