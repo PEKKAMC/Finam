@@ -259,7 +259,10 @@ class BalanceCard(ft.Container):
 
 
 class SavingsGoalItem(ft.Container):
-    def __init__(self, item: dict):
+    def __init__(self, item: dict, on_click_callback: Callable | None = None):
+        self.item = item
+        self.on_click_callback = on_click_callback
+
         self.title_text = Text.MEDIUM(item["title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
         self.progress_text_display = Text.SMALL(item["progress_text"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.progress_bar = ft.ProgressBar(
@@ -310,10 +313,13 @@ class SavingsGoalItem(ft.Container):
             border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
             border_radius=16,
             padding=12,
+            ink=True,
+            on_click=lambda e: self.on_click_callback(e.page, self.item["id"]) if self.on_click_callback else None,
             content=self.main_container
         )
 
     def update_data(self, item: dict):
+        self.item = item
         self.title_text.value = item["title"]
         self.progress_text_display.value = item["progress_text"]
         self.progress_bar.value = item["progress_ratio"]
@@ -329,10 +335,11 @@ class SavingsGoalItem(ft.Container):
 
 
 class SavingsProgressCard(ft.Container):
-    def __init__(self, lang: dict, objective_items: list, on_view_all_click: Callable | None):
+    def __init__(self, lang: dict, objective_items: list, on_view_all_click: Callable | None, on_item_click: Callable | None = None):
         self.lang = lang
         self.objective_items = objective_items or []
         self.on_view_all_click = on_view_all_click
+        self.on_item_click = on_item_click
 
         # TEXT AND ICON COMPONENTS
         # Static texts
@@ -401,7 +408,7 @@ class SavingsProgressCard(ft.Container):
             content=self.empty_state_text
         )
 
-        self.goal_items: list[SavingsGoalItem] = [SavingsGoalItem(item) for item in self.objective_items]
+        self.goal_items: list[SavingsGoalItem] = [SavingsGoalItem(item, self.on_item_click) for item in self.objective_items]
 
         self.goal_items_column = ft.Column(
             spacing=6,
@@ -445,7 +452,7 @@ class SavingsProgressCard(ft.Container):
                 if i < len(self.goal_items):
                     self.goal_items[i].update_data(item)
                 else:
-                    self.goal_items.append(SavingsGoalItem(item))
+                    self.goal_items.append(SavingsGoalItem(item, self.on_item_click))
 
             self.goal_items_column.controls = list(self.goal_items)
 

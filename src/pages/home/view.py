@@ -35,6 +35,10 @@ class HomeView(ft.View):
             total_expense=self.metrics["total_expense"]
         )
 
+        def _open_objective_details(page: Page, objective_id: int):
+            page.pending_objective_id = objective_id
+            page.navigate_to("/saving")()
+
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
             page=self._page,
@@ -62,8 +66,9 @@ class HomeView(ft.View):
 
         self.savings_progress_card = SavingsProgressCard(
             lang=self.lang,
-            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang, self.user_info.get("username", "Admin")),
-            on_view_all_click=self._page.navigate_to("/saving")
+            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang, self.user_info["username"]),
+            on_view_all_click=self._page.navigate_to("/saving"),
+            on_item_click=_open_objective_details
         )
 
         self.expense_pie_chart = ExpensePieChart(

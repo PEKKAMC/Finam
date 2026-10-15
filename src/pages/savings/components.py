@@ -29,16 +29,8 @@ class ObjectiveCard(ft.Container):
         badge_text_color = Color.WHITE if self.completed else Color.PRIMARY
 
         on_action = (
-            lambda e: self.on_click_callback(
-                e.page,
-                self.objective_id,
-                self.objective_title,
-                self.subtitle,
-                self.current_value,
-                self.target_value,
-                self.progress,
-                self.completed
-            ) if self.on_click_callback else None
+            lambda e: self.on_click_callback(e.page, self.objective_id, self.objective_title, self.subtitle, self.current_value, self.target_value, self.progress, self.completed)
+            if self.on_click_callback else None
         )
 
         # TEXT AND ICON COMPONENTS
@@ -51,9 +43,6 @@ class ObjectiveCard(ft.Container):
         self.current_value_text = Text.H4(self.current_value, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
         self.target_text = Text.SMALL(self.lang["savings.target"].format(target_value=self.target_value), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.W_500)
         self.remaining_text = Text.SMALL(self.remaining_value, color=Color.SECONDARY_TEXT, weight=ft.FontWeight.W_500)
-
-        self.deposit_label = Text.MEDIUM(self.lang["savings.deposit"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.withdraw_label = Text.MEDIUM(self.lang["savings.withdraw"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
 
         self.progress_bar = ft.ProgressBar(
             value=self.progress,
@@ -113,42 +102,11 @@ class ObjectiveCard(ft.Container):
             ]
         )
 
-        self.deposit_box = ft.Container(
-            content=self.deposit_label,
-            bgcolor=Color.PRIMARY,
-            padding=ft.Padding(12, 8, 12, 8),
-            border_radius=12,
-        )
-
-        self.withdraw_box = ft.Container(
-            content=self.withdraw_label,
-            bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND,
-            padding=ft.Padding(12, 8, 12, 8),
-            border_radius=12,
-        )
-
-        self.action_row = ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            controls=[
-                ft.Row(
-                    spacing=8,
-                    controls=[
-                        self.deposit_box,
-                        self.withdraw_box
-                    ]
-                )
-            ]
-        )
-
-        self.divider = ft.Divider(color=Color.CARD_DIVIDER, height=1)
-
         self.main_container = ft.Column(
             spacing=16,
             controls=[
                 self.title_row,
-                self.progress_row,
-                self.divider,
-                self.action_row
+                self.progress_row
             ]
         )
 
@@ -300,7 +258,7 @@ class CreateObjectiveDialog(Dialog):
         self.title_text = Text.H3(self.lang["savings.create_objectives"], color=Color.DEFAULT_TEXT)
 
         self.goal_title_input = ft.TextField(
-            label=self.lang["savings.goal_title"],
+            label=self.lang["savings.objective_title"],
             color=Color.DEFAULT_TEXT,
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[a-zA-Z0-9À-ỹ\s]{0,50}$", replacement_string=""),
             border_radius=10,
@@ -376,8 +334,10 @@ class CreateObjectiveDialog(Dialog):
             ),
         )
 
-        super().__init__(dialog_content=self.main_container, color=Color.TRANSPARENT)
-        self.content_padding = 0
+        super().__init__(
+            dialog_content=self.main_container,
+            color=Color.TRANSPARENT
+        )
 
     def _process_add(self, e):
         title = self.goal_title_input.value if self.goal_title_input.value else self.lang["savings.untitled_goal"]
@@ -680,7 +640,7 @@ class GoalDetailsDialog(Dialog):
             on_click=lambda e: Dialog.close_most_recent_dialog(page),
             icon_color=Color.PRIMARY_TEXT,
         )
-        title_text = Text.H3(self.lang["savings.objective_details"], color=Color.BLACK)
+        title_text = Text.H3(self.lang["savings.objective"], color=Color.BLACK)
         header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[

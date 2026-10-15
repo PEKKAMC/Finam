@@ -126,6 +126,8 @@ class SavingsView(ft.View):
                 "completed": bool(completed_at)
             })
 
+        self._objective_data = objectives_data
+
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
             page=self._page,
@@ -149,6 +151,8 @@ class SavingsView(ft.View):
             progress_value=progress_value,
             on_create_click=lambda e: self.dialogs.create_objective_dialog.show(self._page)
         )
+
+        self._open_pending_objective_dialog()
 
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
@@ -214,10 +218,42 @@ class SavingsView(ft.View):
                 "completed": bool(completed_at)
             })
 
+        self._objective_data = objectives_data
         self.summary_banner.update_data(total_savings, total_target, percentage, progress_value)
         self.objective_grid.update_grid(objectives_data)
 
+        if hasattr(self._page, "delete_cached_view"):
+            self._page.delete_cached_view("/home")
+
         self._page.update()
+
+    def _open_pending_objective_dialog(self) -> None:
+        pending_objective_id = getattr(self._page, "pending_objective_id", None)
+        if pending_objective_id is None:
+            return
+
+        try:
+            objective_id = int(pending_objective_id)
+        except (TypeError, ValueError):
+            self._page.pending_objective_id = None
+            return
+
+        objective = next((item for item in self._objective_data if int(item["objective_id"]) == objective_id), None)
+        if objective is None:
+            self._page.pending_objective_id = None
+            return
+
+        self.dialogs.goal_details_dialog.trigger(
+            self._page,
+            objective["objective_id"],
+            objective["title"],
+            objective["reason"],
+            objective["current_value"],
+            objective["target_value"],
+            objective["progress"],
+            objective["completed"],
+        )
+        self._page.pending_objective_id = None
 
     async def trigger_export(self, e=None) -> None:
         file_path = await ft.FilePicker().save_file(allowed_extensions=["xlsx", "xls"], file_name="savings.xlsx")
