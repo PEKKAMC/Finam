@@ -2,8 +2,6 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-from datetime import datetime
-
 from src.database import db
 from src.logger import Logger
 from src.utils.settings import DefaultSettings
@@ -66,50 +64,6 @@ class LogicController:
         if net_balance < 0:
             return "Cảnh báo: Chi tiêu đang vượt quá thu nhập! Hãy cắt giảm các khoản mua sắm không thiết yếu."
         return "Hãy đảm bảo bạn trích ít nhất 10-20% thu nhập hàng tháng cho quỹ tiết kiệm khẩn cấp!"
-
-    def add_income_entry(self, vals: dict) -> tuple[bool, str]:
-        amount = vals.get("amount", '0')
-        category = vals.get("category")
-        note = vals.get("note", "")
-
-        if not amount or not category:
-            Logger.warning("Amount or Category missing.")
-            return False, "home.error.missing_amount_category"
-
-        try:
-            amount_val = int(amount)
-            if amount_val <= 0:
-                return False, "home.error.amount_less_than_zero"
-        except ValueError:
-            Logger.error("Invalid amount provided")
-            return False, "home.error.invalid_amount"
-
-        date = datetime.now().strftime("%Y-%m-%d %H:%M")
-        if db.spending.add_income_entry(self.current_user, amount_val, category, date, note):
-            return True, "spending.income_added_success"
-        return False, "home.error.save_income_failed"
-
-    def add_expense_entry(self, vals: dict) -> tuple[bool, str]:
-        amount = vals.get("amount", '0')
-        category = vals.get("category")
-        note = vals.get("note", "")
-
-        if not amount or not category:
-            Logger.warning("Amount or Category missing.")
-            return False, "home.error.missing_amount_category"
-
-        try:
-            amount_val = int(amount)
-            if amount_val <= 0:
-                return False, "home.error.amount_less_than_zero"
-        except ValueError:
-            Logger.error("Invalid amount provided")
-            return False, "home.error.invalid_amount"
-
-        date = datetime.now().strftime("%Y-%m-%d %H:%M")
-        if db.spending.add_expense_entry(self.current_user, amount_val, category, date, note):
-            return True, "spending.expense_added_success"
-        return False, "home.error.save_expense_failed"
 
     def get_user_objectives(self):
         return db.saving.get_user_objectives(self.current_user)
