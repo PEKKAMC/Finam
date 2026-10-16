@@ -14,8 +14,8 @@ class LogicController:
         self.current_user = current_user
 
     def get_dashboard_totals(self) -> tuple[float, float, float, str]:
-        total_savings = db.saving.get_total_savings(self.current_user)
-        total_target = db.saving.get_total_target_amount(self.current_user)
+        total_savings = db.savings.get_total_savings(self.current_user)
+        total_target = db.savings.get_total_target_amount(self.current_user)
 
         if total_target > 0:
             progress_value = min(total_savings / total_target, 1.0)
@@ -26,11 +26,11 @@ class LogicController:
         return total_savings, total_target, progress_value, percentage
 
     def get_user_objectives(self):
-        return db.saving.get_user_objectives(self.current_user)
+        return db.savings.get_user_objectives(self.current_user)
 
     @staticmethod
     def get_objective_progress_data(objective_id: int, target_amount: float) -> tuple[float, float, str]:
-        objective_savings = db.saving.get_objective_progress(objective_id)
+        objective_savings = db.savings.get_objective_progress(objective_id)
         if target_amount > 0:
             raw_progress = objective_savings / target_amount
             progress_value = min(raw_progress, 1.0)
@@ -42,10 +42,10 @@ class LogicController:
 
     @staticmethod
     def get_objective_history(objective_id: int):
-        return db.saving.get_objective_activity(objective_id)
+        return db.savings.get_objective_activity(objective_id)
 
     def get_recent_activity(self, lang: dict):
-        activities = db.saving.get_user_activity_raw(self.current_user)
+        activities = db.savings.get_user_activity_raw(self.current_user)
         for item in activities:
             if item["type"] == "saving":
                 target = item.get("target_name")
@@ -68,32 +68,32 @@ class LogicController:
         return activities
 
     def add_new_objective(self, title: str, reason: str, target_amount: int) -> bool:
-        return db.saving.add_objective(self.current_user, title, reason, target_amount)
+        return db.savings.add_objective(self.current_user, title, reason, target_amount)
 
     @staticmethod
     def complete_objective(objective_id: int):
-        db.saving.complete_objective(objective_id)
+        db.savings.complete_objective(objective_id)
 
     @staticmethod
     def delete_objective(objective_id: int):
-        db.saving.delete_objective(objective_id)
+        db.savings.delete_objective(objective_id)
 
     def process_quick_action(self, objective_id: int, action: str, amount: int, time: str, note: str = "") -> tuple[bool, str, int]:
-        current_saved = db.saving.get_objective_progress(objective_id)
+        current_saved = db.savings.get_objective_progress(objective_id)
         if action == "remove":
             if amount > current_saved:
                 return False, "savings.error.not_enough_balance", current_saved
             amount = -amount
         else:
-            remaining = db.saving.get_objective_target(objective_id) - current_saved
+            remaining = db.savings.get_objective_target(objective_id) - current_saved
             if amount > remaining:
                 return False, "savings.error.exceeding_amount", remaining
 
-        db.saving.add_saving_entry(self.current_user, amount, time, objective_id, note)
+        db.savings.add_saving_entry(self.current_user, amount, time, objective_id, note)
         return True, "", 0
 
     def clear_activity_history(self):
-        db.saving.clear_activity_history(self.current_user)
+        db.savings.clear_activity_history(self.current_user)
 
     def export_ledger_to_excel(self, file_path: str, lang: dict) -> tuple[bool, str]:
         activities = self.get_recent_activity(lang)
