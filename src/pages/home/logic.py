@@ -6,7 +6,7 @@ from src.database import db
 from src.logger import Logger
 from src.utils.settings import DefaultSettings
 
-
+# Temporary method
 def _get_user_currency(username: str = "Admin") -> str:
     try:
         return db.users.get_currency(username)
@@ -20,8 +20,8 @@ class LogicController:
 
     def get_dashboard_data(self) -> dict:
         Logger.info("Loading dashboard data...")
-        total_savings = db.saving.get_total_savings(self.current_user)
-        total_target = db.saving.get_total_target_amount(self.current_user)
+        total_savings = db.savings.get_total_savings(self.current_user)
+        total_target = db.savings.get_total_target_amount(self.current_user)
 
         expenses = db.spending.get_user_expenses(self.current_user) or []
         incomes = db.spending.get_user_incomes(self.current_user) or []
@@ -66,7 +66,7 @@ class LogicController:
         return "Hãy đảm bảo bạn trích ít nhất 10-20% thu nhập hàng tháng cho quỹ tiết kiệm khẩn cấp!"
 
     def get_user_objectives(self):
-        return db.saving.get_user_objectives(self.current_user)
+        return db.savings.get_user_objectives(self.current_user)
 
     @staticmethod
     def get_saving_progress_items(objectives: list, lang: dict, username: str = ""):
@@ -78,7 +78,7 @@ class LogicController:
 
         for objective in objectives[:3]:
             objective_id, objective_title, objective_reason, target_amount, completed_at = objective
-            current_amount = float(db.saving.get_objective_progress(objective_id))
+            current_amount = float(db.savings.get_objective_progress(objective_id))
             target_value = float(target_amount) if target_amount and float(target_amount) > 0 else 1.0
             progress_ratio = min(1.0, current_amount / target_value) if target_value > 0 else 1.0
             display_title = objective_title if objective_title else lang["home.default_goal_title"]
@@ -98,7 +98,7 @@ class LogicController:
 
     @staticmethod
     def get_objective_progress_data(objective_id: int, target_amount: float) -> tuple[float, float, str]:
-        objective_savings = db.saving.get_objective_progress(objective_id)
+        objective_savings = db.savings.get_objective_progress(objective_id)
         if target_amount > 0:
             raw_progress = objective_savings / target_amount
             progress_value = min(raw_progress, 1.0)
@@ -110,26 +110,26 @@ class LogicController:
 
     @staticmethod
     def get_objective_history(objective_id: int):
-        return db.saving.get_objective_activity(objective_id)
+        return db.savings.get_objective_activity(objective_id)
 
     def process_quick_action(self, objective_id: int, action: str, amount: int, time: str, note: str = "") -> tuple[bool, str]:
-        current_saved = db.saving.get_objective_progress(objective_id)
+        current_saved = db.savings.get_objective_progress(objective_id)
         if action == "remove":
             if amount > current_saved:
                 return False, "savings.error.not_enough_balance"
             amount = -amount
         else:
-            remaining = db.saving.get_objective_target(objective_id) - current_saved
+            remaining = db.savings.get_objective_target(objective_id) - current_saved
             if amount > remaining:
                 return False, "savings.error.exceeding_amount"
 
-        db.saving.add_saving_entry(self.current_user, amount, time, objective_id, note)
+        db.savings.add_saving_entry(self.current_user, amount, time, objective_id, note)
         return True, ""
 
     @staticmethod
     def complete_objective(objective_id: int):
-        db.saving.complete_objective(objective_id)
+        db.savings.complete_objective(objective_id)
 
     @staticmethod
     def delete_objective(objective_id: int):
-        db.saving.delete_objective(objective_id)
+        db.savings.delete_objective(objective_id)

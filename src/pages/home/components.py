@@ -7,20 +7,22 @@ from collections.abc import Callable
 import flet as ft
 import flet_charts as fc
 
+from src.database import db
 from src.utils import Color, Text, UISettings, DefaultSettings
 
 
+# Temporary method
 def _get_user_currency(username: str = "Admin") -> str:
     try:
-        from src.database import db
         return db.users.get_currency(username)
     except Exception:
         return DefaultSettings.CURRENCY
 
 
 class BalanceCard(ft.Container):
-    def __init__(self, lang: dict, net_balance: int, income: int, expense: int, savings: int, ai_advice: str, on_add_click: Callable, on_scan_click: Callable | None):
+    def __init__(self, lang: dict, user_info: dict, net_balance: int, income: int, expense: int, savings: int, ai_advice: str, on_add_click: Callable, on_scan_click: Callable | None):
         self.lang = lang
+        self.user_info = user_info
         self.net_balance = net_balance
         self.income = income
         self.expense = expense
@@ -28,7 +30,7 @@ class BalanceCard(ft.Container):
         self.ai_advice = ai_advice
         self.on_add_click = on_add_click
         self.on_scan_click = on_scan_click
-        self.currency = _get_user_currency()
+        self.currency = _get_user_currency(self.user_info["username"])
 
         # TEXT AND ICON COMPONENTS
         # Static texts
@@ -238,7 +240,7 @@ class BalanceCard(ft.Container):
         self.expense = expense
         self.savings = savings
         self.ai_advice = ai_advice
-        self.currency = _get_user_currency()
+        self.currency = _get_user_currency(self.user_info["username"])
 
         self.balance_amount_display.value = f"{int(self.net_balance):,}"
         self.currency_label.value = self.currency
@@ -263,17 +265,15 @@ class SavingsGoalItem(ft.Container):
         self.item = item
         self.on_click_callback = on_click_callback
 
+        # TEXT AND ICON COMPONENTS
+        # Dynamic texts
         self.title_text = Text.MEDIUM(item["title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
         self.progress_text_display = Text.SMALL(item["progress_text"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.progress_bar = ft.ProgressBar(
-            value=item["progress_ratio"],
-            color=Color.PRIMARY,
-            bgcolor=Color.PROGRESS_TRACK_BACKGROUND,
-            height=8
-        )
+        self.progress_bar = ft.ProgressBar(value=item["progress_ratio"], color=Color.PRIMARY, bgcolor=Color.PROGRESS_TRACK_BACKGROUND, height=8)
         self.contributed_label_display = Text.SMALL(item["contributed_label"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
         self.target_label_display = Text.SMALL(item["target_label"], color=Color.BLAND_TEXT)
 
+        # CONTAINER COMPONENTS
         self.progress_badge_container = ft.Container(
             content=self.progress_text_display,
             bgcolor=Color.PRIMARY,
@@ -320,11 +320,14 @@ class SavingsGoalItem(ft.Container):
 
     def update_data(self, item: dict):
         self.item = item
+
         self.title_text.value = item["title"]
         self.progress_text_display.value = item["progress_text"]
         self.progress_bar.value = item["progress_ratio"]
         self.contributed_label_display.value = item["contributed_label"]
         self.target_label_display.value = item["target_label"]
+
+        self.update()
 
     def resize(self, width: int):
         self.main_container.width = width
@@ -471,9 +474,20 @@ class SavingsProgressCard(ft.Container):
 
 class ExpenseCategoryItem(ft.Row):
     def __init__(self, name: str, val: float, currency_lang: str, color: str):
-        self.color_box = ft.Container(width=10, height=10, border_radius=5, bgcolor=color)
+
+
+        # TEXT AND ICON COMPONENTS
+        # Dynamic texts
         self.name_display = Text.SMALL(name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
         self.value_display = Text.SMALL(f"{int(val):,} {currency_lang}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+
+        # CONTAINER COMPONENTS
+        self.color_box = ft.Container(
+            width=10,
+            height=10,
+            border_radius=5,
+            bgcolor=color
+        )
 
         self.category_label = ft.Row(
             spacing=8,
@@ -496,16 +510,19 @@ class ExpenseCategoryItem(ft.Row):
         self.name_display.value = name
         self.value_display.value = f"{int(val):,} {currency_lang}"
 
+        self.update()
+
     def resize(self, width: int):
         self.width = width
 
 
 class ExpensePieChart(ft.Container):
-    def __init__(self, lang: dict, category_data: dict, on_details_click: Callable | None):
+    def __init__(self, lang: dict, user_info: dict, category_data: dict, on_details_click: Callable | None):
         self.lang = lang
+        self.user_info = user_info
         self.category_data = category_data or {}
         self.on_details_click = on_details_click
-        self.currency = _get_user_currency()
+        self.currency = _get_user_currency(self.user_info["username"])
 
         self.pie_colors = [
             Color.EXPENSE_ACTION_BACKGROUND,
@@ -634,6 +651,7 @@ class ExpensePieChart(ft.Container):
 
     def update_data(self, category_data: dict):
         self.category_data = category_data or {}
+        self.currency = _get_user_currency(self.user_info["username"])
 
         if not self.category_data:
             self.legend_items.clear()
