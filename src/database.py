@@ -251,9 +251,9 @@ class UserDatabase:
             return False
 
     def get_currency(self, username: str) -> str:
-        """Get the currency setting for a user. Returns 'VND (đ)' by default."""
+        """Get the currency setting for a user. Returns DefaultSettings.CURRENCY by default."""
         user_id = self.get_user_id(username)
-        if not user_id: return 'VND (đ)'
+        if not user_id: return DefaultSettings.CURRENCY
 
         result = self.db.execute(
             "SELECT currency FROM user_settings WHERE user_id = ?",
@@ -262,7 +262,7 @@ class UserDatabase:
         )
         if result and result[0]:
             return result[0]
-        return 'VND (đ)'
+        return DefaultSettings.CURRENCY
 
     def set_currency(self, username: str, currency: str) -> bool:
         """Set the currency for a user."""
