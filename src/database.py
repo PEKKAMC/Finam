@@ -51,8 +51,7 @@ class DatabaseConnection:
                     FOREIGN KEY (user_id) REFERENCES users (id)
                  )
             ''')
-            
-            # MIGRATION: Add language and currency columns to existing user_settings tables
+
             try:
                 self.execute("ALTER TABLE user_settings ADD COLUMN language TEXT DEFAULT 'vi'")
                 Logger.info("Added language column to user_settings table")
