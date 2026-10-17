@@ -169,8 +169,8 @@ class SettingsView(ft.View):
         try:
             self._page.update()
             return 0
-        except RuntimeError as e:
-            Logger.warn(f"Failed to refresh view {e}")
+        except RuntimeError as ex:
+            Logger.warn(f"Failed to refresh view {ex}")
             return -1
 
     def _on_page_resize(self, e = None) -> int:

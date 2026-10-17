@@ -42,8 +42,8 @@ class LogicController:
                 try:
                     os.remove(file_path)
                     Logger.info(f"Deleted database file: {file_path}")
-                except Exception as e:
-                    Logger.error(f"Error deleting database file {file_path}: {e}")
+                except Exception as ex:
+                    Logger.error(f"Error deleting database file {file_path}: {ex}")
 
     @staticmethod
     def get_world_currencies() -> list[str]:

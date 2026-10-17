@@ -70,15 +70,15 @@ class AudioController:
     async def _safe_play_task(audio_control):
         try:
             await asyncio.wait_for(audio_control.play(), timeout=1.0)
-        except Exception as e:
-            Logger.debug(f"Audio play failed: {e}")
+        except Exception as ex:
+            Logger.debug(f"Audio play failed: {ex}")
 
     @staticmethod
     async def _safe_pause_task(audio_control):
         try:
             await asyncio.wait_for(audio_control.pause(), timeout=0.5)
-        except Exception as e:
-            Logger.debug(f"Audio pause failed: {e}")
+        except Exception as ex:
+            Logger.debug(f"Audio pause failed: {ex}")
 
     async def pause(self):
         if self.active_audio:
@@ -193,8 +193,8 @@ class AnimationController:
             try:
                 if self.active_sequence_identifier == sequence_identifier and control_element and control_element.page:
                     control_element.update()
-            except Exception as e:
-                Logger.debug(f"Page update skipped: {e}")
+            except Exception as ex:
+                Logger.debug(f"Page update skipped: {ex}")
 
         if self.active_sequence_identifier != sequence_identifier: return
 

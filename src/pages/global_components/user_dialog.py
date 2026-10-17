@@ -270,8 +270,8 @@ class AddUserField(ft.Container):
         self.error_message.value = message
         try:
             self.update()
-        except RuntimeError as e:
-            Logger.debug(f"Render skipped: {e}")
+        except RuntimeError as ex:
+            Logger.debug(f"Render skipped: {ex}")
 
     def clear(self):
         self.input_field.value = ""
@@ -279,8 +279,8 @@ class AddUserField(ft.Container):
         self.error_message.value = ""
         try:
             self.update()
-        except RuntimeError as e:
-            Logger.debug(f"Render skipped: {e}")
+        except RuntimeError as ex:
+            Logger.debug(f"Render skipped: {ex}")
 
     def resize(self, width: int):
         pass

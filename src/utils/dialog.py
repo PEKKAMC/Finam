@@ -34,8 +34,8 @@ class Dialog(ft.AlertDialog):
     def _is_in_overlay(self, page: Page) -> bool:
         try:
             return self in page.overlay
-        except Exception as e:
-            Logger.error(f"Error checking if dialog is in overlay: {e}")
+        except Exception as ex:
+            Logger.error(f"Error checking if dialog is in overlay: {ex}")
             return False
 
     def add_to_overlay(self, page: Page) -> int:
@@ -47,8 +47,8 @@ class Dialog(ft.AlertDialog):
             Logger.warn("Dialog already in overlay")
             return 1
 
-        except Exception as e:
-            Logger.error(f"Error adding dialog to overlay: {e}")
+        except Exception as ex:
+            Logger.error(f"Error adding dialog to overlay: {ex}")
             return -1
 
     def remove_from_overlay(self, page: Page) -> int:
@@ -60,8 +60,8 @@ class Dialog(ft.AlertDialog):
             Logger.warn("Dialog not in overlay")
             return 1
 
-        except Exception as e:
-            Logger.error(f"Error removing dialog from overlay: {e}")
+        except Exception as ex:
+            Logger.error(f"Error removing dialog from overlay: {ex}")
             return -1
 
     def show(self, page: Page) -> int:
@@ -74,8 +74,8 @@ class Dialog(ft.AlertDialog):
                 Logger.warn("Dialog is already opened")
                 return 1
 
-        except Exception as e:
-            Logger.error(f"Error showing dialog: {e}")
+        except Exception as ex:
+            Logger.error(f"Error showing dialog: {ex}")
             return -1
 
     @staticmethod
@@ -91,6 +91,6 @@ class Dialog(ft.AlertDialog):
             Logger.warn("No open dialog found in overlay")
             return 1
 
-        except Exception as e:
-            Logger.error(f"Error closing most recent dialog: {e}")
+        except Exception as ex:
+            Logger.error(f"Error closing most recent dialog: {ex}")
             return -1

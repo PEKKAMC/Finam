@@ -246,8 +246,8 @@ class UserDatabase:
                     (user_id, language)
                 )
             return True
-        except Exception as e:
-            Logger.error(f"Failed to set language: {e}")
+        except Exception as ex:
+            Logger.error(f"Failed to set language: {ex}")
             return False
 
     def get_currency(self, username: str) -> str:
@@ -287,8 +287,8 @@ class UserDatabase:
                     (user_id, currency)
                 )
             return True
-        except Exception as e:
-            Logger.error(f"Failed to set currency: {e}")
+        except Exception as x:
+            Logger.error(f"Failed to set currency: {ex}")
             return False
 
 # ==========================================
@@ -512,8 +512,8 @@ class SpendingDatabase:
                 deleted = cursor.rowcount > 0
                 connection.commit()
                 return deleted
-        except Exception as e:
-            Logger.error(f"Error deleting entry {entry_id} for user {username}: {e}")
+        except Exception as ex:
+            Logger.error(f"Error deleting entry {entry_id} for user {username}: {ex}")
             return False
 
 # ==========================================

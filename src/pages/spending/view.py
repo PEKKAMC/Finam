@@ -163,8 +163,8 @@ class SpendingView(ft.View):
 
             return 0
 
-        except Exception as e:
-            Logger.warn(f"Failed to refresh view {e}")
+        except Exception as ex:
+            Logger.warn(f"Failed to refresh view {ex}")
             return -1
 
     def on_filter_change(self, f_type: str):

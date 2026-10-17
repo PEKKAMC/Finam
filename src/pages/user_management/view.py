@@ -96,8 +96,8 @@ class DialogManager:
                 self.delete_dialog.selected_user = username
             self.delete_dialog.show(self._page)
             return 0
-        except Exception as e:
-            Logger.warn(f"Failed to show delete prompt {e}")
+        except Exception as ex:
+            Logger.warn(f"Failed to show delete prompt {ex}")
             return -1
 
     def _handle_delete_confirm(self, username: str) -> int:
@@ -105,8 +105,8 @@ class DialogManager:
             self.controller.delete_user(username)
             self._refresh_view()
             return 0
-        except Exception as e:
-            Logger.warn(f"Cannot delete user {username}, {e}")
+        except Exception as ex:
+            Logger.warn(f"Cannot delete user {username}, {ex}")
             return -1
 
     # DELETE ALL DATA DIALOG
@@ -114,8 +114,8 @@ class DialogManager:
         try:
             self.delete_all_data_dialog.show(self._page)
             return 0
-        except Exception as e:
-            Logger.warn(f"Failed to show delete all data prompt {e}")
+        except Exception as ex:
+            Logger.warn(f"Failed to show delete all data prompt {ex}")
             return -1
 
     async def _handle_delete_all_data_confirm(self, e=None) -> int:
@@ -124,8 +124,8 @@ class DialogManager:
             os.environ["RESTART_FINAM"] = "1"
             await self._page.window.close()
             return 0
-        except Exception as e:
-            Logger.error(f"Failed to delete all data and restart app: {e}")
+        except Exception as ex:
+            Logger.error(f"Failed to delete all data and restart app: {ex}")
             return -1
 
     # OVERLAY MANAGEMENT
@@ -343,8 +343,8 @@ class UserManagementView(ft.View):
             self.dialogs.user_list.update_data(self.controller.get_all_users(), self.user_info.get("username", ""))
             self.profile_card.update_data(self.user_info.get("username", ""))
             return 0
-        except RuntimeError as e:
-            Logger.warn(f"Failed to refresh view {e}")
+        except RuntimeError as ex:
+            Logger.warn(f"Failed to refresh view {ex}")
             return -1
 
     def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:

@@ -33,8 +33,8 @@ class LogicController:
                 amount = int(income.get("amount", 0))
                 total_income += amount
 
-        except Exception as e:
-            Logger.error(f"Error formatting dashboard data: {e}")
+        except Exception as ex:
+            Logger.error(f"Error formatting dashboard data: {ex}")
 
         net_balance = total_income - total_expense
 

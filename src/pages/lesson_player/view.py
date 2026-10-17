@@ -181,8 +181,8 @@ class LessonPlayerView(ft.View):
 
         try:
             self._page.update()
-        except Exception as e:
-            Logger.error(f"Error updating page after adding visual controls: {e}")
+        except Exception as ex:
+            Logger.error(f"Error updating page after adding visual controls: {ex}")
 
         asyncio.create_task(self.animation_controller.execute_all_animations(user_interface_elements, sequence_identifier))
 

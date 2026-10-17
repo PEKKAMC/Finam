@@ -80,8 +80,8 @@ def get_financial_chart_data(username: str, chart_type: str = "daily", date_offs
                     chart_data[inc_date.month - 1]["income"] += amount
             except (ValueError, TypeError):
                 pass
-    except Exception as e:
-        Logger.error(f"Error formatting dashboard chart data: {e}")
+    except Exception as ex:
+        Logger.error(f"Error formatting dashboard chart data: {ex}")
 
     return chart_date, chart_data
 

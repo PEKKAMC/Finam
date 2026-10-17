@@ -126,10 +126,10 @@ class LogicController:
             else:
                 raise RuntimeError(f"Server status {response.status_code}: {response.text}")
 
-        except Exception as e:
+        except Exception as ex:
             risk = local_risk
             ai_advice = "Đang sử dụng bộ phân tích cục bộ (Không thể kết nối tới server AI)."
-            Logger.warn(f"AI analysis failed: {e}. Using local fallback. Risk: {risk}")
+            Logger.warn(f"AI analysis failed: {ex}. Using local fallback. Risk: {risk}")
 
         if risk is None:
             ai_advice = ai_advice or "Đầu vào bị đánh dấu là nội dung troll hoặc không hợp lệ để phân tích."

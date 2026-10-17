@@ -143,8 +143,8 @@ class PurchaseScannerView(ft.View):
 
                 self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
 
-            except Exception as e:
-                Logger.error(f"Error during background analysis: {e}")
+            except Exception as x:
+                Logger.error(f"Error during background analysis: {ex}")
                 self.result_card.update_result(
                     30,
                     "yếu tố bên ngoài",

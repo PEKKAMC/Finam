@@ -153,8 +153,8 @@ class StarterView(ft.View):
 
             return 0
 
-        except Exception as e:
-            Logger.warn(f"Failed to refresh view {e}")
+        except Exception as ex:
+            Logger.warn(f"Failed to refresh view {ex}")
             return -1
 
     def _on_page_resize(self, e = None) -> int:

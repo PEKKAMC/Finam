@@ -60,7 +60,7 @@ def get_language(lang=None) -> dict:
             loaded_json = json.load(f)
             translation_data = loaded_json.get("translate", {})
             return TranslationDict(translation_data)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        Logger.error(f"Error loading language file {lang_file}: {e}")
+    except (FileNotFoundError, json.JSONDecodeError) as ex:
+        Logger.error(f"Error loading language file {lang_file}: {ex}")
         return TranslationDict()
 
