@@ -408,19 +408,21 @@ class CategorySelectionView(ft.View):
             cleaned = expression.replace("×", "*").replace("÷", "/")
             parsed = ast.parse(cleaned, mode="eval")
             for node in ast.walk(parsed):
-                allowed_bin_ops = (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)
-                allowed_unary_ops = (ast.UAdd, ast.USub)
-                pass_nodes = (*allowed_bin_ops, *allowed_unary_ops, ast.Expression)
-
-                error_data = (
-                    isinstance(node, ast.BinOp) and not isinstance(node.op, allowed_bin_ops) or
-                    isinstance(node, ast.UnaryOp) and not isinstance(node.op, allowed_unary_ops) or
-                    isinstance(node, ast.Constant) and not isinstance(node.value, (int, float)) or
-                    isinstance(node, pass_nodes)
-                )
-
-                if error_data:
-                    raise ValueError(f"Invalid expression: {cleaned}")
+                if isinstance(node, ast.BinOp):
+                    if not isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)):
+                        raise ValueError
+                elif isinstance(node, ast.UnaryOp):
+                    if not isinstance(node.op, (ast.UAdd, ast.USub)):
+                        raise ValueError
+                elif isinstance(node, ast.Constant):
+                    if not isinstance(node.value, (int, float)):
+                        raise ValueError
+                elif isinstance(node, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod, ast.UAdd, ast.USub)):
+                    pass
+                elif isinstance(node, ast.Expression):
+                    pass
+                else:
+                    raise ValueError
 
             value = eval(compile(parsed, "<expr>", "eval"), {"__builtins__": {}}, {"math": math})
             if isinstance(value, float) and value.is_integer():
@@ -431,7 +433,7 @@ class CategorySelectionView(ft.View):
             return None
 
     def _on_key_press(self, val: str):
-        operators = "+-*/"
+        operators = "+-*/."
         if val in operators and self.amount_value and self.amount_value[-1] in operators:
             self.amount_value = self.amount_value[:-1] + val
         elif self.amount_value == "0" and val not in "+-*/.":
