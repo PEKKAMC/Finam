@@ -1,3 +1,47 @@
+# Finam v0.3.1-beta
+
+**Release Date:** October 17, 2026
+
+> **⚠️ BETA WARNING: Read Before Using**
+>
+> This beta update focuses on stability, cleanup, and data flow improvements across the app. While the experience is more reliable, you may still encounter occasional bugs, minor performance hiccups, or incomplete features during regular use.
+>
+> * **Data Backup:** We still recommend backing up any important financial records before performing larger updates or data operations.
+> * **Feedback:** If you run into crashes, softlocks, or unexpected behavior, please report them via GitHub.
+>
+> Thank you for continuing to test and improve Finam.
+
+## Changes in this version
+
+*   Fixed starter page dialog behavior on repeated entry.
+*   Updated category selection flows and related UI logic.
+*   Refined the purchase scanner workflow and supporting components.
+*   Improved home page and savings page behavior, layout, and data handling.
+*   Updated database access and syntax for more consistent persistence.
+*   Switched default settings to be sourced from the app file instead of prewritten data.
+*   Cleaned up duplicate logging, unused functions, and redundant exception handling.
+*   Reordered logic and helper methods for better readability and maintenance.
+*   Improved dialog behavior and broke out a few fixes for relevant UI actions.
+*   Continued the overall refactor of app logic, structure, and utility modules.
+
+## Bug fixes in this version
+
+*   Fixed starter page not showing the user dialog after the first use.
+*   Fixed calculator-related logic failures.
+*   Fixed broken dialog behavior and update issues.
+*   Fixed duplicate balance resizing and related display glitches.
+*   Fixed data filtering and retrieval issues.
+*   Fixed syntax errors and cleanup regressions.
+*   Resolved duplicate logging when route changes fail.
+*   Improved overall app flow during page transitions and refreshes.
+*   Reduced issues caused by stale or inconsistent settings and data access.
+
+## Known Issues & Instability
+
+*   Some actions may cause softlocks or crashes.
+*   Lesson player and lesson editor don't work.
+*   Various UI elements may not scale perfectly on all screen sizes.
+
 # Finam v0.3.0-beta
 
 **Release Date:** October 11, 2026
