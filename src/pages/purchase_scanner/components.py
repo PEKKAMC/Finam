@@ -278,6 +278,135 @@ class InterventionItem(ft.Container):
         self.main_container.width = width
 
 
+class ScannerHistoryCard(ft.Container):
+    def __init__(self, page: Page, lang: dict, on_delete_entry=None, on_clear_all=None):
+        self._page = page
+        self.lang = lang
+        self.on_delete_entry = on_delete_entry or (lambda *_: None)
+        self.on_clear_all = on_clear_all or (lambda: None)
+
+        self.history_collapsed = False
+        self.history_expander = ft.IconButton(
+            icon=ft.Icons.KEYBOARD_ARROW_UP,
+            on_click=lambda e: self.toggle_history_panel(),
+            style=ft.ButtonStyle(shape=ft.CircleBorder()),
+        )
+        self.clear_all_button = ft.TextButton(
+            content=self.lang.get("purchase_scanner.clear_history", "Clear all"),
+            icon=ft.Icons.DELETE_SWEEP_OUTLINED,
+            on_click=lambda e: self._handle_clear_all(),
+            style=ft.ButtonStyle(color=Color.NEGATIVE_ACTION),
+        )
+        self.history_list = ft.Column(spacing=8)
+        self.history_content = ft.Column(
+            spacing=10,
+            controls=[self.history_list],
+            visible=True,
+        )
+
+        super().__init__(
+            visible=True,
+            bgcolor=Color.WHITE,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            border_radius=16,
+            padding=12,
+            content=ft.Column(
+                spacing=10,
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[
+                            Text.LABEL(self.lang["purchase_scanner.history"].upper(), color=Color.SECONDARY_TEXT),
+                            ft.Row(
+                                controls=[self.clear_all_button, self.history_expander],
+                                spacing=0,
+                            ),
+                        ],
+                    ),
+                    self.history_content,
+                ],
+            ),
+        )
+
+    def _handle_delete(self, scan_id):
+        if scan_id is not None:
+            self.on_delete_entry(scan_id)
+
+    def _handle_clear_all(self):
+        self.on_clear_all()
+
+    def set_history(self, history_entries: list[dict]):
+        self.history_list.controls.clear()
+        self.history_content.visible = bool(history_entries) and not self.history_collapsed
+        self.clear_all_button.visible = bool(history_entries)
+
+        if not history_entries:
+            self.history_list.controls.append(
+                Text.SMALL(self.lang["purchase_scanner.no_history"], color=Color.SECONDARY_TEXT)
+            )
+            self.update()
+            return
+
+        for entry in history_entries:
+            item_name = entry.get("item_name") or "Item"
+            risk_score_raw = entry.get("risk_score")
+            risk_score = int(risk_score_raw) if risk_score_raw is not None else 0
+            created_at = entry.get("created_at", "")
+            trigger_display = entry.get("trigger_display") or entry.get("trigger") or "-"
+            advice = entry.get("ai_advice") or "-"
+            price = entry.get("price", 0)
+            scan_id = entry.get("id")
+
+            self.history_list.controls.append(
+                ft.Container(
+                    bgcolor=Color.GOAL_ITEM_BACKGROUND,
+                    border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                    border_radius=14,
+                    padding=12,
+                    content=ft.Column(
+                        spacing=4,
+                        controls=[
+                            ft.Row(
+                                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                                controls=[
+                                    Text.MEDIUM(item_name, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                                    ft.Row(
+                                        controls=[
+                                            ft.Container(
+                                                content=Text.SMALL(f"{risk_score}%", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                                                bgcolor=Color.PRIMARY if risk_score < 60 else (Color.NEGATIVE_ACTION if risk_score > 75 else "#F59E0B"),
+                                                border_radius=12,
+                                                padding=ft.Padding(8, 4, 8, 4),
+                                            ),
+                                            ft.IconButton(
+                                                icon=ft.Icons.DELETE_OUTLINE,
+                                                tooltip=self.lang.get("purchase_scanner.delete_item", "Delete item"),
+                                                on_click=lambda e, sid=scan_id: self._handle_delete(sid),
+                                                icon_color=Color.NEGATIVE_ACTION,
+                                            ),
+                                        ],
+                                        spacing=8,
+                                    ),
+                                ]
+                            ),
+                            Text.SMALL(f"{int(price):,}đ • {trigger_display}", color=Color.SECONDARY_TEXT),
+                            Text.SMALL(created_at, color=Color.SECONDARY_TEXT),
+                            Text.SMALL(advice[:180] + ("..." if len(advice) > 180 else ""), color=Color.DEFAULT_TEXT),
+                        ]
+                    )
+                )
+            )
+
+        self.history_content.visible = not self.history_collapsed
+        self.update()
+
+    def toggle_history_panel(self):
+        self.history_collapsed = not self.history_collapsed
+        self.history_content.visible = not self.history_collapsed
+        self.history_expander.icon = ft.Icons.KEYBOARD_ARROW_DOWN if self.history_collapsed else ft.Icons.KEYBOARD_ARROW_UP
+        self.update()
+
+
 class ScannerResult(ft.Container):
     def __init__(self, page: Page, lang: dict):
         self._page = page
@@ -297,6 +426,25 @@ class ScannerResult(ft.Container):
                     text_align=ft.TextAlign.CENTER
                 )
             ]
+        )
+
+        # Loading display while AI is evaluating the purchase
+        self.loading_container = ft.Container(
+            visible=False,
+            content=ft.Column(
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=16,
+                controls=[
+                    ft.ProgressRing(width=48, height=48, stroke_width=5, color=Color.PRIMARY),
+                    Text.H5(self.lang["purchase_scanner.waiting"], color=Color.DEFAULT_TEXT, text_align=ft.TextAlign.CENTER),
+                    Text.SMALL(
+                        self.lang["purchase_scanner.fill_info"],
+                        color=Color.SECONDARY_TEXT,
+                        text_align=ft.TextAlign.CENTER
+                    )
+                ]
+            )
         )
 
         # Dynamic results controls
@@ -370,14 +518,15 @@ class ScannerResult(ft.Container):
                 ft.Column([
                     Text.LABEL(self.lang["purchase_scanner.intervention_rules"].upper(), color=Color.SECONDARY_TEXT),
                     self.interventions_col
-                ], spacing=8)
+                ], spacing=8),
             ]
         )
 
         self.main_container = ft.Container(
             content=ft.Column(
-                controls=[self.empty_state, self.result_container],
-                alignment=ft.MainAxisAlignment.CENTER
+                controls=[self.empty_state, self.loading_container, self.result_container],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER
             ),
             alignment=ft.Alignment.CENTER,
             expand=True
@@ -397,28 +546,43 @@ class ScannerResult(ft.Container):
 
     def set_loading_state(self):
         self.empty_state.visible = False
-        self.result_container.visible = True
-        self.advice_text.value = self.lang["purchase_scanner.waiting"]
+        self.loading_container.visible = True
+        self.result_container.visible = False
+        self.advice_text.value = ""
+        self.interventions_col.controls.clear()
         self.update()
 
-    def update_result(self, risk: int, trigger_display: str, price: float, item_name: str, ai_advice: str = ""):
+    def update_result(self, risk: int | None, trigger_display: str, price: float, item_name: str, ai_advice: str = ""):
         self.empty_state.visible = False
+        self.loading_container.visible = False
         self.result_container.visible = True
+
+        if risk is None:
+            self.risk_score_text.value = "—"
+            self.risk_score_text.color = Color.BLAND_TEXT
+            self.risk_status_text.value = "Nội dung troll / không hợp lệ"
+            self.risk_badge_text.value = "Bỏ qua"
+            self.progress_bar.value = 0.0
+            self.progress_bar.color = Color.BLAND_TEXT
+            self.advice_text.value = ai_advice or "Đầu vào này bị xác định là troll hoặc không hợp lệ nên không được lưu vào lịch sử."
+            self.interventions_col.controls.clear()
+            self.update()
+            return
 
         risk_val = max(0, min(100, int(risk)))
 
         if risk_val > 65:
             risk_color = Color.NEGATIVE_ACTION
             status_desc = self.lang["purchase_scanner.risk_very_high"]
-            pause_time = f"24 {self.lang["generic.hour"]}"
+            pause_time = f"24 {self.lang['generic.hour']}"
         elif risk_val > 35:
             risk_color = "#F59E0B"
             status_desc = self.lang["purchase_scanner.risk_moderate"]
-            pause_time = f"60 {self.lang["generic.second"]}"
+            pause_time = f"60 {self.lang['generic.second']}"
         else:
             risk_color = Color.PROGRESS_ACTIVE
             status_desc = self.lang["purchase_scanner.risk_rational"]
-            pause_time = f"60 {self.lang["generic.second"]}"
+            pause_time = f"60 {self.lang['generic.second']}"
 
         self.risk_score_text.value = f"{risk_val}%"
         self.risk_score_text.color = risk_color
@@ -426,11 +590,9 @@ class ScannerResult(ft.Container):
         self.risk_badge_text.value = pause_time
         self.progress_bar.value = risk_val / 100.0
         self.progress_bar.color = risk_color
-
         self.advice_text.value = ai_advice if ai_advice else f"Món đồ {item_name} đang chịu ảnh hưởng từ {trigger_display}."
 
         formatted_price = f"{int(price):,}đ" if price > 0 else "chưa nhập"
-
         interventions = [
             InterventionItem(self._page, self.lang["purchase_scanner.pause_rule"], f"Đợi ít nhất {pause_time} trước khi thanh toán."),
             InterventionItem(self._page, self.lang["purchase_scanner.budget_check"], f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),

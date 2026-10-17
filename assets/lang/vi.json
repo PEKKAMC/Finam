@@ -40,6 +40,7 @@
     "generic.purchase_scanner": "Đánh giá",
     "generic.save": "Lưu",
     "generic.saving": "Tiết kiệm",
+    "generic.second": "Giây",
     "generic.spending": "Chi/Tiêu",
     "generic.week": "Tuần",
     "generic.year": "Năm",
@@ -123,7 +124,7 @@
     "purchase_scanner.scan_assess": "Quét & Đánh Giá Chi Tiêu",
     "purchase_scanner.source": "Nguồn kích thích mua",
     "purchase_scanner.subtitle": "Nhập một món bạn đang muốn mua. App sẽ phân tích mức rủi ro hành vi.",
-    "purchase_scanner.thinking_time_question": "Thời gian bạn đã đắn đo suy nghĩ?",
+    "purchase_scanner.thinking_time_question": "Thời gian b��n đã đắn đo suy nghĩ?",
     "purchase_scanner.title": "Đánh Giá Mua Sắm Bốc Đồng",
     "purchase_scanner.trigger_actual_need": "Nhu cầu dùng thực tế",
     "purchase_scanner.trigger_emotion": "Cảm xúc (Stress, hưng phấn)",
@@ -132,6 +133,8 @@
     "purchase_scanner.trigger_question": "Yếu tố thôi thúc bạn mua?",
     "purchase_scanner.trigger_social_media": "TikTok / Mạng xã hội",
     "purchase_scanner.waiting": "Trí tuệ nhân tạo đang phân tích quyết định của bạn...",
+    "purchase_scanner.history": "Lịch sử quét",
+    "purchase_scanner.no_history": "Chưa có lịch sử quét cho người dùng này.",
     "savings.accumulated": "Đã tích lũy",
     "savings.add_money": "Thêm tiền",
     "savings.added_to": "Đã thêm vào",
@@ -220,7 +223,7 @@
     "user_management.guide_expense_mgmt": "Hướng dẫn quản lý chi tiêu hiệu quả",
     "user_management.header_title": "Quản Lý Hồ Sơ Người Dùng",
     "user_management.help_faq": "Trung tâm trợ giúp & FAQ",
-    "user_management.invalid_username": "Tên không hợp lệ",
+    "user_management.invalid_username": "T��n không hợp lệ",
     "user_management.language_security_currency": "Ngôn ngữ, bảo mật, tiền tệ",
     "user_management.logout": "Đăng xuất tài khoản",
     "user_management.msg_error": "Đã xảy ra lỗi khi đăng nhập",
@@ -241,6 +244,8 @@
     "user_management.support_and_info": "Hỗ trợ & Thông tin",
     "user_management.user_already_exists": "Tên người dùng đã tồn tại",
     "user_management.username_hint": "Tên người dùng...",
-    "user_management.version": "Phiên bản"
+    "user_management.version": "Phiên bản",
+    "purchase_scanner.clear_history": "Xoá toàn bộ lịch sử",
+    "purchase_scanner.delete_item": "Xoá mục này"
   }
 }

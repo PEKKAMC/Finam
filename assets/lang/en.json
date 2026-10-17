@@ -39,6 +39,7 @@
     "generic.practice": "Practice",
     "generic.purchase_scanner": "Scanner",
     "generic.save": "Save",
+    "generic.second": "Second",
     "generic.saving": "Savings",
     "generic.spending": "Spending",
     "generic.week": "Week",
@@ -97,7 +98,8 @@
     "purchase_scanner.budget_check": "Budget check",
     "purchase_scanner.description": "Enter product information you want to spend money on so AI can analyze impulse spending risk and provide smart purchase delay rules.",
     "purchase_scanner.expert_perspective": "Finam Expert Perspective:",
-    "purchase_scanner.fill_info": "Fill in product information on the left for AI to assess impulse risk and protect your wallet.",
+    "purchase_scanner.fill_info": "Fill in product information for AI to assess impulse risk and protect your wallet.",
+    "purchase_scanner.history": "Scan history",
     "purchase_scanner.intervention_rules": "Suggested Intervention Rules:",
     "purchase_scanner.item": "Item",
     "purchase_scanner.item_name": "Item you want to buy",
@@ -107,6 +109,7 @@
     "purchase_scanner.item_reason": "Reason for wanting to buy",
     "purchase_scanner.item_reason_hint": "Example: saw it on TikTok, friends also bought it, afraid the sale will end...",
     "purchase_scanner.no_data": "No data yet. Try scanning a purchase decision.",
+    "purchase_scanner.no_history": "No scan history for this user yet.",
     "purchase_scanner.no_results": "No Scan Results Yet",
     "purchase_scanner.pause_rule": "Pause rule",
     "purchase_scanner.price": "Estimated Price",
@@ -241,6 +244,8 @@
     "user_management.support_and_info": "Support & Information",
     "user_management.user_already_exists": "Username already exists",
     "user_management.username_hint": "Username...",
-    "user_management.version": "Version"
+    "user_management.version": "Version",
+    "purchase_scanner.clear_history": "Clear all history",
+    "purchase_scanner.delete_item": "Delete this item"
   }
 }

@@ -27,15 +27,6 @@ class DefaultSettings:
             return cls.CURRENCY
 
 
-def get_user_currency(username: str = "Admin") -> str:
-    """Return the saved currency for the current user."""
-    try:
-        from src.database import db
-        return db.users.get_currency(username)
-    except Exception:
-        return DefaultSettings.CURRENCY
-
-
 class UISettings:
     MAX_APP_WIDTH: int = 432
     MAX_APP_HEIGHT: int = 960

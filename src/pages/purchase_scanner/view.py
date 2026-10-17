@@ -7,7 +7,7 @@ import flet as ft
 from src.logger import Logger
 from src.pages.global_components import Menu
 from src.pages.purchase_scanner.logic import LogicController
-from src.pages.purchase_scanner.components import ScannerForm, ScannerResult
+from src.pages.purchase_scanner.components import ScannerForm, ScannerResult, ScannerHistoryCard
 from src.utils import Color, Page, get_safe_page_size, Text, UISettings
 
 Logger.info("Initializing Purchase Scanner page...")
@@ -18,7 +18,8 @@ class PurchaseScannerView(ft.View):
         self._page = page
         self.lang = lang
         self.user_info = user_info
-        self.controller = LogicController()
+        self.controller = LogicController(user_info["username"])
+        self.scan_history = self.controller.get_scan_history()
 
         # IMPORTED FUNCTIONS
         self.get_safe_page_size = get_safe_page_size
@@ -28,6 +29,13 @@ class PurchaseScannerView(ft.View):
 
         self.form_card = ScannerForm(page=self._page, lang=self.lang, on_scan_click=self.handle_scan_click)
         self.result_card = ScannerResult(page=self._page, lang=self.lang)
+        self.history_card = ScannerHistoryCard(
+            page=self._page,
+            lang=self.lang,
+            on_delete_entry=self.handle_delete_history_entry,
+            on_clear_all=self.handle_clear_history,
+        )
+        self.history_card.set_history(self.scan_history)
 
         # Header banner matching React header card styling
         header_banner = ft.Container(
@@ -84,6 +92,10 @@ class PurchaseScannerView(ft.View):
                                         ft.Container(self.form_card, col={"sm": 12, "md": 6}),
                                         ft.Container(self.result_card, col={"sm": 12, "md": 6}),
                                     ]
+                                ),
+                                ft.Container(
+                                    self.history_card,
+                                    margin=ft.Margin.only(top=4)
                                 )
                             ]
                         )
@@ -125,6 +137,10 @@ class PurchaseScannerView(ft.View):
                     item_name, price, reason, trigger, time
                 )
 
+                if risk is not None:
+                    self.controller.save_scan_result(item_name, price_val, trigger, reason, time, risk, trigger_display, ai_advice)
+                    self.history_card.set_history(self.controller.get_scan_history())
+
                 self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
 
             except Exception as e:
@@ -138,6 +154,14 @@ class PurchaseScannerView(ft.View):
                 )
 
         self._page.run_thread(worker)
+
+    def handle_delete_history_entry(self, entry):
+        self.controller.delete_scan_result(entry)
+        self.history_card.set_history(self.controller.get_scan_history())
+
+    def handle_clear_history(self):
+        self.controller.clear_scan_history()
+        self.history_card.set_history(self.controller.get_scan_history())
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
         try:
