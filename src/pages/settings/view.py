@@ -25,7 +25,7 @@ class SettingsView(ft.View):
         self.controller = LogicController(self.user_info)
 
         # FETCH DATA
-        self.currencies = self.controller.get_world_currencies()
+        self.currencies = self.controller.get_currencies()
 
         # GET CURRENT SETTINGS FROM DATABASE
         username = user_info.get("username", "Admin")

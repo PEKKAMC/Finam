@@ -6,6 +6,7 @@
 
 from src.utils.assets import get_asset_path, get_language, TranslationDict
 from src.utils.color import Color
+from src.utils.data import Data
 from src.utils.page import Page
 from src.utils.dialog import Dialog
 from src.utils.resizing import get_safe_page_size
@@ -19,6 +20,8 @@ __all__ = [
     "TranslationDict",
     # Color
     "Color",
+    # Data
+    "Data",
     # Dialog
     "Dialog",
     # Page

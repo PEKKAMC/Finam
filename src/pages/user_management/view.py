@@ -39,7 +39,7 @@ class DialogManager:
             page=self._page,
             lang=self.lang,
             on_submit_callback=self._handle_add_user,
-            currencies=self.controller.get_world_currencies()
+            currencies=self.controller.get_currencies()
         )
 
         self.user_dialog = UserManagementDialog(
