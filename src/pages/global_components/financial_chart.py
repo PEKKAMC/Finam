@@ -106,15 +106,14 @@ class FinancialChart(ft.Container):
         month_val = temp_date.get("month", self.real_current_month)
         self.monthly_page = 0 if month_val <= 6 else 1
 
-        # Swipe/drag gesture tracking variables
         self.total_pan_x = 0.0
         self.is_dragging = False
         self.prev_container = None
         self.curr_container = None
         self.next_container = None
         self.chart_width = 380
+        self.drag_sensitivity = 4
 
-        # Initial data load and max value computation across periods
         self._load_all_periods_data()
 
         controls = []
@@ -156,132 +155,33 @@ class FinancialChart(ft.Container):
             if self.monthly_year == self.real_current_year and self.monthly_page < self.real_current_page:
                 return True
             return False
-        else:
-            return self.date_offset < 0
+        return self.date_offset < 0
 
     @property
     def can_go_prev(self) -> bool:
         """Allows unlimited past period navigation across all modes."""
         return True
 
-    def _get_prev_coords(self):
-        if self.chart_type == "monthly":
-            if self.monthly_page == 1:
-                return 0, self.monthly_year, 0
-            else:
-                return 0, self.monthly_year - 1, 1
-        else:
-            return self.date_offset - 1, self.real_current_year, 0
-
-    def _get_next_coords(self):
-        if self.chart_type == "monthly":
-            if self.monthly_page == 0:
-                return 0, self.monthly_year, 1
-            else:
-                return 0, self.monthly_year + 1, 0
-        else:
-            return self.date_offset + 1, self.real_current_year, 0
-
-    def _get_period_data(self, chart_type: str, date_offset: int, monthly_year: int, monthly_page: int):
-        if chart_type == "monthly":
-            chart_date, chart_data = get_financial_chart_data(
-                username=self.username,
-                chart_type="monthly",
-                date_offset=0,
-                target_year=monthly_year
-            )
-            data_subset = chart_data[:6] if monthly_page == 0 else chart_data[6:12]
-            start_index = 0 if monthly_page == 0 else 6
-            return chart_date, data_subset, start_index
-        else:
-            chart_date, chart_data = get_financial_chart_data(
-                username=self.username,
-                chart_type=chart_type,
-                date_offset=date_offset,
-                target_year=None
-            )
-            start_index = 0
-            return chart_date, chart_data, start_index
-
-    def _load_all_periods_data(self):
-        """Fetches data for previous, current, and next periods to enable live drag previews."""
-        curr_offset = 0 if self.chart_type == "monthly" else self.date_offset
-        self.chart_date, self.curr_data, self.curr_start_idx = self._get_period_data(
-            self.chart_type, curr_offset, self.monthly_year, self.monthly_page
-        )
-
-        prev_offset, prev_year, prev_page = self._get_prev_coords()
-        _, self.prev_data, self.prev_start_idx = self._get_period_data(
-            self.chart_type, prev_offset, prev_year, prev_page
-        )
-
-        next_offset, next_year, next_page = self._get_next_coords()
-        _, self.next_data, self.next_start_idx = self._get_period_data(
-            self.chart_type, next_offset, next_year, next_page
-        )
-
-        all_data = self.prev_data + self.curr_data + self.next_data
-        max_chart_value = (
-            max(max(int(d["income"]), int(d["expense"])) for d in all_data)
-            if all_data
-            else 1
-        )
-        self.max_value = max_chart_value if max_chart_value > 0 else 1
-
-    def update_data(self):
-        """Fetches fresh chart data for all three periods and refreshes the UI."""
-        self.is_dragging = False
-        self._load_all_periods_data()
-        self._refresh_ui()
-
-    def _handle_mode_change(self, mode: str):
-        """Handles internal mode switching (daily, weekly, monthly)."""
-        if self.chart_type == mode:
+    def _schedule_after_drag(self, callback, *args):
+        """Schedule the async drag completion/cleanup on the active event loop."""
+        if self.page:
+            self.page.run_task(callback, *args)
             return
-        self.chart_type = mode
-        self.date_offset = 0
-        self.monthly_year = self.real_current_year
-        self.monthly_page = 0 if self.real_current_month <= 6 else 1
 
-        self.update_data()
-
-    def _apply_prev_state(self):
-        if self.chart_type == "monthly":
-            if self.monthly_page == 1:
-                self.monthly_page = 0
-            else:
-                self.monthly_page = 1
-                self.monthly_year -= 1
-        else:
-            self.date_offset -= 1
-
-    def _apply_next_state(self):
-        if self.chart_type == "monthly":
-            if self.monthly_page == 0:
-                self.monthly_page = 1
-            else:
-                self.monthly_page = 0
-                self.monthly_year += 1
-        else:
-            self.date_offset += 1
-
-    def _handle_prev(self):
-        """Navigates to the previous period."""
-        if not self.can_go_prev:
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(callback(*args))
             return
-        self._apply_prev_state()
-        self.update_data()
+        except RuntimeError:
+            pass
 
-    def _handle_next(self):
-        """Navigates to the next period if within upper limit bounds."""
-        if not self.can_go_next:
-            return
-        self._apply_next_state()
-        self.update_data()
+        try:
+            asyncio.run(callback(*args))
+        except TypeError:
+            callback(*args)
 
-    def _handle_pan_start(self, e: ft.DragStartEvent) -> ft.DragStartEvent:
-        """Resets accumulated drag distance and makes adjacent charts visible for dragging."""
-        self.total_pan_x = 0.0
+    def _prepare_containers_for_animation(self):
+        """Makes adjacent charts visible and resets offsets before starting an animation."""
         self.is_dragging = True
 
         if self.prev_container:
@@ -301,11 +201,21 @@ class FinancialChart(ft.Container):
             self.next_container.offset = ft.Offset(1.0, 0.0)
             self.next_container.update()
 
+    def _handle_pan_start(self, e: ft.DragStartEvent) -> ft.DragStartEvent:
+        """Resets accumulated drag distance and makes adjacent charts visible for dragging."""
+        self.total_pan_x = 0.0
+        self._prepare_containers_for_animation()
         return e
 
     def _handle_pan_update(self, e: ft.DragUpdateEvent):
         """Accumulates horizontal delta and updates container offsets for live preview dragging."""
-        delta = getattr(e, "delta_x", 0)
+        delta = getattr(e, "primary_delta", None)
+        if delta is None:
+            local_delta = getattr(e, "local_delta", None)
+            if local_delta is not None:
+                delta = getattr(local_delta, "x", 0)
+        if delta is None:
+            delta = getattr(e, "delta_x", 0)
         if delta is None and getattr(e, "local_delta", None) is not None:
             delta = getattr(e.local_delta, "x", None)
 
@@ -313,7 +223,7 @@ class FinancialChart(ft.Container):
             try:
                 dx = float(delta)
                 if dx == dx and dx != float("inf") and dx != float("-inf"):
-                    self.total_pan_x += dx
+                    self.total_pan_x += dx * self.drag_sensitivity
                     w = max(100, self.chart_width)
                     fraction = self.total_pan_x / w
 
@@ -339,19 +249,29 @@ class FinancialChart(ft.Container):
                 Logger.error(f"Error occurred while handling pan update: {ex}")
 
     def _handle_pan_end(self, e: ft.DragEndEvent) -> ft.DragEndEvent:
-        """Triggers previous/next navigation or snaps back based on drag threshold."""
+        """Triggers smooth animated previous/next navigation or snap-back based on drag threshold."""
         threshold = 35
-        direction = None
+        direction = "none"
 
         if self.total_pan_x > threshold and self.can_go_prev:
             direction = "prev"
         elif self.total_pan_x < -threshold and self.can_go_next:
             direction = "next"
 
-        anim = ft.Animation(duration=200, curve=ft.AnimationCurve.EASE_OUT)
+        self._schedule_after_drag(self._handle_pan_end_async, direction)
+
+        self.total_pan_x = 0.0
+        return e
+
+    async def _handle_pan_end_async(self, direction: str):
+        anim = ft.Animation(duration=250, curve=ft.AnimationCurve.EASE_OUT)
+
         for c in [self.prev_container, self.curr_container, self.next_container]:
             if c and c.visible:
                 c.animate_offset = anim
+                c.update()
+
+        await asyncio.sleep(0.02)
 
         if direction == "prev":
             if self.prev_container:
@@ -363,8 +283,6 @@ class FinancialChart(ft.Container):
             if self.next_container and self.next_container.visible:
                 self.next_container.offset = ft.Offset(2.0, 0.0)
                 self.next_container.update()
-            if self.page:
-                self.page.run_task(self._complete_navigation, "prev")
         elif direction == "next":
             if self.prev_container and self.prev_container.visible:
                 self.prev_container.offset = ft.Offset(-2.0, 0.0)
@@ -375,8 +293,6 @@ class FinancialChart(ft.Container):
             if self.next_container:
                 self.next_container.offset = ft.Offset(0.0, 0.0)
                 self.next_container.update()
-            if self.page:
-                self.page.run_task(self._complete_navigation, "next")
         else:
             if self.prev_container and self.prev_container.visible:
                 self.prev_container.offset = ft.Offset(-1.0, 0.0)
@@ -387,38 +303,31 @@ class FinancialChart(ft.Container):
             if self.next_container and self.next_container.visible:
                 self.next_container.offset = ft.Offset(1.0, 0.0)
                 self.next_container.update()
-            if self.page:
-                self.page.run_task(self._reset_drag_state)
 
-        self.total_pan_x = 0.0
+        await asyncio.sleep(0.25)
 
-        return e
-
-    async def _complete_navigation(self, direction: str):
-        await asyncio.sleep(0.2)
         if direction == "prev":
             self._apply_prev_state()
-        else:
+            self.update_data()
+        elif direction == "next":
             self._apply_next_state()
-        self.update_data()
-
-    async def _reset_drag_state(self):
-        await asyncio.sleep(0.2)
-        self.is_dragging = False
-        if self.prev_container:
-            self.prev_container.visible = False
-            self.prev_container.animate_offset = None
-            self.prev_container.offset = ft.Offset(-1.0, 0.0)
-            self.prev_container.update()
-        if self.curr_container:
-            self.curr_container.animate_offset = None
-            self.curr_container.offset = ft.Offset(0.0, 0.0)
-            self.curr_container.update()
-        if self.next_container:
-            self.next_container.visible = False
-            self.next_container.animate_offset = None
-            self.next_container.offset = ft.Offset(1.0, 0.0)
-            self.next_container.update()
+            self.update_data()
+        else:
+            self.is_dragging = False
+            if self.prev_container:
+                self.prev_container.visible = False
+                self.prev_container.animate_offset = None
+                self.prev_container.offset = ft.Offset(-1.0, 0.0)
+                self.prev_container.update()
+            if self.curr_container:
+                self.curr_container.animate_offset = None
+                self.curr_container.offset = ft.Offset(0.0, 0.0)
+                self.curr_container.update()
+            if self.next_container:
+                self.next_container.visible = False
+                self.next_container.animate_offset = None
+                self.next_container.offset = ft.Offset(1.0, 0.0)
+                self.next_container.update()
 
     def _refresh_ui(self):
         controls = []
@@ -693,10 +602,14 @@ class FinancialChart(ft.Container):
                     bgcolor=ft.Colors.TRANSPARENT,
                     content=ft.GestureDetector(
                         expand=True,
+                        drag_interval=10,
+                        mouse_cursor=ft.MouseCursor.MOVE,
+                        on_horizontal_drag_start=self._handle_pan_start,
+                        on_horizontal_drag_update=self._handle_pan_update,
+                        on_horizontal_drag_end=self._handle_pan_end,
                         on_pan_start=self._handle_pan_start,
                         on_pan_update=self._handle_pan_update,
                         on_pan_end=self._handle_pan_end,
-                        mouse_cursor=ft.MouseCursor.CLICK
                     )
                 )
             ]
@@ -716,3 +629,111 @@ class FinancialChart(ft.Container):
     def resize(self, width: int) -> None:
         self.chart_width = width
         self.main_container.width = width
+
+    def _load_all_periods_data(self):
+        """Fetches data for previous, current, and next periods to enable live drag previews."""
+        curr_offset = 0 if self.chart_type == "monthly" else self.date_offset
+        self.chart_date, self.curr_data, self.curr_start_idx = self._get_period_data(
+            self.chart_type, curr_offset, self.monthly_year, self.monthly_page
+        )
+
+        prev_offset, prev_year, prev_page = self._get_prev_coords()
+        _, self.prev_data, self.prev_start_idx = self._get_period_data(
+            self.chart_type, prev_offset, prev_year, prev_page
+        )
+
+        next_offset, next_year, next_page = self._get_next_coords()
+        _, self.next_data, self.next_start_idx = self._get_period_data(
+            self.chart_type, next_offset, next_year, next_page
+        )
+
+        all_data = self.prev_data + self.curr_data + self.next_data
+        max_chart_value = (
+            max(max(int(d["income"]), int(d["expense"])) for d in all_data)
+            if all_data
+            else 1
+        )
+        self.max_value = max_chart_value if max_chart_value > 0 else 1
+
+    def update_data(self):
+        """Fetches fresh chart data for all three periods and refreshes the UI."""
+        self.is_dragging = False
+        self._load_all_periods_data()
+        self._refresh_ui()
+
+    def _handle_mode_change(self, mode: str):
+        """Handles internal mode switching (daily, weekly, monthly)."""
+        if self.chart_type == mode:
+            return
+        self.chart_type = mode
+        self.date_offset = 0
+        self.monthly_year = self.real_current_year
+        self.monthly_page = 0 if self.real_current_month <= 6 else 1
+        self.update_data()
+
+    def _apply_prev_state(self):
+        if self.chart_type == "monthly":
+            if self.monthly_page == 1:
+                self.monthly_page = 0
+            else:
+                self.monthly_page = 1
+                self.monthly_year -= 1
+        else:
+            self.date_offset -= 1
+
+    def _apply_next_state(self):
+        if self.chart_type == "monthly":
+            if self.monthly_page == 0:
+                self.monthly_page = 1
+            else:
+                self.monthly_page = 0
+                self.monthly_year += 1
+        else:
+            self.date_offset += 1
+
+    def _handle_prev(self):
+        """Navigates to the previous period with animation."""
+        if not self.can_go_prev:
+            return
+        self._prepare_containers_for_animation()
+        self._schedule_after_drag(self._handle_pan_end_async, "prev")
+
+    def _handle_next(self):
+        """Navigates to the next period with animation if within upper limit bounds."""
+        if not self.can_go_next:
+            return
+        self._prepare_containers_for_animation()
+        self._schedule_after_drag(self._handle_pan_end_async, "next")
+
+
+    def _get_prev_coords(self):
+        """Returns the coordinates for the previous period used in the chart stack."""
+        if self.chart_type == "monthly":
+            if self.monthly_page == 0:
+                return 0, self.monthly_year - 1, 1
+            return 0, self.monthly_year, 0
+        return self.date_offset - 1, None, None
+
+    def _get_next_coords(self):
+        """Returns the coordinates for the next period used in the chart stack."""
+        if self.chart_type == "monthly":
+            if self.monthly_page == 0:
+                return 0, self.monthly_year, 1
+            return 0, self.monthly_year + 1, 0
+        return self.date_offset + 1, None, None
+
+    def _get_period_data(self, chart_type: str, date_offset: int, target_year: int | None = None, page: int | None = None):
+        """Loads chart data for a designated period and slices the monthly view to the proper half-year."""
+        chart_date, chart_data = get_financial_chart_data(
+            username=self.username,
+            chart_type=chart_type,
+            date_offset=date_offset,
+            target_year=target_year,
+        )
+
+        if chart_type == "monthly":
+            if page == 1:
+                return chart_date, chart_data[6:12], 6
+            return chart_date, chart_data[0:6], 0
+
+        return chart_date, chart_data, 0
