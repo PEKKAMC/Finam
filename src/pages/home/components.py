@@ -306,7 +306,7 @@ class SavingsGoalItem(ft.Container):
             border_radius=16,
             padding=12,
             ink=True,
-            on_click=lambda e: self.on_click_callback(e.page, self.item["id"]) if self.on_click_callback else None,
+            on_click=lambda e: self.on_click_callback(self.item["id"]) if self.on_click_callback else None,
             content=self.main_container
         )
 
