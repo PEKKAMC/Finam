@@ -4,12 +4,12 @@
 
 > **⚠️ BETA WARNING: Read Before Using**
 >
-> This beta update focuses on stability, cleanup, and data flow improvements across the app. While the experience is more reliable, you may still encounter occasional bugs, minor performance hiccups, or incomplete features during regular use.
+> Welcome to the Beta build! Core stability and performance have been significantly improved since our Alpha release, but you may still encounter occasional bugs, minor performance hiccups, or incomplete features as we fine-tune the application for full launch.
 >
-> * **Data Backup:** We still recommend backing up any important financial records before performing larger updates or data operations.
-> * **Feedback:** If you run into crashes, softlocks, or unexpected behavior, please report them via GitHub.
+> * **Data Backup:** While local database corruption is now far less likely, we still recommend backing up any critical financial data before performing major updates or operations.
+> * **Feedback:** If you run into any issues, softlocks, or unexpected behavior, please submit a report via our GitHub page.
 >
-> Thank you for continuing to test and improve Finam.
+> Thank you for helping us test and polish this release!
 
 ## Changes in this version
 
