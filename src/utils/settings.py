@@ -8,24 +8,6 @@ class DefaultSettings:
     CURRENCY: str = "VND (đ)"
     LANGUAGE: str = "vi"
 
-    @classmethod
-    def get_language(cls, username: str = "Admin") -> str:
-        """Get the language setting for a user from the database."""
-        try:
-            from src.database import db
-            return db.users.get_language(username)
-        except:
-            return cls.LANGUAGE
-
-    @classmethod
-    def get_currency(cls, username: str = "Admin") -> str:
-        """Get the currency setting for a user from the database."""
-        try:
-            from src.database import db
-            return db.users.get_currency(username)
-        except:
-            return cls.CURRENCY
-
 
 class UISettings:
     MAX_APP_WIDTH: int = 432

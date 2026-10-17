@@ -48,7 +48,7 @@ class HomeView(ft.View):
 
         self.balance_card = BalanceCard(
             lang=self.lang,
-            user_info=self.user_info,
+            username=self.user_info["username"],
             net_balance=self.metrics["net_balance"],
             income=self.metrics["total_income"],
             expense=self.metrics["total_expense"],
@@ -74,7 +74,7 @@ class HomeView(ft.View):
 
         self.expense_pie_chart = ExpensePieChart(
             lang=self.lang,
-            user_info=self.user_info,
+            username=self.user_info["username"],
             category_data=self.metrics["category_expenses"],
             on_details_click=self._page.navigate_to("/spending")
         )

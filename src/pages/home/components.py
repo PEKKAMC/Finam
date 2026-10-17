@@ -8,21 +8,13 @@ import flet as ft
 import flet_charts as fc
 
 from src.database import db
-from src.utils import Color, Text, UISettings, DefaultSettings
-
-
-# Temporary method
-def _get_user_currency(username: str = "Admin") -> str:
-    try:
-        return db.users.get_currency(username)
-    except Exception:
-        return DefaultSettings.CURRENCY
+from src.utils import Color, Text, UISettings
 
 
 class BalanceCard(ft.Container):
-    def __init__(self, lang: dict, user_info: dict, net_balance: int, income: int, expense: int, savings: int, ai_advice: str, on_add_click: Callable, on_scan_click: Callable | None):
+    def __init__(self, lang: dict, username: dict, net_balance: int, income: int, expense: int, savings: int, ai_advice: str, on_add_click: Callable, on_scan_click: Callable | None):
         self.lang = lang
-        self.user_info = user_info
+        self.username = username
         self.net_balance = net_balance
         self.income = income
         self.expense = expense
@@ -30,7 +22,7 @@ class BalanceCard(ft.Container):
         self.ai_advice = ai_advice
         self.on_add_click = on_add_click
         self.on_scan_click = on_scan_click
-        self.currency = _get_user_currency(self.user_info["username"])
+        self.currency = db.users.get_currency(self.username)
 
         # TEXT AND ICON COMPONENTS
         # Static texts
@@ -240,7 +232,7 @@ class BalanceCard(ft.Container):
         self.expense = expense
         self.savings = savings
         self.ai_advice = ai_advice
-        self.currency = _get_user_currency(self.user_info["username"])
+        self.currency = db.users.get_currency(self.username)
 
         self.balance_amount_display.value = f"{int(self.net_balance):,}"
         self.currency_label.value = self.currency
@@ -517,12 +509,12 @@ class ExpenseCategoryItem(ft.Row):
 
 
 class ExpensePieChart(ft.Container):
-    def __init__(self, lang: dict, user_info: dict, category_data: dict, on_details_click: Callable | None):
+    def __init__(self, lang: dict, username: dict, category_data: dict, on_details_click: Callable | None):
         self.lang = lang
-        self.user_info = user_info
+        self.username = username
         self.category_data = category_data or {}
         self.on_details_click = on_details_click
-        self.currency = _get_user_currency(self.user_info["username"])
+        self.currency = db.users.get_currency(self.username)
 
         self.pie_colors = [
             Color.EXPENSE_ACTION_BACKGROUND,
@@ -651,7 +643,7 @@ class ExpensePieChart(ft.Container):
 
     def update_data(self, category_data: dict):
         self.category_data = category_data or {}
-        self.currency = _get_user_currency(self.user_info["username"])
+        self.currency = db.users.get_currency(self.username)
 
         if not self.category_data:
             self.legend_items.clear()

@@ -145,15 +145,17 @@ class StarterView(ft.View):
         self.dialogs.show_user_management_dialog()
 
     def _refresh_view(self) -> int:
-        self.dialogs.user_list.update_data(
-            self.controller.get_all_users(),
-            self.user_info.get("username", "")
-        )
         try:
-            self._page.update()
-        except RuntimeError:
-            pass
-        return 0
+            self.dialogs.user_list.update_data(
+                current_users=self.controller.get_all_users(),
+                current_user=self.user_info["username"]
+            )
+
+            return 0
+
+        except Exception as e:
+            Logger.warn(f"Failed to refresh view {e}")
+            return -1
 
     def _on_page_resize(self, e = None) -> int:
         try:

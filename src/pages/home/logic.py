@@ -4,14 +4,6 @@
 
 from src.database import db
 from src.logger import Logger
-from src.utils.settings import DefaultSettings
-
-# Temporary method
-def _get_user_currency(username: str = "Admin") -> str:
-    try:
-        return db.users.get_currency(username)
-    except Exception:
-        return DefaultSettings.CURRENCY
 
 
 class LogicController:
@@ -74,7 +66,7 @@ class LogicController:
         if not objectives:
             return goal_items
 
-        currency = _get_user_currency(username or "Admin")
+        currency = db.users.get_currency(username)
 
         for objective in objectives[:3]:
             objective_id, objective_title, objective_reason, target_amount, completed_at = objective
