@@ -115,6 +115,22 @@ class DatabaseConnection:
                 FOREIGN KEY (user_id) REFERENCES users (id)
                 )
             ''')
+            self.execute('''
+                CREATE TABLE IF NOT EXISTS purchase_scan_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    item_name TEXT NOT NULL,
+                    price REAL NOT NULL,
+                    trigger TEXT,
+                    reason TEXT,
+                    thinking_time TEXT,
+                    risk_score INTEGER NOT NULL,
+                    trigger_display TEXT,
+                    ai_advice TEXT,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users (id)
+                )
+            ''')
 
             count = self.execute(
                 "SELECT COUNT(*) FROM users",
@@ -280,7 +296,7 @@ class UserDatabase:
 # SAVING PAGE LOGIC
 # ==========================================
 
-class SavingDatabase:
+class SavingsDatabase:
     """Handles all logic related to the Saving page (objectives and objective deposits)."""
 
     def __init__(self, connection: DatabaseConnection, user_db: UserDatabase):
@@ -389,14 +405,14 @@ class SavingDatabase:
         cleared_at = setting_row[0] if setting_row else None
 
         activities = []
-        saving_rows = self.db.execute(
+        savings_rows = self.db.execute(
             "SELECT s.amount, s.date, o.title, s.note FROM savings s LEFT JOIN objectives o ON s.objective_id = o.id WHERE s.user_id = ?",
             (user_id,),
             fetch_all=True
         )
 
-        for amount, date, title, note in saving_rows:
-            activities.append({"type": "saving", "date": date, "amount": amount, "target_name": title, "note": note})
+        for amount, date, title, note in savings_rows:
+            activities.append({"type": "savings", "date": date, "amount": amount, "target_name": title, "note": note})
 
         objective_rows = self.db.execute(
             "SELECT title, created_at, target_amount, completed_at, deleted_at FROM objectives WHERE user_id = ?",
@@ -502,6 +518,95 @@ class SpendingDatabase:
             return False
 
 # ==========================================
+# PURCHASE SCANNER LOGIC
+# ==========================================
+
+class PurchaseScannerDatabase:
+    """Handles purchase scanner scan history entries."""
+
+    def __init__(self, connection: DatabaseConnection, user_db: UserDatabase):
+        self.db = connection
+        self.user_db = user_db
+
+    def add_scan_result(
+        self,
+        username: str,
+        item_name: str,
+        price: float,
+        trigger: str,
+        reason: str,
+        thinking_time: str,
+        risk_score: int,
+        trigger_display: str,
+        ai_advice: str,
+    ) -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return False
+
+        created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.db.execute(
+            """
+            INSERT INTO purchase_scan_history (
+                user_id, item_name, price, trigger, reason, thinking_time, risk_score, trigger_display, ai_advice, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (user_id, item_name, float(price), trigger, reason, thinking_time, int(risk_score), trigger_display, ai_advice, created_at),
+        )
+        return True
+
+    def get_user_scan_history(self, username: str) -> list[dict]:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return []
+
+        rows = self.db.execute(
+            """
+            SELECT id, item_name, price, trigger, reason, thinking_time, risk_score, trigger_display, ai_advice, created_at
+            FROM purchase_scan_history
+            WHERE user_id = ?
+            ORDER BY id DESC
+            """,
+            (user_id,),
+            fetch_all=True,
+        )
+        return [
+            {
+                "id": row[0],
+                "item_name": row[1],
+                "price": row[2],
+                "trigger": row[3],
+                "reason": row[4],
+                "thinking_time": row[5],
+                "risk_score": row[6],
+                "trigger_display": row[7],
+                "ai_advice": row[8],
+                "created_at": row[9],
+            }
+            for row in rows
+        ]
+
+    def delete_scan_result(self, username: str, scan_id: int) -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id or scan_id is None:
+            return False
+
+        self.db.execute(
+            "DELETE FROM purchase_scan_history WHERE user_id = ? AND id = ?",
+            (user_id, scan_id),
+        )
+        return True
+
+    def clear_user_scan_history(self, username: str) -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return False
+
+        self.db.execute("DELETE FROM purchase_scan_history WHERE user_id = ?", (user_id,))
+        return True
+
+
+# ==========================================
 # MAIN DATABASE MANAGER
 # ==========================================
 
@@ -512,8 +617,9 @@ class DatabaseManager:
         self.connection = DatabaseConnection(database_name)
 
         self.users = UserDatabase(self.connection)
-        self.saving = SavingDatabase(self.connection, self.users)
+        self.savings = SavingsDatabase(self.connection, self.users)
         self.spending = SpendingDatabase(self.connection, self.users)
+        self.scanner_history = PurchaseScannerDatabase(self.connection, self.users)
 
     def initialize_database(self) -> None:
         """Route the initialization call to the core connection."""
