@@ -151,10 +151,9 @@ async def main(page: Page):
             page.update()
 
         except Exception as ex:
-            Logger.critical(f"Failed to change route: {ex}", exc_info=True)
-            await on_error(e)
+            await on_error(e, ex)
 
-    async def on_error(e) -> None:
+    async def on_error(e, ex: Exception | None = None) -> None:
         if e == ft.Event(name='error', data='Bad state: No element', control=page):
             print("\nthere is like 5-15% chance you'll see this message on launch, depends on")
             print("your computer. it's because of a bug that makes 2 processes racing for control,")
@@ -163,7 +162,7 @@ async def main(page: Page):
             print("it later. consider yourself lucky if this happens first try.\n")
             Logger.error("PEKKAMC")
         else:
-            Logger.critical(f"Unexpected error occurred: {e.data}", exc_info=True)
+            Logger.critical(f"Unexpected error occurred: \nEvent data: {e.data}\nException: {ex}")
             Logger.info("Attempting to restart application...")
 
             os.environ["RESTART_FINAM"] = "1"
