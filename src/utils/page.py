@@ -2,37 +2,18 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from collections.abc import Callable
+
 import flet as ft
 
 from src.logger import Logger
 
 
-_original_control_update = ft.Control.update
-
-
-def _safe_control_update(self):
-    """Ignore detached-control updates until the control is actually attached to a page."""
-    try:
-        if self is None:
-            return None
-
-        page_ref = getattr(self, "page", None)
-        if page_ref is None:
-            return None
-
-        return _original_control_update(self)
-    except Exception as exc:  # pragma: no cover - Flet raises this before page attaches in some race cases
-        message = str(exc).lower()
-        if "must be added to the page" in message or "no element" in message:
-            Logger.debug(f"Skipping control update for detached control: {exc}")
-            return None
-        raise
-
-
-ft.Control.update = _safe_control_update
-
-
 class Page(ft.Page):
+    def __init__(self):
+        self.delete_cached_view: Callable
+        self.pending_objective_id: int
+
     def navigate_to(self, route: str):
         def handler(e: ft.ControlEvent | None = None) -> None:
             try:

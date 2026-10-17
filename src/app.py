@@ -28,6 +28,29 @@ if ENABLE_EDITOR:
     from src.pages.lesson_editor import get_lesson_editor_view
 
 
+def initial_setup():
+    _original_control_update = ft.Control.update
+
+    def _safe_control_update(self):
+        """Ignore detached-control updates until the control is actually attached to a page."""
+        try:
+            if self is None:
+                return None
+
+            page_ref = getattr(self, "page", None)
+            if page_ref is None:
+                return None
+
+            return _original_control_update(self)
+        except Exception as exc:  # pragma: no cover - Flet raises this before page attaches in some race cases
+            message = str(exc).lower()
+            if "must be added to the page" in message or "no element" in message:
+                Logger.debug(f"Skipping control update for detached control: {exc}")
+                return None
+            raise
+
+    ft.Control.update = _safe_control_update
+
 async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> None:
     Logger.info("Redirecting to fallback page...")
     await page.push_route("/fallback")
@@ -35,6 +58,7 @@ async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> 
 
 
 async def main(page: Page):
+    initial_setup()
     db.initialize_database()
 
     info: dict[str, str] = {
