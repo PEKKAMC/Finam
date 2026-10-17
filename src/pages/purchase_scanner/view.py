@@ -143,7 +143,7 @@ class PurchaseScannerView(ft.View):
 
                 self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
 
-            except Exception as x:
+            except Exception as ex:
                 Logger.error(f"Error during background analysis: {ex}")
                 self.result_card.update_result(
                     30,

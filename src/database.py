@@ -287,7 +287,7 @@ class UserDatabase:
                     (user_id, currency)
                 )
             return True
-        except Exception as x:
+        except Exception as ex:
             Logger.error(f"Failed to set currency: {ex}")
             return False
 
