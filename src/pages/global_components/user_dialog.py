@@ -85,7 +85,11 @@ class UserManagementDialog(Dialog):
             on_close_callback=on_close_callback,
             has_cancel_button=has_cancel_button
         )
-        super().__init__(dialog_content=self.card, color=Color.WHITE)
+
+        super().__init__(
+            dialog_content=self.card,
+            color=Color.WHITE
+        )
 
 
 class UserList(ft.Container):

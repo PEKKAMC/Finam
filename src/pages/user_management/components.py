@@ -138,7 +138,7 @@ class MenuItem(ft.Container):
                 border_radius=10
             )
 
-        self.title_row_controls = [self.title_text]
+        self.title_row_controls: list[ft.Control] = [self.title_text]
         if self.badge_control:
             self.title_row_controls.append(self.badge_control)
 
@@ -254,9 +254,8 @@ class DeleteAllDataCard(ft.Container):
 
         super().__init__(
             bgcolor=Color.WHITE,
-            border_radius=20,
+            border_radius=24,
             padding=24,
-            width=380,
             content=self.main_container
         )
 
@@ -275,7 +274,7 @@ class DeleteAllDataDialog(Dialog):
         )
 
         super().__init__(
-            color=Color.DIALOG_BACKGROUND,
+            color=Color.WHITE,
             dialog_content=self.card
         )
 
@@ -287,4 +286,4 @@ class DeleteAllDataDialog(Dialog):
                 await res
 
     def resize(self, width: int) -> None:
-        self.card.width = min(width - 40, 380)
+        self.card.width = width // 2 - 40

@@ -80,7 +80,6 @@ class Dialog(ft.AlertDialog):
 
     @staticmethod
     def close_most_recent_dialog(page: Page) -> int:
-        """Deprecated: use individual dialog.close() instead. This method remains for compatibility."""
         try:
             if page.overlay:
                 for control in reversed(page.overlay):
