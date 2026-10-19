@@ -77,6 +77,7 @@ async def main(page: Page):
         )
     )
     page.padding = 0
+    page.window.icon = "icon.ico"
     page.window.resizable = True
     page.window.width = UISettings.MAX_APP_WIDTH
     page.window.height = UISettings.MAX_APP_HEIGHT
