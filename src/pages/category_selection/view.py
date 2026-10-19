@@ -188,12 +188,15 @@ class CategorySelectionView(ft.View):
             padding=0,
             bgcolor=Color.DIALOG_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=[
-                ft.SafeArea(
+            controls=ft.SafeArea(
+                expand=True,
+                content=ft.Stack(
                     expand=True,
-                    content=self.main_container
+                    controls=[
+                        self.main_container
+                    ]
                 )
-            ]
+            )
         )
 
         self._page.on_resize = self._on_page_resize

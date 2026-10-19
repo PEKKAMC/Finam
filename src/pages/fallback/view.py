@@ -54,7 +54,9 @@ class FallbackView(ft.View):
             route="/fallback",
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
-            controls=[self.main_container]
+            controls=[
+                self.main_container
+            ]
         )
 
         self._page.on_resize = self._on_page_resize
