@@ -28,10 +28,10 @@ if ENABLE_EDITOR:
     from src.pages.lesson_editor import get_lesson_editor_view
 
 
-def initial_setup():
+def initial_setup() -> None:
     _original_control_update = ft.Control.update
 
-    def _safe_control_update(self):
+    def _safe_control_update(self) -> None:
         """Ignore detached-control updates until the control is actually attached to a page."""
         try:
             if self is None:
@@ -57,7 +57,7 @@ async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> 
     page.views.append(get_fallback_view(page, lang, fallback_reason))
 
 
-async def main(page: Page):
+async def main(page: Page) -> None:
     initial_setup()
     db.initialize_database()
 
