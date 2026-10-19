@@ -60,7 +60,7 @@ class FallbackView(ft.View):
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
 
-    def get_fallback_message(self, reason) -> str:
+    def get_fallback_message(self, reason: str) -> str:
         match reason:
             case "unsupported_os":
                 return self.lang["fallback.unsupported_os"]
