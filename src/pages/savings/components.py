@@ -163,16 +163,21 @@ class AggregateCard(ft.Container):
         self.lang = lang
 
         # TEXT AND ICON COMPONENTS
+        # Static texts
         self.title_text = Text.MEDIUM(self.lang["savings.fund_management"].upper(), color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.progress_label = Text.MEDIUM(self.lang["savings.progress"], color=Color.WHITE)
+
+        # Dynamic texts
         self.savings_text = Text.H3(f"{int(total_savings):,}".replace(",", "."), color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.target_text = Text.H5(f" / {int(total_target):,}".replace(",", ".") + " đ", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.progress_label = Text.MEDIUM(self.lang["savings.progress"], color=Color.WHITE)
         self.percentage_text = Text.MEDIUM(f"{percentage}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+
+        # Static icons
         self.add_icon = ft.Icon(ft.Icons.ADD, color=Color.PRIMARY, size=16)
 
+        # CONTAINER COMPONENTS
         self.progress_bar = ft.ProgressBar(value=progress_value, color=Color.LIGHT_ACCENT, bgcolor=Color.DARK_SURFACE, height=8, border_radius=4)
 
-        # CONTAINER COMPONENTS
         self.pill_container = ft.Container(
             content=self.title_text,
             bgcolor=Color.DARK_SURFACE,
@@ -182,10 +187,7 @@ class AggregateCard(ft.Container):
         )
 
         self.add_button_container = ft.Container(
-            content=ft.Row(
-                spacing=8,
-                controls=[self.add_icon]
-            ),
+            content=self.add_icon,
             bgcolor=Color.LIGHT_ACCENT,
             padding=ft.Padding(16, 12, 16, 12),
             border_radius=16,
