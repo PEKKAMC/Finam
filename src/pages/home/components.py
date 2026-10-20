@@ -12,14 +12,14 @@ from src.utils import Color, Text, UISettings
 
 
 class BalanceCard(ft.Container):
-    def __init__(self, lang: dict, username: dict, net_balance: int, income: int, expense: int, savings: int, ai_advice: str, on_add_click: Callable, on_scan_click: Callable | None):
+    def __init__(self, lang: dict, username: dict, net_balance: int, income: int, expense: int, savings: int, advice: str, on_add_click: Callable, on_scan_click: Callable | None):
         self.lang = lang
         self.username = username
         self.net_balance = net_balance
         self.income = income
         self.expense = expense
         self.savings = savings
-        self.ai_advice = ai_advice
+        self.advice = advice
         self.on_add_click = on_add_click
         self.on_scan_click = on_scan_click
         self.currency = db.users.get_currency(self.username)
@@ -41,11 +41,11 @@ class BalanceCard(ft.Container):
         self.ai_icon = ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=16)
 
         # Dynamic texts
-        self.balance_amount_display = Text.H1(f"{int(self.net_balance):,}", color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.income_display = Text.MEDIUM(f"{int(self.income):,} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.expense_display = Text.MEDIUM(f"-{int(self.expense):,} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
-        self.saving_display = Text.MEDIUM(f"{int(self.savings):,} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
-        self.ai_advice_display = Text.SMALL(self.ai_advice, color=Color.WHITE)
+        self.balance_amount_text = Text.H1(f"{int(self.net_balance):,}", color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.income_text = Text.MEDIUM(f"{int(self.income):,} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.expense_text = Text.MEDIUM(f"-{int(self.expense):,} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.savings_text = Text.MEDIUM(f"{int(self.savings):,} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.advice_text = Text.SMALL(self.advice, color=Color.WHITE)
 
         # CONTAINER COMPONENTS
         self.balance_label_container = ft.Container(
@@ -58,7 +58,7 @@ class BalanceCard(ft.Container):
 
         self.balance_amount_text = ft.Row(
             controls=[
-                self.balance_amount_display,
+                self.balance_amount_text,
                 self.currency_label
             ],
             alignment=ft.MainAxisAlignment.START,
@@ -130,7 +130,7 @@ class BalanceCard(ft.Container):
                 spacing=2,
                 controls=[
                     self.income_title,
-                    self.income_display
+                    self.income_text
                 ]
             )
         )
@@ -145,7 +145,7 @@ class BalanceCard(ft.Container):
                 spacing=2,
                 controls=[
                     self.expense_title,
-                    self.expense_display
+                    self.expense_text
                 ]
             )
         )
@@ -160,7 +160,7 @@ class BalanceCard(ft.Container):
                 spacing=2,
                 controls=[
                     self.saving_title,
-                    self.saving_display
+                    self.savings_text
                 ]
             )
         )
@@ -189,7 +189,7 @@ class BalanceCard(ft.Container):
             spacing=2,
             controls=[
                 self.ai_banner_title,
-                self.ai_advice_display
+                self.advice_text
             ]
         )
 
@@ -231,15 +231,15 @@ class BalanceCard(ft.Container):
         self.income = income
         self.expense = expense
         self.savings = savings
-        self.ai_advice = ai_advice
+        self.advice = ai_advice
         self.currency = db.users.get_currency(self.username)
 
-        self.balance_amount_display.value = f"{int(self.net_balance):,}"
+        self.balance_amount_text.value = f"{int(self.net_balance):,}"
         self.currency_label.value = self.currency
-        self.income_display.value = f"{int(self.income):,} {self.currency}"
-        self.expense_display.value = f"-{int(self.expense):,} {self.currency}"
-        self.saving_display.value = f"{int(self.savings):,} {self.currency}"
-        self.ai_advice_display.value = self.ai_advice
+        self.income_text.value = f"{int(self.income):,} {self.currency}"
+        self.expense_text.value = f"-{int(self.expense):,} {self.currency}"
+        self.savings_text.value = f"{int(self.savings):,} {self.currency}"
+        self.advice_text.value = self.advice
 
         self.update()
 
@@ -260,14 +260,20 @@ class SavingsGoalItem(ft.Container):
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
         self.title_text = Text.MEDIUM(item["title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
-        self.progress_text_display = Text.SMALL(item["progress_text"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.progress_bar = ft.ProgressBar(value=item["progress_ratio"], color=Color.PRIMARY, bgcolor=Color.PROGRESS_TRACK_BACKGROUND, height=8)
-        self.contributed_label_display = Text.SMALL(item["contributed_label"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
-        self.target_label_display = Text.SMALL(item["target_label"], color=Color.BLAND_TEXT)
+        self.progress_text = Text.SMALL(item["progress_text"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.contributed_label = Text.SMALL(item["contributed_label"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
+        self.target_label = Text.SMALL(item["target_label"], color=Color.BLAND_TEXT)
 
         # CONTAINER COMPONENTS
+        self.progress_bar = ft.ProgressBar(
+            value=item["progress_ratio"],
+            color=Color.PRIMARY,
+            bgcolor=Color.PROGRESS_TRACK_BACKGROUND,
+            height=8
+        )
+
         self.progress_badge_container = ft.Container(
-            content=self.progress_text_display,
+            content=self.progress_text,
             bgcolor=Color.PRIMARY,
             padding=ft.Padding(8, 2, 8, 2),
             border_radius=12
@@ -284,8 +290,8 @@ class SavingsGoalItem(ft.Container):
         self.footer_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                self.contributed_label_display,
-                self.target_label_display
+                self.contributed_label,
+                self.target_label
             ]
         )
 
@@ -314,10 +320,10 @@ class SavingsGoalItem(ft.Container):
         self.item = item
 
         self.title_text.value = item["title"]
-        self.progress_text_display.value = item["progress_text"]
+        self.progress_text.value = item["progress_text"]
         self.progress_bar.value = item["progress_ratio"]
-        self.contributed_label_display.value = item["contributed_label"]
-        self.target_label_display.value = item["target_label"]
+        self.contributed_label.value = item["contributed_label"]
+        self.target_label.value = item["target_label"]
 
         self.update()
 
@@ -347,7 +353,7 @@ class SavingsProgressCard(ft.Container):
         self.view_all_arrow_icon = ft.Icon(ft.Icons.ARROW_FORWARD, color=Color.PRIMARY, size=14)
 
         # Dynamic texts
-        self.view_all_count_display = Text.SMALL(
+        self.view_all_count = Text.SMALL(
             f"{self.lang['generic.all']} ({len(self.objective_items)})",
             color=Color.PRIMARY,
             weight=ft.FontWeight.BOLD
@@ -376,7 +382,7 @@ class SavingsProgressCard(ft.Container):
                 spacing=4,
                 tight=True,
                 controls=[
-                    self.view_all_count_display,
+                    self.view_all_count,
                     self.view_all_arrow_icon
                 ]
             ),
@@ -434,7 +440,7 @@ class SavingsProgressCard(ft.Container):
 
     def update_data(self, objective_items: list):
         self.objective_items = objective_items or []
-        self.view_all_count_display.value = f"{self.lang['generic.all']} ({len(self.objective_items)})"
+        self.view_all_count.value = f"{self.lang['generic.all']} ({len(self.objective_items)})"
 
         if not self.objective_items:
             self.goal_items.clear()
@@ -470,8 +476,8 @@ class ExpenseCategoryItem(ft.Row):
 
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
-        self.name_display = Text.SMALL(name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
-        self.value_display = Text.SMALL(f"{int(val):,} {currency_lang}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+        self.expense_name_text = Text.SMALL(name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
+        self.expense_value_text = Text.SMALL(f"{int(val):,} {currency_lang}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
 
         # CONTAINER COMPONENTS
         self.color_box = ft.Container(
@@ -485,7 +491,7 @@ class ExpenseCategoryItem(ft.Row):
             spacing=8,
             controls=[
                 self.color_box,
-                self.name_display
+                self.expense_name_text
             ]
         )
 
@@ -493,14 +499,14 @@ class ExpenseCategoryItem(ft.Row):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
                 self.category_label,
-                self.value_display
+                self.expense_value_text
             ]
         )
 
     def update_data(self, name: str, val: float, currency_lang: str, color: str):
         self.color_box.bgcolor = color
-        self.name_display.value = name
-        self.value_display.value = f"{int(val):,} {currency_lang}"
+        self.expense_name_text.value = name
+        self.expense_value_text.value = f"{int(val):,} {currency_lang}"
 
         self.update()
 

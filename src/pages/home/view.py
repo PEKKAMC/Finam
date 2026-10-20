@@ -28,7 +28,7 @@ class HomeView(ft.View):
         # FETCH DASHBOARD DATA
         self.objectives = self.controller.get_user_objectives()
         self.metrics = self.controller.get_dashboard_data()
-        self.ai_advice = self.controller.get_advice()
+        self.advice = self.controller.get_advice()
 
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
@@ -44,7 +44,7 @@ class HomeView(ft.View):
             income=self.metrics["total_income"],
             expense=self.metrics["total_expense"],
             savings=self.metrics["total_savings"],
-            ai_advice=self.ai_advice,
+            advice=self.advice,
             on_add_click=self._page.navigate_to("/category_selection"),
             on_scan_click=self._page.navigate_to("/purchase_scanner")
         )
@@ -140,14 +140,14 @@ class HomeView(ft.View):
         try:
             self.objectives = self.controller.get_user_objectives()
             self.metrics = self.controller.get_dashboard_data()
-            self.ai_advice = self.controller.get_advice()
+            self.advice = self.controller.get_advice()
 
             self.balance_card.update_data(
                 net_balance=self.metrics["net_balance"],
                 income=self.metrics["total_income"],
                 expense=self.metrics["total_expense"],
                 savings=self.metrics["total_savings"],
-                ai_advice=self.ai_advice
+                ai_advice=self.advice
             )
 
             self.financial_chart.update_data()
