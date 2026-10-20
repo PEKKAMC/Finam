@@ -370,6 +370,11 @@ class UserManagementView(ft.View):
             width=page_width
         )
 
+        self.dialogs.user_dialog.resize(
+            width=page_width // 3 * 2,
+            height=page_height // 2,
+        )
+
         return e
 
 def get_user_management_view(page: Page, lang: dict, user_info: dict) -> ft.View:

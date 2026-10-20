@@ -165,7 +165,6 @@ class CategorySelectionView(ft.View):
             expand=True,
             padding=UISettings.CARD_PADDING,
             content=ft.Column(
-                tight=True,
                 spacing=15,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[

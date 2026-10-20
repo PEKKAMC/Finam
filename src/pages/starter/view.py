@@ -25,7 +25,7 @@ class DialogManager:
         self.user_list = UserList(
             page=self._page,
             lang=self.lang,
-            current_user=self.user_info.get("username", ""),
+            current_user=self.user_info["username"],
             on_select_callback=self.handle_change_user,
             on_delete_callback=self.show_delete_prompt
         )
@@ -166,6 +166,12 @@ class StarterView(ft.View):
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+
+            # Resizing other components
+            self.dialogs.user_dialog.resize(
+                width=page_width // 3 * 2,
+                height=page_height // 2,
+            )
 
             return 0
 

@@ -217,65 +217,48 @@ class MenuSectionCard(ft.Container):
         self.main_container.content.width = width
 
 
-class DeleteAllDataCard(ft.Container):
-    def __init__(self, page: Page, lang: dict, on_confirm_callback: Callable, on_cancel_callback: Callable):
-        self._page = page
-        self.lang = lang
-        self.on_confirm = on_confirm_callback
-        self.on_cancel = on_cancel_callback
-
-        cancel_text = self.lang["generic.cancel"]
-        delete_text = self.lang["generic.delete"]
-        title_text = self.lang["user_management.confirm_delete_all_data_title"]
-        content_text = self.lang["user_management.confirm_delete_all_data_content"]
-
-        self.main_container = ft.Column(
-            tight=True,
-            spacing=16,
-            controls=[
-                Text.H3(title_text, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
-                Text.P(content_text, color=Color.SECONDARY_TEXT),
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.END,
-                    spacing=12,
-                    controls=[
-                        ft.TextButton(
-                            content=Text.BUTTON(cancel_text, color=Color.SECONDARY_TEXT),
-                            on_click=self.on_cancel
-                        ),
-                        ft.TextButton(
-                            content=Text.BUTTON(delete_text, color=Color.DELETE_ACTION, weight=ft.FontWeight.BOLD),
-                            on_click=self.on_confirm
-                        )
-                    ]
-                )
-            ]
-        )
-
-        super().__init__(
-            bgcolor=Color.WHITE,
-            border_radius=24,
-            padding=24,
-            content=self.main_container
-        )
-
-
 class DeleteAllDataDialog(Dialog):
     def __init__(self, page: Page, lang: dict, on_confirm_callback: Callable):
         self._page = page
         self.lang = lang
         self.on_confirm = on_confirm_callback
 
-        self.card = DeleteAllDataCard(
-            page=page,
-            lang=lang,
-            on_confirm_callback=self._handle_confirm,
-            on_cancel_callback=lambda e: self.close_most_recent_dialog(self._page)
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.title_text = Text.H3(self.lang["user_management.confirm_delete_all_data_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.content_text = Text.P(self.lang["user_management.confirm_delete_all_data_content"], color=Color.SECONDARY_TEXT)
+        self.cancel_text = Text.BUTTON(self.lang["generic.cancel"], color=Color.SECONDARY_TEXT)
+        self.delete_text = Text.BUTTON(self.lang["generic.delete"], color=Color.DELETE_ACTION, weight=ft.FontWeight.BOLD)
+
+        self.main_container = ft.Container(
+            padding=12,
+            content=ft.Column(
+                spacing=16,
+                tight=True,
+                controls=[
+                    self.title_text,
+                    self.content_text,
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.END,
+                        spacing=12,
+                        controls=[
+                            ft.TextButton(
+                                content=self.cancel_text,
+                                on_click=lambda e: self.close_most_recent_dialog(self._page)
+                            ),
+                            ft.TextButton(
+                                content=self.delete_text,
+                                on_click=self._handle_confirm
+                            )
+                        ]
+                    )
+                ]
+            )
         )
 
         super().__init__(
             color=Color.WHITE,
-            dialog_content=self.card
+            dialog_content=self.main_container
         )
 
     async def _handle_confirm(self, e=None):
@@ -286,4 +269,4 @@ class DeleteAllDataDialog(Dialog):
                 await res
 
     def resize(self, width: int) -> None:
-        self.card.width = width // 2 - 40
+        self.main_container.width = width

@@ -6,15 +6,13 @@
 
 from src.pages.global_components.financial_chart import FinancialChart
 from src.pages.global_components.menu import Menu
-from src.pages.global_components.user_dialog import AddUserField, DeleteUserCard, DeleteUserDialog, UserList, UserManagementCard, UserManagementDialog
+from src.pages.global_components.user_dialog import AddUserField, DeleteUserDialog, UserList, UserManagementDialog
 
 __all__ = [
     "FinancialChart",
     "Menu",
     "UserList",
-    "UserManagementCard",
     "UserManagementDialog",
     "AddUserField",
-    "DeleteUserCard",
     "DeleteUserDialog"
 ]
