@@ -2,6 +2,8 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import random
+
 class Data:
     """A class to hold data for the application."""
 
@@ -35,5 +37,115 @@ class Data:
             "YER (﷼)", "ZAR (R)", "ZMW (ZK)", "ZWL (Z$)"
         ]
 
+        self.advices = {
+            "en": [
+                "Build an emergency fund: Set aside 3 to 6 months' worth of essential living expenses for unexpected events.",
+                "Follow the 50/30/20 rule: Allocate 50% of income to needs, 30% to wants, and 20% to savings and investments.",
+                "Track daily expenses: Record every transaction to understand where your money goes.",
+                "Pay credit card bills in full: Avoid high interest rates and penalty fees by clearing your credit card balance monthly.",
+                "Automate your savings: Set up automatic transfers from your checking account to your savings account right after payday.",
+                "Create a monthly budget: Plan your financial allocations before the month begins.",
+                "Cut the \"Latte Factor\": Limit small daily splurges like takeout coffee, frequent dining out, or impulse purchases.",
+                "Avoid emotional shopping: Wait at least 24 to 48 hours before buying an unplanned luxury item.",
+                "Shop with a strict list: Always bring a shopping list to the grocery store and stick to it to avoid overbuying.",
+                "Compare prices before buying: Check multiple sources or online platforms before making major purchasing decisions.",
+                "Leverage cashback and discounts: Use cashback programs, promo codes, and vouchers when shopping online or in-store.",
+                "Avoid high-interest consumer debt: Stay away from predatory loans, high-interest payday loans, or unnecessary installment debt.",
+                "Prioritize debt payoff strategies: Use the debt avalanche or debt snowball method to clear debts systematically.",
+                "Invest in financial literacy: Read books and take courses on personal finance to improve your money management skills.",
+                "Diversify income streams: Look for side hustles or secondary income sources to avoid relying on a single paycheck.",
+                "Protect finances with insurance: Get health, life, or property insurance to safeguard against major financial shocks.",
+                "Avoid \"lifestyle inflation\": When your income increases, boost your savings rate instead of scaling up your expenses proportionally.",
+                "Start investing early: Harness the power of compound interest by starting your investment journey as early as possible.",
+                "Focus on long-term investing: Be patient with long-term assets like quality stocks, mutual funds, or real estate rather than day trading.",
+                "Don't put all your eggs in one basket: Diversify your investment portfolio to mitigate risks.",
+                "Understand your risk tolerance: Only invest in vehicles that match your personal financial risk appetite.",
+                "Review finances regularly: Check your budget, investments, and financial goals quarterly or annually.",
+                "Cancel unused subscriptions: Unsubscribe from streaming services, apps, or gym memberships you rarely use.",
+                "Cook meals at home: Reduce dining out and pack lunches to save a significant amount of money each month.",
+                "Use public transport or carpooling: Save on monthly fuel, maintenance, and parking costs.",
+                "Set specific goal-based funds: Break down major milestones (house, car, vacation) into clear monthly savings targets.",
+                "Protect cash from inflation: Put idle cash into safe, yield-bearing savings vehicles rather than letting cash sit idly.",
+                "Learn to say \"No\": Don't let peer pressure or social image force you beyond your financial means.",
+                "Buy second-hand items: Utilize thrift stores or online resale groups to acquire high-quality items affordably.",
+                "Plan vacations smartly: Book flights and hotels early and travel during off-peak seasons to optimize travel costs.",
+                "Read contracts carefully: Beware of hidden clauses and high penalty fees in loan, insurance, or rental agreements.",
+                "Maintain personal assets: Regularly service vehicles, homes, and electronics to avoid costly repairs or replacements.",
+                "Conserve energy and utilities: Turn off electronics and appliances when not in use to lower monthly bills.",
+                "Build a strong credit score: Pay bills on time to secure better loan terms and lower interest rates in the future.",
+                "Seek free entertainment options: Take advantage of parks, free museums, and community events instead of costly outings.",
+                "Avoid herd mentality investing: Never buy assets solely based on hype, rumors, or social media trends.",
+                "Draft a will and estate plan early: Organize your assets clearly to protect your family in case of unforeseen events.",
+                "Beware of financial scams: Avoid any investment opportunity promising unrealistic or guaranteed ultra-high returns.",
+                "Practice financial patience: Delay instant gratification to achieve larger long-term financial goals.",
+                "Teach kids financial literacy early: Educate the younger generation on money management to build a solid foundation.",
+                "Rent instead of buying single-use items: For tools or equipment used rarely, consider renting rather than purchasing.",
+                "Learn basic DIY repairs: Handle minor household fixes yourself instead of immediately hiring expensive professionals.",
+                "Maximize tax benefits and welfare: Understand tax deductions and government welfare benefits you qualify for.",
+                "Be cautious when lending money: Avoid lending money to friends or acquaintances if it compromises your personal financial stability.",
+                "Maintain discipline and optimism: Personal finance is a marathon; consistency matters more than short-term brilliance.",
+                "Monitor inflation and adjust accordingly: Ensure your wealth growth outpaces the actual inflation rate.",
+                "Distinguish needs from wants: Always question whether an item is essential or just a temporary desire before opening your wallet.",
+                "Don't treat credit cards as free money: Remember that credit card spending is debt that must be repaid, not extra income.",
+                "Join healthy financial communities: Share experiences and learn saving strategies from like-minded individuals.",
+                "Set age-specific financial milestones: Create clear monetary targets for ages 30, 40, and 50 to maintain a solid direction."
+            ],
+            "vi": [
+                "Xây dựng quỹ khẩn cấp: Luôn để dành từ 3 đến 6 tháng chi phí sinh hoạt cơ bản cho các tình huống bất ngờ như mất việc hay ốm đau.",
+                "Áp dụng quy tắc 50/30/20: Dành 50% thu nhập cho nhu cầu thiết yếu, 30% cho mong muốn cá nhân và 20% cho tiết kiệm hoặc đầu tư.",
+                "Theo dõi chi tiêu hằng ngày: Ghi chép lại mọi khoản thu chi để hiểu rõ dòng tiền của bạn đang đi đâu.",
+                "Thanh toán thẻ tín dụng đúng hạn: Tránh trả lãi suất cao và phí phạt bằng cách luôn thanh toán toàn bộ số dư thẻ tín dụng mỗi tháng.",
+                "Tự động hóa tiết kiệm: Đặt lệnh chuyển tiền tự động từ tài khoản chính sang tài khoản tiết kiệm ngay sau khi nhận lương.",
+                "Lập ngân sách trước khi chi tiêu: Lên kế hoạch tài chính cho cả tháng trước khi tháng mới bắt đầu.",
+                "Cắt giảm các chi phí lặt vặt (Latte Factor): Hạn chế mua cà phê ngoài, ăn tiệm quá nhiều hoặc mua sắm bốc đồng những thứ nhỏ nhặt.",
+                "Tránh mua sắm theo cảm xúc: Chờ ít nhất 24 đến 48 giờ trước khi quyết định mua một món đồ đắt tiền không có trong kế hoạch.",
+                "Mua sắm có danh sách: Luôn mang theo danh sách khi đi siêu thị và tuân thủ tuyệt đối để tránh mua thừa.",
+                "So sánh giá trước khi mua: Tham khảo giá từ nhiều nguồn hoặc nền tảng trực tuyến trước khi đưa ra quyết định mua sắm lớn.",
+                "Tận dụng ưu đãi và mã giảm giá: Sử dụng các chương trình hoàn tiền (cashback) và mã giảm giá khi mua sắm trực tuyến hoặc siêu thị.",
+                "Nói không với nợ tiêu dùng lãi suất cao: Tránh vay tiền qua các hình thức tín dụng đen hoặc vay mua sắm trả góp với lãi suất cắt cổ.",
+                "Ưu tiên trả nợ theo phương pháp tối ưu: Trả dứt điểm các khoản nợ có lãi suất cao nhất trước (phương pháp tuyết lở hoặc nợ chồng).",
+                "Đầu tư cho bản thân: Đọc sách, tham gia các khóa học về quản lý tài chính cá nhân để nâng cao trí tuệ tài chính.",
+                "Đa dạng hóa nguồn thu nhập: Tìm kiếm thêm các công việc tay trái hoặc đầu tư sinh lời để không phụ thuộc vào một nguồn thu duy nhất.",
+                "Bảo vệ tài chính bằng bảo hiểm: Tham gia bảo hiểm y tế, bảo hiểm nhân thọ hoặc bảo hiểm tài sản để phòng ngừa rủi ro lớn.",
+                "Tránh \"lạm phát lối sống\": Khi lương tăng, thay vì tăng chi tiêu tương ứng, hãy tăng tỷ lệ tiết kiệm và đầu tư.",
+                "Đầu tư càng sớm càng tốt: Tận dụng sức mạnh của lãi kép bằng cách bắt đầu đầu tư từ khi còn trẻ.",
+                "Đầu tư dài hạn: Kiên nhẫn với các danh mục đầu tư dài hạn như cổ phiếu chất lượng, quỹ mở hoặc bất động sản thay vì lướt sóng ngắn hạn.",
+                "Không bỏ tất cả trứng vào một giỏ: Đa dạng hóa danh mục đầu tư để phân tán rủi ro.",
+                "Hiểu rõ khẩu vị rủi ro: Chỉ đầu tư vào các kênh phù hợp với khả năng chịu đựng rủi ro tài chính của bản thân.",
+                "Kiểm tra tài chính định kỳ: Xem xét lại ngân sách, các khoản đầu tư và mục tiêu tài chính mỗi quý hoặc mỗi năm.",
+                "Cắt giảm các gói đăng ký không dùng: Hủy các dịch vụ phát trực tuyến, ứng dụng hoặc câu lạc bộ thể hình mà bạn ít khi sử dụng.",
+                "Tự nấu ăn tại nhà: Giảm tần suất ăn ngoài và mang cơm đi làm để tiết kiệm một khoản đáng kể mỗi tháng.",
+                "Sử dụng phương tiện công cộng hoặc đi chung: Tiết kiệm chi phí xăng xe, bảo dưỡng và gửi xe hàng tháng.",
+                "Lập quỹ mục tiêu cụ thể: Chia nhỏ các mục tiêu lớn (mua nhà, mua xe, du lịch) thành các khoản tiết kiệm hàng tháng rõ ràng.",
+                "Tránh để tiền mặt mất giá: Đặt tiền nhàn rỗi vào các kênh sinh lời an toàn thay vì giữ quá nhiều tiền mặt trong ví.",
+                "Học cách nói \"Không\": Đừng vì sĩ diện hay áp lực xã hội mà chi tiêu vượt quá khả năng tài chính.",
+                "Mua sắm đồ cũ chất lượng: Tận dụng các hội nhóm mua bán đồ cũ để tiết kiệm chi phí mua sắm thiết bị, quần áo.",
+                "Lên kế hoạch du lịch thông minh: Đặt vé máy bay và phòng khách sạn sớm, đi du lịch vào mùa thấp điểm để tối ưu chi phí.",
+                "Đọc kỹ hợp đồng trước khi ký: Tránh các điều khoản ẩn, phí phạt cao trong các hợp đồng vay vốn hay thuê nhà.",
+                "Giữ gìn tài sản cá nhân: Bảo dưỡng định kỳ xe cộ, nhà cửa để tránh phải sửa chữa lớn hoặc thay mới tốn kém.",
+                "Tiết kiệm điện nước: Tắt các thiết bị điện khi không sử dụng để giảm hóa đơn sinh hoạt hằng tháng.",
+                "Xây dựng điểm tín dụng tốt: Thanh toán hóa đơn đúng hạn giúp bạn dễ dàng vay vốn với lãi suất thấp hơn trong tương lai.",
+                "Tìm kiếm giải trí miễn phí: Tận dụng công viên, bảo tàng miễn phí, sự kiện cộng đồng thay vì các hoạt động tốn kém.",
+                "Tránh đầu tư theo đám đông: Đừng mua bán tài sản chỉ vì nghe người khác rỉ tai hay theo phong trào mạng xã hội.",
+                "Lập di chúc và kế hoạch thừa kế sớm: Sắp xếp rõ ràng các vấn đề tài sản để bảo vệ gia đình khi có biến cố.",
+                "Cẩn trọng với lừa đảo tài chính: Tránh xa các cơ hội đầu tư hứa hẹn lợi nhuận siêu cao, phi thực tế.",
+                "Rèn luyện sự kiên nhẫn tài chính: Trì hoãn sự thỏa mãn tức thời để đạt được mục tiêu lớn hơn.",
+                "Dạy con về tài chính từ nhỏ: Giáo dục thế hệ sau về cách quản lý tiền bạc để xây dựng nền tảng vững chắc.",
+                "Thuê thay vì mua đồ dùng một lần: Đối với các dụng cụ sửa chữa chỉ dùng vài lần, hãy thuê thay vì mua đứt.",
+                "Tự sửa chữa hỏng hóc nhỏ: Học các kỹ năng cơ bản để tự khắc phục sự cố nhỏ trong nhà thay vì gọi thợ ngay.",
+                "Tận dụng chính sách hoàn thuế và phúc lợi: Tìm hiểu kỹ các quyền lợi về thuế và phúc lợi xã hội mà bạn được hưởng.",
+                "Cẩn thận khi cho mượn tiền: Tránh cho bạn bè vay tiền nếu điều đó gây rủi ro lớn cho tài chính của bạn.",
+                "Giữ tinh thần kỷ luật: Tài chính cá nhân là cuộc chạy đua đường dài, tính kỷ luật quan trọng hơn sự thông minh tức thời.",
+                "Theo dõi lạm phát: Đảm bảo tốc độ tăng trưởng tài sản của bạn cao hơn tỷ lệ lạm phát thực tế.",
+                "Xác định rõ nhu cầu và mong muốn: Luôn phân biệt rõ ràng giữa thứ bạn cần và thứ bạn thích trước khi mua.",
+                "Không xem thẻ tín dụng là thu nhập thêm: Nhớ rằng tiền quẹt thẻ là khoản nợ phải trả, không phải tiền miễn phí.",
+                "Tham gia hội nhóm tài chính lành mạnh: Chia sẻ kinh nghiệm và học hỏi cách tiết kiệm từ những người cùng chí hướng.",
+                "Đặt mốc tài chính theo độ tuổi: Lên kế hoạch cụ thể cần đạt được bao nhiêu tiền ở tuổi 30, 40, 50 để luôn có định hướng rõ ràng."
+            ]
+        }
+
     def get_currencies(self):
         return self.supported_currencies
+
+    def get_advice(self, language: str):
+        return random.choice(self.advices[language])

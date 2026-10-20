@@ -4,6 +4,7 @@
 
 from src.database import db
 from src.logger import Logger
+from src.utils import Data
 
 
 class LogicController:
@@ -25,7 +26,7 @@ class LogicController:
         try:
             for expense in expenses:
                 amount = int(expense.get("amount", 0))
-                category = expense.get("category", "Khác")
+                category = expense["category"]
                 total_expense += amount
                 category_expenses[category] = category_expenses.get(category, 0) + amount
 
@@ -49,13 +50,8 @@ class LogicController:
 
         return data
 
-    @staticmethod # Temporary static messages until AI integration is implemented
-    def get_ai_advice(net_balance: float, total_income: float, total_expense: float) -> str:
-        if total_income == 0 and total_expense == 0:
-            return "Hãy bắt đầu ghi chép các khoản thu chi hàng ngày để Finam AI phân tích sức khỏe tài chính cho bạn!"
-        if net_balance < 0:
-            return "Cảnh báo: Chi tiêu đang vượt quá thu nhập! Hãy cắt giảm các khoản mua sắm không thiết yếu."
-        return "Hãy đảm bảo bạn trích ít nhất 10-20% thu nhập hàng tháng cho quỹ tiết kiệm khẩn cấp!"
+    def get_advice(self) -> str:
+        return Data().get_advice(db.users.get_language(self.current_user))
 
     def get_user_objectives(self):
         return db.savings.get_user_objectives(self.current_user)

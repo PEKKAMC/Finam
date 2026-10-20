@@ -28,12 +28,7 @@ class HomeView(ft.View):
         # FETCH DASHBOARD DATA
         self.objectives = self.controller.get_user_objectives()
         self.metrics = self.controller.get_dashboard_data()
-
-        self.ai_advice = self.controller.get_ai_advice(
-            net_balance=self.metrics["net_balance"],
-            total_income=self.metrics["total_income"],
-            total_expense=self.metrics["total_expense"]
-        )
+        self.ai_advice = self.controller.get_advice()
 
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
@@ -145,12 +140,7 @@ class HomeView(ft.View):
         try:
             self.objectives = self.controller.get_user_objectives()
             self.metrics = self.controller.get_dashboard_data()
-
-            self.ai_advice = self.controller.get_ai_advice(
-                self.metrics["net_balance"],
-                self.metrics["total_income"],
-                self.metrics["total_expense"]
-            )
+            self.ai_advice = self.controller.get_advice()
 
             self.balance_card.update_data(
                 net_balance=self.metrics["net_balance"],
