@@ -19,19 +19,19 @@ class LogicController:
         expenses = db.spending.get_user_expenses(self.current_user) or []
         incomes = db.spending.get_user_incomes(self.current_user) or []
 
-        total_income = 0
-        total_expense = 0
+        total_income = 0.0
+        total_expense = 0.0
         category_expenses = {}
 
         try:
             for expense in expenses:
-                amount = int(expense.get("amount", 0))
+                amount = float(expense.get("amount", 0))
                 category = expense["category"]
                 total_expense += amount
                 category_expenses[category] = category_expenses.get(category, 0) + amount
 
             for income in incomes:
-                amount = int(income.get("amount", 0))
+                amount = float(income.get("amount", 0))
                 total_income += amount
 
         except Exception as ex:
@@ -78,8 +78,8 @@ class LogicController:
                 "target_amount": target_value,
                 "progress_ratio": progress_ratio,
                 "progress_text": f"{int(progress_ratio * 100)}%",
-                "contributed_label": f"{lang['home.contributed']}: {int(current_amount):,} {currency}",
-                "target_label": f"{lang['home.target']}: {int(target_value):,} {currency}",
+                "contributed_label": f"{lang['home.contributed']}: {current_amount:,.2f} {currency}",
+                "target_label": f"{lang['home.target']}: {target_value:,.2f} {currency}",
             })
 
         return goal_items

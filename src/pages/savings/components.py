@@ -168,8 +168,8 @@ class AggregateCard(ft.Container):
         self.progress_label = Text.MEDIUM(self.lang["savings.progress"], color=Color.WHITE)
 
         # Dynamic texts
-        self.savings_text = Text.H3(f"{int(total_savings):,}".replace(",", "."), color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.target_text = Text.H5(f" / {int(total_target):,}".replace(",", ".") + " đ", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.savings_text = Text.H3(f"{total_savings:,.2f}".translate(str.maketrans(".,", ",.")), color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.target_text = Text.H5(f" / {total_target:,.2f}".translate(str.maketrans(".,", ",.")) + " đ", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.percentage_text = Text.MEDIUM(f"{percentage}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
 
         # Static icons
@@ -234,8 +234,8 @@ class AggregateCard(ft.Container):
         )
 
     def update_data(self, total_savings: float, total_target: float, percentage: str, progress_value: float):
-        self.savings_text.value = f"{int(total_savings):,}".replace(",", ".")
-        self.target_text.value = f" / {int(total_target):,}".replace(",", ".") + " đ"
+        self.savings_text.value = f"{total_savings:,.2f}".translate(str.maketrans(".,", ",."))
+        self.target_text.value = f" / {total_target:,.2f}".translate(str.maketrans(".,", ",.")) + " đ"
         self.percentage_text.value = percentage
         self.progress_bar.value = progress_value
 
@@ -271,7 +271,7 @@ class CreateObjectiveDialog(Dialog):
         self.goal_amount_input = ft.TextField(
             label=self.lang["savings.target_amount"],
             color=Color.DEFAULT_TEXT,
-            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]{0,12}$", replacement_string=""),
+            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]{0,12}(?:\.[0-9]{0,2})?$", replacement_string=""),
             border_radius=10,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
@@ -345,9 +345,9 @@ class CreateObjectiveDialog(Dialog):
         title = self.goal_title_input.value if self.goal_title_input.value else self.lang["savings.untitled_goal"]
         subtitle = self.reason_input.value if self.reason_input.value else self.lang["savings.no_reason"]
         try:
-            target = int(self.goal_amount_input.value)
-        except ValueError:
-            target = 0
+            target = float(self.goal_amount_input.value)
+        except (TypeError, ValueError):
+            target = 0.0
 
         if self.controller.add_new_objective(title, subtitle, target):
             Dialog.close_most_recent_dialog(e.page)
@@ -366,7 +366,7 @@ class QuickActionDialog(Dialog):
         self.quick_amount_input = ft.TextField(
             label=self.lang["generic.amount"],
             color=Color.DEFAULT_TEXT,
-            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]{0,12}$", replacement_string=""),
+            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]{0,12}(?:\.[0-9]{0,2})?$", replacement_string=""),
             border_radius=10,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
@@ -396,7 +396,7 @@ class QuickActionDialog(Dialog):
 
     def _process(self, e):
         try:
-            amount = int(self.quick_amount_input.value)
+            amount = float(self.quick_amount_input.value)
             objective_id = int(self.current_action_objective["id"])
             action = str(self.current_action_objective["action"])
 
@@ -406,16 +406,16 @@ class QuickActionDialog(Dialog):
             if not success:
                 if error_key == "savings.error.not_enough_balance":
                     msg = (
-                        f"Not enough balance. Current: {extra_val:,} VND"
+                        f"Not enough balance. Current: {extra_val:,.2f} VND"
                         if "format" not in self.lang[error_key]
-                        else self.lang[error_key].format(remaining=f"{extra_val:,}")
+                        else self.lang[error_key].format(remaining=f"{extra_val:,.2f}")
                     )
                     snack_bar = ft.SnackBar(Text.MEDIUM(msg))
                 elif error_key == "savings.error.exceeding_amount":
                     msg = (
-                        f"Amount exceeds target! Remaining: {extra_val:,} VND"
+                        f"Amount exceeds target! Remaining: {extra_val:,.2f} VND"
                         if "format" not in self.lang[error_key]
-                        else self.lang[error_key].format(remaining=f"{extra_val:,}")
+                        else self.lang[error_key].format(remaining=f"{extra_val:,.2f}")
                     )
                     snack_bar = ft.SnackBar(Text.MEDIUM(msg))
                 else:
@@ -626,7 +626,7 @@ class GoalDetailsDialog(Dialog):
             )
         else:
             for item in history_data:
-                amount = f"+{item['amount']:,}" if item["amount"] > 0 else f"{item['amount']:,}"
+                amount = f"{item['amount']:+,.2f}"
                 color_theme = Color.PRIMARY_ACTION if item["amount"] > 0 else Color.NEGATIVE_ACTION
                 history_controls.append(
                     ft.ListTile(

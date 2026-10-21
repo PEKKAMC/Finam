@@ -53,7 +53,7 @@ class LogicController:
                     action = lang["savings.added_to"] if item.get("amount", 0) > 0 else lang["savings.removed_from"]
                     item["desc"] = f"{action} {target}"
                 else:
-                    item["desc"] = f"{lang['savings.transaction']} ({item.get('amount'):,} VND)"
+                    item["desc"] = f"{lang['savings.transaction']} ({item.get('amount'):,.2f} VND)"
 
             match item["type"]:
                 case "completed":
@@ -67,7 +67,7 @@ class LogicController:
                 item["date"] = item["date"][:16]
         return activities
 
-    def add_new_objective(self, title: str, reason: str, target_amount: int) -> bool:
+    def add_new_objective(self, title: str, reason: str, target_amount: float) -> bool:
         return db.savings.add_objective(self.current_user, title, reason, target_amount)
 
     @staticmethod
@@ -78,7 +78,7 @@ class LogicController:
     def delete_objective(objective_id: int):
         db.savings.delete_objective(objective_id)
 
-    def process_quick_action(self, objective_id: int, action: str, amount: int, time: str, note: str = "") -> tuple[bool, str, int]:
+    def process_quick_action(self, objective_id: int, action: str, amount: float, time: str, note: str = "") -> tuple[bool, str, float]:
         current_saved = db.savings.get_objective_progress(objective_id)
         if action == "remove":
             if amount > current_saved:
@@ -90,7 +90,7 @@ class LogicController:
                 return False, "savings.error.exceeding_amount", remaining
 
         db.savings.add_saving_entry(self.current_user, amount, time, objective_id, note)
-        return True, "", 0
+        return True, "", 0.0
 
     def clear_activity_history(self):
         db.savings.clear_activity_history(self.current_user)

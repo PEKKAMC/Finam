@@ -17,14 +17,14 @@ class LogicController:
         expenses = db.spending.get_user_expenses(self.current_user) or []
         incomes = db.spending.get_user_incomes(self.current_user) or []
 
-        total_income = sum(int(item.get("amount", 0)) for item in incomes)
-        total_expense = sum(int(item.get("amount", 0)) for item in expenses)
+        total_income = sum(float(item.get("amount", 0)) for item in incomes)
+        total_expense = sum(float(item.get("amount", 0)) for item in expenses)
         net_balance = total_income - total_expense
 
         balance_data = {
-            "incomes": f"+{total_income:,} VND",
-            "expenses": f"-{total_expense:,} VND",
-            "current": f"{net_balance:,} VND",
+            "incomes": f"+{total_income:,.2f} VND",
+            "expenses": f"-{total_expense:,.2f} VND",
+            "current": f"{net_balance:,.2f} VND",
         }
 
         transactions: dict[str, list[dict]] = {}
@@ -33,7 +33,7 @@ class LogicController:
                 "id": item.get("id"),
                 "title": item.get("category", "Lương"),
                 "subtitle": item.get("note") or "",
-                "amount": int(item.get("amount", 0)),
+                "amount": float(item.get("amount", 0)),
                 "date": item.get("date", ""),
                 "positive": True,
             }
@@ -44,7 +44,7 @@ class LogicController:
                 "id": item.get("id"),
                 "title": item.get("category", "Khác"),
                 "subtitle": item.get("note") or "",
-                "amount": int(item.get("amount", 0)),
+                "amount": float(item.get("amount", 0)),
                 "date": item.get("date", ""),
                 "positive": False,
             }

@@ -37,11 +37,11 @@ def get_financial_chart_data(username: str, chart_type: str = "daily", date_offs
     chart_date = {"month": target_date.month, "year": target_date.year, "week": iso_week}
 
     if chart_type == "daily":
-        chart_data = [{"day": i + 1, "income": 0, "expense": 0} for i in range(7)]
+        chart_data = [{"day": i + 1, "income": 0.0, "expense": 0.0} for i in range(7)]
     elif chart_type == "weekly":
-        chart_data = [{"week": i + 1, "income": 0, "expense": 0} for i in range(4)]
+        chart_data = [{"week": i + 1, "income": 0.0, "expense": 0.0} for i in range(4)]
     elif chart_type == "monthly":
-        chart_data = [{"month": i + 1, "income": 0, "expense": 0} for i in range(12)]
+        chart_data = [{"month": i + 1, "income": 0.0, "expense": 0.0} for i in range(12)]
     else:
         chart_data = []
 
@@ -56,7 +56,7 @@ def get_financial_chart_data(username: str, chart_type: str = "daily", date_offs
         for expense in expenses:
             try:
                 exp_date = datetime.datetime.strptime(str(expense["date"])[:16], "%Y-%m-%d %H:%M")
-                amount = int(expense.get("amount", 0))
+                amount = float(expense.get("amount", 0))
                 if chart_type == "daily" and start_of_week <= exp_date <= end_of_week:
                     chart_data[exp_date.weekday()]["expense"] += amount
                 elif chart_type == "weekly" and exp_date.year == target_date.year and exp_date.month == target_date.month:
@@ -70,7 +70,7 @@ def get_financial_chart_data(username: str, chart_type: str = "daily", date_offs
         for income in incomes:
             try:
                 inc_date = datetime.datetime.strptime(str(income["date"])[:16], "%Y-%m-%d %H:%M")
-                amount = int(income.get("amount", 0))
+                amount = float(income.get("amount", 0))
                 if chart_type == "daily" and start_of_week <= inc_date <= end_of_week:
                     chart_data[inc_date.weekday()]["income"] += amount
                 elif chart_type == "weekly" and inc_date.year == target_date.year and inc_date.month == target_date.month:
@@ -434,11 +434,11 @@ class FinancialChart(ft.Container):
         step = max_val / 4.0
         labels = []
         for i in range(5):
-            value = int(i * step)
+            value = i * step
             labels.append(
                 fc.ChartAxisLabel(
                     value=float(value),
-                    label=Text.LABEL(f"{value // 1000}K", color=Color.SECONDARY_TEXT)
+                    label=Text.LABEL(f"{value / 1000:g}K", color=Color.SECONDARY_TEXT)
                 )
             )
         return labels
@@ -473,8 +473,8 @@ class FinancialChart(ft.Container):
                 )
             )
 
-            income_value = int(data.get("income", 0))
-            expense_value = int(data.get("expense", 0))
+            income_value = float(data.get("income", 0))
+            expense_value = float(data.get("expense", 0))
 
             groups.append(
                 fc.BarChartGroup(
@@ -487,7 +487,7 @@ class FinancialChart(ft.Container):
                             color=Color.PRIMARY,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang['generic.income']}: {income_value:,} đ"
+                                text=f"{self.lang['generic.income']}: {income_value:,.2f} đ"
                             ),
                         ),
                         fc.BarChartRod(
@@ -497,7 +497,7 @@ class FinancialChart(ft.Container):
                             color=Color.EXPENSE_ACTION_BACKGROUND,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang['generic.expense']}: {expense_value:,} đ"
+                                text=f"{self.lang['generic.expense']}: {expense_value:,.2f} đ"
                             ),
                         )
                     ]
@@ -649,7 +649,7 @@ class FinancialChart(ft.Container):
 
         all_data = self.prev_data + self.curr_data + self.next_data
         max_chart_value = (
-            max(max(int(d["income"]), int(d["expense"])) for d in all_data)
+            max(max(float(d["income"]), float(d["expense"])) for d in all_data)
             if all_data
             else 1
         )

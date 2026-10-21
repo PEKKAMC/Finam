@@ -389,7 +389,7 @@ class ScannerHistoryCard(ft.Container):
                                     ),
                                 ]
                             ),
-                            Text.SMALL(f"{int(price):,}đ • {trigger_display}", color=Color.SECONDARY_TEXT),
+                            Text.SMALL(f"{price:,.2f}đ • {trigger_display}", color=Color.SECONDARY_TEXT),
                             Text.SMALL(created_at, color=Color.SECONDARY_TEXT),
                             Text.SMALL(advice[:180] + ("..." if len(advice) > 180 else ""), color=Color.DEFAULT_TEXT),
                         ]
@@ -592,7 +592,7 @@ class ScannerResult(ft.Container):
         self.progress_bar.color = risk_color
         self.advice_text.value = ai_advice if ai_advice else f"Món đồ {item_name} đang chịu ảnh hưởng từ {trigger_display}."
 
-        formatted_price = f"{int(price):,}đ" if price > 0 else "chưa nhập"
+        formatted_price = f"{price:,.2f}đ" if price > 0 else "chưa nhập"
         interventions = [
             InterventionItem(self._page, self.lang["purchase_scanner.pause_rule"], f"Đợi ít nhất {pause_time} trước khi thanh toán."),
             InterventionItem(self._page, self.lang["purchase_scanner.budget_check"], f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),
