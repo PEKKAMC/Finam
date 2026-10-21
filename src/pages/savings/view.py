@@ -228,15 +228,11 @@ class SavingsView(ft.View):
         self._page.update()
 
     def _open_pending_objective_dialog(self) -> None:
-        pending_objective_id = getattr(self._page, "pending_objective_id", None)
+        pending_objective_id: int | None = getattr(self._page, "pending_objective_id", None)
         if pending_objective_id is None:
             return
 
-        try:
-            objective_id = int(pending_objective_id)
-        except (TypeError, ValueError):
-            self._page.pending_objective_id = None
-            return
+        objective_id = int(pending_objective_id)
 
         objective = next((item for item in self._objective_data if int(item["objective_id"]) == objective_id), None)
         if objective is None:
