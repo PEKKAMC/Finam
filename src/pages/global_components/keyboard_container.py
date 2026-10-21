@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import ast
-from datetime import datetime
+from datetime import datetime, time
 import math
 from typing import Callable, Optional
 
@@ -22,6 +22,7 @@ class KeyboardContainer(ft.Container):
 
         self.amount_value = "0"
         self.selected_date = datetime.now().strftime("%Y-%m-%d")
+        self.selected_time = datetime.now().strftime("%H:%M")
 
         self.amount_display = ft.Text(
             value="0", size=32, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD
@@ -43,7 +44,14 @@ class KeyboardContainer(ft.Container):
         self.date_display = ft.Text(
             value=self.selected_date,
             color=Color.DEFAULT_TEXT,
-            size=13,
+            size=11,
+            weight=ft.FontWeight.BOLD,
+        )
+
+        self.time_display = ft.Text(
+            value=self.selected_time,
+            color=Color.DEFAULT_TEXT,
+            size=11,
             weight=ft.FontWeight.BOLD,
         )
 
@@ -54,20 +62,51 @@ class KeyboardContainer(ft.Container):
         if self._page.overlay is not None and self.date_picker not in self._page.overlay:
             self._page.overlay.append(self.date_picker)
 
-        self.today_button = ft.Container(
+        self.time_picker = ft.TimePicker(
+            value=datetime.strptime(self.selected_time, "%H:%M").time(),
+            on_change=self._on_time_changed,
+        )
+        if self._page.overlay is not None and self.time_picker not in self._page.overlay:
+            self._page.overlay.append(self.time_picker)
+
+        self.datetime_container = ft.Container(
             expand=2,
             height=45,
             bgcolor=Color.PAGE_BACKGROUND,
             border_radius=8,
-            alignment=ft.Alignment.CENTER,
-            ink=True,
-            on_click=self._handle_date_toggle,
-            content=ft.Row(
+            padding=ft.Padding.symmetric(horizontal=4, vertical=2),
+            content=ft.Column(
                 alignment=ft.MainAxisAlignment.CENTER,
-                spacing=4,
+                spacing=2,
                 controls=[
-                    ft.Icon(ft.Icons.CALENDAR_MONTH, color=Color.DEFAULT_TEXT, size=16),
-                    self.date_display,
+                    ft.Container(
+                        ink=True,
+                        border_radius=4,
+                        padding=2,
+                        on_click=self._handle_date_toggle,
+                        content=ft.Row(
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=4,
+                            controls=[
+                                ft.Icon(ft.Icons.CALENDAR_MONTH, color=Color.DEFAULT_TEXT, size=14),
+                                self.date_display,
+                            ],
+                        ),
+                    ),
+                    ft.Container(
+                        ink=True,
+                        border_radius=4,
+                        padding=2,
+                        on_click=self._handle_time_toggle,
+                        content=ft.Row(
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=4,
+                            controls=[
+                                ft.Icon(ft.Icons.ACCESS_TIME, color=Color.DEFAULT_TEXT, size=14),
+                                self.time_display,
+                            ],
+                        ),
+                    ),
                 ],
             ),
         )
@@ -138,7 +177,7 @@ class KeyboardContainer(ft.Container):
                         k_btn("7", lambda e: self._on_key_press("7")),
                         k_btn("8", lambda e: self._on_key_press("8")),
                         k_btn("9", lambda e: self._on_key_press("9")),
-                        self.today_button,
+                        self.datetime_container,
                     ],
                 ),
                 ft.Row(
@@ -184,7 +223,7 @@ class KeyboardContainer(ft.Container):
             for node in ast.walk(parsed):
                 if isinstance(node, ast.BinOp):
                     if not isinstance(
-                        node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)
+                            node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)
                     ):
                         raise ValueError
                 elif isinstance(node, ast.UnaryOp):
@@ -194,7 +233,7 @@ class KeyboardContainer(ft.Container):
                     if not isinstance(node.value, (int, float)):
                         raise ValueError
                 elif isinstance(
-                    node, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod, ast.UAdd, ast.USub)
+                        node, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod, ast.UAdd, ast.USub)
                 ):
                     pass
                 elif isinstance(node, ast.Expression):
@@ -253,7 +292,7 @@ class KeyboardContainer(ft.Container):
         values = {
             "amount": self.amount_value,
             "note": self.note_input.value or "",
-            "date": self.selected_date,
+            "date": f"{self.selected_date} {self.selected_time}",
         }
         self.on_save(values)
 
@@ -262,21 +301,62 @@ class KeyboardContainer(ft.Container):
             if self.date_picker not in self._page.overlay:
                 self._page.overlay.append(self.date_picker)
             self.date_picker.open = True
+            self.date_picker.update()
+
+    def _handle_time_toggle(self, e=None):
+        if self._page is not None:
+            if self.time_picker not in self._page.overlay:
+                self._page.overlay.append(self.time_picker)
+            self.time_picker.open = True
+            self.time_picker.update()
 
     def _on_date_changed(self, e):
         if e.control.value:
-            self.selected_date = e.control.value.strftime("%Y-%m-%d")
+            val = e.control.value
+            if isinstance(val, datetime) and val.tzinfo is not None:
+                val = val.astimezone()
+
+            if hasattr(val, "year") and hasattr(val, "month") and hasattr(val, "day"):
+                self.selected_date = f"{val.year:04d}-{val.month:02d}-{val.day:02d}"
+            else:
+                date_value = str(val)
+                try:
+                    parsed_value = datetime.fromisoformat(date_value.replace("Z", "+00:00"))
+                except ValueError:
+                    self.selected_date = date_value[:10]
+                else:
+                    if parsed_value.tzinfo is not None:
+                        parsed_value = parsed_value.astimezone()
+                    self.selected_date = parsed_value.strftime("%Y-%m-%d")
+
             self.date_display.value = self.selected_date
             self.update()
             if self.on_date_changed_callback:
-                self.on_date_changed_callback(self.selected_date)
+                self.on_date_changed_callback(f"{self.selected_date} {self.selected_time}")
+
+    def _on_time_changed(self, e):
+        if e.control.value:
+            time_val = e.control.value
+            if isinstance(time_val, time):
+                self.selected_time = time_val.strftime("%H:%M")
+            else:
+                self.selected_time = str(time_val)[:5]
+            self.time_display.value = self.selected_time
+            self.update()
+            if self.on_date_changed_callback:
+                self.on_date_changed_callback(f"{self.selected_date} {self.selected_time}")
 
     def reset_inputs(self):
-        self.amount_value = "0"
-        self.note_input.value = "0"
+        self.amount_value = ""
+        self.amount_display.value = ""
+        self.note_input.value = ""
         self.selected_date = datetime.now().strftime("%Y-%m-%d")
+        self.selected_time = datetime.now().strftime("%H:%M")
         self.date_display.value = self.selected_date
+        self.time_display.value = self.selected_time
         self.date_picker.value = datetime.strptime(self.selected_date, "%Y-%m-%d").date()
+        self.time_picker.value = datetime.strptime(self.selected_time, "%H:%M").time()
+        self.update()
 
     def resize(self, width: int):
         self.main_container.width = width
