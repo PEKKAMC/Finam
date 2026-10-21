@@ -5,11 +5,13 @@
 """Global page elements - Reusable components across all pages."""
 
 from src.pages.global_components.financial_chart import FinancialChart
+from src.pages.global_components.keyboard_container import KeyboardContainer
 from src.pages.global_components.menu import Menu
 from src.pages.global_components.user_dialog import AddUserField, DeleteUserDialog, UserList, UserManagementDialog
 
 __all__ = [
     "FinancialChart",
+    "KeyboardContainer",
     "Menu",
     "UserList",
     "UserManagementDialog",

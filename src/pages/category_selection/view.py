@@ -2,9 +2,6 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import ast
-from datetime import datetime
-import math
 from typing import TypedDict
 
 import flet as ft
@@ -12,6 +9,7 @@ import flet as ft
 from src.logger import Logger
 from src.pages.category_selection.components import CategoryItem
 from src.pages.category_selection.logic import LogicController
+from src.pages.global_components import KeyboardContainer
 from src.utils import Color, Page, Text, UISettings, get_safe_page_size
 
 Logger.info("Initializing Category Selection page...")
@@ -33,7 +31,6 @@ class CategorySelectionView(ft.View):
         self.current_type = "expense"
         self.selected_category = ""
         self.snack_bar = ft.SnackBar
-        self.amount_value = "0"
         self.category_items: list[CategoryItem] = []
 
         self.cancel_button = ft.TextButton(
@@ -84,78 +81,10 @@ class CategorySelectionView(ft.View):
             height=340
         )
 
-        self.amount_display = ft.Text(value="0", size=32, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
-
-        self.note_input = ft.TextField(
-            hint_text=self.lang["category_selection.note_hint"],
-            label=self.lang["generic.note"],
-            label_style=ft.TextStyle(color=Color.SECONDARY_TEXT, size=13),
-            color=Color.DEFAULT_TEXT,
-            border_color=ft.Colors.TRANSPARENT,
-            focused_border_color=ft.Colors.TRANSPARENT,
-            bgcolor=Color.WHITE,
-            prefix_icon=ft.Icons.NOTES,
-            text_size=14,
-            content_padding=10
-        )
-
-        self.selected_date = datetime.now().strftime("%Y-%m-%d")
-        self.date_display = ft.Text(
-            value=self.selected_date,
-            color=Color.DEFAULT_TEXT,
-            size=13,
-            weight=ft.FontWeight.BOLD,
-        )
-
-        self.date_picker = ft.DatePicker(
-            value=datetime.strptime(self.selected_date, "%Y-%m-%d").date(),
-            on_change=self._on_date_changed,
-        )
-        self._page.overlay.append(self.date_picker)
-
-        self.date_button = ft.Container(
-            expand=2,
-            height=45,
-            bgcolor=Color.PAGE_BACKGROUND,
-            border_radius=8,
-            alignment=ft.Alignment.CENTER,
-            ink=True,
-            on_click=self._handle_date_toggle,
-            content=ft.Row(
-                alignment=ft.MainAxisAlignment.CENTER,
-                spacing=4,
-                controls=[
-                    ft.Icon(ft.Icons.CALENDAR_MONTH, color=Color.DEFAULT_TEXT, size=16),
-                    self.date_display,
-                ]
-            )
-        )
-
-        self.keyboard_container = ft.Container(
-            bgcolor=Color.WHITE,
-            padding=10,
-            border_radius=ft.BorderRadius.only(top_left=16, top_right=16),
-            visible=False,
-            alignment=ft.Alignment.BOTTOM_CENTER,
-            content=ft.Column(
-                spacing=8,
-                controls=[
-                    ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[
-                            ft.IconButton(icon=ft.Icons.CREDIT_CARD, icon_color=Color.PRIMARY, icon_size=20),
-                            self.amount_display
-                        ]
-                    ),
-                    ft.Container(
-                        bgcolor=Color.PAGE_BACKGROUND,
-                        border_radius=8,
-                        padding=ft.Padding.symmetric(horizontal=8, vertical=2),
-                        content=self.note_input
-                    ),
-                    self._build_keypad()
-                ]
-            )
+        self.keyboard_container = KeyboardContainer(
+            page=self._page,
+            lang=self.lang,
+            on_save=self._on_save_clicked,
         )
 
         self.load_categories("expense")
@@ -175,9 +104,7 @@ class CategorySelectionView(ft.View):
                         ]
                     ),
                     self.segment_control,
-                    self.category_list,
-                    ft.Container(expand=True),
-                    self.keyboard_container
+                    self.category_list
                 ]
             )
         )
@@ -192,7 +119,8 @@ class CategorySelectionView(ft.View):
                 content=ft.Stack(
                     expand=True,
                     controls=[
-                        self.main_container
+                        self.main_container,
+                        self.keyboard_container
                     ]
                 )
             )
@@ -205,6 +133,7 @@ class CategorySelectionView(ft.View):
         self.current_type = category_type
         self.selected_category = ""
         self.keyboard_container.visible = False
+        self.keyboard_container.reset_inputs()
         self.load_categories(category_type)
         if self._page is not None:
             self.update()
@@ -322,168 +251,8 @@ class CategorySelectionView(ft.View):
         if self._page is not None:
             self.update()
 
-    def _build_keypad(self) -> ft.Column:
-        btn_bg = Color.DEFAULT_CONTAINER_BACKGROUND
-        txt_color = Color.PRIMARY_TEXT
-
-        def k_btn(text: str, on_click, icon=None, expand=1):
-            content = ft.Icon(icon, color=txt_color, size=20) if icon else ft.Text(text, size=18, color=txt_color, weight=ft.FontWeight.BOLD)
-            return ft.Container(
-                content=content,
-                bgcolor=btn_bg,
-                alignment=ft.Alignment.CENTER,
-                border_radius=8,
-                expand=expand,
-                height=45,
-                ink=True,
-                on_click=on_click
-            )
-
-        today_button = ft.Container(
-            expand=2,
-            height=45,
-            bgcolor=Color.PAGE_BACKGROUND,
-            border_radius=8,
-            alignment=ft.Alignment.CENTER,
-            ink=True,
-            on_click=self._handle_date_toggle,
-            content=ft.Row(
-                alignment=ft.MainAxisAlignment.CENTER,
-                spacing=4,
-                controls=[
-                    ft.Icon(ft.Icons.CALENDAR_MONTH, color=Color.DEFAULT_TEXT, size=16),
-                    self.date_display,
-                ]
-            )
-        )
-
-        return ft.Column(
-            spacing=6,
-            controls=[
-                ft.Row(
-                    spacing=6,
-                    controls=[
-                        k_btn("7", lambda e: self._on_key_press("7")),
-                        k_btn("8", lambda e: self._on_key_press("8")),
-                        k_btn("9", lambda e: self._on_key_press("9")),
-                        today_button
-                    ]
-                ),
-                ft.Row(
-                    spacing=6,
-                    controls=[
-                        k_btn("4", lambda e: self._on_key_press("4")),
-                        k_btn("5", lambda e: self._on_key_press("5")),
-                        k_btn("6", lambda e: self._on_key_press("6")),
-                        k_btn("+", lambda e: self._on_key_press("+")),
-                        k_btn("-", lambda e: self._on_key_press("-")),
-                    ]
-                ),
-                ft.Row(
-                    spacing=6,
-                    controls=[
-                        k_btn("1", lambda e: self._on_key_press("1")),
-                        k_btn("2", lambda e: self._on_key_press("2")),
-                        k_btn("3", lambda e: self._on_key_press("3")),
-                        k_btn("×", lambda e: self._on_key_press("*")),
-                        k_btn("÷", lambda e: self._on_key_press("/")),
-                    ]
-                ),
-                ft.Row(
-                    spacing=6,
-                    controls=[
-                        k_btn(".", lambda e: self._on_key_press(".")),
-                        k_btn("0", lambda e: self._on_key_press("0")),
-                        k_btn("", lambda e: self._on_backspace(), icon=ft.Icons.BACKSPACE),
-                        k_btn("=", lambda e: self._on_equal_pressed()),
-                        k_btn("", lambda e: self._on_save_clicked(), icon=ft.Icons.CHECK)
-                    ]
-                )
-            ]
-        )
-
-    @staticmethod
-    def _safe_eval_expression(expression: str):
-        try:
-            if not expression:
-                return None
-            cleaned = expression.replace("×", "*").replace("÷", "/")
-            parsed = ast.parse(cleaned, mode="eval")
-            for node in ast.walk(parsed):
-                if isinstance(node, ast.BinOp):
-                    if not isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)):
-                        raise ValueError
-                elif isinstance(node, ast.UnaryOp):
-                    if not isinstance(node.op, (ast.UAdd, ast.USub)):
-                        raise ValueError
-                elif isinstance(node, ast.Constant):
-                    if not isinstance(node.value, (int, float)):
-                        raise ValueError
-                elif isinstance(node, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod, ast.UAdd, ast.USub)):
-                    pass
-                elif isinstance(node, ast.Expression):
-                    pass
-                else:
-                    raise ValueError
-
-            value = eval(compile(parsed, "<expr>", "eval"), {"__builtins__": {}}, {"math": math})
-            if isinstance(value, float) and value.is_integer():
-                return str(int(value))
-            return str(value)
-        except Exception as ex:
-            Logger.error(f"Failed to evaluate expression '{expression}': {ex}")
-            return None
-
-    def _on_key_press(self, val: str):
-        operators = "+-*/."
-        if val in operators and self.amount_value and self.amount_value[-1] in operators:
-            self.amount_value = self.amount_value[:-1] + val
-        elif self.amount_value == "0" and val not in "+-*/.":
-            self.amount_value = val
-        else:
-            self.amount_value += val
-        self.amount_display.value = self.amount_value
-        if self._page is not None:
-            self.amount_display.update()
-
-    def _on_backspace(self):
-        if len(self.amount_value) > 1:
-            self.amount_value = self.amount_value[:-1]
-        else:
-            self.amount_value = "0"
-        self.amount_display.value = self.amount_value
-        if self._page is not None:
-            self.amount_display.update()
-
-    def _on_equal_pressed(self):
-        result = self._safe_eval_expression(self.amount_value)
-        if result is None:
-            return
-        self.amount_value = result
-        self.amount_display.value = self.amount_value
-        if self._page is not None:
-            self.amount_display.update()
-
-    def _on_save_clicked(self):
-        if any(ch in self.amount_value for ch in "+-*/"):
-            evaluated = self._safe_eval_expression(self.amount_value)
-            if evaluated is not None:
-                self.amount_value = evaluated
-                self.amount_display.value = self.amount_value
-                self.update()
-            else:
-                message = self.lang["category_selection.error.invalid_amount"]
-                self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-                self._page.overlay.append(self.snack_bar)
-                self.snack_bar.open = True
-                return
-
-        values = {
-            "amount": self.amount_value,
-            "category": self.selected_category,
-            "note": self.note_input.value or "",
-            "date": self.selected_date,
-        }
+    def _on_save_clicked(self, values: dict):
+        values["category"] = self.selected_category
 
         if self.current_type == "expense":
             success, code = self.controller.add_expense_entry(values)
@@ -517,27 +286,34 @@ class CategorySelectionView(ft.View):
         else:
             self.update()
 
-    def _handle_date_toggle(self, e=None):
-        if self._page is not None:
-            if self.date_picker not in self._page.overlay:
-                self._page.overlay.append(self.date_picker)
-            self.date_picker.open = True
+    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+        page_width, page_height = self.get_safe_page_size(
+            page=self._page
+        )
 
-    def _trigger_today_date(self):
-        self.selected_date = datetime.now().strftime("%Y-%m-%d")
-        self.date_display.value = self.selected_date
-        self.date_picker.value = datetime.strptime(self.selected_date, "%Y-%m-%d").date()
-        self.update()
+        try:
+            # Resizing main container
+            self.main_container.width = page_width
+            self.main_container.height = page_height
 
-    def _on_date_changed(self, e):
-        if e.control.value:
-            self.selected_date = e.control.value.strftime("%Y-%m-%d")
-            self.date_display.value = self.selected_date
-            self.update()
+            # Resizing other components
+            self.keyboard_container.resize(
+                width=page_width
+            )
 
-    def _on_page_resize(self, e = None) -> None:
-        page_width, page_height = self.get_safe_page_size(page=self._page)
-        self.main_container.width = page_width
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 
 def get_category_selection_view(page: Page, lang: dict, user_info: dict) -> ft.View:
