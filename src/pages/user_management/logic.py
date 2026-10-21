@@ -48,3 +48,7 @@ class LogicController:
     @staticmethod
     def get_currencies() -> list:
         return Data().get_currencies()
+
+    @staticmethod
+    def get_currency(username: str) -> str:
+        return db.users.get_currency(username)

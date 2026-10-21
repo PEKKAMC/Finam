@@ -279,20 +279,21 @@ class InterventionItem(ft.Container):
 
 
 class ScannerHistoryCard(ft.Container):
-    def __init__(self, page: Page, lang: dict, on_delete_entry=None, on_clear_all=None):
+    def __init__(self, page: Page, lang: dict, currency: str, on_delete_entry=None, on_clear_all=None):
         self._page = page
         self.lang = lang
+        self.currency = currency
         self.on_delete_entry = on_delete_entry or (lambda *_: None)
         self.on_clear_all = on_clear_all or (lambda: None)
 
         self.history_collapsed = False
         self.history_expander = ft.IconButton(
-            icon=ft.Icons.KEYBOARD_ARROW_UP,
+            icon=ft.Icons.KEYBOARD_ARROW_DOWN,
             on_click=lambda e: self.toggle_history_panel(),
             style=ft.ButtonStyle(shape=ft.CircleBorder()),
         )
         self.clear_all_button = ft.TextButton(
-            content=self.lang.get("purchase_scanner.clear_history", "Clear all"),
+            content=self.lang["purchase_scanner.clear_history"],
             icon=ft.Icons.DELETE_SWEEP_OUTLINED,
             on_click=lambda e: self._handle_clear_all(),
             style=ft.ButtonStyle(color=Color.NEGATIVE_ACTION),
@@ -350,7 +351,7 @@ class ScannerHistoryCard(ft.Container):
         for entry in history_entries:
             item_name = entry.get("item_name") or "Item"
             risk_score_raw = entry.get("risk_score")
-            risk_score = int(risk_score_raw) if risk_score_raw is not None else 0
+            risk_score = int(risk_score_raw or 0)
             created_at = entry.get("created_at", "")
             trigger_display = entry.get("trigger_display") or entry.get("trigger") or "-"
             advice = entry.get("ai_advice") or "-"
@@ -380,7 +381,7 @@ class ScannerHistoryCard(ft.Container):
                                             ),
                                             ft.IconButton(
                                                 icon=ft.Icons.DELETE_OUTLINE,
-                                                tooltip=self.lang.get("purchase_scanner.delete_item", "Delete item"),
+                                                tooltip=self.lang["purchase_scanner.delete_item"],
                                                 on_click=lambda e, sid=scan_id: self._handle_delete(sid),
                                                 icon_color=Color.NEGATIVE_ACTION,
                                             ),
@@ -389,7 +390,7 @@ class ScannerHistoryCard(ft.Container):
                                     ),
                                 ]
                             ),
-                            Text.SMALL(f"{price:,.2f}đ • {trigger_display}", color=Color.SECONDARY_TEXT),
+                            Text.SMALL(f"{price:,.2f} {self.currency} • {trigger_display}", color=Color.SECONDARY_TEXT),
                             Text.SMALL(created_at, color=Color.SECONDARY_TEXT),
                             Text.SMALL(advice[:180] + ("..." if len(advice) > 180 else ""), color=Color.DEFAULT_TEXT),
                         ]
@@ -403,14 +404,15 @@ class ScannerHistoryCard(ft.Container):
     def toggle_history_panel(self):
         self.history_collapsed = not self.history_collapsed
         self.history_content.visible = not self.history_collapsed
-        self.history_expander.icon = ft.Icons.KEYBOARD_ARROW_DOWN if self.history_collapsed else ft.Icons.KEYBOARD_ARROW_UP
+        self.history_expander.icon = ft.Icons.KEYBOARD_ARROW_UP if self.history_collapsed else ft.Icons.KEYBOARD_ARROW_DOWN
         self.update()
 
 
 class ScannerResult(ft.Container):
-    def __init__(self, page: Page, lang: dict):
+    def __init__(self, page: Page, lang: dict, currency: str):
         self._page = page
         self.lang = lang
+        self.currency = currency
 
         # Empty state display
         self.empty_state = ft.Column(
@@ -592,7 +594,7 @@ class ScannerResult(ft.Container):
         self.progress_bar.color = risk_color
         self.advice_text.value = ai_advice if ai_advice else f"Món đồ {item_name} đang chịu ảnh hưởng từ {trigger_display}."
 
-        formatted_price = f"{price:,.2f}đ" if price > 0 else "chưa nhập"
+        formatted_price = f"{price:,.2f} {self.currency}" if price > 0 else "chưa nhập"
         interventions = [
             InterventionItem(self._page, self.lang["purchase_scanner.pause_rule"], f"Đợi ít nhất {pause_time} trước khi thanh toán."),
             InterventionItem(self._page, self.lang["purchase_scanner.budget_check"], f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),

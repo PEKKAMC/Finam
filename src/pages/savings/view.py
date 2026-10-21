@@ -108,6 +108,7 @@ class SavingsView(ft.View):
         # FETCH DASHBOARD DATA
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
         existing_objectives = self.controller.get_user_objectives()
+        currency = self.controller.get_currency()
 
         objectives_data = []
         for objective_id, title, reason, target_amount, completed_at in existing_objectives:
@@ -118,9 +119,9 @@ class SavingsView(ft.View):
                 "objective_id": objective_id,
                 "title": title,
                 "reason": reason,
-                "current_value": f"{objective_savings:,.2f}".translate(str.maketrans(".,", ",.")) + " đ",
-                "target_value": f"{target_amount:,.2f}".translate(str.maketrans(".,", ",.")) + " đ",
-                "remaining_value": self.lang["savings.remaining"].format(amount=f"{remaining_amt:,.2f}".translate(str.maketrans(".,", ",.")) + " đ"),
+                "current_value": f"{objective_savings:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}",
+                "target_value": f"{target_amount:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}",
+                "remaining_value": self.lang["savings.remaining"].format(amount=f"{remaining_amt:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}"),
                 "percentage": card_percentage,
                 "progress": card_progress,
                 "completed": bool(completed_at)
@@ -149,6 +150,7 @@ class SavingsView(ft.View):
             total_target=total_target,
             percentage=percentage,
             progress_value=progress_value,
+            currency=currency,
             on_create_click=lambda e: self.dialogs.create_objective_dialog.show(self._page)
         )
 
@@ -200,6 +202,7 @@ class SavingsView(ft.View):
     def _refresh_view(self) -> None:
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
         existing_objectives = self.controller.get_user_objectives()
+        currency = self.controller.get_currency()
 
         objectives_data = []
         for objective_id, title, reason, target_amount, completed_at in existing_objectives:
@@ -210,16 +213,16 @@ class SavingsView(ft.View):
                 "objective_id": objective_id,
                 "title": title,
                 "reason": reason,
-                "current_value": f"{objective_savings:,.2f}".translate(str.maketrans(".,", ",.")) + " đ",
-                "target_value": f"{target_amount:,.2f}".translate(str.maketrans(".,", ",.")) + " đ",
-                "remaining_value": self.lang["savings.remaining"].format(amount=f"{remaining_amt:,.2f}".translate(str.maketrans(".,", ",.")) + " đ"),
+                "current_value": f"{objective_savings:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}",
+                "target_value": f"{target_amount:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}",
+                "remaining_value": self.lang["savings.remaining"].format(amount=f"{remaining_amt:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}"),
                 "percentage": card_percentage,
                 "progress": card_progress,
                 "completed": bool(completed_at)
             })
 
         self._objective_data = objectives_data
-        self.summary_banner.update_data(total_savings, total_target, percentage, progress_value)
+        self.summary_banner.update_data(total_savings, total_target, percentage, progress_value, currency)
         self.objective_grid.update_grid(objectives_data)
 
         if hasattr(self._page, "delete_cached_view"):

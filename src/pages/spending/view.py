@@ -51,8 +51,8 @@ class SpendingView(ft.View):
         self.metric_cards = MetricCards(
             page=self._page,
             lang=self.lang,
-            total_income=balance_data["incomes"].replace("+", "").replace(" VND", ""),
-            total_expense=balance_data["expenses"].replace("-", "").replace(" VND", ""),
+            total_income=balance_data["incomes"].replace("+", ""),
+            total_expense=balance_data["expenses"].replace("-", ""),
             net_balance=balance_data["current"],
         )
 
@@ -145,8 +145,8 @@ class SpendingView(ft.View):
             )
 
             self.metric_cards.update_data(
-                total_income=balance_data["incomes"].replace("+", "").replace(" VND", ""),
-                total_expense=balance_data["expenses"].replace("-", "").replace(" VND", ""),
+                total_income=balance_data["incomes"].replace("+", ""),
+                total_expense=balance_data["expenses"].replace("-", ""),
                 net_balance=balance_data["current"],
             )
 

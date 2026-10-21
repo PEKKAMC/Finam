@@ -13,6 +13,9 @@ class LogicController:
     def __init__(self, current_user: str):
         self.current_user = current_user
 
+    def get_currency(self) -> str:
+        return db.users.get_currency(self.current_user)
+
     def get_dashboard_totals(self) -> tuple[float, float, float, str]:
         total_savings = db.savings.get_total_savings(self.current_user)
         total_target = db.savings.get_total_target_amount(self.current_user)
@@ -46,6 +49,7 @@ class LogicController:
 
     def get_recent_activity(self, lang: dict):
         activities = db.savings.get_user_activity_raw(self.current_user)
+        currency = self.get_currency()
         for item in activities:
             if item["type"] == "saving":
                 target = item.get("target_name")
@@ -53,7 +57,7 @@ class LogicController:
                     action = lang["savings.added_to"] if item.get("amount", 0) > 0 else lang["savings.removed_from"]
                     item["desc"] = f"{action} {target}"
                 else:
-                    item["desc"] = f"{lang['savings.transaction']} ({item.get('amount'):,.2f} VND)"
+                    item["desc"] = f"{lang['savings.transaction']} ({item.get('amount'):,.2f} {currency})"
 
             match item["type"]:
                 case "completed":

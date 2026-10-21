@@ -7,7 +7,7 @@ import os
 import flet as ft
 
 from src.database import db
-from src.utils import Page, UISettings, get_language
+from src.utils import DefaultSettings, Page, UISettings, get_language
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
@@ -148,9 +148,9 @@ async def main(page: Page) -> None:
             else:
                 Logger.info("Page not found")
 
-            current_username = info.get("username", "") or "Admin"
-            current_language_code = db.users.get_language(current_username) if current_username else "vi"
-            current_currency = db.users.get_currency(current_username) if current_username else "VND (đ)"
+            current_username = info.get("username", "")
+            current_language_code = db.users.get_language(current_username) if current_username else DefaultSettings.LANGUAGE
+            current_currency = db.users.get_currency(current_username) if current_username else DefaultSettings.CURRENCY
             lang = get_language(current_language_code)
 
             route_name = page.route or "/"

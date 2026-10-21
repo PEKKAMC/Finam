@@ -20,11 +20,12 @@ class LogicController:
         total_income = sum(float(item.get("amount", 0)) for item in incomes)
         total_expense = sum(float(item.get("amount", 0)) for item in expenses)
         net_balance = total_income - total_expense
+        currency = db.users.get_currency(self.current_user)
 
         balance_data = {
-            "incomes": f"+{total_income:,.2f} VND",
-            "expenses": f"-{total_expense:,.2f} VND",
-            "current": f"{net_balance:,.2f} VND",
+            "incomes": f"+{total_income:,.2f} {currency}",
+            "expenses": f"-{total_expense:,.2f} {currency}",
+            "current": f"{net_balance:,.2f} {currency}",
         }
 
         transactions: dict[str, list[dict]] = {}

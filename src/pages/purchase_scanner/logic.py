@@ -17,8 +17,10 @@ class LogicController:
     def __init__(self, username: str = "Admin"):
         self.current_user = username or "Admin"
 
-    @staticmethod
-    def analyze_purchase(name: str, price: str, reason: str, trigger: str, time: str):
+    def get_currency(self) -> str:
+        return db.users.get_currency(self.current_user)
+
+    def analyze_purchase(self, name: str, price: str, reason: str, trigger: str, time: str):
         try:
             price = float(price.strip()) if price and str(price).strip() else 0.0
         except (ValueError, AttributeError):
@@ -106,7 +108,7 @@ class LogicController:
             payload = {
                 "item_name": name or "Sản phẩm",
                 "price": price if price > 0 else 1.0,
-                "currency": "VND",
+                "currency": self.get_currency().split(" ", 1)[0],
                 "category": trigger_display,
                 "monthly_budget_remaining": 5000000.0,
                 "user_notes": f"Lý do: {reason or 'Không có'}. Thời gian suy nghĩ: {time}.",

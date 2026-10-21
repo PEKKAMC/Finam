@@ -7,7 +7,7 @@ from collections.abc import Callable
 import flet as ft
 
 from src.logger import Logger
-from src.utils import Color, Dialog, Page, Text
+from src.utils import Color, DefaultSettings, Dialog, Page, Text
 
 class UserManagementDialog(Dialog):
     def __init__(self, page: Page, lang: dict, user_list: UserList, add_form, on_close_callback: Callable, has_cancel_button: bool = True):
@@ -104,7 +104,7 @@ class UserList(ft.Container):
     def create_user_box(self, username: str):
         is_active = (username == self.current_user)
         initial = username[0].upper() if username else ""
-        created_at = self.user_created_at.get(username, "")
+        created_at = self.user_created_at[username]
         created_prefix = self.lang["user_management.created_date"]
 
         def handle_select(e, name=username) -> None:
@@ -186,9 +186,9 @@ class UserList(ft.Container):
         else:
             for username in current_users:
                 if isinstance(username, dict):
-                    username_name = username.get("name", "")
+                    username_name = username["name"]
                     if username_name:
-                        self.user_created_at.setdefault(username_name, username.get("created_at", ""))
+                        self.user_created_at.setdefault(username_name, username["created_at"])
                         self.list_column.controls.append(self.create_user_box(username_name))
                 else:
                     username_name = str(username)
@@ -208,11 +208,12 @@ class UserList(ft.Container):
 
 
 class AddUserField(ft.Container):
-    def __init__(self, page: Page, lang: dict, on_submit_callback, currencies: list[str]):
+    def __init__(self, page: Page, lang: dict, on_submit_callback, currencies: list[str], default_currency: str = DefaultSettings.CURRENCY):
         self._page = page
         self.lang = lang
         self.on_submit_callback = on_submit_callback
         self.currencies = currencies
+        self.default_currency = default_currency
 
         self.input_field = ft.TextField(
             hint_text=self.lang["user_management.username_hint"],
@@ -228,7 +229,7 @@ class AddUserField(ft.Container):
         )
 
         self.currency_dropdown = ft.Dropdown(
-            value="VND (đ)",
+            value=self.default_currency,
             options=[ft.dropdown.Option(currency) for currency in self.currencies],
             color=Color.DEFAULT_TEXT,
             bgcolor=Color.DIALOG_BACKGROUND,
@@ -281,7 +282,7 @@ class AddUserField(ft.Container):
 
     def _handle_submit(self, e=None) -> None:
         input_username = self.input_field.value.strip()
-        selected_currency = self.currency_dropdown.value or "VND (đ)"
+        selected_currency = self.currency_dropdown.value or self.default_currency
         self.on_submit_callback(input_username, selected_currency)
 
     def show_error(self, message: str):
@@ -293,7 +294,7 @@ class AddUserField(ft.Container):
 
     def clear(self):
         self.input_field.value = ""
-        self.currency_dropdown.value = "VND (đ)"
+        self.currency_dropdown.value = self.default_currency
         self.error_message.value = ""
         try:
             self.update()

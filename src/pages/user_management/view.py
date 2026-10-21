@@ -30,7 +30,7 @@ class DialogManager:
         self.user_list = UserList(
             page=self._page,
             lang=self.lang,
-            current_user=self.user_info.get("username", ""),
+            current_user=self.user_info["username"],
             on_select_callback=self._handle_change_user,
             on_delete_callback=self.show_delete_prompt
         )
@@ -39,7 +39,8 @@ class DialogManager:
             page=self._page,
             lang=self.lang,
             on_submit_callback=self._handle_add_user,
-            currencies=self.controller.get_currencies()
+            currencies=self.controller.get_currencies(),
+            default_currency=self.controller.get_currency(self.user_info["username"])
         )
 
         self.user_dialog = UserManagementDialog(
@@ -68,7 +69,7 @@ class DialogManager:
     def show_user_management_dialog(self) -> int:
         self.user_list.update_data(
             self.controller.get_all_users(),
-            self.user_info.get("username", "")
+            self.user_info["username"]
         )
         try:
             self.user_list.main_container.update()
@@ -91,7 +92,7 @@ class DialogManager:
             self.add_form.clear()
             self.user_list.update_data(
                 self.controller.get_all_users(),
-                self.user_info.get("username", "")
+                self.user_info["username"]
             )
             try:
                 self.user_dialog.update()
@@ -207,7 +208,7 @@ class UserManagementView(ft.View):
         )
 
         self.profile_card = ProfileCard(
-            username=self.user_info.get("username", ""),
+            username=self.user_info["username"],
             lang=self.lang,
             on_change_user=self.dialogs.show_user_management_dialog
         )
@@ -362,7 +363,7 @@ class UserManagementView(ft.View):
                 self.controller.get_all_users(),
                 self.user_info["username"]
             )
-            self.profile_card.update_data(self.user_info.get("username", ""))
+            self.profile_card.update_data(self.user_info["username"])
             return 0
         except RuntimeError as ex:
             Logger.warn(f"Failed to refresh view {ex}")

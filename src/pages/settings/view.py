@@ -7,7 +7,7 @@ import flet as ft
 from src.logger import Logger
 from src.pages.settings.components import SettingCard, SettingDropdown, SettingRow, SettingsHeader
 from src.pages.settings.logic import LogicController
-from src.utils import Color, Page, get_safe_page_size, Text, UISettings
+from src.utils import Color, DefaultSettings, Page, get_safe_page_size, Text, UISettings
 from src.database import db
 
 Logger.info("Initializing Settings page...")
@@ -28,7 +28,7 @@ class SettingsView(ft.View):
         self.currencies = self.controller.get_currencies()
 
         # GET CURRENT SETTINGS FROM DATABASE
-        username = user_info.get("username", "Admin")
+        username = user_info["username"]
         current_language = db.users.get_language(username)
         current_currency = db.users.get_currency(username)
 
@@ -40,7 +40,7 @@ class SettingsView(ft.View):
         language_index = language_options.index(current_language_name) if current_language_name in language_options else 0
 
         # Get currency index
-        currency_index = self.currencies.index(current_currency) if current_currency in self.currencies else self.currencies.index("VND (đ)")
+        currency_index = self.currencies.index(current_currency) if current_currency in self.currencies else self.currencies.index(DefaultSettings.CURRENCY)
 
         # INITIALIZE PAGE COMPONENTS
         self.settings_header = SettingsHeader(lang=self.lang)
@@ -152,7 +152,7 @@ class SettingsView(ft.View):
 
     async def _on_done_click(self, e=None):
         """Handle the Done button click - saves settings and navigates."""
-        username = self.user_info.get("username", "Admin")
+        username = self.user_info["username"]
 
         selected_language_name = self.language_dropdown.dropdown_control.value
         selected_currency = self.currency_dropdown.dropdown_control.value

@@ -90,6 +90,7 @@ class FinancialChart(ft.Container):
     def __init__(self, lang: dict, username: str, chart_type: str, show_mode_buttons: bool):
         self.lang = lang
         self.username = username
+        self.currency = db.users.get_currency(username)
         self.chart_type = chart_type
         self.show_mode_buttons = show_mode_buttons
 
@@ -487,7 +488,7 @@ class FinancialChart(ft.Container):
                             color=Color.PRIMARY,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang['generic.income']}: {income_value:,.2f} đ"
+                                text=f"{self.lang['generic.income']}: {income_value:,.2f} {self.currency}"
                             ),
                         ),
                         fc.BarChartRod(
@@ -497,7 +498,7 @@ class FinancialChart(ft.Container):
                             color=Color.EXPENSE_ACTION_BACKGROUND,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang['generic.expense']}: {expense_value:,.2f} đ"
+                                text=f"{self.lang['generic.expense']}: {expense_value:,.2f} {self.currency}"
                             ),
                         )
                     ]

@@ -65,7 +65,7 @@ class DialogManager:
     def show_user_management_dialog(self) -> int:
         self.user_list.update_data(
             self.controller.get_all_users(),
-            self.user_info.get("username", "")
+            self.user_info["username"]
         )
         try:
             self.user_list.main_container.update()
@@ -157,7 +157,7 @@ class StarterView(ft.View):
         try:
             self.dialogs.user_list.update_data(
                 self.controller.get_all_users(),
-                self.user_info.get("username", "")
+                self.user_info["username"]
             )
             self.dialogs.user_list.main_container.update()
             self.dialogs.user_dialog.update()

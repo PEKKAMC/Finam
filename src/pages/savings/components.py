@@ -158,9 +158,10 @@ class ObjectiveGrid(ft.Column):
 
 
 class AggregateCard(ft.Container):
-    def __init__(self, page: Page, lang: dict, total_savings: float, total_target: float, percentage: str, progress_value: float, on_create_click: Callable):
+    def __init__(self, page: Page, lang: dict, total_savings: float, total_target: float, percentage: str, progress_value: float, currency: str, on_create_click: Callable):
         self._page = page
         self.lang = lang
+        self.currency = currency
 
         # TEXT AND ICON COMPONENTS
         # Static texts
@@ -169,7 +170,7 @@ class AggregateCard(ft.Container):
 
         # Dynamic texts
         self.savings_text = Text.H3(f"{total_savings:,.2f}".translate(str.maketrans(".,", ",.")), color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.target_text = Text.H5(f" / {total_target:,.2f}".translate(str.maketrans(".,", ",.")) + " đ", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.target_text = Text.H5(f" / {total_target:,.2f}".translate(str.maketrans(".,", ",.")) + f" {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.percentage_text = Text.MEDIUM(f"{percentage}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
 
         # Static icons
@@ -233,9 +234,10 @@ class AggregateCard(ft.Container):
             content=self.main_container
         )
 
-    def update_data(self, total_savings: float, total_target: float, percentage: str, progress_value: float):
+    def update_data(self, total_savings: float, total_target: float, percentage: str, progress_value: float, currency: str):
         self.savings_text.value = f"{total_savings:,.2f}".translate(str.maketrans(".,", ",."))
-        self.target_text.value = f" / {total_target:,.2f}".translate(str.maketrans(".,", ",.")) + " đ"
+        self.currency = currency
+        self.target_text.value = f" / {total_target:,.2f}".translate(str.maketrans(".,", ",.")) + f" {self.currency}"
         self.percentage_text.value = percentage
         self.progress_bar.value = progress_value
 
@@ -406,16 +408,22 @@ class QuickActionDialog(Dialog):
             if not success:
                 if error_key == "savings.error.not_enough_balance":
                     msg = (
-                        f"Not enough balance. Current: {extra_val:,.2f} VND"
+                        f"Not enough balance. Current: {extra_val:,.2f} {self.controller.get_currency()}"
                         if "format" not in self.lang[error_key]
-                        else self.lang[error_key].format(remaining=f"{extra_val:,.2f}")
+                        else self.lang[error_key].format(
+                            remaining=f"{extra_val:,.2f}",
+                            currency=self.controller.get_currency(),
+                        )
                     )
                     snack_bar = ft.SnackBar(Text.MEDIUM(msg))
                 elif error_key == "savings.error.exceeding_amount":
                     msg = (
-                        f"Amount exceeds target! Remaining: {extra_val:,.2f} VND"
+                        f"Amount exceeds target! Remaining: {extra_val:,.2f} {self.controller.get_currency()}"
                         if "format" not in self.lang[error_key]
-                        else self.lang[error_key].format(remaining=f"{extra_val:,.2f}")
+                        else self.lang[error_key].format(
+                            remaining=f"{extra_val:,.2f}",
+                            currency=self.controller.get_currency(),
+                        )
                     )
                     snack_bar = ft.SnackBar(Text.MEDIUM(msg))
                 else:
@@ -631,7 +639,7 @@ class GoalDetailsDialog(Dialog):
                 history_controls.append(
                     ft.ListTile(
                         leading=ft.Icon(ft.Icons.MONEY, color=color_theme),
-                        title=Text.MEDIUM(f"{amount} VND", color=color_theme),
+                        title=Text.MEDIUM(f"{amount} {self.controller.get_currency()}", color=color_theme),
                         subtitle=Text.P(f"{item['date']}"),
                     )
                 )

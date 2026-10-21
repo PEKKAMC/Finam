@@ -20,6 +20,7 @@ class PurchaseScannerView(ft.View):
         self.user_info = user_info
         self.controller = LogicController(user_info["username"])
         self.scan_history = self.controller.get_scan_history()
+        self.currency = self.controller.get_currency()
 
         # IMPORTED FUNCTIONS
         self.get_safe_page_size = get_safe_page_size
@@ -28,12 +29,13 @@ class PurchaseScannerView(ft.View):
         self.menu = Menu(self._page, self.lang, self.user_info)
 
         self.form_card = ScannerForm(page=self._page, lang=self.lang, on_scan_click=self.handle_scan_click)
-        self.result_card = ScannerResult(page=self._page, lang=self.lang)
+        self.result_card = ScannerResult(page=self._page, lang=self.lang, currency=self.currency)
         self.history_card = ScannerHistoryCard(
             page=self._page,
             lang=self.lang,
             on_delete_entry=self.handle_delete_history_entry,
             on_clear_all=self.handle_clear_history,
+            currency=self.currency,
         )
         self.history_card.set_history(self.scan_history)
 
