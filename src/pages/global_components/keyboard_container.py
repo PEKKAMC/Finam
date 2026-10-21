@@ -175,7 +175,7 @@ class KeyboardContainer(ft.Container):
         )
 
     @staticmethod
-    def _safe_eval_expression(expression: str):
+    def _eval_expression(expression: str):
         try:
             if not expression:
                 return None
@@ -234,7 +234,7 @@ class KeyboardContainer(ft.Container):
             self.amount_display.update()
 
     def _on_equal_pressed(self):
-        result = self._safe_eval_expression(self.amount_value)
+        result = self._eval_expression(self.amount_value)
         if result is None:
             return
         self.amount_value = result
@@ -244,7 +244,7 @@ class KeyboardContainer(ft.Container):
 
     def _handle_save_click(self):
         if any(ch in self.amount_value for ch in "+-*/"):
-            evaluated = self._safe_eval_expression(self.amount_value)
+            evaluated = self._eval_expression(self.amount_value)
             if evaluated is not None:
                 self.amount_value = evaluated
                 self.amount_display.value = self.amount_value

@@ -39,9 +39,19 @@ class DatabaseConnection:
             self.execute('''
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL
+                    name TEXT UNIQUE NOT NULL,
+                    created_at TEXT
                 )
             ''')
+            try:
+                self.execute("ALTER TABLE users ADD COLUMN created_at TEXT")
+                Logger.info("Added created_at column to users table")
+            except sqlite3.OperationalError:
+                pass
+            self.execute(
+                "UPDATE users SET created_at = ? WHERE created_at IS NULL OR created_at = ''",
+                (datetime.now().strftime("%Y-%m-%d %H:%M"),)
+            )
             self.execute('''
                 CREATE TABLE IF NOT EXISTS user_settings (
                     user_id INTEGER PRIMARY KEY,
@@ -137,8 +147,8 @@ class DatabaseConnection:
             )[0]
             if count == 0:
                 self.execute(
-                    "INSERT INTO users (name) VALUES (?)",
-                    (DefaultSettings.USERNAME,)
+                    "INSERT INTO users (name, created_at) VALUES (?, ?)",
+                    (DefaultSettings.USERNAME, datetime.now().strftime("%Y-%m-%d %H:%M"))
                 )
 
             Logger.info("Database initialized successfully.")
@@ -155,18 +165,22 @@ class UserDatabase:
     def __init__(self, connection: DatabaseConnection):
         self.db = connection
 
-    def get_all_users(self) -> List[str]:
+    def get_all_users(self) -> List[Dict[str, str]]:
         rows = self.db.execute(
-            "SELECT name FROM users",
+            "SELECT name, created_at FROM users ORDER BY id",
             fetch_all=True
         )
-        return [row[0] for row in rows]
+        return [
+            {"name": row[0], "created_at": row[1] or ""}
+            for row in rows
+        ]
 
     def add_user(self, username: str, currency: str) -> bool:
         try:
+            created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
             self.db.execute(
-                "INSERT INTO users (name) VALUES (?)",
-                (username,)
+                "INSERT INTO users (name, created_at) VALUES (?, ?)",
+                (username, created_at)
             )
             self.set_currency(username, currency)
             return True
@@ -174,10 +188,17 @@ class UserDatabase:
             return False
 
     def delete_user(self, username: str) -> None:
-        self.db.execute(
-            "DELETE FROM users WHERE name = ?",
-            (username,)
-        )
+        user_id = self.get_user_id(username)
+        if not user_id:
+            return
+
+        self.db.execute("DELETE FROM user_settings WHERE user_id = ?", (user_id,))
+        self.db.execute("DELETE FROM purchase_scan_history WHERE user_id = ?", (user_id,))
+        self.db.execute("DELETE FROM expenses WHERE user_id = ?", (user_id,))
+        self.db.execute("DELETE FROM incomes WHERE user_id = ?", (user_id,))
+        self.db.execute("DELETE FROM savings WHERE user_id = ?", (user_id,))
+        self.db.execute("DELETE FROM objectives WHERE user_id = ?", (user_id,))
+        self.db.execute("DELETE FROM users WHERE id = ?", (user_id,))
 
     def get_user_id(self, username: str) -> Optional[int]:
         result = self.db.execute(

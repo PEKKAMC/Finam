@@ -63,6 +63,16 @@ class DialogManager:
             d.add_to_overlay(self._page)
 
     def show_user_management_dialog(self) -> int:
+        self.user_list.update_data(
+            self.controller.get_all_users(),
+            self.user_info.get("username", "")
+        )
+        try:
+            self.user_list.main_container.update()
+            self.user_dialog.update()
+            self._page.update()
+        except RuntimeError:
+            pass
         return self.user_dialog.show(self._page)
 
     def show_delete_prompt(self, username: str = "") -> int:
@@ -141,16 +151,17 @@ class StarterView(ft.View):
 
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
-        self._refresh_view()
         self.dialogs.show_user_management_dialog()
 
     def _refresh_view(self) -> int:
         try:
             self.dialogs.user_list.update_data(
-                current_users=self.controller.get_all_users(),
-                current_user=self.user_info["username"]
+                self.controller.get_all_users(),
+                self.user_info.get("username", "")
             )
-
+            self.dialogs.user_list.main_container.update()
+            self.dialogs.user_dialog.update()
+            self._page.update()
             return 0
 
         except Exception as ex:

@@ -11,7 +11,7 @@ class LogicController:
         self.user_info = user_info
 
     @staticmethod
-    def get_all_users() -> list:
+    def get_all_users() -> list[dict]:
         return db.users.get_all_users()
 
     def add_user(self, input_username: str, currency: str) -> tuple[bool, str]:

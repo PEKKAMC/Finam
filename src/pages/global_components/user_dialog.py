@@ -87,6 +87,7 @@ class UserList(ft.Container):
         self.current_user = current_user
         self.on_select = on_select_callback
         self.on_delete = on_delete_callback
+        self.user_created_at = {}
 
         self.list_column = ft.Column(
             spacing=12,
@@ -103,6 +104,7 @@ class UserList(ft.Container):
     def create_user_box(self, username: str):
         is_active = (username == self.current_user)
         initial = username[0].upper() if username else ""
+        created_at = self.user_created_at.get(username, "")
         created_prefix = self.lang["user_management.created_date"]
 
         def handle_select(e, name=username) -> None:
@@ -135,7 +137,7 @@ class UserList(ft.Container):
                                 spacing=2,
                                 controls=[
                                     Text.MEDIUM(username, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
-                                    Text.SMALL(f"{created_prefix} 2026-01-01 08:00", color=Color.SECONDARY_TEXT)
+                                    Text.SMALL(f"{created_prefix} {created_at}" if created_at else f"{created_prefix} --", color=Color.SECONDARY_TEXT)
                                 ]
                             ),
                         ]
@@ -152,12 +154,16 @@ class UserList(ft.Container):
                                     )
                                 ] if is_active else []
                             ),
-                            ft.IconButton(
-                                icon=ft.Icons.DELETE_OUTLINE,
-                                icon_color=Color.DELETE_ACTION,
-                                icon_size=18,
-                                on_click=lambda e, u=username: self.on_delete(u),
-                                tooltip="Xóa người dùng"
+                            *(
+                                [
+                                    ft.IconButton(
+                                        icon=ft.Icons.DELETE_OUTLINE,
+                                        icon_color=Color.DELETE_ACTION,
+                                        icon_size=18,
+                                        on_click=lambda e, u=username: self.on_delete(u),
+                                        tooltip="Xóa người dùng"
+                                    )
+                                ] if not is_active else []
                             )
                         ]
                     )
@@ -165,9 +171,13 @@ class UserList(ft.Container):
             )
         )
 
-    def update_data(self, current_users: list, current_user: str = ""):
+    def update_data(self, current_users: list, current_user: str = "", user_created_at: dict | None = None):
         self.current_user = current_user
         self.list_column.controls.clear()
+        if user_created_at is not None:
+            self.user_created_at = user_created_at
+        else:
+            self.user_created_at = {}
 
         if not current_users:
             self.list_column.controls.append(
@@ -175,7 +185,23 @@ class UserList(ft.Container):
             )
         else:
             for username in current_users:
-                self.list_column.controls.append(self.create_user_box(username))
+                if isinstance(username, dict):
+                    username_name = username.get("name", "")
+                    if username_name:
+                        self.user_created_at.setdefault(username_name, username.get("created_at", ""))
+                        self.list_column.controls.append(self.create_user_box(username_name))
+                else:
+                    username_name = str(username)
+                    self.user_created_at.setdefault(username_name, self.user_created_at.get(username_name, ""))
+                    self.list_column.controls.append(self.create_user_box(username_name))
+
+        try:
+            self.main_container.update()
+            self.update()
+            if self._page:
+                self._page.update()
+        except RuntimeError:
+            pass
 
     def resize(self, height: int):
         pass

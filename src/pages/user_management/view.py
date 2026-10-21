@@ -66,7 +66,16 @@ class DialogManager:
 
     # USER MANAGEMENT DIALOG
     def show_user_management_dialog(self) -> int:
-        self.user_list.update_data(self.controller.get_all_users(), self.user_info.get("username", ""))
+        self.user_list.update_data(
+            self.controller.get_all_users(),
+            self.user_info.get("username", "")
+        )
+        try:
+            self.user_list.main_container.update()
+            self.user_dialog.update()
+            self._page.update()
+        except RuntimeError:
+            pass
         return self.user_dialog.show(self._page)
 
     def _close_user_management_dialog(self, e: ft.ControlEvent | None = None) -> None:
@@ -80,6 +89,15 @@ class DialogManager:
 
         if success:
             self.add_form.clear()
+            self.user_list.update_data(
+                self.controller.get_all_users(),
+                self.user_info.get("username", "")
+            )
+            try:
+                self.user_dialog.update()
+                self._page.update()
+            except RuntimeError:
+                pass
             self._refresh_view()
         else:
             self.add_form.show_error("error")
@@ -340,7 +358,10 @@ class UserManagementView(ft.View):
 
     def refresh_view(self) -> int:
         try:
-            self.dialogs.user_list.update_data(self.controller.get_all_users(), self.user_info.get("username", ""))
+            self.dialogs.user_list.update_data(
+                self.controller.get_all_users(),
+                self.user_info["username"]
+            )
             self.profile_card.update_data(self.user_info.get("username", ""))
             return 0
         except RuntimeError as ex:
