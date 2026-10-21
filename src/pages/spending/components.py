@@ -150,7 +150,7 @@ class MetricCards(ft.ResponsiveRow):
 
 class TransactionToolbar(ft.Container):
     """Filter, Search, and Action Toolbar"""
-    def __init__(self, page: Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_sort_change: Callable, on_add_expense_click: Callable, on_add_income_click: Callable, search_query: str = "", sort_by: str = "newest"):
+    def __init__(self, page: Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_sort_change: Callable, on_add_click: Callable, search_query: str = "", sort_by: str = "newest"):
         self._page = page
         self.lang = lang
         self.on_filter = on_filter_change
@@ -174,38 +174,21 @@ class TransactionToolbar(ft.Container):
             )
 
         # TEXT AND ICON COMPONENTS
-        self.all_filter_button = create_filter_button(self.lang["generic.all"], "all", "#1A4734")
-        self.expense_filter_button = create_filter_button(self.lang["spending.expense_label"], "expense", "#E90C00")
-        self.income_filter_button = create_filter_button(self.lang["spending.income_label"], "income", "#1A4734")
+        self.all_filter_button = create_filter_button(self.lang["generic.all"], "all", Color.PRIMARY_ACTION)
+        self.expense_filter_button = create_filter_button(self.lang["spending.expense_label"], "expense", Color.PRIMARY_ACTION)
+        self.income_filter_button = create_filter_button(self.lang["spending.income_label"], "income", Color.PRIMARY_ACTION)
 
-        self.add_expense_button = ft.Button(
+        self.add_button = ft.Button(
             content=ft.Row(
                 spacing=8,
                 controls=[
-                    ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=18),
-                    Text.MEDIUM(self.lang["spending.add_expense"], color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+                    ft.Icon(ft.Icons.ADD, color=Color.WHITE, size=18),
+                    Text.MEDIUM(self.lang["spending.add_income"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
                 ],
                 tight=True
             ),
-            bgcolor="#E90C00",
-            on_click=on_add_expense_click,
-            style=ft.ButtonStyle(
-                shape=ft.RoundedRectangleBorder(radius=16),
-                padding=12
-            )
-        )
-
-        self.add_income_button = ft.Button(
-            content=ft.Row(
-                spacing=8,
-                controls=[
-                    ft.Icon(ft.Icons.ADD, color="#DAF1DE", size=18),
-                    Text.MEDIUM(self.lang["spending.add_income"], color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
-                ],
-                tight=True
-            ),
-            bgcolor="#1A4734",
-            on_click=on_add_income_click,
+            bgcolor=Color.PRIMARY_ACTION,
+            on_click=on_add_click,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=16),
                 padding=12
@@ -258,8 +241,7 @@ class TransactionToolbar(ft.Container):
         self.action_buttons_row = ft.Row(
             spacing=6,
             controls=[
-                self.add_expense_button,
-                self.add_income_button
+                self.add_button
             ]
         )
 
@@ -314,9 +296,9 @@ class TransactionToolbar(ft.Container):
         self.sort_by = sort_by
 
         buttons_info = [
-            (self.all_filter_button, "all", "#1A4734"),
-            (self.expense_filter_button, "expense", "#E90C00"),
-            (self.income_filter_button, "income", "#1A4734")
+            (self.all_filter_button, "all", Color.PRIMARY_ACTION),
+            (self.expense_filter_button, "expense", Color.PRIMARY_ACTION),
+            (self.income_filter_button, "income", Color.PRIMARY_ACTION)
         ]
 
         for button, f_type, active_bg in buttons_info:

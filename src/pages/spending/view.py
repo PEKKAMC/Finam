@@ -63,8 +63,7 @@ class SpendingView(ft.View):
             on_filter_change=self.on_filter_change,
             on_search_change=self.on_search_change,
             on_sort_change=self.on_sort_change,
-            on_add_expense_click=self._page.navigate_to("/category_selection"),
-            on_add_income_click=self._page.navigate_to("/category_selection"),
+            on_add_click=self._page.navigate_to("/category_selection"),
             search_query=self.search_query,
             sort_by=self.sort_by
         )
@@ -169,6 +168,13 @@ class SpendingView(ft.View):
 
     def on_filter_change(self, f_type: str):
         self.filter_type = f_type
+
+        self.toolbar.update_data(
+            filter_type=self.filter_type,
+            search_query=self.search_query,
+            sort_by=self.sort_by
+        )
+
         self.update_history_list()
 
     def on_search_change(self, query: str):
