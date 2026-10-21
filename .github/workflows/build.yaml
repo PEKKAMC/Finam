@@ -55,10 +55,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install flet
 
-      - name: Create .env file from GitHub Secrets
-        run: |
-          echo "APP_SECRET_TOKEN=${{ secrets.APP_SECRET_TOKEN }}" >> .env
-
       - name: Build APK
         run: flet build apk --build-version ${{ needs.prepare.outputs.raw_version }} --module-name main --yes -v
 
@@ -104,10 +100,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install flet
 
-      - name: Create .env file from GitHub Secrets
-        run: |
-          echo "APP_SECRET_TOKEN=${{ secrets.APP_SECRET_TOKEN }}" >> .env
-
       - name: Build AAB
         run: flet build aab --build-version ${{ needs.prepare.outputs.raw_version }} --module-name main --yes -v
 
@@ -143,10 +135,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install flet
-
-      - name: Create .env file from GitHub Secrets
-        run: |
-          echo "APP_SECRET_TOKEN=${{ secrets.APP_SECRET_TOKEN }}" >> .env
 
       - name: Build IPA (Generates xcarchive)
         run: flet build ipa --build-version ${{ needs.prepare.outputs.raw_version }} --module-name main --yes -v
