@@ -36,9 +36,6 @@ copyright = "Copyright (C) 2026 by PEKKAMC"
 [tool.flet.app]
 path = ""
 assets = "assets"
-include = [
-    ".env"
-]
 exclude = [
     "venv",
     ".venv",
