@@ -183,7 +183,7 @@ class TransactionToolbar(ft.Container):
                 spacing=8,
                 controls=[
                     ft.Icon(ft.Icons.ADD, color=Color.WHITE, size=18),
-                    Text.MEDIUM(self.lang["spending.add_income"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                    Text.MEDIUM(self.lang["spending.add_transaction"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
                 ],
                 tight=True
             ),
