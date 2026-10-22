@@ -386,6 +386,16 @@ class SavingsDatabase:
             "INSERT INTO savings (user_id, objective_id, amount, date, note) VALUES (?, ?, ?, ?, ?)",
             (user_id, objective_id_value, amount, date, note)
         )
+        if objective_id_value is not None and amount > 0:
+            result = self.db.execute(
+                "SELECT o.target_amount, COALESCE(SUM(s.amount), 0) "
+                "FROM objectives o LEFT JOIN savings s ON s.objective_id = o.id AND s.deleted_at IS NULL "
+                "WHERE o.id = ? GROUP BY o.id",
+                (objective_id_value,),
+                fetch_one=True,
+            )
+            if result and result[0] > 0 and result[1] >= result[0]:
+                self.complete_objective(objective_id_value)
         return True
 
     def get_total_savings(self, username: str) -> float:
@@ -443,7 +453,7 @@ class SavingsDatabase:
     def complete_objective(self, objective_id: int) -> bool:
         completed_date = datetime.now().strftime("%Y-%m-%d %H:%M")
         self.db.execute(
-            "UPDATE objectives SET completed_at = ? WHERE id = ?",
+            "UPDATE objectives SET completed_at = ? WHERE id = ? AND completed_at IS NULL",
             (completed_date, objective_id)
         )
         return True

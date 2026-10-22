@@ -3,11 +3,12 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from collections.abc import Callable
+from typing import Any
 import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import Menu
-from src.pages.savings.components import AggregateCard, ClearHistoryDialog, CompleteConfirmDialog, CreateGoalModal, DepositWithdrawModal, CongratulationsModal, DeleteConfirmDialog, GoalDetailsDialog, ObjectiveGrid
+from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CreateGoalModal, DepositWithdrawModal, CongratulationsModal, DeleteConfirmDialog, GoalDetailsDialog, GoalGrid
 from src.pages.savings.logic import LogicController
 from src.utils import Color, Page, Text, UISettings, get_safe_page_size
 
@@ -47,14 +48,6 @@ class DialogManager:
             on_surplus=lambda p, goal, surplus: self.congratulations_modal.trigger(p, goal, surplus, self._get_objectives())
         )
 
-        self.complete_dialog = CompleteConfirmDialog(
-            page=self._page,
-            lang=self.lang,
-            controller=self.controller,
-            on_success=self._refresh_view,
-            on_congratulate=lambda p, goal, surplus: self.congratulations_modal.trigger(p, goal, surplus, self._get_objectives())
-        )
-
         self.delete_dialog = DeleteConfirmDialog(
             page=self._page,
             lang=self.lang,
@@ -73,8 +66,6 @@ class DialogManager:
         self.goal_details_dialog = GoalDetailsDialog(
             page=self._page,
             lang=self.lang,
-            controller=self.controller,
-            on_complete=self.complete_dialog.trigger,
             on_deposit_withdraw=self.deposit_withdraw_modal.trigger,
             on_delete=self.delete_dialog.trigger
         )
@@ -86,7 +77,6 @@ class DialogManager:
             self.create_goal_modal,
             self.deposit_withdraw_modal,
             self.congratulations_modal,
-            self.complete_dialog,
             self.delete_dialog,
             self.clear_history_dialog,
             self.goal_details_dialog,
@@ -112,24 +102,7 @@ class SavingsView(ft.View):
         existing_objectives = self.controller.get_user_objectives()
         currency = self.controller.get_currency()
 
-        objectives_data = []
-        for objective_id, title, reason, target_amount, completed_at in existing_objectives:
-            objective_savings, card_progress, card_percentage = self.controller.get_objective_progress_data(objective_id, target_amount)
-            remaining_amt = max(0, target_amount - objective_savings)
-
-            objectives_data.append({
-                "objective_id": objective_id,
-                "title": title,
-                "reason": reason,
-                "current_value": f"{objective_savings:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}",
-                "target_value": f"{target_amount:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}",
-                "remaining_value": self.lang["savings.remaining"].format(amount=f"{remaining_amt:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}"),
-                "percentage": card_percentage,
-                "progress": card_progress,
-                "completed": bool(completed_at)
-            })
-
-        self._objective_data = objectives_data
+        self._objective_data = self._build_objective_data(existing_objectives, currency)
 
         # INITIALIZE DIALOG MANAGER
         self.dialogs = DialogManager(
@@ -148,11 +121,13 @@ class SavingsView(ft.View):
             user_info=self.user_info
         )
 
-        self.objective_grid = ObjectiveGrid(
+        self.goal_grid = GoalGrid(
             page=self._page,
             lang=self.lang,
-            objectives_data=objectives_data,
-            on_card_click=self.dialogs.goal_details_dialog.trigger
+            objectives_data=self._objective_data,
+            on_deposit=self.dialogs.deposit_withdraw_modal.trigger,
+            on_withdraw=self.dialogs.deposit_withdraw_modal.trigger,
+            on_delete=self.dialogs.delete_dialog.trigger,
         )
 
         self.summary_banner = AggregateCard(
@@ -164,6 +139,15 @@ class SavingsView(ft.View):
             progress_value=progress_value,
             currency=currency,
             on_create_click=lambda e: self.dialogs.create_goal_modal.trigger(self._page)
+        )
+
+        self.activity_history = ActivityHistory(
+            page=self._page,
+            lang=self.lang,
+            activities=self.controller.get_recent_activity(self.lang),
+            currency=currency,
+            on_export=self.trigger_export,
+            on_clear=lambda e: self.dialogs.clear_history_dialog.trigger(e.page),
         )
 
         self._open_pending_objective_dialog()
@@ -180,7 +164,8 @@ class SavingsView(ft.View):
                             spacing=25,
                             controls=[
                                 self.summary_banner,
-                                self.objective_grid,
+                                self.goal_grid,
+                                self.activity_history,
                             ]
                         )
                     )
@@ -216,31 +201,34 @@ class SavingsView(ft.View):
         existing_objectives = self.controller.get_user_objectives()
         currency = self.controller.get_currency()
 
+        self._objective_data = self._build_objective_data(existing_objectives, currency)
+        self.summary_banner.update_data(total_savings, total_target, percentage, progress_value, currency)
+        self.goal_grid.update_grid(self._objective_data)
+        self.activity_history.update_history(self.controller.get_recent_activity(self.lang), currency)
+
+        self._page.update()
+
+    def _build_objective_data(self, objectives: list, currency: str) -> list:
         objectives_data = []
-        for objective_id, title, reason, target_amount, completed_at in existing_objectives:
+        for objective_id, title, reason, target_amount, _completed_at in objectives:
             objective_savings, card_progress, card_percentage = self.controller.get_objective_progress_data(objective_id, target_amount)
             remaining_amt = max(0, target_amount - objective_savings)
+
+            def format_amount(amount: float) -> str:
+                return f"{amount:,.2f}".translate(str.maketrans(".,", ",."))
 
             objectives_data.append({
                 "objective_id": objective_id,
                 "title": title,
                 "reason": reason,
-                "current_value": f"{objective_savings:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}",
-                "target_value": f"{target_amount:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}",
-                "remaining_value": self.lang["savings.remaining"].format(amount=f"{remaining_amt:,.2f}".translate(str.maketrans(".,", ",.")) + f" {currency}"),
+                "current_value": f"{format_amount(objective_savings)} {currency}",
+                "target_value": f"{format_amount(target_amount)} {currency}",
+                "remaining_value": self.lang["savings.remaining"].format(amount=f"{format_amount(remaining_amt)} {currency}"),
                 "percentage": card_percentage,
                 "progress": card_progress,
-                "completed": bool(completed_at)
+                "completed": 0 < target_amount <= objective_savings,
             })
-
-        self._objective_data = objectives_data
-        self.summary_banner.update_data(total_savings, total_target, percentage, progress_value, currency)
-        self.objective_grid.update_grid(objectives_data)
-
-        if hasattr(self._page, "delete_cached_view"):
-            self._page.delete_cached_view("/home")
-
-        self._page.update()
+        return objectives_data
 
     def _open_pending_objective_dialog(self) -> None:
         pending_objective_id: int | None = getattr(self._page, "pending_objective_id", None)
@@ -249,7 +237,12 @@ class SavingsView(ft.View):
 
         objective_id = int(pending_objective_id)
 
-        objective = next((item for item in self._objective_data if int(item["objective_id"]) == objective_id), None)
+        objective: dict[str, Any] | None = None
+        for item in self._objective_data:
+            if int(item["objective_id"]) == objective_id:
+                objective = item
+                break
+
         if objective is None:
             self._page.pending_objective_id = None
             return
@@ -267,10 +260,18 @@ class SavingsView(ft.View):
         self._page.pending_objective_id = None
 
     async def trigger_export(self, e=None) -> None:
-        file_path = await ft.FilePicker().save_file(allowed_extensions=["xlsx", "xls"], file_name="savings.xlsx")
-        if file_path:
-            success, error_message = self.controller.export_ledger_to_excel(file_path, self.lang)
-            snack_bar = ft.SnackBar(Text.MEDIUM(self.lang["savings.export_succeeded"] if success else self.lang["savings.error.export_failed"].format(error=error_message)))
+        try:
+            file_path = await ft.FilePicker().save_file(allowed_extensions=["xlsx", "xls"], file_name="savings.xlsx")
+            if file_path:
+                success, error_message = self.controller.export_ledger_to_excel(file_path, self.lang)
+                snack_bar = ft.SnackBar(Text.MEDIUM(self.lang["savings.export_succeeded"] if success else self.lang["savings.error.export_failed"].format(error=error_message)))
+                self._page.overlay.append(snack_bar)
+                snack_bar.open = True
+                self._page.update()
+
+        except Exception as ex:
+            Logger.error(f"Error during export: {ex}, Event: {e}")
+            snack_bar = ft.SnackBar(Text.MEDIUM(self.lang["savings.error.export_failed"].format(error=str(ex))))
             self._page.overlay.append(snack_bar)
             snack_bar.open = True
             self._page.update()
@@ -294,20 +295,24 @@ class SavingsView(ft.View):
                 width=page_width
             )
 
-            self.objective_grid.resize(
+            self.goal_grid.resize(
+                width=page_width
+            )
+
+            self.activity_history.resize(
                 width=page_width
             )
 
             self.dialogs.create_goal_modal.resize(
-                width=page_width // 4 * 3
+                width=page_width // 7 * 6
             )
 
             self.dialogs.congratulations_modal.resize(
-                width=page_width // 4 * 3
+                width=page_width // 7 * 6
             )
 
             self.dialogs.deposit_withdraw_modal.resize(
-                width=page_width // 4 * 3
+                width=page_width // 7 * 6
             )
 
             return 0

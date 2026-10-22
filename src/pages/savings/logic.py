@@ -49,15 +49,12 @@ class LogicController:
         target = db.savings.get_objective_target(objective_id)
         return current, target
 
-    @staticmethod
-    def get_objective_history(objective_id: int):
-        return db.savings.get_objective_activity(objective_id)
-
     def get_recent_activity(self, lang: dict):
         activities = db.savings.get_user_activity_raw(self.current_user)
         currency = self.get_currency()
         for item in activities:
-            if item["type"] == "saving":
+            if item["type"] in ("saving", "savings"):
+                item["type"] = "saving"
                 target = item.get("target_name")
                 if target:
                     action = lang["savings.added_to"] if item.get("amount", 0) > 0 else lang["savings.removed_from"]
@@ -87,10 +84,6 @@ class LogicController:
         return db.savings.transfer_surplus(self.current_user, source_id, target_id, amount)
 
     @staticmethod
-    def complete_objective(objective_id: int):
-        db.savings.complete_objective(objective_id)
-
-    @staticmethod
     def delete_objective(objective_id: int):
         db.savings.delete_objective(objective_id)
 
@@ -99,7 +92,7 @@ class LogicController:
         target = db.savings.get_objective_target(objective_id)
         surplus = 0.0
 
-        if action == "remove":
+        if action in ("remove", "withdraw"):
             if amount > current_saved:
                 return False, "savings.error.not_enough_balance", current_saved, 0.0
             amount = -amount
@@ -110,9 +103,6 @@ class LogicController:
                 amount = remaining
 
         db.savings.add_saving_entry(self.current_user, amount, time, objective_id, note)
-
-        if current_saved + amount >= target > 0:
-            db.savings.complete_objective(objective_id)
 
         return True, "", 0.0, surplus
 
