@@ -44,6 +44,12 @@ class LogicController:
         return objective_savings, progress_value, percentage
 
     @staticmethod
+    def get_objective_amounts(objective_id: int) -> tuple[float, float]:
+        current = db.savings.get_objective_progress(objective_id)
+        target = db.savings.get_objective_target(objective_id)
+        return current, target
+
+    @staticmethod
     def get_objective_history(objective_id: int):
         return db.savings.get_objective_activity(objective_id)
 
@@ -74,6 +80,12 @@ class LogicController:
     def add_new_objective(self, title: str, reason: str, target_amount: float) -> bool:
         return db.savings.add_objective(self.current_user, title, reason, target_amount)
 
+    def create_goal_with_surplus(self, title: str, reason: str, target_amount: float, surplus_amount: float) -> bool:
+        return db.savings.create_goal_with_initial_deposit(self.current_user, title, reason, target_amount, surplus_amount)
+
+    def transfer_surplus(self, source_id: int, target_id: int, amount: float) -> bool:
+        return db.savings.transfer_surplus(self.current_user, source_id, target_id, amount)
+
     @staticmethod
     def complete_objective(objective_id: int):
         db.savings.complete_objective(objective_id)
@@ -82,19 +94,27 @@ class LogicController:
     def delete_objective(objective_id: int):
         db.savings.delete_objective(objective_id)
 
-    def process_quick_action(self, objective_id: int, action: str, amount: float, time: str, note: str = "") -> tuple[bool, str, float]:
+    def process_quick_action(self, objective_id: int, action: str, amount: float, time: str, note: str = "") -> tuple[bool, str, float, float]:
         current_saved = db.savings.get_objective_progress(objective_id)
+        target = db.savings.get_objective_target(objective_id)
+        surplus = 0.0
+
         if action == "remove":
             if amount > current_saved:
-                return False, "savings.error.not_enough_balance", current_saved
+                return False, "savings.error.not_enough_balance", current_saved, 0.0
             amount = -amount
         else:
-            remaining = db.savings.get_objective_target(objective_id) - current_saved
+            remaining = max(0.0, target - current_saved)
             if amount > remaining:
-                return False, "savings.error.exceeding_amount", remaining
+                surplus = amount - remaining
+                amount = remaining
 
         db.savings.add_saving_entry(self.current_user, amount, time, objective_id, note)
-        return True, "", 0.0
+
+        if current_saved + amount >= target > 0:
+            db.savings.complete_objective(objective_id)
+
+        return True, "", 0.0, surplus
 
     def clear_activity_history(self):
         db.savings.clear_activity_history(self.current_user)
@@ -109,7 +129,7 @@ class LogicController:
             worksheet.title = lang["savings.savings_ledger"]
             worksheet.append([lang["generic.date"], lang["savings.ledger.action_type"], lang["savings.ledger.description"]])
             for activity in activities:
-                worksheet.append([activity["date"], activity["type"], activity["desc"]])
+                worksheet.append([activity["date"], lang[f"savings.activity.{activity['type']}"], activity["desc"]])
             workbook.save(file_path)
             return True, ""
         except Exception as error:

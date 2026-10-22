@@ -406,6 +406,28 @@ class SavingsDatabase:
         )
         return True
 
+    def create_goal_with_initial_deposit(self, username: str, title: str, reason: str, target_amount: float, initial_deposit: float) -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id: return False
+
+        created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
+        objective_id = self.db.execute(
+            "INSERT INTO objectives (user_id, title, reason, target_amount, created_at) VALUES (?, ?, ?, ?, ?)",
+            (user_id, title, reason, target_amount, created_at)
+        )
+        if objective_id and initial_deposit > 0:
+            self.add_saving_entry(username, initial_deposit, created_at, objective_id, "Nạp tiền dư khởi tạo")
+        return True
+
+    def transfer_surplus(self, username: str, source_id: int, target_id: int, amount: float, note: str = "") -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id: return False
+
+        date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.complete_objective(source_id)
+        self.add_saving_entry(username, amount, date, target_id, note or "Chuyển tiền dư từ mục tiêu hoàn thành")
+        return True
+
     def delete_objective(self, objective_id: int) -> bool:
         deleted_date = datetime.now().strftime("%Y-%m-%d %H:%M")
         self.db.execute(
@@ -603,18 +625,7 @@ class PurchaseScannerDatabase:
         self.db = connection
         self.user_db = user_db
 
-    def add_scan_result(
-        self,
-        username: str,
-        item_name: str,
-        price: float,
-        trigger: str,
-        reason: str,
-        thinking_time: str,
-        risk_score: int,
-        trigger_display: str,
-        ai_advice: str,
-    ) -> bool:
+    def add_scan_result(self, username: str, item_name: str, price: float, trigger: str, reason: str, thinking_time: str, risk_score: int, trigger_display: str, ai_advice: str) -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id:
             return False
@@ -679,7 +690,6 @@ class PurchaseScannerDatabase:
 
         self.db.execute("DELETE FROM purchase_scan_history WHERE user_id = ?", (user_id,))
         return True
-
 
 # ==========================================
 # MAIN DATABASE MANAGER

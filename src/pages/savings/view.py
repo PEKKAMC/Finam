@@ -3,12 +3,11 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from collections.abc import Callable
-
 import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import Menu
-from src.pages.savings.components import AggregateCard, ClearHistoryDialog, CompleteConfirmDialog, CreateObjectiveDialog, DeleteConfirmDialog, GoalDetailsDialog, ObjectiveGrid, QuickActionDialog
+from src.pages.savings.components import AggregateCard, ClearHistoryDialog, CompleteConfirmDialog, CreateGoalModal, DepositWithdrawModal, CongratulationsModal, DeleteConfirmDialog, GoalDetailsDialog, ObjectiveGrid
 from src.pages.savings.logic import LogicController
 from src.utils import Color, Page, Text, UISettings, get_safe_page_size
 
@@ -16,33 +15,44 @@ Logger.info("Initializing Savings page...")
 
 
 class DialogManager:
-    """Handles all dialog instantiation, states, and callbacks for the Savings View."""
-    def __init__(self, page: Page, lang: dict, controller: LogicController, refresh_callback: Callable, trigger_export_callback: Callable):
+    """Handles all dialog instantiation, states, and callbacks for the Savings View matching TSX components."""
+    def __init__(self, page: Page, lang: dict, controller: LogicController, refresh_callback: Callable, trigger_export_callback: Callable, get_objectives_callback: Callable):
         self._page = page
         self.lang = lang
         self.controller = controller
         self._refresh_view = refresh_callback
         self._trigger_export = trigger_export_callback
+        self._get_objectives = get_objectives_callback
 
-        self.create_objective_dialog = CreateObjectiveDialog(
+        self.create_goal_modal = CreateGoalModal(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
             on_success=self._refresh_view
         )
 
-        self.quick_action_dialog = QuickActionDialog(
+        self.congratulations_modal = CongratulationsModal(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
-            on_success=self._refresh_view
+            on_success=self._refresh_view,
+            on_create_with_surplus=lambda p, surplus: self.create_goal_modal.trigger(p, surplus)
+        )
+
+        self.deposit_withdraw_modal = DepositWithdrawModal(
+            page=self._page,
+            lang=self.lang,
+            controller=self.controller,
+            on_success=self._refresh_view,
+            on_surplus=lambda p, goal, surplus: self.congratulations_modal.trigger(p, goal, surplus, self._get_objectives())
         )
 
         self.complete_dialog = CompleteConfirmDialog(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
-            on_success=self._refresh_view
+            on_success=self._refresh_view,
+            on_congratulate=lambda p, goal, surplus: self.congratulations_modal.trigger(p, goal, surplus, self._get_objectives())
         )
 
         self.delete_dialog = DeleteConfirmDialog(
@@ -65,7 +75,7 @@ class DialogManager:
             lang=self.lang,
             controller=self.controller,
             on_complete=self.complete_dialog.trigger,
-            on_quick_action=self.quick_action_dialog.trigger,
+            on_deposit_withdraw=self.deposit_withdraw_modal.trigger,
             on_delete=self.delete_dialog.trigger
         )
 
@@ -73,8 +83,9 @@ class DialogManager:
 
     def _add_dialogs_to_overlay(self) -> None:
         dialogs = [
-            self.create_objective_dialog,
-            self.quick_action_dialog,
+            self.create_goal_modal,
+            self.deposit_withdraw_modal,
+            self.congratulations_modal,
             self.complete_dialog,
             self.delete_dialog,
             self.clear_history_dialog,
@@ -95,15 +106,6 @@ class SavingsView(ft.View):
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(user_info["username"])
-
-        # INITIALIZE DIALOG MANAGER
-        self.dialogs = DialogManager(
-            page=self._page,
-            lang=self.lang,
-            controller=self.controller,
-            refresh_callback=self._refresh_view,
-            trigger_export_callback=self.trigger_export
-        )
 
         # FETCH DASHBOARD DATA
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
@@ -129,6 +131,16 @@ class SavingsView(ft.View):
 
         self._objective_data = objectives_data
 
+        # INITIALIZE DIALOG MANAGER
+        self.dialogs = DialogManager(
+            page=self._page,
+            lang=self.lang,
+            controller=self.controller,
+            refresh_callback=self._refresh_view,
+            trigger_export_callback=self.trigger_export,
+            get_objectives_callback=lambda: self._objective_data
+        )
+
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
             page=self._page,
@@ -151,7 +163,7 @@ class SavingsView(ft.View):
             percentage=percentage,
             progress_value=progress_value,
             currency=currency,
-            on_create_click=lambda e: self.dialogs.create_objective_dialog.show(self._page)
+            on_create_click=lambda e: self.dialogs.create_goal_modal.trigger(self._page)
         )
 
         self._open_pending_objective_dialog()

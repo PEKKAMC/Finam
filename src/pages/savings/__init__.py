@@ -4,7 +4,7 @@
 
 """Savings page - Objective tracking and portfolio management."""
 
-from src.pages.savings.components import ObjectiveCard, ObjectiveGrid, AggregateCard, CreateObjectiveDialog, QuickActionDialog, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog
+from src.pages.savings.components import ObjectiveCard, ObjectiveGrid, AggregateCard, CreateGoalModal, DepositWithdrawModal, CongratulationsModal, CompleteConfirmDialog, DeleteConfirmDialog, ClearHistoryDialog, GoalDetailsDialog
 from src.pages.savings.logic import LogicController
 from src.pages.savings.view import DialogManager, SavingsView, get_savings_view
 
@@ -12,8 +12,9 @@ __all__ = [
     "ObjectiveCard",
     "ObjectiveGrid",
     "AggregateCard",
-    "CreateObjectiveDialog",
-    "QuickActionDialog",
+    "CreateGoalModal",
+    "DepositWithdrawModal",
+    "CongratulationsModal",
     "CompleteConfirmDialog",
     "DeleteConfirmDialog",
     "ClearHistoryDialog",
