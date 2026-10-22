@@ -22,7 +22,7 @@ class LessonItemCard(ft.Container):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
                 ft.Container(
-                    content=Text.SMALL(f"{self.duration} phút", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                    content=Text.SMALL(f"{self.duration} {self.lang["generic.minute"]}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
                     bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
                     padding=ft.Padding(10, 4, 10, 4),
                     border_radius=12,
@@ -35,11 +35,11 @@ class LessonItemCard(ft.Container):
                                 spacing=4,
                                 controls=[
                                     ft.Icon(ft.Icons.CHECK_CIRCLE, color=Color.WHITE, size=14),
-                                    Text.SMALL("Đã học", color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                                    Text.SMALL(self.lang["lessons.completed_badge"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
                                 ],
                                 tight=True
                             ),
-                            bgcolor=ft.Colors.EMERALD_600 if hasattr(ft.Colors, 'EMERALD_600') else "#059669",
+                            bgcolor="#059669",
                             padding=ft.Padding(8, 4, 8, 4),
                             border_radius=12
                         )
@@ -97,7 +97,7 @@ class LessonItemCard(ft.Container):
                             spacing=6,
                             controls=[
                                 ft.Icon(ft.Icons.PLAY_ARROW_ROUNDED, color=Color.LIGHT_ACCENT, size=18),
-                                Text.MEDIUM("Ôn Lại Bài Học" if self.is_completed else "Bắt Đầu Học", color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                                Text.MEDIUM(self.lang["lessons.review_lesson"] if self.is_completed else self.lang["lessons.start_lesson"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
                             ],
                             tight=True
                         ),
@@ -147,14 +147,14 @@ class LessonSummaryBanner(ft.Container):
                     spacing=6,
                     controls=[
                         ft.Container(
-                            content=Text.SMALL("HỌC VIỆN TÀI CHÍNH FINAM", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                            content=Text.SMALL(self.lang["lessons.academy_title"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
                             bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
                             padding=ft.Padding(12, 4, 12, 4),
                             border_radius=16,
                             border=ft.Border.all(1, ft.Colors.with_opacity(0.3, Color.PRIMARY))
                         ),
-                        Text.H2("Tư Duy & Kiến Thức Quản Lý Tiền", color=Color.WHITE, weight=ft.FontWeight.BOLD),
-                        Text.SMALL("Cung cấp các bài học cô đọng giúp bạn đưa ra các quyết định chi tiêu thông minh hơn", color=Color.LIGHT_ACCENT)
+                        Text.H2(self.lang["lessons.banner_title"], color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                        Text.SMALL(self.lang["lessons.banner_description"], color=Color.LIGHT_ACCENT)
                     ]
                 ),
                 ft.Row(
@@ -171,7 +171,7 @@ class LessonSummaryBanner(ft.Container):
                                 spacing=2,
                                 controls=[
                                     Text.H3(f"{completed_lessons}/{total_lessons}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
-                                    Text.SMALL("BÀI HOÀN THÀNH", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+                                    Text.SMALL(self.lang["lessons.completed_count"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
                                 ]
                             )
                         ),
@@ -185,8 +185,8 @@ class LessonSummaryBanner(ft.Container):
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 spacing=2,
                                 controls=[
-                                    Text.H3(f"{total_minutes} phút", color=ft.Colors.AMBER_300 if hasattr(ft.Colors, 'AMBER_300') else "#FCD34D", weight=ft.FontWeight.BOLD),
-                                    Text.SMALL("ĐÃ TÍCH LŨY", color=ft.Colors.AMBER_200 if hasattr(ft.Colors, 'AMBER_200') else "#FDE68A", weight=ft.FontWeight.BOLD)
+                                    Text.H3(f"{total_minutes} {self.lang['generic.minute']}", color=ft.Colors.AMBER_300 if hasattr(ft.Colors, 'AMBER_300') else "#FCD34D", weight=ft.FontWeight.BOLD),
+                                    Text.SMALL(self.lang["lessons.accumulated_time"], color=ft.Colors.AMBER_200 if hasattr(ft.Colors, 'AMBER_200') else "#FDE68A", weight=ft.FontWeight.BOLD)
                                 ]
                             )
                         ),
