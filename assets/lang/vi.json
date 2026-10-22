@@ -98,7 +98,7 @@
     "purchase_scanner.delete_item": "Xoá mục này",
     "purchase_scanner.description": "Nhập thông tin món đồ bạn đang muốn xuống tiền để AI phân tích chỉ số rủi ro phung phí và đưa ra quy tắc trì hoãn mua sắm thông minh.",
     "purchase_scanner.expert_perspective": "Góc nhìn từ chuyên gia Finam:",
-    "purchase_scanner.fill_info": "Điền thông tin sản phẩm bên trái để AI đánh giá mức độ bốc đồng và bảo vệ ví tiền của bạn.",
+    "purchase_scanner.fill_info": "Điền thông tin sản phẩm bên trên để AI đánh giá mức độ bốc đồng và bảo vệ ví tiền của bạn.",
     "purchase_scanner.history": "Lịch sử quét",
     "purchase_scanner.intervention_rules": "Quy tắc can thiệp đề xuất:",
     "purchase_scanner.item": "Món hàng",
