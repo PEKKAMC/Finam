@@ -276,12 +276,16 @@ class SavingsView(ft.View):
             self._page.update()
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
-        try:
-            page_width, page_height = self.get_safe_page_size(page=self._page)
+        page_width, page_height = self.get_safe_page_size(
+            page=self._page
+        )
 
+        try:
+            # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
 
+            # Resizing other components
             self.menu.resize(
                 width=page_width
             )
@@ -292,6 +296,18 @@ class SavingsView(ft.View):
 
             self.objective_grid.resize(
                 width=page_width
+            )
+
+            self.dialogs.create_goal_modal.resize(
+                width=page_width // 4 * 3
+            )
+
+            self.dialogs.congratulations_modal.resize(
+                width=page_width // 4 * 3
+            )
+
+            self.dialogs.deposit_withdraw_modal.resize(
+                width=page_width // 4 * 3
             )
 
             return 0

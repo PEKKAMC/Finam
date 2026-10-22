@@ -238,7 +238,6 @@ class AggregateCard(ft.Container):
 
 
 class CreateGoalModal(Dialog):
-    """Matches CreateGoalModal.tsx"""
     def __init__(self, page: Page, lang: dict, controller, on_success: Callable):
         self._page = page
         self.lang = lang
@@ -289,7 +288,6 @@ class CreateGoalModal(Dialog):
             on_click=self._process_submit,
             bgcolor=Color.PRIMARY_ACTION,
             color=Color.WHITE,
-            width=390,
             height=52,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=16)),
         )
@@ -304,7 +302,6 @@ class CreateGoalModal(Dialog):
         )
 
         self.main_container = ft.Container(
-            width=390,
             padding=24,
             bgcolor=Color.DIALOG_BACKGROUND,
             border_radius=32,
@@ -325,7 +322,10 @@ class CreateGoalModal(Dialog):
             ),
         )
 
-        super().__init__(dialog_content=self.main_container, color=Color.TRANSPARENT)
+        super().__init__(
+            dialog_content=self.main_container,
+            color=Color.TRANSPARENT
+        )
 
     def trigger(self, page: Page, initial_surplus: float = 0.0):
         self.initial_surplus = initial_surplus
@@ -390,9 +390,12 @@ class CreateGoalModal(Dialog):
             Dialog.close_most_recent_dialog(e.page)
             self.on_success()
 
+    def resize(self, width: int) -> None:
+        self.main_container.width = width
+        self.submit_button.width = width
+
 
 class DepositWithdrawModal(Dialog):
-    """Matches DepositWithdrawModal.tsx"""
     def __init__(self, page: Page, lang: dict, controller, on_success: Callable, on_surplus: Callable):
         self._page = page
         self.lang = lang
@@ -450,7 +453,6 @@ class DepositWithdrawModal(Dialog):
             on_click=self._process_submit,
             bgcolor=Color.PRIMARY_ACTION,
             color=Color.WHITE,
-            width=390,
             height=52,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=16)),
         )
@@ -465,7 +467,6 @@ class DepositWithdrawModal(Dialog):
         )
 
         self.main_container = ft.Container(
-            width=390,
             padding=24,
             bgcolor=Color.DIALOG_BACKGROUND,
             border_radius=32,
@@ -485,7 +486,10 @@ class DepositWithdrawModal(Dialog):
             ),
         )
 
-        super().__init__(dialog_content=self.main_container, color=Color.TRANSPARENT)
+        super().__init__(
+            dialog_content=self.main_container,
+            color=Color.TRANSPARENT
+        )
 
     def trigger(self, page: Page, goal: dict, mode: str):
         self.goal = goal
@@ -545,9 +549,12 @@ class DepositWithdrawModal(Dialog):
         if surplus > 0:
             self.on_surplus(e.page, self.goal, surplus)
 
+    def resize(self, width: int) -> None:
+        self.main_container.width = width
+        self.submit_button.width = width
+
 
 class CongratulationsModal(Dialog):
-    """Matches CongratulationsModal.tsx"""
     def __init__(self, page: Page, lang: dict, controller, on_success: Callable, on_create_with_surplus: Callable):
         self._page = page
         self.lang = lang
@@ -586,7 +593,6 @@ class CongratulationsModal(Dialog):
         self.create_new_button = ft.TextButton(self.lang["savings.create_goal_with_surplus_alternative"], icon=ft.Icons.ADD_CIRCLE, on_click=self._process_create_new)
 
         self.main_container = ft.Container(
-            width=420,
             padding=28,
             bgcolor=Color.DIALOG_BACKGROUND,
             border_radius=32,
@@ -608,7 +614,10 @@ class CongratulationsModal(Dialog):
             ),
         )
 
-        super().__init__(dialog_content=self.main_container, color=Color.TRANSPARENT)
+        super().__init__(
+            dialog_content=self.main_container,
+            color=Color.TRANSPARENT
+        )
 
     def trigger(self, page: Page, completed_goal: dict, surplus_amount: float, available_goals: list):
         self.completed_goal = completed_goal
@@ -687,6 +696,9 @@ class CongratulationsModal(Dialog):
     def _process_create_new(self, e):
         Dialog.close_most_recent_dialog(e.page)
         self.on_create_with_surplus(e.page, self.surplus_amount)
+
+    def resize(self, width: int) -> None:
+        self.main_container.width = width
 
 
 class CompleteConfirmDialog(Dialog):
