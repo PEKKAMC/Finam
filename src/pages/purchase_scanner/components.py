@@ -338,14 +338,15 @@ class ScannerHistoryCard(ft.Container):
 
     def set_history(self, history_entries: list[dict]):
         self.history_list.controls.clear()
-        self.history_content.visible = bool(history_entries) and not self.history_collapsed
+        self.history_content.visible = not self.history_collapsed
         self.clear_all_button.visible = bool(history_entries)
 
         if not history_entries:
             self.history_list.controls.append(
                 Text.SMALL(self.lang["purchase_scanner.no_history"], color=Color.SECONDARY_TEXT)
             )
-            self.update()
+            if self.parent:
+                self.update()
             return
 
         for entry in history_entries:
@@ -399,7 +400,8 @@ class ScannerHistoryCard(ft.Container):
             )
 
         self.history_content.visible = not self.history_collapsed
-        self.update()
+        if self.parent:
+            self.update()
 
     def toggle_history_panel(self):
         self.history_collapsed = not self.history_collapsed

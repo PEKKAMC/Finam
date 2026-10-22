@@ -165,15 +165,27 @@ class PurchaseScannerView(ft.View):
         self.controller.clear_scan_history()
         self.history_card.set_history(self.controller.get_scan_history())
 
-    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+    def _refresh_view(self) -> int:
         try:
-            page_width, page_height = self.get_safe_page_size(
-                page=self._page
-            )
+            self.scan_history = self.controller.get_scan_history()
+            self.history_card.set_history(self.scan_history)
+            return 0
 
+        except Exception as ex:
+            Logger.warn(f"Failed to refresh view {ex}")
+            return -1
+
+    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+        page_width, page_height = self.get_safe_page_size(
+            page=self._page
+        )
+
+        try:
+            # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
 
+            # Resizing other components
             self.menu.resize(
                 width=page_width
             )
