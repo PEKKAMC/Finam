@@ -2,6 +2,8 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from collections.abc import Callable
+
 import flet as ft
 
 from src.utils import Color, Page, Text
@@ -37,14 +39,14 @@ class SelectableOptionGroup(ft.Container):
             rows.append(ft.Row(controls=row_controls, spacing=8))
 
         super().__init__(content=ft.Column(controls=rows, spacing=8))
-        self._update_styles()
+        self.update_styles()
 
     def _select(self, val_id: str):
         self.value = val_id
-        self._update_styles()
+        self.update_styles()
         self.update()
 
-    def _update_styles(self):
+    def update_styles(self):
         for val_id, btn in self.button_controls.items():
             is_selected = (val_id == self.value)
             text_ctrl: ft.Control | None = btn.content
@@ -116,7 +118,7 @@ class ThinkingTimeUnitContainer(ft.Container):
 
 
 class ScannerForm(ft.Container):
-    def __init__(self, page: Page, lang: dict, on_scan_click):
+    def __init__(self, page: Page, lang: dict, on_scan_click: Callable):
         self._page = page
         self.lang = lang
         self.on_scan_click = on_scan_click
@@ -166,7 +168,7 @@ class ScannerForm(ft.Container):
             ("social", self.lang["purchase_scanner.trigger_friends"]),
             ("emotion", self.lang["purchase_scanner.trigger_emotion"])
         ]
-        self.trigger = SelectableOptionGroup(trigger_options, initial_value="tiktok", is_dark_selected=False)
+        self.trigger = SelectableOptionGroup(trigger_options, initial_value="", is_dark_selected=False)
 
         self.thinking_time = ThinkingTimeUnitContainer(lang=self.lang, default_val="0", default_unit="hour")
 
@@ -182,13 +184,7 @@ class ScannerForm(ft.Container):
             bgcolor=Color.PRIMARY,
             border_radius=16,
             padding=ft.Padding(0, 14, 0, 14),
-            on_click=lambda e: self.on_scan_click(
-                self.item_name.value,
-                self.item_price.value,
-                self.item_reason.value,
-                self.trigger.value,
-                self.thinking_time.value
-            ) if self.on_scan_click else None
+            on_click=self._handle_scan_click
         )
 
         self.main_container = ft.Column(
@@ -245,6 +241,26 @@ class ScannerForm(ft.Container):
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
             content=self.main_container
         )
+
+    def _handle_scan_click(self):
+        self.on_scan_click(
+            self.item_name.value,
+            self.item_price.value,
+            self.item_reason.value,
+            self.trigger.value,
+            self.thinking_time.value
+        )
+        self.reset()
+
+    def reset(self):
+        self.item_name.value = ""
+        self.item_price.value = ""
+        self.item_reason.value = ""
+        self.trigger.value = ""
+        self.trigger.update_styles()
+        self.thinking_time.value_field.value = "0"
+        self.thinking_time.unit_dropdown.value = "hour"
+        self._page.update()
 
     def resize(self, page_width: int):
         self.main_container.width = max(page_width, 0)
@@ -303,6 +319,8 @@ class ScannerHistoryCard(ft.Container):
             spacing=10,
             controls=[self.history_list],
             visible=True,
+            scroll=ft.ScrollMode.AUTO,
+            expand=True
         )
 
         super().__init__(
@@ -359,45 +377,66 @@ class ScannerHistoryCard(ft.Container):
             price = entry.get("price", 0)
             scan_id = entry.get("id")
 
-            self.history_list.controls.append(
-                ft.Container(
-                    bgcolor=Color.GOAL_ITEM_BACKGROUND,
-                    border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
-                    border_radius=14,
-                    padding=12,
-                    content=ft.Column(
-                        spacing=4,
-                        controls=[
-                            ft.Row(
-                                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                controls=[
-                                    Text.MEDIUM(item_name, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
-                                    ft.Row(
-                                        controls=[
-                                            ft.Container(
-                                                content=Text.SMALL(f"{risk_score}", color=Color.WHITE, weight=ft.FontWeight.BOLD),
-                                                bgcolor=Color.PRIMARY if risk_score < 60 else (Color.NEGATIVE_ACTION if risk_score > 75 else "#F59E0B"),
-                                                border_radius=12,
-                                                padding=ft.Padding(8, 4, 8, 4),
-                                            ),
-                                            ft.IconButton(
-                                                icon=ft.Icons.DELETE_OUTLINE,
-                                                tooltip=self.lang["purchase_scanner.delete_item"],
-                                                on_click=lambda e, sid=scan_id: self._handle_delete(sid),
-                                                icon_color=Color.NEGATIVE_ACTION,
-                                            ),
-                                        ],
-                                        spacing=8,
-                                    ),
-                                ]
-                            ),
-                            Text.SMALL(f"{price:,.2f} {self.currency} • {trigger_display}", color=Color.SECONDARY_TEXT),
-                            Text.SMALL(created_at, color=Color.SECONDARY_TEXT),
-                            Text.SMALL(advice[:180] + ("..." if len(advice) > 180 else ""), color=Color.DEFAULT_TEXT),
-                        ]
-                    )
+            details = ft.Column(
+                spacing=4,
+                visible=False,
+                controls=[
+                    Text.SMALL(f"{price:,.2f} {self.currency} • {trigger_display}", color=Color.SECONDARY_TEXT),
+                    Text.SMALL(created_at, color=Color.SECONDARY_TEXT),
+                    Text.SMALL(advice, color=Color.DEFAULT_TEXT),
+                ],
+            )
+            expander = ft.IconButton(
+                icon=ft.Icons.KEYBOARD_ARROW_DOWN,
+                tooltip=self.lang["purchase_scanner.history"],
+            )
+            item_card = ft.Container(
+                bgcolor=Color.GOAL_ITEM_BACKGROUND,
+                border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                border_radius=14,
+                padding=12,
+                content=ft.Column(
+                    spacing=4,
+                    controls=[
+                        ft.Row(
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            controls=[
+                                Text.MEDIUM(item_name, weight=ft.FontWeight.BOLD, color=Color.DEFAULT_TEXT),
+                                ft.Row(
+                                    controls=[
+                                        ft.Container(
+                                            content=Text.SMALL(f"{risk_score}", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                                            bgcolor=Color.PRIMARY if risk_score < 60 else (Color.NEGATIVE_ACTION if risk_score > 75 else "#F59E0B"),
+                                            border_radius=12,
+                                            padding=ft.Padding(8, 4, 8, 4),
+                                        ),
+                                        expander,
+                                        ft.IconButton(
+                                            icon=ft.Icons.DELETE_OUTLINE,
+                                            tooltip=self.lang["purchase_scanner.delete_item"],
+                                            on_click=lambda e, sid=scan_id: self._handle_delete(sid),
+                                            icon_color=Color.NEGATIVE_ACTION,
+                                        ),
+                                    ],
+                                    spacing=0,
+                                ),
+                            ]
+                        ),
+                        details,
+                    ]
                 )
             )
+
+            def toggle_entry(e: ft.ControlEvent | None = None, entry_details: ft.Column = details, entry_expander: ft.IconButton = expander, entry_card: ft.Container = item_card):
+                entry_details.visible = not entry_details.visible
+                entry_expander.icon = (
+                    ft.Icons.KEYBOARD_ARROW_UP if entry_details.visible else ft.Icons.KEYBOARD_ARROW_DOWN
+                )
+                entry_card.update()
+                return e
+
+            expander.on_click = toggle_entry
+            self.history_list.controls.append(item_card)
 
         self.history_content.visible = not self.history_collapsed
         if self.parent:
@@ -545,9 +584,6 @@ class ScannerResult(ft.Container):
             content=self.main_container
         )
 
-    def resize(self, page_width: int):
-        self.main_container.width = max(page_width, 0)
-
     def set_loading_state(self):
         self.empty_state.visible = False
         self.loading_container.visible = True
@@ -606,3 +642,6 @@ class ScannerResult(ft.Container):
         self.interventions_col.controls.clear()
         self.interventions_col.controls.extend(interventions)
         self.update()
+
+    def resize(self, width: int):
+        self.main_container.width = width
