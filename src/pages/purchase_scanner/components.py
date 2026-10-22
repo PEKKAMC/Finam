@@ -47,7 +47,7 @@ class SelectableOptionGroup(ft.Container):
     def _update_styles(self):
         for val_id, btn in self.button_controls.items():
             is_selected = (val_id == self.value)
-            text_ctrl: ft.Text = btn.content
+            text_ctrl: ft.Control | None = btn.content
 
             if is_selected:
                 if self.is_dark_selected:
