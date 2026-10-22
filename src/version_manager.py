@@ -8,7 +8,15 @@ from src.logger import Logger
 
 def get_version(package: str, rc: int = 0) -> str:
     try:
-        app_version = version(package)
+        try:
+            from src._build_version import APP_VERSION
+        except ModuleNotFoundError as ex:
+            if ex.name != "src._build_version":
+                raise
+            app_version = version(package)
+        else:
+            app_version = APP_VERSION
+
         nversion: list[int] = list(map(int, app_version.split('.')))
         if len(nversion) != 3:
             raise ValueError(f"Invalid version format, must be in the format of X.Y.Z, got {app_version}")
