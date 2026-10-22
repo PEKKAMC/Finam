@@ -12,7 +12,8 @@ class SettingsHeader(ft.Container):
         self.lang = lang
 
         # TEXT AND ICON COMPONENTS
-        self.title_text = Text.H2(self.lang["settings.title"])
+        # Static texts
+        self.title_text = Text.H2(self.lang["settings.title"], color=Color.LIGHT_ACCENT)
         self.desc_text = Text.P(self.lang["settings.desc"], color=Color.LIGHT_ACCENT)
 
         # CONTAINER COMPONENTS
@@ -53,7 +54,6 @@ class SettingsHeader(ft.Container):
 
 class SettingDropdown(ft.Container):
     def __init__(self, options: list[str], active_index: int = 0):
-        # DYNAMIC CONTROLS
         self.dropdown_control = ft.Dropdown(
             options=[ft.dropdown.Option(opt) for opt in options],
             value=options[active_index],
