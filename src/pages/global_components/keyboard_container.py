@@ -297,16 +297,25 @@ class KeyboardContainer(ft.Container):
         self.on_save(values)
 
     def _handle_date_toggle(self, e=None):
-        if self._page is not None:
-            if self.date_picker not in self._page.overlay:
-                self._page.overlay.append(self.date_picker)
-            self.date_picker.open = True
-            self.date_picker.update()
+        try:
+            if self._page is not None:
+                if self.date_picker not in self._page.overlay:
+                    self._page.overlay.append(self.date_picker)
+                self.date_picker.open = True
+                self.date_picker.update()
+        except Exception as ex:
+            Logger.error(f"Failed to open date toggle '{ex}': Event: {e}")
+
 
     def _handle_time_toggle(self, e=None):
-        if self._page is not None:
-            if self.time_picker not in self._page.overlay:
-                self._page.overlay.append(self.time_picker)
+        try:
+            if self._page is not None:
+                if self.time_picker not in self._page.overlay:
+                    self._page.overlay.append(self.time_picker)
+                self.time_picker.open = True
+                self.time_picker.update()
+        except Exception as ex:
+            Logger.error(f"Failed to open time toggle '{ex}': Event: {e}")
             self.time_picker.open = True
             self.time_picker.update()
 

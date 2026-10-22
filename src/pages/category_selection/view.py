@@ -279,12 +279,16 @@ class CategorySelectionView(ft.View):
         self.snack_bar.open = True
 
         if success:
-            if hasattr(self._page, "delete_cached_view"):
-                self._page.delete_cached_view("/home")
-                self._page.delete_cached_view("/spending")
+            self.selected_category = ""
+            for item in self.category_items:
+                item.update_selection(False)
+            self.keyboard_container.visible = False
+            self.keyboard_container.reset_inputs()
+            self._page.delete_cached_view("/home")
+            self._page.delete_cached_view("/spending")
             self._page.navigate_to("/home")()
-        else:
-            self.update()
+
+        self.update()
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
         page_width, page_height = self.get_safe_page_size(

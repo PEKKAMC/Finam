@@ -57,8 +57,3 @@ class CategoryItem(ft.Container):
         self.is_selected = selected
         self.main_container.bgcolor = Color.LIGHT_ACCENT if self.is_selected else Color.TRANSPARENT
         self.icon_circle.content.color = Color.BLACK if self.is_selected else Color.PRIMARY
-        try:
-            if self.icon_circle.page:
-                self.icon_circle.update()
-        except Exception:
-            pass
