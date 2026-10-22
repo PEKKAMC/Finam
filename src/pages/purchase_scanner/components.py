@@ -375,7 +375,7 @@ class ScannerHistoryCard(ft.Container):
                                     ft.Row(
                                         controls=[
                                             ft.Container(
-                                                content=Text.SMALL(f"{risk_score}%", color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                                                content=Text.SMALL(f"{risk_score}", color=Color.WHITE, weight=ft.FontWeight.BOLD),
                                                 bgcolor=Color.PRIMARY if risk_score < 60 else (Color.NEGATIVE_ACTION if risk_score > 75 else "#F59E0B"),
                                                 border_radius=12,
                                                 padding=ft.Padding(8, 4, 8, 4),
