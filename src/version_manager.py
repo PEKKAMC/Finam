@@ -2,20 +2,27 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import importlib
 from importlib.metadata import version
+from typing import Optional
 
 from src.logger import Logger
 
+APP_VERSION: Optional[str] = None
+try:
+    _build_version = importlib.import_module("src._build_version")
+    # noinspection PyGlobalVariableRedeclarationInNotebook
+    APP_VERSION = getattr(_build_version, "APP_VERSION", None)
+except (ImportError, ModuleNotFoundError):
+    pass
+
+
 def get_version(package: str, rc: int = 0) -> str:
     try:
-        try:
-            from src._build_version import APP_VERSION
-        except ModuleNotFoundError as ex:
-            if ex.name != "src._build_version":
-                raise
-            app_version = version(package)
-        else:
+        if APP_VERSION is not None:
             app_version = APP_VERSION
+        else:
+            app_version = version(package)
 
         nversion: list[int] = list(map(int, app_version.split('.')))
         if len(nversion) != 3:
