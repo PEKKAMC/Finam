@@ -18,8 +18,8 @@
 *   Redesigned purchase history cards and added translated scanner hints.
 *   Updated monetary values to support fractional amounts and corrected currency formatting across the app.
 *   Added account creation dates and refined user-management dialogs.
-*   Updated the app icon and improved version metadata for mobile builds.
-*   Refined home, spending, and savings page layouts and components.
+*   Improved version metadata for mobile builds.
+*   Improved app stability and performance.
 
 ## Bug fixes in this version
 
@@ -28,8 +28,7 @@
 *   Fixed savings-page resizing and pending page objects.
 *   Fixed purchase history cards not appearing on initial load.
 *   Fixed a missing-element error during app startup and improved dialog behavior.
-*   Corrected purchase scanner risk-score formatting and a translated description that pointed in the wrong direction.
-*   Improved error logging when parsing purchase-analysis thinking time fails.
+*   Improved error logging.
 
 ## Known Issues & Instability
 
