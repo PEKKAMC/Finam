@@ -122,7 +122,7 @@ class ScannerForm(ft.Container):
         self.on_scan_click = on_scan_click
 
         self.item_name = ft.TextField(
-            hint_text="Ví dụ: Giày Sneaker, Áo khoác sale, Tai nghe bluetooth...",
+            hint_text=self.lang["purchase_scanner.product_hint"],
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
             border_radius=16,
@@ -134,7 +134,7 @@ class ScannerForm(ft.Container):
         )
 
         self.item_price = ft.TextField(
-            hint_text="0",
+            hint_text=self.lang["purchase_scanner.item_price_hint"],
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
