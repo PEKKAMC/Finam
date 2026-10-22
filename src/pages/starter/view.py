@@ -151,7 +151,9 @@ class StarterView(ft.View):
 
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
-        self.dialogs.show_user_management_dialog()
+
+    def show_user_management_dialog(self) -> int:
+        return self.dialogs.show_user_management_dialog()
 
     def _refresh_view(self) -> int:
         try:

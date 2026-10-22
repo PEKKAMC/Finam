@@ -18,7 +18,7 @@ from src.pages.savings import get_savings_view
 from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.purchase_scanner import get_scanner_view
-from src.pages.starter.view import get_starter_view
+from src.pages.starter.view import StarterView, get_starter_view
 from src.pages.user_management import get_user_management_view
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
@@ -174,27 +174,22 @@ async def main(page: Page) -> None:
 
             page.views.append(view)
             page.update()
+            if isinstance(view, StarterView):
+                view.show_user_management_dialog()
 
         except Exception as ex:
             await on_error(e, ex)
 
     async def on_error(e, ex: Exception | None = None) -> None:
-        if e == ft.Event(name='error', data='Bad state: No element', control=page):
-            print("\nthere is like 5-15% chance you'll see this message on launch, depends on")
-            print("your computer. it's because of a bug that makes 2 processes racing for control,")
-            print("and if that one specifically wins the race, it causes this to happen.")
-            print("currently the bug doesn't affect the application much, so i'll be fixing")
-            print("it later. consider yourself lucky if this happens first try.\n")
-            Logger.error("PEKKAMC")
-        else:
-            Logger.critical(f"Unexpected error occurred: \nEvent data: {e.data}\nException: {ex}")
-            Logger.info("Attempting to restart application...")
+        event_data = getattr(e, "data", None)
+        Logger.critical(f"Unexpected error occurred: \nEvent data: {event_data}\nException: {ex}")
+        Logger.info("Attempting to restart application...")
 
-            os.environ["RESTART_FINAM"] = "1"
+        os.environ["RESTART_FINAM"] = "1"
 
-            await page.window.close()
+        await page.window.close()
 
     page.on_error = on_error
     page.on_route_change = route_change
 
-    page.navigate_to("/starter")()
+    await page.push_route("/starter")
