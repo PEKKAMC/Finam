@@ -74,7 +74,8 @@ class LogicController:
                 local_risk += 10
             else:
                 local_risk += 2
-        except Exception:
+        except Exception as e:
+            Logger.warn(f"Failed to parse thinking time '{time}': {e}")
             if "minute" in thinking_lower or "hour" in thinking_lower:
                 local_risk += 22
             elif "day" in thinking_lower or "tuần" in thinking_lower:
@@ -99,9 +100,6 @@ class LogicController:
                 local_risk += 5
 
         local_risk = min(100, local_risk)
-
-        risk = None
-        ai_advice = ""
 
         try:
             endpoint = f"{BACKEND_URL.rstrip('/')}/api/v1/purchase-advice"
