@@ -341,9 +341,9 @@ class SavingsGoalItem(ft.Container):
 
 
 class SavingsProgressCard(ft.Container):
-    def __init__(self, lang: dict, objective_items: list, on_view_all_click: Callable | None, on_item_click: Callable | None = None):
+    def __init__(self, lang: dict, objective_items: tuple[list, int], on_view_all_click: Callable | None, on_item_click: Callable | None = None):
         self.lang = lang
-        self.objective_items = objective_items or []
+        self.objective_items, self.objective_count = objective_items
         self.on_view_all_click = on_view_all_click
         self.on_item_click = on_item_click
 
@@ -359,7 +359,7 @@ class SavingsProgressCard(ft.Container):
 
         # Dynamic texts
         self.view_all_count = Text.SMALL(
-            f"{self.lang['generic.all']} ({len(self.objective_items)})",
+            f"{self.lang['generic.all']} ({self.objective_count})",
             color=Color.PRIMARY,
             weight=ft.FontWeight.BOLD
         )

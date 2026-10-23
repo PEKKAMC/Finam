@@ -17,10 +17,11 @@ Logger.info("Initializing Savings page...")
 
 class DialogManager:
     """Handles all dialog instantiation, states, and callbacks for the Savings View matching TSX components."""
-    def __init__(self, page: Page, lang: dict, controller: LogicController, refresh_callback: Callable, trigger_export_callback: Callable, get_objectives_callback: Callable):
+    def __init__(self, page: Page, lang: dict, controller: LogicController, currency: str, refresh_callback: Callable, trigger_export_callback: Callable, get_objectives_callback: Callable):
         self._page = page
         self.lang = lang
         self.controller = controller
+        self.currency = currency
         self._refresh_view = refresh_callback
         self._trigger_export = trigger_export_callback
         self._get_objectives = get_objectives_callback
@@ -29,6 +30,7 @@ class DialogManager:
             page=self._page,
             lang=self.lang,
             controller=self.controller,
+            currency=self.currency,
             on_success=self._refresh_view
         )
 
@@ -36,6 +38,7 @@ class DialogManager:
             page=self._page,
             lang=self.lang,
             controller=self.controller,
+            currency=self.currency,
             on_success=self._refresh_view,
             on_create_with_surplus=lambda p, surplus: self.create_goal_modal.trigger(p, surplus)
         )
@@ -70,19 +73,10 @@ class DialogManager:
             on_delete=self.delete_dialog.trigger
         )
 
-        self._add_dialogs_to_overlay()
-
-    def _add_dialogs_to_overlay(self) -> None:
-        dialogs = [
-            self.create_goal_modal,
-            self.deposit_withdraw_modal,
-            self.congratulations_modal,
-            self.delete_dialog,
-            self.clear_history_dialog,
-            self.goal_details_dialog,
-        ]
-        for dialog in dialogs:
-            dialog.add_to_overlay(self._page)
+    def update_currency(self, currency: str) -> None:
+        self.currency = currency
+        self.create_goal_modal.currency = currency
+        self.congratulations_modal.currency = currency
 
 
 class SavingsView(ft.View):
@@ -109,6 +103,7 @@ class SavingsView(ft.View):
             page=self._page,
             lang=self.lang,
             controller=self.controller,
+            currency=currency,
             refresh_callback=self._refresh_view,
             trigger_export_callback=self.trigger_export,
             get_objectives_callback=lambda: self._objective_data
@@ -201,7 +196,9 @@ class SavingsView(ft.View):
         existing_objectives = self.controller.get_user_objectives()
         currency = self.controller.get_currency()
 
+        self._page.delete_cached_view("/home")
         self._objective_data = self._build_objective_data(existing_objectives, currency)
+        self.dialogs.update_currency(currency)
         self.summary_banner.update_data(total_savings, total_target, percentage, progress_value, currency)
         self.goal_grid.update_grid(self._objective_data)
         self.activity_history.update_history(self.controller.get_recent_activity(self.lang), currency)
@@ -312,6 +309,14 @@ class SavingsView(ft.View):
             )
 
             self.dialogs.deposit_withdraw_modal.resize(
+                width=page_width // 7 * 6
+            )
+
+            self.dialogs.delete_dialog.resize(
+                width=page_width // 7 * 6
+            )
+
+            self.dialogs.clear_history_dialog.resize(
                 width=page_width // 7 * 6
             )
 

@@ -80,8 +80,17 @@ class LogicController:
     def create_goal_with_surplus(self, title: str, reason: str, target_amount: float, surplus_amount: float) -> bool:
         return db.savings.create_goal_with_initial_deposit(self.current_user, title, reason, target_amount, surplus_amount)
 
-    def transfer_surplus(self, source_id: int, target_id: int, amount: float) -> bool:
-        return db.savings.transfer_surplus(self.current_user, source_id, target_id, amount)
+    def transfer_surplus(self, source_id: int, target_id: int, amount: float) -> tuple[bool, float]:
+        current_saved, target_amount = self.get_objective_amounts(target_id)
+        amount_to_transfer = min(amount, max(0.0, target_amount - current_saved))
+        remaining_surplus = amount - amount_to_transfer
+        success = db.savings.transfer_surplus(
+            self.current_user,
+            source_id,
+            target_id,
+            amount_to_transfer,
+        )
+        return success, remaining_surplus if success else 0.0
 
     @staticmethod
     def delete_objective(objective_id: int):
@@ -107,7 +116,7 @@ class LogicController:
         return True, "", 0.0, surplus
 
     def clear_activity_history(self):
-        db.savings.clear_activity_history(self.current_user)
+        db.users.clear_activity_history(self.current_user)
 
     def export_ledger_to_excel(self, file_path: str, lang: dict) -> tuple[bool, str]:
         activities = self.get_recent_activity(lang)

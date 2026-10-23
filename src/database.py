@@ -435,7 +435,8 @@ class SavingsDatabase:
 
         date = datetime.now().strftime("%Y-%m-%d %H:%M")
         self.complete_objective(source_id)
-        self.add_saving_entry(username, amount, date, target_id, note or "Chuyển tiền dư từ mục tiêu hoàn thành")
+        if amount > 0:
+            self.add_saving_entry(username, amount, date, target_id, note or "Chuyển tiền dư từ mục tiêu hoàn thành")
         return True
 
     def delete_objective(self, objective_id: int) -> bool:

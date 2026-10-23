@@ -153,7 +153,11 @@ class HomeView(ft.View):
             self.financial_chart.update_data()
 
             self.savings_progress_card.update_data(
-                objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang)
+                objective_items=self.controller.get_saving_progress_items(
+                    self.objectives,
+                    self.lang,
+                    self.user_info["username"],
+                )
             )
 
             self.expense_pie_chart.update_data(

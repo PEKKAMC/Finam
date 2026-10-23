@@ -57,10 +57,10 @@ class LogicController:
         return db.savings.get_user_objectives(self.current_user)
 
     @staticmethod
-    def get_saving_progress_items(objectives: list, lang: dict, username: str = ""):
+    def get_saving_progress_items(objectives: list, lang: dict, username: str = "") -> tuple[list, int]:
         goal_items = []
         if not objectives:
-            return goal_items
+            return goal_items, 0
 
         currency = db.users.get_currency(username)
 
@@ -82,4 +82,4 @@ class LogicController:
                 "target_label": f"{lang['home.target']}: {target_value:,.2f} {currency}",
             })
 
-        return goal_items
+        return goal_items, len(objectives)
