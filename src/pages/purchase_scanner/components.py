@@ -74,7 +74,7 @@ class ThinkingTimeUnitContainer(ft.Container):
         self.value_field = ft.TextField(
             hint_text="0",
             value=default_val,
-            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
+            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9.]*$", replacement_string=""),
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
             border_radius=16,
@@ -137,7 +137,7 @@ class ScannerForm(ft.Container):
 
         self.item_price = ft.TextField(
             hint_text=self.lang["purchase_scanner.item_price_hint"],
-            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
+            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9.]*$", replacement_string=""),
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
             border_radius=16,
