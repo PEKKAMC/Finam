@@ -25,11 +25,26 @@ class PurchaseScannerView(ft.View):
         # IMPORTED FUNCTIONS
         self.get_safe_page_size = get_safe_page_size
 
-        # Global components
-        self.menu = Menu(self._page, self.lang, self.user_info)
+        # INITIALIZE PAGE COMPONENTS
+        self.menu = Menu(
+            page=self._page,
+            lang=self.lang,
+            user_info=self.user_info
+        )
 
-        self.form_card = ScannerForm(page=self._page, lang=self.lang, on_scan_click=self.handle_scan_click)
-        self.result_card = ScannerResult(page=self._page, lang=self.lang, currency=self.currency)
+        self.form_card = ScannerForm(
+            page=self._page,
+            lang=self.lang,
+            currency=self.currency,
+            on_scan_click=self.handle_scan_click
+        )
+
+        self.result_card = ScannerResult(
+            page=self._page,
+            lang=self.lang,
+            currency=self.currency
+        )
+
         self.history_card = ScannerHistoryCard(
             page=self._page,
             lang=self.lang,
@@ -37,9 +52,9 @@ class PurchaseScannerView(ft.View):
             on_clear_all=self.handle_clear_history,
             currency=self.currency,
         )
+
         self.history_card.set_history(self.scan_history)
 
-        # Header banner matching React header card styling
         header_banner = ft.Container(
             bgcolor=Color.PRIMARY,
             border_radius=24,

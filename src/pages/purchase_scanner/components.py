@@ -118,9 +118,10 @@ class ThinkingTimeUnitContainer(ft.Container):
 
 
 class ScannerForm(ft.Container):
-    def __init__(self, page: Page, lang: dict, on_scan_click: Callable):
+    def __init__(self, page: Page, lang: dict, currency: str, on_scan_click: Callable):
         self._page = page
         self.lang = lang
+        self.currency = currency
         self.on_scan_click = on_scan_click
 
         self.item_name = ft.TextField(
@@ -136,7 +137,7 @@ class ScannerForm(ft.Container):
         )
 
         self.item_price = ft.TextField(
-            hint_text=self.lang["purchase_scanner.item_price_hint"],
+            hint_text=self.lang["purchase_scanner.item_price_hint"].format(currency=self.currency),
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9.]*$", replacement_string=""),
             border_color=Color.INPUT_BORDER,
             color=Color.DEFAULT_TEXT,
