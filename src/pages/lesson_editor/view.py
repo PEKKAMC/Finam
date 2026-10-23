@@ -111,9 +111,9 @@ class LessonEditorView(ft.View):
         return safe_width, safe_height
 
     def show_snackbar(self, message: str, color: str):
-        sb = ft.SnackBar(Text.MEDIUM(message), bgcolor=color)
-        self._page.overlay.append(sb)
-        sb.open = True
+        self.snack_bar = ft.SnackBar(Text.MEDIUM(message), bgcolor=color)
+        self._page.overlay.append(self.snack_bar)
+        self.snack_bar.open = True
         self._page.update()
 
     async def save_file(self, e):
