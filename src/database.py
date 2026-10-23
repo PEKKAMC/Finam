@@ -47,8 +47,8 @@ class DatabaseConnection:
             connection.execute("BEGIN")
             for table, column in money_columns.items():
                 table_info = connection.execute(f"PRAGMA table_info({table})").fetchall()
-                column_info = next((row for row in table_info if row[1] == column), None)
-                if column_info is None or column_info[2].upper() == "REAL":
+                column_info = next((row for row in table_info if row[1] == column), [])
+                if not column_info or column_info[2].upper() == "REAL":
                     continue
                 if column_info[2].upper() not in ("INT", "INTEGER"):
                     raise RuntimeError(f"Unexpected type for {table}.{column}: {column_info[2]}")
@@ -394,7 +394,7 @@ class SavingsDatabase:
                 (objective_id_value,),
                 fetch_one=True,
             )
-            if result and result[0] > 0 and result[1] >= result[0]:
+            if result and 0 < result[0] <= result[1]:
                 self.complete_objective(objective_id_value)
         return True
 
