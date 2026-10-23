@@ -31,65 +31,25 @@ class Dialog(ft.AlertDialog):
         else:
             return False
 
-    def _is_in_overlay(self, page: Page) -> bool:
-        try:
-            return self in page.overlay
-        except Exception as ex:
-            Logger.error(f"Error checking if dialog is in overlay: {ex}")
-            return False
-
-    def add_to_overlay(self, page: Page) -> int:
-        try:
-            if not self._is_in_overlay(page):
-                page.overlay.append(self)
-                return 0
-
-            Logger.warn("Dialog already in overlay")
-            return 1
-
-        except Exception as ex:
-            Logger.error(f"Error adding dialog to overlay: {ex}")
-            return -1
-
-    def remove_from_overlay(self, page: Page) -> int:
-        try:
-            if self._is_in_overlay(page):
-                page.overlay.remove(self)
-                return 0
-
-            Logger.warn("Dialog not in overlay")
-            return 1
-
-        except Exception as ex:
-            Logger.error(f"Error removing dialog from overlay: {ex}")
-            return -1
-
     def show(self, page: Page) -> int:
         try:
             if not self.open:
-                self.open = True
-                page.update()
-                return 0
-            else:
-                Logger.warn("Dialog is already opened")
-                return 1
+                page.show_dialog(self)
+            return 0
 
         except Exception as ex:
             Logger.error(f"Error showing dialog: {ex}")
             return -1
 
-    @staticmethod
-    def close_most_recent_dialog(page: Page) -> int:
+    def dismiss(self, page: Page) -> int:
         try:
-            if page.overlay:
-                for control in reversed(page.overlay):
-                    if isinstance(control, ft.AlertDialog) and control.open:
-                        control.open = False
-                        page.update()
-                        return 0
-            Logger.warn("No open dialog found in overlay")
-            return 1
+            if self.open:
+                dismissed_dialog = page.pop_dialog()
+                if dismissed_dialog is not self:
+                    Logger.error("Attempted to dismiss a dialog that is not at the top of the dialog stack")
+                    return -1
+            return 0
 
         except Exception as ex:
-            Logger.error(f"Error closing most recent dialog: {ex}")
+            Logger.error(f"Error dismissing dialog: {ex}")
             return -1

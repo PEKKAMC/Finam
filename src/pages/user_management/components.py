@@ -244,7 +244,7 @@ class DeleteAllDataDialog(Dialog):
                         controls=[
                             ft.TextButton(
                                 content=self.cancel_text,
-                                on_click=lambda e: self.close_most_recent_dialog(self._page)
+                                on_click=lambda e: self.dismiss(e.page)
                             ),
                             ft.TextButton(
                                 content=self.delete_text,
@@ -262,7 +262,7 @@ class DeleteAllDataDialog(Dialog):
         )
 
     async def _handle_confirm(self, e=None):
-        self.close_most_recent_dialog(self._page)
+        self.dismiss(e.page if e is not None else self._page)
         if self.on_confirm:
             res = self.on_confirm(e)
             if asyncio.iscoroutine(res):

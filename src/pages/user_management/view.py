@@ -63,8 +63,6 @@ class DialogManager:
             on_confirm_callback=self._handle_delete_all_data_confirm
         )
 
-        self._add_dialogs_to_overlay()
-
     # USER MANAGEMENT DIALOG
     def show_user_management_dialog(self) -> int:
         self.user_list.update_data(
@@ -80,7 +78,7 @@ class DialogManager:
         return self.user_dialog.show(self._page)
 
     def _close_user_management_dialog(self, e: ft.ControlEvent | None = None) -> None:
-        self.user_dialog.close_most_recent_dialog(self._page)
+        self.user_dialog.dismiss(e.page if e is not None else self._page)
 
     # USER ACTIONS
     def _handle_add_user(self, input_username: str, currency: str):
@@ -104,7 +102,7 @@ class DialogManager:
             self.add_form.show_error("error")
 
     def _handle_change_user(self, username: str):
-        self.user_dialog.close_most_recent_dialog(self._page)
+        self.user_dialog.dismiss(self._page)
         self.controller.change_user(username)
         self._refresh_view()
 
@@ -146,26 +144,6 @@ class DialogManager:
         except Exception as ex:
             Logger.error(f"Failed to delete all data and restart app: {ex}")
             return -1
-
-    # OVERLAY MANAGEMENT
-    def _add_dialogs_to_overlay(self) -> None:
-        dialogs = [
-            self.user_dialog,
-            self.delete_dialog,
-            self.delete_all_data_dialog
-        ]
-        for d in dialogs:
-            d.add_to_overlay(self._page)
-
-    def _remove_dialogs_from_overlay(self) -> None:
-        dialogs = [
-            self.user_dialog,
-            self.delete_dialog,
-            self.delete_all_data_dialog
-        ]
-        for d in dialogs:
-            d.remove_from_overlay(self._page)
-
 
 class UserManagementView(ft.View):
     def __init__(self, page: Page, lang: dict, user_info: dict):

@@ -52,16 +52,6 @@ class DialogManager:
             on_confirm_callback=self._handle_delete_confirm
         )
 
-        self._add_dialogs_to_overlay()
-
-    def _add_dialogs_to_overlay(self) -> None:
-        dialogs = [
-            self.user_dialog,
-            self.delete_dialog
-        ]
-        for d in dialogs:
-            d.add_to_overlay(self._page)
-
     def show_user_management_dialog(self) -> int:
         self.user_list.update_data(
             self.controller.get_all_users(),
@@ -81,7 +71,7 @@ class DialogManager:
         return self.delete_dialog.show(self._page)
 
     def _close_user_management_dialog(self):
-        self.user_dialog.close_most_recent_dialog(self._page)
+        self.user_dialog.dismiss(self._page)
 
     def _handle_delete_confirm(self, username: str) -> int:
         self.controller.delete_user(username)
@@ -99,7 +89,7 @@ class DialogManager:
             self.add_form.show_error("error")
 
     def handle_change_user(self, username: str):
-        self.user_dialog.close_most_recent_dialog(self._page)
+        self.user_dialog.dismiss(self._page)
         self.controller.change_user(username)
         self._page.navigate_to("/home")()
 
