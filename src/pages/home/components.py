@@ -74,11 +74,12 @@ class BalanceCard(ft.Container):
         )
 
         self.add_transaction_button = ft.Button(
+            expand=True,
             content=ft.Row(
                 spacing=5,
                 controls=[
-                    self.add_transaction_button_label,
-                    self.add_transaction_button_icon
+                    self.add_transaction_button_icon,
+                    self.add_transaction_button_label
                 ],
                 tight=True
             ),
@@ -88,6 +89,7 @@ class BalanceCard(ft.Container):
         )
 
         self.purchase_scanner_button = ft.OutlinedButton(
+            expand=True,
             content=ft.Row(
                 controls=[
                     self.purchase_scanner_icon,
@@ -126,7 +128,8 @@ class BalanceCard(ft.Container):
             border_radius=UISettings.METRIC_PILL_BORDER_RADIUS,
             padding=UISettings.METRIC_PILL_PADDING,
             border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
-            content=ft.Column(
+            content=ft.Row(
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 spacing=2,
                 controls=[
                     self.income_title,
@@ -141,7 +144,8 @@ class BalanceCard(ft.Container):
             border_radius=UISettings.METRIC_PILL_BORDER_RADIUS,
             padding=UISettings.METRIC_PILL_PADDING,
             border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
-            content=ft.Column(
+            content=ft.Row(
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 spacing=2,
                 controls=[
                     self.expense_title,
@@ -156,7 +160,8 @@ class BalanceCard(ft.Container):
             border_radius=UISettings.METRIC_PILL_BORDER_RADIUS,
             padding=UISettings.METRIC_PILL_PADDING,
             border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
-            content=ft.Column(
+            content=ft.Row(
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 spacing=2,
                 controls=[
                     self.saving_title,
@@ -165,7 +170,7 @@ class BalanceCard(ft.Container):
             )
         )
 
-        self.metrics_row = ft.Row(
+        self.metrics_row = ft.Column(
             spacing=10,
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
