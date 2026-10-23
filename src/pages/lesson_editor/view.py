@@ -265,7 +265,7 @@ class LessonEditorView(ft.View):
 
         elements = self.logic.elements_list()
         idx = self.logic.selected_element_index
-        float_filter = ft.InputFilter(allow=True, regex_string=r"^[0-9]*\.?[0-9]*$")
+        float_filter = ft.InputFilter(allow=True, regex_string=r"^[0-9.]*$")
 
         def update_prop(e, key, needs_canvas_update=False, rebuild_ui=False, map_dict=None):
             if idx is not None and elements:
