@@ -1,3 +1,38 @@
+# Finam v0.3.3-beta
+
+**Release Date:** October 23, 2026
+
+> **⚠️ BETA WARNING: Read Before Using**
+>
+> Welcome to the Beta build! Core stability and performance have been significantly improved since our Alpha release, but you may still encounter occasional bugs, minor performance hiccups, or incomplete features as we fine-tune the application for full launch.
+>
+> * **Data Backup:** While local database corruption is now far less likely, we still recommend backing up any critical financial data before performing major updates or operations.
+> * **Feedback:** If you run into any issues, softlocks, or unexpected behavior, please submit a report via our GitHub page.
+>
+> Thank you for helping us test and polish this release!
+
+## Changes in this version
+
+*   Improved the home page and savings page layout.
+*   Updated savings dialogs, purchase scanner to accept decimal amounts.
+*   Updated dialog module.
+*   Refined savings page components, dialogs, currency handling, and responsive layouts.
+*   Replaced the app icon asset to prevent cropping.
+
+## Bug fixes in this version
+
+*   Fixed savings dialogs causing softlocks and crashes in multiple ways.
+*   Fixed savings surplus transfers exceeding a goal's remaining target and prevented zero-value transfer entries.
+*   Fixed clearing savings activity history and refreshed cached home data when returning from savings.
+*   Fixed savings dialogs not consistently reflecting the current currency or fitting the page.
+*   Fixed issues with savings page behavior and layout.
+
+## Known Issues & Instability
+
+*   Some actions may cause softlocks or crashes.
+*   Lesson player and lesson editor don't work.
+*   Various UI elements may not scale perfectly on all screen sizes.
+
 # Finam v0.3.2-beta
 
 **Release Date:** October 22, 2026
