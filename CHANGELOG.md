@@ -13,7 +13,6 @@
 
 ## Changes in this version
 
-*   Added AI security system. However, this means older versions won't be able to use AI features.
 *   Added app lock feature, which can be enabled in settings.
 *   Improved home, category selection, savings and spending page layouts, responsiveness.
 *   Updated Dialog module.
