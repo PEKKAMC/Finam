@@ -228,7 +228,7 @@ class SavingsView(ft.View):
 
         self._page.update()
 
-    def on_search_change(self, e: ft.ControlEvent) -> None:
+    def on_search_change(self, e: ft.Event[ft.TextField]) -> None:
         self.search_query = e.control.value or ""
         self.goal_grid.update_grid(self._filter_objectives())
         self._page.update()
