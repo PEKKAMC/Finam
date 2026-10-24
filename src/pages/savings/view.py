@@ -133,7 +133,7 @@ class SavingsView(ft.View):
             percentage=percentage,
             progress_value=progress_value,
             currency=currency,
-            on_create_click=lambda e: self.dialogs.create_goal_modal.trigger(self._page)
+            on_create_click=lambda e: self.dialogs.create_goal_modal.trigger()
         )
 
         self.activity_history = ActivityHistory(
@@ -142,7 +142,7 @@ class SavingsView(ft.View):
             activities=self.controller.get_recent_activity(self.lang),
             currency=currency,
             on_export=self.trigger_export,
-            on_clear=lambda e: self.dialogs.clear_history_dialog.trigger(e.page),
+            on_clear=lambda e: self.dialogs.clear_history_dialog.trigger(),
         )
 
         self._open_pending_objective_dialog()
