@@ -10,7 +10,7 @@ from src.logger import Logger
 from src.utils import Color, Page
 
 class Dialog(ft.AlertDialog):
-    def __init__(self, dialog_content: ft.Control, color: Color | ft.Colors | str, title: str = "", options: list | None = None, padding: int = 24):
+    def __init__(self, dialog_content: ft.Control, color: Color | ft.Colors | str, options: list | None = None, padding: int = 24):
         if not self._verify_color(color):
             color = Color.DEFAULT_CONTAINER_BACKGROUND
 
@@ -19,7 +19,6 @@ class Dialog(ft.AlertDialog):
         super().__init__(
             content=dialog_content,
             bgcolor=color,
-            title=title,
             actions=options,
             content_padding=padding,
             modal=True

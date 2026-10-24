@@ -25,7 +25,7 @@ class LogicController:
             percentage = f"{(int(progress_value * 100))}%"
         else:
             progress_value = 1.0
-            percentage = "100%"
+            percentage = "--%"
         return total_savings, total_target, progress_value, percentage
 
     def get_user_objectives(self):
