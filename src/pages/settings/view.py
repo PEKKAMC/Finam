@@ -2,12 +2,15 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import json
+from pathlib import Path
+
 import flet as ft
 
 from src.logger import Logger
 from src.pages.settings.components import SettingCard, SettingDropdown, SettingRow, SettingsHeader
 from src.pages.settings.logic import LogicController
-from src.utils import Color, DefaultSettings, Page, get_safe_page_size, Text, UISettings
+from src.utils import Color, DefaultSettings, Page, get_asset_path, get_safe_page_size, Text, UISettings
 from src.database import db
 
 Logger.info("Initializing Settings page...")
@@ -28,15 +31,24 @@ class SettingsView(ft.View):
         self.currencies = self.controller.get_currencies()
 
         # GET CURRENT SETTINGS FROM DATABASE
-        username = user_info["username"]
+        username = self.user_info["username"]
         current_language = db.users.get_language(username)
         current_currency = db.users.get_currency(username)
 
-        # Map language code to display name
-        language_options = ["Tiếng Việt", "English"]
-        language_code_to_name = {"vi": "Tiếng Việt", "en": "English"}
-        language_name_to_code = {"Tiếng Việt": "vi", "English": "en"}
-        current_language_name = language_code_to_name.get(current_language, "Tiếng Việt")
+        language_files = sorted(Path(get_asset_path("lang")).glob("*.json"))
+        if not language_files:
+            raise FileNotFoundError("No language files found in assets/lang")
+
+        language_options = []
+        language_name_to_code = {}
+        for language_file in language_files:
+            with language_file.open("r", encoding="utf-8-sig") as file:
+                language_name = json.load(file)["language"]
+            language_options.append(language_name)
+            language_name_to_code[language_name] = language_file.stem
+
+        language_code_to_name = {code: name for name, code in language_name_to_code.items()}
+        current_language_name = language_code_to_name.get(current_language, language_options[0])
         language_index = language_options.index(current_language_name) if current_language_name in language_options else 0
 
         # Get currency index
