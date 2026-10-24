@@ -132,7 +132,22 @@ class GoalGrid(ft.Column):
         self.on_deposit = on_deposit
         self.on_withdraw = on_withdraw
         self.on_delete = on_delete
+        self.is_expanded = True
+        self.title_text = Text.H3("", color=Color.PRIMARY_TEXT)
+        self.toggle_button = ft.IconButton(
+            icon=ft.Icons.EXPAND_LESS,
+            tooltip=self.lang["generic.collapse"],
+            on_click=self._toggle_expanded,
+        )
+        self.objectives_column = ft.Column(spacing=20)
         super().__init__(spacing=20)
+        self.controls = [
+            ft.Row(
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                controls=[self.title_text, self.toggle_button],
+            ),
+            self.objectives_column,
+        ]
         self.update_grid(objectives_data)
 
     def update_grid(self, objectives_data: list):
@@ -146,10 +161,21 @@ class GoalGrid(ft.Column):
                 on_withdraw=self.on_withdraw,
                 on_delete=self.on_delete,
             ))
-        self.controls = cards
+        self.title_text.value = self.lang["savings.objectives"].format(len=len(objectives_data))
+        self.objectives_column.controls = cards
+        self.objectives_column.visible = self.is_expanded
+
+    def _toggle_expanded(self, e):
+        self.is_expanded = not self.is_expanded
+        self.objectives_column.visible = self.is_expanded
+        self.toggle_button.icon = ft.Icons.EXPAND_LESS if self.is_expanded else ft.Icons.EXPAND_MORE
+        self.toggle_button.tooltip = self.lang["generic.collapse"] if self.is_expanded else self.lang["generic.expand"]
+        if self._page is not None:
+            self._page.update()
 
     def resize(self, width: int) -> None:
         self.width = max(width, 0)
+        self.objectives_column.width = max(width, 0)
 
 
 class AggregateCard(ft.Container):
@@ -248,8 +274,17 @@ class ActivityHistory(ft.Container):
         self.currency = currency
         self.on_export = on_export
         self.on_clear = on_clear
-        self.activity_list = ft.Column(spacing=0, scroll=ft.ScrollMode.AUTO)
-        self.update_history(activities, currency)
+        self.is_expanded = True
+        self.activity_list = ft.Column(spacing=0)
+        self.history_title = Text.H3(
+            self.lang["savings.recent_activity"].format(len=len(activities)),
+            color=Color.PRIMARY_TEXT,
+        )
+        self.toggle_button = ft.IconButton(
+            icon=ft.Icons.EXPAND_LESS,
+            tooltip=self.lang["generic.collapse"],
+            on_click=self._toggle_expanded,
+        )
 
         self.main_container = ft.Column(
             spacing=12,
@@ -258,25 +293,25 @@ class ActivityHistory(ft.Container):
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     wrap=True,
                     controls=[
-                        Text.H3(self.lang["savings.recent_activity"], color=Color.PRIMARY_TEXT),
+                        self.history_title,
                         ft.Row(
                             spacing=4,
                             controls=[
                                 ft.TextButton(Text.BUTTON(self.lang["savings.export_ledger"], color=Color.PRIMARY_ACTION), icon=ft.Icons.DOWNLOAD, on_click=self.on_export, icon_color=Color.PRIMARY_ACTION),
-                                ft.TextButton(Text.BUTTON(self.lang["savings.clear_history"], color=Color.DELETE_ACTION), icon=ft.Icons.DELETE_OUTLINE, on_click=self.on_clear, icon_color=Color.DELETE_ACTION)
+                                ft.TextButton(Text.BUTTON(self.lang["savings.clear_history"], color=Color.DELETE_ACTION), icon=ft.Icons.DELETE_OUTLINE, on_click=self.on_clear, icon_color=Color.DELETE_ACTION),
+                                self.toggle_button,
                             ],
                         ),
                     ],
                 ),
                 ft.Container(
                     content=self.activity_list,
-                    height=300,
-                    padding=UISettings.CARD_PADDING,
-                    bgcolor=Color.CARD_BACKGROUND,
-                    border_radius=16
+                    visible=self.is_expanded,
                 ),
             ],
         )
+        self.activity_content = self.main_container.controls[1]
+        self.update_history(activities, currency)
         super().__init__(
             content=self.main_container,
             padding=20,
@@ -286,6 +321,7 @@ class ActivityHistory(ft.Container):
 
     def update_history(self, activities: list, currency: str) -> None:
         self.currency = currency
+        self.history_title.value = self.lang["savings.recent_activity"].format(len=len(activities))
         self.activity_list.controls.clear()
         if not activities:
             self.activity_list.controls.append(
@@ -310,6 +346,14 @@ class ActivityHistory(ft.Container):
                     dense=True,
                 )
             )
+
+    def _toggle_expanded(self, e):
+        self.is_expanded = not self.is_expanded
+        self.activity_content.visible = self.is_expanded
+        self.toggle_button.icon = ft.Icons.EXPAND_LESS if self.is_expanded else ft.Icons.EXPAND_MORE
+        self.toggle_button.tooltip = self.lang["generic.collapse"] if self.is_expanded else self.lang["generic.expand"]
+        if self._page is not None:
+            self._page.update()
 
     def resize(self, width: int) -> None:
         self.width = width

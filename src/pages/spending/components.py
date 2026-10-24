@@ -324,6 +324,7 @@ class TransactionHistoryCard(ft.Container):
         self.lang = lang
         self.transactions = transactions
         self.on_delete = on_delete
+        self.is_expanded = True
 
         self.history_column = ft.Column(spacing=12, controls=[])
         self._render_controls()
@@ -338,14 +339,25 @@ class TransactionHistoryCard(ft.Container):
         )
 
     def _render_controls(self):
+        self.history_title = Text.H4(
+            self.lang["spending.transaction_history"].format(len=len(self.transactions)),
+            color=Color.PRIMARY_TEXT,
+            weight=ft.FontWeight.BOLD,
+        )
+        self.toggle_button = ft.IconButton(
+            icon=ft.Icons.EXPAND_LESS if self.is_expanded else ft.Icons.EXPAND_MORE,
+            tooltip=self.lang["generic.collapse"] if self.is_expanded else self.lang["generic.expand"],
+            on_click=self._toggle_expanded,
+        )
         history_header = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                Text.H4(self.lang["spending.transaction_history"].format(len=len(self.transactions)), color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
+                self.history_title,
+                self.toggle_button,
             ],
         )
 
-        tx_list_controls: list[ft.Control] = [history_header]
+        tx_list_controls: list[ft.Control] = []
         if self.transactions:
             for tx in self.transactions:
                 tx_list_controls.append(
@@ -358,7 +370,6 @@ class TransactionHistoryCard(ft.Container):
                 )
         else:
             tx_list_controls = [
-                history_header,
                 ft.Container(
                     padding=40,
                     alignment=ft.Alignment.CENTER,
@@ -373,7 +384,20 @@ class TransactionHistoryCard(ft.Container):
                 )
             ]
 
-        self.history_column.controls = tx_list_controls
+        self.history_content = ft.Column(
+            spacing=12,
+            controls=tx_list_controls,
+            visible=self.is_expanded,
+        )
+        self.history_column.controls = [history_header, self.history_content]
+
+    def _toggle_expanded(self, e):
+        self.is_expanded = not self.is_expanded
+        self.history_content.visible = self.is_expanded
+        self.toggle_button.icon = ft.Icons.EXPAND_LESS if self.is_expanded else ft.Icons.EXPAND_MORE
+        self.toggle_button.tooltip = self.lang["generic.collapse"] if self.is_expanded else self.lang["generic.expand"]
+        if self._page is not None:
+            self._page.update()
 
     def update_data(self, transactions: list):
         self.transactions = transactions

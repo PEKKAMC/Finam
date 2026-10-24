@@ -305,7 +305,7 @@ class ScannerHistoryCard(ft.Container):
 
         self.history_collapsed = False
         self.history_expander = ft.IconButton(
-            icon=ft.Icons.KEYBOARD_ARROW_DOWN,
+            icon=ft.Icons.KEYBOARD_ARROW_UP,
             on_click=lambda e: self.toggle_history_panel(),
             style=ft.ButtonStyle(shape=ft.CircleBorder()),
         )
@@ -446,7 +446,7 @@ class ScannerHistoryCard(ft.Container):
     def toggle_history_panel(self):
         self.history_collapsed = not self.history_collapsed
         self.history_content.visible = not self.history_collapsed
-        self.history_expander.icon = ft.Icons.KEYBOARD_ARROW_UP if self.history_collapsed else ft.Icons.KEYBOARD_ARROW_DOWN
+        self.history_expander.icon = ft.Icons.KEYBOARD_ARROW_DOWN if self.history_collapsed else ft.Icons.KEYBOARD_ARROW_UP
         self.update()
 
 

@@ -97,6 +97,7 @@ class SavingsView(ft.View):
         currency = self.controller.get_currency()
 
         self._objective_data = self._build_objective_data(existing_objectives, currency)
+        self.search_query = ""
 
         # INITIALIZE DIALOG MANAGER
         self.dialogs = DialogManager(
@@ -123,6 +124,27 @@ class SavingsView(ft.View):
             on_deposit=self.dialogs.deposit_withdraw_modal.trigger,
             on_withdraw=self.dialogs.deposit_withdraw_modal.trigger,
             on_delete=self.dialogs.delete_dialog.trigger,
+        )
+
+        self.search_field = ft.TextField(
+            value=self.search_query,
+            hint_text=self.lang["savings.search"],
+            prefix_icon=ft.Icons.SEARCH,
+            on_change=self.on_search_change,
+            bgcolor=Color.CARD_BACKGROUND,
+            border_color=Color.INPUT_BORDER,
+            border_radius=16,
+            text_size=13,
+            content_padding=12,
+            filled=True,
+        )
+        self.search_bar = ft.Container(
+            bgcolor=Color.WHITE,
+            border_radius=UISettings.CARD_BORDER_RADIUS,
+            padding=20,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
+            content=self.search_field,
         )
 
         self.summary_banner = AggregateCard(
@@ -159,6 +181,7 @@ class SavingsView(ft.View):
                             spacing=25,
                             controls=[
                                 self.summary_banner,
+                                self.search_bar,
                                 self.goal_grid,
                                 self.activity_history,
                             ]
@@ -200,10 +223,24 @@ class SavingsView(ft.View):
         self._objective_data = self._build_objective_data(existing_objectives, currency)
         self.dialogs.update_currency(currency)
         self.summary_banner.update_data(total_savings, total_target, percentage, progress_value, currency)
-        self.goal_grid.update_grid(self._objective_data)
+        self.goal_grid.update_grid(self._filter_objectives())
         self.activity_history.update_history(self.controller.get_recent_activity(self.lang), currency)
 
         self._page.update()
+
+    def on_search_change(self, e: ft.ControlEvent) -> None:
+        self.search_query = e.control.value or ""
+        self.goal_grid.update_grid(self._filter_objectives())
+        self._page.update()
+
+    def _filter_objectives(self) -> list:
+        query = self.search_query.strip().casefold()
+        if not query:
+            return self._objective_data
+        return [
+            objective for objective in self._objective_data
+            if query in objective["title"].casefold() or query in objective["reason"].casefold()
+        ]
 
     def _build_objective_data(self, objectives: list, currency: str) -> list:
         objectives_data = []
@@ -291,6 +328,8 @@ class SavingsView(ft.View):
             self.summary_banner.resize(
                 width=page_width
             )
+
+            self.search_bar.width = page_width
 
             self.goal_grid.resize(
                 width=page_width
