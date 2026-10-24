@@ -161,7 +161,7 @@ class UserList(ft.Container):
                                         icon_color=Color.DELETE_ACTION,
                                         icon_size=18,
                                         on_click=lambda e, u=username: self.on_delete(u),
-                                        tooltip="Xóa người dùng"
+                                        tooltip=self.lang["user_management.delete_user_tooltip"]
                                     )
                                 ] if not is_active else []
                             )
