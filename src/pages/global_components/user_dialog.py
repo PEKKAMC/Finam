@@ -332,7 +332,7 @@ class DeleteUserDialog(Dialog):
                         controls=[
                             ft.TextButton(
                                 content=self.cancel_text,
-                                on_click=lambda e: self.dismiss(e.page)
+                                on_click=lambda e: self.dismiss()
                             ),
                             ft.TextButton(
                                 content=self.delete_text,
@@ -352,7 +352,7 @@ class DeleteUserDialog(Dialog):
     def confirm(self, e=None):
         if self.selected_user and self.on_confirm:
             self.on_confirm(self.selected_user)
-        self.dismiss(e.page if e is not None else self._page)
+        self.dismiss()
 
     def resize(self, width: int) -> None:
         self.main_container.width = width

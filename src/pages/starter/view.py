@@ -63,15 +63,15 @@ class DialogManager:
             self._page.update()
         except RuntimeError:
             pass
-        return self.user_dialog.show(self._page)
+        return self.user_dialog.show()
 
     def show_delete_prompt(self, username: str = "") -> int:
         if username:
             self.delete_dialog.selected_user = username
-        return self.delete_dialog.show(self._page)
+        return self.delete_dialog.show()
 
     def _close_user_management_dialog(self):
-        self.user_dialog.dismiss(self._page)
+        self.user_dialog.dismiss()
 
     def _handle_delete_confirm(self, username: str) -> int:
         self.controller.delete_user(username)
@@ -89,7 +89,7 @@ class DialogManager:
             self.add_form.show_error("error")
 
     def handle_change_user(self, username: str):
-        self.user_dialog.dismiss(self._page)
+        self.user_dialog.dismiss()
         self.controller.change_user(username)
         self._page.navigate_to("/home")()
 

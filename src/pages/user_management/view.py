@@ -74,10 +74,10 @@ class DialogManager:
             self._page.update()
         except RuntimeError:
             pass
-        return self.user_dialog.show(self._page)
+        return self.user_dialog.show()
 
     def _close_user_management_dialog(self, e: ft.ControlEvent | None = None) -> None:
-        self.user_dialog.dismiss(e.page if e is not None else self._page)
+        self.user_dialog.dismiss()
 
     # USER ACTIONS
     def _handle_add_user(self, input_username: str, currency: str):
@@ -101,7 +101,7 @@ class DialogManager:
             self.add_form.show_error("error")
 
     def _handle_change_user(self, username: str):
-        self.user_dialog.dismiss(self._page)
+        self.user_dialog.dismiss()
         self.controller.change_user(username)
         self._refresh_view()
 
@@ -110,7 +110,7 @@ class DialogManager:
         try:
             if username:
                 self.delete_dialog.selected_user = username
-            self.delete_dialog.show(self._page)
+            self.delete_dialog.show()
             return 0
         except Exception as ex:
             Logger.warn(f"Failed to show delete prompt {ex}")
@@ -128,7 +128,7 @@ class DialogManager:
     # DELETE ALL DATA DIALOG
     def show_delete_all_data_prompt(self) -> int:
         try:
-            self.delete_all_data_dialog.show(self._page)
+            self.delete_all_data_dialog.show()
             return 0
         except Exception as ex:
             Logger.warn(f"Failed to show delete all data prompt {ex}")

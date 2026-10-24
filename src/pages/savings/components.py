@@ -6,7 +6,6 @@ from collections.abc import Callable
 from datetime import datetime
 
 import flet as ft
-
 from src.logger import Logger
 from src.utils import Color, Dialog, Page, Text, UISettings
 
@@ -325,10 +324,9 @@ class CreateGoalModal(Dialog):
 
         self.close_button = ft.IconButton(
             ft.Icons.CLOSE,
-            on_click=lambda e: self.dismiss(e.page),
+            on_click=lambda e: self.dismiss(),
             icon_color=Color.PRIMARY_TEXT,
         )
-        self.title_text = Text.H3(self.lang["savings.create_goal_title"], color=Color.DEFAULT_TEXT)
 
         self.surplus_banner = ft.Container(visible=False)
 
@@ -374,7 +372,6 @@ class CreateGoalModal(Dialog):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
                 self.close_button,
-                self.title_text,
                 ft.Container(width=40),
             ],
         )
@@ -403,14 +400,16 @@ class CreateGoalModal(Dialog):
         super().__init__(
             dialog_content=self.main_container,
             color=Color.TRANSPARENT,
+            title=self.lang["savings.create_goal_title"],
+            padding=0
         )
-        self.content_padding = 0
+
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
     def trigger(self, page: Page, initial_surplus: float = 0.0):
         self.initial_surplus = initial_surplus
         if initial_surplus > 0:
-            self.title_text.value = self.lang["savings.create_goal_from_surplus_title"]
+            self.title = self.lang["savings.create_goal_from_surplus_title"]
             self.goal_title_input.value = self.lang["savings.next_objective"]
             self.goal_amount_input.value = str(int(initial_surplus * 5))
             self.reason_input.value = self.lang["savings.surplus_reason"].format(amount=f"{initial_surplus:,.0f}", currency=self.currency)
@@ -425,14 +424,14 @@ class CreateGoalModal(Dialog):
             self.surplus_banner.padding = 12
             self.surplus_banner.border_radius = 16
         else:
-            self.title_text.value = self.lang["savings.create_goal_title"]
+            self.title = self.lang["savings.create_goal_title"]
             self.goal_title_input.value = ""
             self.goal_amount_input.value = ""
             self.reason_input.value = ""
             self.surplus_banner.visible = False
 
         self.error_container.visible = False
-        self.show(page)
+        self.show()
 
     def _process_submit(self, e):
         title = self.goal_title_input.value.strip() if self.goal_title_input.value else ""
@@ -467,7 +466,7 @@ class CreateGoalModal(Dialog):
             success = self.controller.add_new_objective(title, reason, target)
 
         if success:
-            self.dismiss(e.page)
+            self.dismiss()
             self.on_success()
 
     def resize(self, width: int) -> None:
@@ -494,10 +493,9 @@ class DepositWithdrawModal(Dialog):
 
         self.close_button = ft.IconButton(
             ft.Icons.CLOSE,
-            on_click=lambda e: self.dismiss(e.page),
+            on_click=lambda e: self.dismiss(),
             icon_color=Color.PRIMARY_TEXT,
         )
-        self.title_text = Text.H3(self.lang["savings.deposit_title"], color=Color.DEFAULT_TEXT)
 
         self.goal_info_text = Text.SMALL("", color=Color.SECONDARY_TEXT)
         self.goal_amount_info = Text.SMALL("", color=Color.PRIMARY)
@@ -547,9 +545,7 @@ class DepositWithdrawModal(Dialog):
         header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                self.close_button,
-                self.title_text,
-                ft.Container(width=40),
+                self.close_button
             ],
         )
 
@@ -576,8 +572,10 @@ class DepositWithdrawModal(Dialog):
         super().__init__(
             dialog_content=self.main_container,
             color=Color.TRANSPARENT,
+            title=self.lang["savings.deposit_title"],
+            padding=0
         )
-        self.content_padding = 0
+
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
     def trigger(self, page: Page, goal: dict, mode: str):
@@ -585,7 +583,7 @@ class DepositWithdrawModal(Dialog):
         self.mode = mode
         is_deposit = mode == "deposit"
 
-        self.title_text.value = self.lang["savings.deposit_title"] if is_deposit else self.lang["savings.withdraw_title"]
+        self.title = self.lang["savings.deposit_title"] if is_deposit else self.lang["savings.withdraw_title"]
         self.goal_info_text.value = goal["title"]
         self.goal_amount_info.value = f"{goal['current_value']} / {goal['target_value']}"
         self.amount_input.value = ""
@@ -595,7 +593,7 @@ class DepositWithdrawModal(Dialog):
         self.submit_button.content = self.lang["savings.confirm_deposit"] if is_deposit else self.lang["savings.confirm_withdraw"]
         self.submit_button.bgcolor = Color.PRIMARY_ACTION if is_deposit else Color.NEGATIVE_ACTION
 
-        self.show(page)
+        self.show()
 
     def _process_submit(self, e):
         try:
@@ -632,7 +630,7 @@ class DepositWithdrawModal(Dialog):
             self.main_container.update()
             return
 
-        self.dismiss(e.page)
+        self.dismiss()
         self.on_success()
 
         if surplus > 0:
@@ -660,18 +658,17 @@ class CongratulationsModal(Dialog):
         self.on_create_with_surplus = on_create_with_surplus
         self.completed_goal = None
         self.surplus_amount = 0.0
-        self.available_goals = []
+        self.available_goals: list[dict] = []
         self.selected_target_id = None
         self.goal_option_cards: dict[int, ft.Container] = {}
-        self.pending_followup: tuple[dict, float, list] | None = None
+        self.pending_followup: tuple[dict, float | int, list[dict]] | None = None
 
         self.close_button = ft.IconButton(
             ft.Icons.CLOSE,
-            on_click=lambda e: self.dismiss(e.page),
+            on_click=lambda e: self.dismiss(),
             icon_color=Color.PRIMARY_TEXT,
         )
 
-        self.goal_title_text = Text.H3(self.lang["savings.congratulations"], color=Color.DEFAULT_TEXT)
         self.desc_text = Text.SMALL(self.lang["savings.goal_completed_desc"], color=Color.SECONDARY_TEXT)
 
         self.target_amount_text = Text.H4("", color=Color.PRIMARY)
@@ -702,7 +699,6 @@ class CongratulationsModal(Dialog):
                 controls=[
                     ft.Row([self.close_button], alignment=ft.MainAxisAlignment.END),
                     ft.Icon(ft.Icons.EMOJI_EVENTS, size=48, color=Color.PRIMARY),
-                    self.goal_title_text,
                     self.desc_text,
                     self.achievement_card,
                     self.surplus_banner,
@@ -715,13 +711,15 @@ class CongratulationsModal(Dialog):
 
         super().__init__(
             dialog_content=self.main_container,
-            color=Color.TRANSPARENT
+            color=Color.TRANSPARENT,
+            title=self.lang["savings.congratulations"],
+            padding=0
         )
-        self.content_padding = 0
+
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
         self.on_dismiss = self._handle_dismiss
 
-    def trigger(self, page: Page, completed_goal: dict, surplus_amount: float, available_goals: list):
+    def trigger(self, page: Page, completed_goal: dict, surplus_amount: float | int, available_goals: list[dict]):
         self.completed_goal = completed_goal
         self.surplus_amount = surplus_amount
         self.available_goals = [g for g in available_goals if g["objective_id"] != completed_goal["objective_id"]]
@@ -730,7 +728,7 @@ class CongratulationsModal(Dialog):
         self.goals_dropdown_column.controls = []
         self.create_new_button.visible = True
 
-        self.goal_title_text.value = self.lang["savings.goal_completed_title"].format(title=completed_goal["title"])
+        self.title = self.lang["savings.goal_completed_title"].format(title=completed_goal["title"])
         self.target_amount_text.value = completed_goal["target_value"]
 
         if surplus_amount > 0:
@@ -780,7 +778,7 @@ class CongratulationsModal(Dialog):
             self.action_button.content = self.lang["savings.continue_saving"]
             self.create_new_button.visible = False
 
-        self.show(page)
+        self.show()
 
     def _select_target(self, objective_id: int):
         if objective_id not in self.goal_option_cards:
@@ -826,17 +824,17 @@ class CongratulationsModal(Dialog):
 
             if remaining_surplus > 0:
                 self.pending_followup = (target_goal, remaining_surplus, self.available_goals)
-            self.dismiss(e.page)
+            self.dismiss()
             self.on_success()
         elif self.surplus_amount > 0 and not self.available_goals:
-            self.dismiss(e.page)
+            self.dismiss()
             self.on_create_with_surplus(e.page, self.surplus_amount)
         else:
-            self.dismiss(e.page)
+            self.dismiss()
             self.on_success()
 
     def _process_create_new(self, e):
-        self.dismiss(e.page)
+        self.dismiss()
         self.on_create_with_surplus(e.page, self.surplus_amount)
 
     def resize(self, width: int) -> None:
@@ -872,24 +870,24 @@ class DeleteConfirmDialog(Dialog):
 
         super().__init__(
             dialog_content=self.main_container,
-            color=Color.DIALOG_BACKGROUND
+            color=Color.DIALOG_BACKGROUND,
+            title=self.lang["savings.delete_objective_title"],
+            options=[self.cancel_button, self.delete_button],
+            padding=0
         )
 
-        self.title = self.lang["savings.delete_objective_title"]
-        self.actions = [self.cancel_button, self.delete_button]
-        self.content_padding = 0
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
     def trigger(self, page: Page, objective_id: int):
         self.current_id = objective_id
-        self.show(page)
+        self.show()
 
     def _close_dialog(self, e):
-        self.dismiss(e.page)
+        self.dismiss()
 
     def _delete(self, e):
         self.controller.delete_objective(self.current_id)
-        self.dismiss(e.page)
+        self.dismiss()
         self.on_success()
 
     def resize(self, width: int) -> None:
@@ -908,7 +906,7 @@ class ClearHistoryDialog(Dialog):
 
         self.desc_text = Text.P(self.lang["savings.clear_history_desc"])
 
-        self.cancel_button = ft.TextButton(self.lang["generic.cancel"], on_click=lambda e: self.dismiss(e.page))
+        self.cancel_button = ft.TextButton(self.lang["generic.cancel"], on_click=lambda e: self.dismiss())
         self.export_button = ft.Button(self.lang["savings.export_ledger"], on_click=trigger_export, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE)
         self.clear_button = ft.Button(self.lang["savings.clear_history"], on_click=self._process, bgcolor=Color.DELETE_ACTION, color=Color.WHITE)
 
@@ -919,20 +917,20 @@ class ClearHistoryDialog(Dialog):
 
         super().__init__(
             dialog_content=self.main_container,
-            color=Color.DIALOG_BACKGROUND
+            color=Color.DIALOG_BACKGROUND,
+            title=self.lang["savings.clear_history_title"],
+            options=[self.cancel_button, self.export_button, self.clear_button],
+            padding=0
         )
 
-        self.title = self.lang["savings.clear_history_title"]
-        self.actions = [self.cancel_button, self.export_button, self.clear_button]
-        self.content_padding = 0
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
     def trigger(self, page: Page):
-        self.show(page)
+        self.show()
 
     def _process(self, e):
         self.controller.clear_activity_history()
-        self.dismiss(e.page)
+        self.dismiss()
         self.on_success()
 
     def resize(self, width: int) -> None:
@@ -949,8 +947,11 @@ class GoalDetailsDialog(Dialog):
         self.on_deposit_withdraw = on_deposit_withdraw
         self.on_delete = on_delete
 
-        super().__init__(dialog_content=ft.Container(), color=Color.TRANSPARENT)
-        self.content_padding = 0
+        super().__init__(
+            dialog_content=ft.Container(),
+            color=Color.TRANSPARENT,
+            padding=0
+        )
 
     def trigger(self, page: Page, objective_id: int, goal_title: str, subtitle: str, current_value: str, target_value: str, progress: float, completed: bool):
         goal_data = {
@@ -1016,7 +1017,7 @@ class GoalDetailsDialog(Dialog):
 
         close_btn = ft.IconButton(
             ft.Icons.CLOSE,
-            on_click=lambda e: self.dismiss(page),
+            on_click=lambda e: self.dismiss(),
             icon_color=Color.PRIMARY_TEXT,
         )
         title_text = Text.H3(self.lang["savings.objective"], color=Color.BLACK)
@@ -1045,12 +1046,12 @@ class GoalDetailsDialog(Dialog):
                 ],
             ),
         )
-        self.show(page)
+        self.show()
 
     def _handle_dw(self, page, goal, mode):
-        self.dismiss(page)
+        self.dismiss()
         self.on_deposit_withdraw(page, goal, mode)
 
     def _handle_delete(self, page, oid):
-        self.dismiss(page)
+        self.dismiss()
         self.on_delete(page, oid)
