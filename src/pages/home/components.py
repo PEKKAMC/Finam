@@ -26,10 +26,10 @@ class BalanceCard(ft.Container):
 
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.balance_label_title = Text.SMALL(self.lang["home.available_balance"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.balance_label_text = Text.LABEL(self.lang["home.available_balance"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.currency_label = Text.P(self.currency, color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.add_transaction_button_label = Text.MEDIUM(self.lang["home.add_transaction"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
-        self.purchase_scanner_title = Text.MEDIUM(self.lang["home.ai_scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.add_transaction_button_label = Text.BUTTON(self.lang["home.add_transaction"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
+        self.purchase_scanner_button_label = Text.BUTTON(self.lang["home.ai_scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.income_title = Text.H6(self.lang["home.total_income"], color=Color.LIGHT_ACCENT)
         self.expense_title = Text.H6(self.lang["home.total_expense"], color=Color.EXPENSE_LABEL_TEXT)
         self.saving_title = Text.H6(self.lang["home.total_savings"], color=Color.SAVINGS_LABEL_TEXT)
@@ -49,7 +49,7 @@ class BalanceCard(ft.Container):
 
         # CONTAINER COMPONENTS
         self.balance_label_container = ft.Container(
-            content=self.balance_label_title,
+            content=self.balance_label_text,
             bgcolor=Color.DARK_SURFACE,
             padding=ft.Padding(12, 4, 12, 4),
             border_radius=20,
@@ -76,6 +76,7 @@ class BalanceCard(ft.Container):
         self.add_transaction_button = ft.Button(
             expand=True,
             content=ft.Row(
+                alignment=ft.MainAxisAlignment.CENTER,
                 spacing=5,
                 controls=[
                     self.add_transaction_button_icon,
@@ -85,21 +86,28 @@ class BalanceCard(ft.Container):
             ),
             bgcolor=Color.LIGHT_ACCENT,
             on_click=self.on_add_click,
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=16))
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=16),
+                padding=0,
+                alignment=ft.Alignment.CENTER
+            )
         )
 
         self.purchase_scanner_button = ft.OutlinedButton(
             expand=True,
             content=ft.Row(
+                alignment=ft.MainAxisAlignment.CENTER,
                 controls=[
                     self.purchase_scanner_icon,
-                    self.purchase_scanner_title
+                    self.purchase_scanner_button_label
                 ],
                 tight=True
             ),
             on_click=self.on_scan_click,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=16),
+                padding=0,
+                alignment=ft.Alignment.CENTER,
                 side=ft.BorderSide(1, Color.SCAN_BUTTON_BORDER)
             )
         )
