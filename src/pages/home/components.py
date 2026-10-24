@@ -242,7 +242,7 @@ class BalanceCard(ft.Container):
         self.balance_amount_text.value = f"{self.net_balance:,.2f}"
         self.currency_label.value = self.currency
         self.income_text.value = f"{self.income:,.2f} {self.currency}"
-        self.expense_text.value = f"-{self.expense:,.2f} {self.currency}"
+        self.expense_text.value = f"{self.expense:,.2f} {self.currency}"
         self.savings_text.value = f"{self.savings:,.2f} {self.currency}"
         self.advice_text.value = self.advice
 
