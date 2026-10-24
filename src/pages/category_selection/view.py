@@ -78,7 +78,7 @@ class CategorySelectionView(ft.View):
             alignment=ft.MainAxisAlignment.START,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             scroll=ft.ScrollMode.AUTO,
-            height=340
+            expand=True
         )
 
         self.keyboard_container = KeyboardContainer(
@@ -86,6 +86,7 @@ class CategorySelectionView(ft.View):
             lang=self.lang,
             on_save=self._on_save_clicked,
         )
+        self.keyboard_container.bottom = None
 
         self.load_categories("expense")
 
@@ -95,6 +96,7 @@ class CategorySelectionView(ft.View):
             padding=UISettings.CARD_PADDING,
             content=ft.Column(
                 spacing=15,
+                expand=True,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
                     ft.Row(
@@ -116,7 +118,7 @@ class CategorySelectionView(ft.View):
             horizontal_alignment=ft.MainAxisAlignment.CENTER,
             controls=ft.SafeArea(
                 expand=True,
-                content=ft.Stack(
+                content=ft.Column(
                     expand=True,
                     controls=[
                         self.main_container,
@@ -291,14 +293,14 @@ class CategorySelectionView(ft.View):
         self.update()
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
-        page_width, page_height = self.get_safe_page_size(
+        page_width, _ = self.get_safe_page_size(
             page=self._page
         )
 
         try:
             # Resizing main container
             self.main_container.width = page_width
-            self.main_container.height = page_height
+            self.main_container.height = None
 
             # Resizing other components
             self.keyboard_container.resize(
