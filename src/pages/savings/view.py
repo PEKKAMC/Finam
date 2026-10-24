@@ -40,7 +40,7 @@ class DialogManager:
             controller=self.controller,
             currency=self.currency,
             on_success=self._refresh_view,
-            on_create_with_surplus=lambda p, surplus: self.create_goal_modal.trigger(p, surplus)
+            on_create_with_surplus=lambda surplus: self.create_goal_modal.trigger(surplus)
         )
 
         self.deposit_withdraw_modal = DepositWithdrawModal(
@@ -48,7 +48,7 @@ class DialogManager:
             lang=self.lang,
             controller=self.controller,
             on_success=self._refresh_view,
-            on_surplus=lambda p, goal, surplus: self.congratulations_modal.trigger(p, goal, surplus, self._get_objectives())
+            on_surplus=lambda goal, surplus: self.congratulations_modal.trigger(goal, surplus, self._get_objectives())
         )
 
         self.delete_dialog = DeleteConfirmDialog(

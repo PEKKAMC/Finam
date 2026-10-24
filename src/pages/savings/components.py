@@ -34,20 +34,20 @@ class GoalCard(ft.Container):
         self.deposit_button = ft.Button(
             self.lang["savings.add_money"],
             icon=ft.Icons.ADD,
-            on_click=lambda e: on_deposit(e.page, goal, "deposit"),
+            on_click=lambda: on_deposit(goal, "deposit"),
             bgcolor=Color.PRIMARY,
             color=Color.WHITE,
         )
         self.withdraw_button = ft.OutlinedButton(
             self.lang["savings.remove_money"],
             icon=ft.Icons.REMOVE,
-            on_click=lambda e: on_withdraw(e.page, goal, "withdraw"),
+            on_click=lambda: on_withdraw(goal, "withdraw"),
         )
         self.delete_button = ft.IconButton(
             icon=ft.Icons.DELETE_OUTLINE,
             icon_color=Color.DELETE_ACTION,
             tooltip=self.lang["generic.delete"],
-            on_click=lambda e: on_delete(e.page, self.objective_id),
+            on_click=lambda: on_delete(self.objective_id),
         )
 
         self.main_container = ft.Column(
@@ -406,7 +406,7 @@ class CreateGoalModal(Dialog):
 
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
-    def trigger(self, page: Page, initial_surplus: float = 0.0):
+    def trigger(self, initial_surplus: float = 0.0):
         self.initial_surplus = initial_surplus
         if initial_surplus > 0:
             self.title = self.lang["savings.create_goal_from_surplus_title"]
@@ -578,7 +578,7 @@ class DepositWithdrawModal(Dialog):
 
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
-    def trigger(self, page: Page, goal: dict, mode: str):
+    def trigger(self, goal: dict, mode: str):
         self.goal = goal
         self.mode = mode
         is_deposit = mode == "deposit"
@@ -634,7 +634,7 @@ class DepositWithdrawModal(Dialog):
         self.on_success()
 
         if surplus > 0:
-            self.on_surplus(e.page, self.goal, surplus)
+            self.on_surplus(self.goal, surplus)
 
     def resize(self, width: int) -> None:
         outer_width = max(width, 0)
@@ -719,7 +719,7 @@ class CongratulationsModal(Dialog):
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
         self.on_dismiss = self._handle_dismiss
 
-    def trigger(self, page: Page, completed_goal: dict, surplus_amount: float | int, available_goals: list[dict]):
+    def trigger(self, completed_goal: dict, surplus_amount: float | int, available_goals: list[dict]):
         self.completed_goal = completed_goal
         self.surplus_amount = surplus_amount
         self.available_goals = [g for g in available_goals if g["objective_id"] != completed_goal["objective_id"]]
@@ -798,7 +798,7 @@ class CongratulationsModal(Dialog):
 
         completed_goal, surplus_amount, available_goals = self.pending_followup
         self.pending_followup = None
-        self.trigger(e.page, completed_goal, surplus_amount, available_goals)
+        self.trigger(completed_goal, surplus_amount, available_goals)
 
     def _process_transfer(self, e):
         if self.surplus_amount > 0 and self.available_goals and self.selected_target_id:
@@ -878,7 +878,7 @@ class DeleteConfirmDialog(Dialog):
 
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
-    def trigger(self, page: Page, objective_id: int):
+    def trigger(self, objective_id: int):
         self.current_id = objective_id
         self.show()
 
@@ -925,7 +925,7 @@ class ClearHistoryDialog(Dialog):
 
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
-    def trigger(self, page: Page):
+    def trigger(self):
         self.show()
 
     def _process(self, e):
