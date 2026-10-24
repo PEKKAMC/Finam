@@ -186,9 +186,9 @@ async def main(page: Page) -> None:
 
     async def on_error(e, ex: Exception | None = None) -> None:
         event_data = getattr(e, "data", None)
-        Logger.critical(f"Unexpected error occurred: \nEvent data: {event_data}\nException: {ex}")
+        Logger.critical(f"Unexpected error occurred: \nEvent data: {event_data}\nException: {ex}", exc_info=True)
 
-        await page.window.close()
+        await page.window.destroy()
 
     page.on_error = on_error
     page.on_route_change = route_change
