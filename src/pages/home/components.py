@@ -43,7 +43,7 @@ class BalanceCard(ft.Container):
         # Dynamic texts
         self.balance_amount_text = Text.H1(f"{self.net_balance:,.2f}", color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.income_text = Text.MEDIUM(f"{self.income:,.2f} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.expense_text = Text.MEDIUM(f"-{self.expense:,.2f} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.expense_text = Text.MEDIUM(f"{self.expense:,.2f} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
         self.savings_text = Text.MEDIUM(f"{self.savings:,.2f} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
         self.advice_text = Text.SMALL(self.advice, color=Color.WHITE)
 
