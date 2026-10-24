@@ -18,7 +18,24 @@ jobs:
         id: extract
         run: |
           RAW_VERSION=$(grep -m 1 '^version = ' pyproject.toml | cut -d '"' -f 2)
-          FORMATTED_VERSION="v${RAW_VERSION}-alpha"
+          VERSION_SUFFIX=$(python3 - "$RAW_VERSION" <<'PY'
+          import sys
+
+          try:
+              version = [int(part) for part in sys.argv[1].split(".")]
+              if len(version) != 3:
+                  raise ValueError
+          except ValueError:
+              raise SystemExit(f"Invalid version format: {sys.argv[1]}")
+
+          major, minor, _ = version
+          if major == 0 and 0 <= minor <= 2:
+              print("-alpha")
+          elif major == 0 and minor >= 3:
+              print("-beta")
+          PY
+          )
+          FORMATTED_VERSION="v${RAW_VERSION}${VERSION_SUFFIX}"
           
           echo "raw_version=$RAW_VERSION" >> "$GITHUB_OUTPUT"
           echo "version=$FORMATTED_VERSION" >> "$GITHUB_OUTPUT"
