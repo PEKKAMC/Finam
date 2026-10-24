@@ -196,16 +196,6 @@ class UserManagementView(ft.View):
         self.services_card = MenuSectionCard(
             items=[
                 MenuItem(
-                    icon=ft.Icons.THUMB_UP_OUTLINED,
-                    icon_color=Color.PRIMARY_ACTION,
-                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title=self.lang["user_management.refer_friend"],
-                    subtitle=self.lang["user_management.get_vip_30_days"],
-                    badge_text=self.lang["user_management.badge_30days"],
-                    badge_bg=Color.LIGHT_ACCENT,
-                    badge_color=Color.PRIMARY
-                ),
-                MenuItem(
                     icon=ft.Icons.SHIELD_OUTLINED,
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
@@ -228,13 +218,6 @@ class UserManagementView(ft.View):
 
         self.support_card = MenuSectionCard(
             items=[
-                MenuItem(
-                    icon=ft.Icons.STAR_OUTLINE,
-                    icon_color=Color.GOAL_HEADER_ICON_COLOR,
-                    icon_bg_color=Color.GOAL_HEADER_ICON_BACKGROUND,
-                    title=self.lang["user_management.rate_app"],
-                    subtitle=self.lang["user_management.rate_5_stars"]
-                ),
                 MenuItem(
                     icon=ft.Icons.HELP_OUTLINE,
                     icon_color=Color.PRIMARY_ACTION,
