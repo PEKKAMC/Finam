@@ -12,6 +12,7 @@ from src.logger import Logger
 class Page(ft.Page):
     def __init__(self):
         self.delete_cached_view: Callable
+        self.delete_all_cached_views: Callable
         self.pending_objective_id: int | None
 
     def navigate_to(self, route: str):
