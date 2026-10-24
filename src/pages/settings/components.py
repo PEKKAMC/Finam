@@ -53,10 +53,11 @@ class SettingsHeader(ft.Container):
 
 
 class SettingDropdown(ft.Container):
-    def __init__(self, options: list[str], active_index: int = 0):
+    def __init__(self, options: list[str], active_index: int = 0, menu_height: int | None = None):
         self.dropdown_control = ft.Dropdown(
             options=[ft.dropdown.Option(opt) for opt in options],
             value=options[active_index],
+            menu_height=menu_height,
             width=130,
             border=ft.InputBorder.NONE,
             bgcolor=Color.CARD_BACKGROUND,

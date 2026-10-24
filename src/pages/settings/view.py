@@ -58,7 +58,7 @@ class SettingsView(ft.View):
             ]
         )
 
-        self.currency_dropdown = SettingDropdown(self.currencies, active_index=currency_index)
+        self.currency_dropdown = SettingDropdown(self.currencies, active_index=currency_index, menu_height=240)
         self.currency_card = SettingCard(
             controls=[
                 SettingRow(
