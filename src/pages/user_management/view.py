@@ -2,7 +2,6 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import os
 from collections.abc import Callable
 
 import flet as ft
@@ -138,11 +137,12 @@ class DialogManager:
     async def _handle_delete_all_data_confirm(self, e=None) -> int:
         try:
             self.controller.delete_all_data()
-            os.environ["RESTART_FINAM"] = "1"
-            await self._page.window.close()
+            self._page.navigate_to("/starter")()
+            self._page.delete_all_cached_views()
+
             return 0
         except Exception as ex:
-            Logger.error(f"Failed to delete all data and restart app: {ex}")
+            Logger.error(f"Failed to delete all data: {ex}")
             return -1
 
 class UserManagementView(ft.View):

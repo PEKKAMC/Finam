@@ -138,6 +138,10 @@ async def main(page: Page) -> None:
         else:
             Logger.info(f"No cached view found for route: {route}")
 
+    def delete_all_cached_views() -> None:
+        views_cache.clear()
+        Logger.info("Deleted all cached views")
+
     page.delete_cached_view = delete_cached_view
 
     async def route_change(e: ft.RouteChangeEvent) -> None:
@@ -183,9 +187,6 @@ async def main(page: Page) -> None:
     async def on_error(e, ex: Exception | None = None) -> None:
         event_data = getattr(e, "data", None)
         Logger.critical(f"Unexpected error occurred: \nEvent data: {event_data}\nException: {ex}")
-        Logger.info("Attempting to restart application...")
-
-        os.environ["RESTART_FINAM"] = "1"
 
         await page.window.close()
 

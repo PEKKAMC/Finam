@@ -14,7 +14,6 @@ PACKAGE_NAME = "Finam"
 
 def main() -> int:
     try:
-        os.environ["RESTART_APP"] = "0"
         app_version = get_version(PACKAGE_NAME)
         assets_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets")
 
@@ -24,12 +23,6 @@ def main() -> int:
         # START APPLICATION
         Logger.info(f"Starting Finam {app_version}...")
         ft.run(app, assets_dir=assets_directory)
-
-        # POST RUN CLEANUP
-        if os.environ.get("RESTART_FINAM") == "1":
-            os.environ["RESTART_FINAM"] = "0"
-            Logger.info("Restarting...")
-            return 1
 
         Logger.info("Finam closed gracefully.")
         return 0
@@ -41,9 +34,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     exit_code = main()
-    if exit_code != 0:
-        exit_code = main()
-        if exit_code != 0:
-            Logger.error("Application crashed twice, please restart manually...")
-
     exit(exit_code)
