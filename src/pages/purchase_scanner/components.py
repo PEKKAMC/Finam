@@ -100,7 +100,7 @@ class ThinkingTimeUnitContainer(ft.Container):
             filled=True,
             bgcolor=Color.PAGE_BACKGROUND,
             height=48,
-            width=225,
+            width=150,
             text_size=13,
             content_padding=ft.Padding(16, 12, 16, 12)
         )
