@@ -2,7 +2,10 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import hashlib
+import hmac
 import re
+import secrets
 import sqlite3
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -113,6 +116,17 @@ class DatabaseConnection:
                     FOREIGN KEY (user_id) REFERENCES users (id)
                  )
             ''')
+            self.execute('''
+                CREATE TABLE IF NOT EXISTS app_security_settings (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    app_lock_enabled INTEGER NOT NULL DEFAULT 0,
+                    pin_salt TEXT,
+                    pin_hash TEXT
+                )
+            ''')
+            self.execute(
+                "INSERT OR IGNORE INTO app_security_settings (id) VALUES (1)"
+            )
 
             try:
                 self.execute("ALTER TABLE user_settings ADD COLUMN language TEXT DEFAULT 'vi'")
@@ -296,7 +310,7 @@ class UserDatabase:
         )
         if result and result[0]:
             return result[0]
-        return 'vi'
+        return DefaultSettings.LANGUAGE
 
     def set_language(self, username: str, language: str) -> bool:
         """Set the language for a user."""
@@ -365,6 +379,81 @@ class UserDatabase:
         except Exception as ex:
             Logger.error(f"Failed to set currency: {ex}")
             return False
+
+
+class AppSecurityDatabase:
+    """Stores device-wide app lock settings needed before a user is selected."""
+
+    _PIN_ITERATIONS = 200_000
+
+    def __init__(self, connection: DatabaseConnection):
+        self.db = connection
+
+    def is_app_lock_enabled(self) -> bool:
+        result = self.db.execute(
+            "SELECT app_lock_enabled FROM app_security_settings WHERE id = 1",
+            fetch_one=True
+        )
+        return bool(result and result[0])
+
+    @staticmethod
+    def _hash_pin(pin: str, salt: bytes) -> bytes:
+        return hashlib.pbkdf2_hmac(
+            "sha256",
+            pin.encode("ascii"),
+            salt,
+            AppSecurityDatabase._PIN_ITERATIONS
+        )
+
+    def set_app_lock_pin(self, pin: str) -> bool:
+        if len(pin) != 4 or not pin.isascii() or not pin.isdigit():
+            return False
+
+        salt = secrets.token_bytes(16)
+        pin_hash = self._hash_pin(pin, salt)
+        self.db.execute(
+            """
+            UPDATE app_security_settings
+            SET app_lock_enabled = 1, pin_salt = ?, pin_hash = ?
+            WHERE id = 1
+            """,
+            (salt.hex(), pin_hash.hex())
+        )
+        return True
+
+    def disable_app_lock(self) -> None:
+        self.db.execute(
+            """
+            UPDATE app_security_settings
+            SET app_lock_enabled = 0, pin_salt = NULL, pin_hash = NULL
+            WHERE id = 1
+            """
+        )
+
+    def verify_app_lock_pin(self, pin: str) -> bool:
+        if len(pin) != 4 or not pin.isascii() or not pin.isdigit():
+            return False
+
+        result = self.db.execute(
+            """
+            SELECT app_lock_enabled, pin_salt, pin_hash
+            FROM app_security_settings
+            WHERE id = 1
+            """,
+            fetch_one=True
+        )
+        if not result or not result[0] or not result[1] or not result[2]:
+            return False
+
+        try:
+            salt = bytes.fromhex(result[1])
+            expected_hash = bytes.fromhex(result[2])
+        except ValueError as ex:
+            Logger.error(f"Invalid stored app lock credentials: {ex}")
+            return False
+
+        actual_hash = self._hash_pin(pin, salt)
+        return hmac.compare_digest(actual_hash, expected_hash)
 
 # ==========================================
 # SAVING PAGE LOGIC
@@ -542,7 +631,7 @@ class SavingsDatabase:
 # ==========================================
 
 class SpendingDatabase:
-    """Handles all logic related to the Spending page (daily expenses and incomes)."""
+    """Handles all logic related to the Spending page (expenses and incomes)."""
 
     def __init__(self, connection: DatabaseConnection, user_db: UserDatabase):
         self.db = connection
@@ -713,6 +802,7 @@ class DatabaseManager:
         self.connection = DatabaseConnection(database_name)
 
         self.users = UserDatabase(self.connection)
+        self.app_security = AppSecurityDatabase(self.connection)
         self.savings = SavingsDatabase(self.connection, self.users)
         self.spending = SpendingDatabase(self.connection, self.users)
         self.scanner_history = PurchaseScannerDatabase(self.connection, self.users)

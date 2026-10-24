@@ -10,7 +10,7 @@ import flet as ft
 from src.logger import Logger
 from src.pages.settings.components import SettingCard, SettingDropdown, SettingRow, SettingsHeader
 from src.pages.settings.logic import LogicController
-from src.utils import Color, DefaultSettings, Page, get_asset_path, get_safe_page_size, Text, UISettings
+from src.utils import Color, DefaultSettings, Dialog, Page, get_asset_path, get_safe_page_size, Text, UISettings
 from src.database import db
 
 Logger.info("Initializing Settings page...")
@@ -82,13 +82,19 @@ class SettingsView(ft.View):
             ]
         )
 
+        self.app_lock_switch = ft.Switch(
+            value=db.app_security.is_app_lock_enabled(),
+            active_color=Color.PRIMARY_ACTION,
+            on_change=self._on_app_lock_changed
+        )
+
         self.system_prefs_card = SettingCard(
             controls=[
                 SettingRow(
                     icon=ft.Icons.FINGERPRINT,
                     title=self.lang["settings.app_lock"],
                     subtitle=self.lang["settings.lock_requirement"],
-                    control=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
+                    control=self.app_lock_switch
                 ),
                 ft.Container(height=4),
                 SettingRow(
@@ -161,6 +167,75 @@ class SettingsView(ft.View):
 
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
+
+    def _on_app_lock_changed(self, e: ft.ControlEvent) -> None:
+        if e.control.value:
+            self._show_pin_setup_dialog()
+            return
+
+        db.app_security.disable_app_lock()
+        self._page.update()
+
+    def _show_pin_setup_dialog(self) -> None:
+        pin_field = ft.TextField(
+            label=self.lang["settings.pin"],
+            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
+            password=True,
+            max_length=4,
+            keyboard_type=ft.KeyboardType.NUMBER
+        )
+        confirm_pin_field = ft.TextField(
+            label=self.lang["settings.confirm_pin"],
+            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
+            password=True,
+            max_length=4,
+            keyboard_type=ft.KeyboardType.NUMBER
+        )
+        error_text = ft.Text(color=Color.NEGATIVE_ACTION)
+
+        def close_dialog(e=None) -> None:
+            self._pin_setup_dialog.dismiss()
+            self.app_lock_switch.value = db.app_security.is_app_lock_enabled()
+            self._page.update()
+
+        def save_pin(e=None) -> None:
+            pin = pin_field.value or ""
+            confirm_pin = confirm_pin_field.value or ""
+            if len(pin) != 4 or not pin.isascii() or not pin.isdigit():
+                error_text.value = self.lang["settings.pin_invalid"]
+                error_text.update()
+                return
+            if pin != confirm_pin:
+                error_text.value = self.lang["settings.pin_mismatch"]
+                error_text.update()
+                return
+            if not db.app_security.set_app_lock_pin(pin):
+                error_text.value = self.lang["settings.pin_invalid"]
+                error_text.update()
+                return
+
+            self._pin_setup_dialog.dismiss()
+            self.app_lock_switch.value = True
+            self._page.update()
+
+        self._pin_setup_dialog = Dialog(
+            dialog_content=ft.Column(
+                tight=True,
+                controls=[
+                    Text.H4(self.lang["settings.pin_title"], color=Color.PRIMARY_TEXT),
+                    pin_field,
+                    confirm_pin_field,
+                    error_text
+                ]
+            ),
+            color=Color.WHITE,
+            options=[
+                ft.TextButton(self.lang["generic.cancel"], on_click=close_dialog),
+                ft.TextButton(self.lang["generic.save"], on_click=save_pin)
+            ]
+        )
+        self._pin_setup_dialog._dialog_page = self._page
+        self._pin_setup_dialog.show()
 
     async def _on_done_click(self, e=None):
         """Handle the Done button click - saves settings and navigates."""

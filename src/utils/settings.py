@@ -7,6 +7,7 @@ class DefaultSettings:
     THEME: str = "light"
     CURRENCY: str = "VND (đ)"
     LANGUAGE: str = "vi"
+    APP_LOCK: bool = False
 
 
 class UISettings:

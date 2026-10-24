@@ -4,11 +4,13 @@
 
 """Starter page - Initial user selection."""
 
+from src.pages.starter.components import AppLockCard, DialogManager
 from src.pages.starter.logic import LogicController
-from src.pages.starter.view import DialogManager, StarterView, get_starter_view
+from src.pages.starter.view import StarterView, get_starter_view
 
 __all__ = [
     "LogicController",
+    "AppLockCard",
     "DialogManager",
     "StarterView",
     "get_starter_view"

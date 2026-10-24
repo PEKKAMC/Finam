@@ -178,7 +178,7 @@ async def main(page: Page) -> None:
 
             page.views.append(view)
             page.update()
-            if isinstance(view, StarterView):
+            if isinstance(view, StarterView) and view.is_unlocked:
                 view.show_user_management_dialog()
 
         except Exception as ex:
