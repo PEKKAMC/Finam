@@ -35,7 +35,7 @@ class CategorySelectionView(ft.View):
 
         self.cancel_button = ft.TextButton(
             content=ft.Icon(ft.Icons.ARROW_BACK, color=Color.DEFAULT_BUTTON),
-            on_click=self._page.navigate_to("/home")
+            on_click=self._on_cancel_clicked
         )
 
         self.expense_text = Text.P(self.lang["generic.expense"], color=Color.BLACK, weight=ft.FontWeight.BOLD)
@@ -139,6 +139,13 @@ class CategorySelectionView(ft.View):
         self.load_categories(category_type)
         if self._page is not None:
             self.update()
+
+    def _get_return_route(self) -> str:
+        previous_route = getattr(self._page, "previous_route", "")
+        return previous_route if previous_route in ("/home", "/spending") else "/home"
+
+    def _on_cancel_clicked(self, e: ft.ControlEvent) -> None:
+        self._page.navigate_to(self._get_return_route())(e)
 
     def load_categories(self, category_type: str) -> None:
         if category_type == "expense":
@@ -288,7 +295,7 @@ class CategorySelectionView(ft.View):
             self.keyboard_container.reset_inputs()
             self._page.delete_cached_view("/home")
             self._page.delete_cached_view("/spending")
-            self._page.navigate_to("/home")()
+            self._page.navigate_to(self._get_return_route())()
 
         self.update()
 

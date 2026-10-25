@@ -14,6 +14,7 @@ class Page(ft.Page):
         self.delete_cached_view: Callable
         self.delete_all_cached_views: Callable
         self.pending_objective_id: int | None
+        self.previous_route: str
 
     def navigate_to(self, route: str):
         def handler(e: ft.ControlEvent | None = None) -> None:
@@ -23,6 +24,7 @@ class Page(ft.Page):
                 if normalized_route == current_route:
                     Logger.info(f"Skipping route navigation to '{normalized_route}' because we are already there.")
                     return
+                self.previous_route = current_route
                 self.run_task(self.push_route, normalized_route)
             except Exception as ex:
                 Logger.error(f"Failed to navigate to {route}: {ex}\nEvent details: {e}")
