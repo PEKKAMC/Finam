@@ -143,6 +143,7 @@ async def main(page: Page) -> None:
         Logger.info("Deleted all cached views")
 
     page.delete_cached_view = delete_cached_view
+    page.delete_all_cached_views = delete_all_cached_views
 
     async def route_change(e: ft.RouteChangeEvent) -> None:
         try:
