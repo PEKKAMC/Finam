@@ -96,13 +96,7 @@ class SettingsView(ft.View):
                     subtitle=self.lang["settings.lock_requirement"],
                     control=self.app_lock_switch
                 ),
-                ft.Container(height=4),
-                SettingRow(
-                    icon=ft.Icons.VOLUME_UP_OUTLINED,
-                    title=self.lang["settings.sound_haptic"],
-                    subtitle=self.lang["settings.touch_effect"],
-                    control=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
-                )
+                ft.Container(height=4)
             ]
         )
 
