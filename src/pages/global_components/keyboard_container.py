@@ -35,7 +35,7 @@ class KeyboardContainer(ft.Container):
             color=Color.DEFAULT_TEXT,
             border_color=ft.Colors.TRANSPARENT,
             focused_border_color=ft.Colors.TRANSPARENT,
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             prefix_icon=ft.Icons.NOTES,
             text_size=14,
             content_padding=10,
@@ -139,7 +139,7 @@ class KeyboardContainer(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             bottom=0,
             border_radius=ft.BorderRadius.only(top_left=16, top_right=16),
             visible=False,

@@ -38,12 +38,12 @@ class CategorySelectionView(ft.View):
             on_click=self._on_cancel_clicked
         )
 
-        self.expense_text = Text.P(self.lang["generic.expense"], color=Color.BLACK, weight=ft.FontWeight.BOLD)
+        self.expense_text = Text.P(self.lang["generic.expense"], color=Color.NAVIGATION_ACTIVE_TEXT, weight=ft.FontWeight.BOLD)
         self.income_text = Text.P(self.lang["generic.income"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.NORMAL)
 
         self.expense_button = ft.Container(
             content=self.expense_text,
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             padding=ft.Padding.symmetric(horizontal=20, vertical=8),
             border_radius=8,
             alignment=ft.Alignment.CENTER,
@@ -149,16 +149,16 @@ class CategorySelectionView(ft.View):
 
     def load_categories(self, category_type: str) -> None:
         if category_type == "expense":
-            self.expense_button.bgcolor = Color.WHITE
-            self.expense_text.color = Color.BLACK
+            self.expense_button.bgcolor = Color.NAVIGATION_ACTIVE_BACKGROUND
+            self.expense_text.color = Color.NAVIGATION_ACTIVE_TEXT
             self.expense_text.weight = ft.FontWeight.BOLD
 
             self.income_button.bgcolor = Color.TRANSPARENT
             self.income_text.color = Color.DEFAULT_TEXT
             self.income_text.weight = ft.FontWeight.NORMAL
         elif category_type == "income":
-            self.income_button.bgcolor = Color.WHITE
-            self.income_text.color = Color.BLACK
+            self.income_button.bgcolor = Color.NAVIGATION_ACTIVE_BACKGROUND
+            self.income_text.color = Color.NAVIGATION_ACTIVE_TEXT
             self.income_text.weight = ft.FontWeight.BOLD
 
             self.expense_button.bgcolor = Color.TRANSPARENT

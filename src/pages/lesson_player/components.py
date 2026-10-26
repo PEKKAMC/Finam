@@ -13,7 +13,7 @@ class TopNavigationMenu(ft.Row):
         self.lang = lang
         self.return_button = ft.IconButton(
             icon=ft.Icons.ARROW_BACK,
-            icon_color=Color.BLACK,
+            icon_color=Color.PRIMARY_TEXT,
             icon_size=30,
             on_click=on_return_click
         )
@@ -47,8 +47,8 @@ class SlideCanvas(ft.Container):
             content=self.main_container,
             width=550,
             height=750,
-            bgcolor=ft.Colors.WHITE,
-            border=ft.Border.all(1, ft.Colors.GREY_200),
+            bgcolor=Color.CARD_BACKGROUND,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
             clip_behavior=ft.ClipBehavior.HARD_EDGE
         )
 
@@ -70,8 +70,8 @@ class LessonHeader(ft.Row):
     def __init__(self, page: Page, lang: dict, default_title: str):
         self._page = page
         self.lang = lang
-        self.title_display = Text.H2(default_title, color=ft.Colors.BLUE_GREY_900)
-        self.progress_display = Text.H4("0 / 0", color=ft.Colors.GREY_600)
+        self.title_display = Text.H2(default_title, color=Color.PRIMARY_TEXT)
+        self.progress_display = Text.H4("0 / 0", color=Color.SECONDARY_TEXT)
         self.main_container = ft.Row(
             controls=[self.title_display, self.progress_display],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
@@ -126,7 +126,7 @@ class PresentationBoard(ft.Container):
 
         super().__init__(
             content=self.main_container,
-            padding=25, bgcolor=ft.Colors.WHITE, border_radius=15,
+            padding=25, bgcolor=Color.CARD_BACKGROUND, border_radius=15,
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK)),
             height=850
         )

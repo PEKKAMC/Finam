@@ -22,12 +22,20 @@ class CategoryItem(ft.Container):
             width=60,
             height=60,
             border_radius=UISettings.CARD_BORDER_RADIUS,
-            bgcolor=Color.LIGHT_ACCENT if self.is_selected else None,
+            bgcolor=Color.NAVIGATION_ACTIVE_BACKGROUND if self.is_selected else None,
             alignment=ft.Alignment.CENTER,
-            content=ft.Icon(icon=self.icon, color=Color.BLACK if self.is_selected else Color.PRIMARY, size=30)
+            content=ft.Icon(
+                icon=self.icon,
+                color=Color.NAVIGATION_ACTIVE_ICON if self.is_selected else Color.PRIMARY,
+                size=30,
+            )
         )
 
-        self.icon_label = Text.LABEL(value=self.category_name, color=Color.DEFAULT_TEXT, text_align=ft.TextAlign.CENTER)
+        self.icon_label = Text.LABEL(
+            value=self.category_name,
+            color=Color.NAVIGATION_ACTIVE_TEXT if self.is_selected else Color.DEFAULT_TEXT,
+            text_align=ft.TextAlign.CENTER,
+        )
 
         self.main_container = ft.Container(
             width=75,
@@ -44,7 +52,7 @@ class CategoryItem(ft.Container):
             on_click=self._on_click,
             ink=True,
             border_radius=UISettings.CARD_BORDER_RADIUS,
-            bgcolor=Color.LIGHT_ACCENT if self.is_selected else Color.TRANSPARENT
+            bgcolor=Color.NAVIGATION_ACTIVE_BACKGROUND if self.is_selected else Color.TRANSPARENT
         )
 
         super().__init__(
@@ -55,5 +63,15 @@ class CategoryItem(ft.Container):
 
     def update_selection(self, selected: bool):
         self.is_selected = selected
-        self.main_container.bgcolor = Color.LIGHT_ACCENT if self.is_selected else Color.TRANSPARENT
-        self.icon_circle.content.color = Color.BLACK if self.is_selected else Color.PRIMARY
+        self.main_container.bgcolor = (
+            Color.NAVIGATION_ACTIVE_BACKGROUND if self.is_selected else Color.TRANSPARENT
+        )
+        self.icon_circle.bgcolor = (
+            Color.NAVIGATION_ACTIVE_BACKGROUND if self.is_selected else None
+        )
+        self.icon_circle.content.color = (
+            Color.NAVIGATION_ACTIVE_ICON if self.is_selected else Color.PRIMARY
+        )
+        self.icon_label.color = (
+            Color.NAVIGATION_ACTIVE_TEXT if self.is_selected else Color.DEFAULT_TEXT
+        )

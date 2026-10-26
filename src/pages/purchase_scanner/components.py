@@ -61,7 +61,7 @@ class SelectableOptionGroup(ft.Container):
                     btn.border = ft.Border.all(1.5, Color.PRIMARY)
                     text_ctrl.color = Color.PRIMARY
             else:
-                btn.bgcolor = Color.WHITE
+                btn.bgcolor = Color.CARD_BACKGROUND
                 btn.border = ft.Border.all(1, Color.INPUT_BORDER)
                 text_ctrl.color = Color.DEFAULT_TEXT
 
@@ -235,7 +235,7 @@ class ScannerForm(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=24,
             padding=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
@@ -287,7 +287,7 @@ class InterventionItem(ft.Container):
             border=ft.Border.all(1, Color.INPUT_BORDER),
             border_radius=16,
             padding=14,
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             content=self.main_container
         )
 
@@ -326,7 +326,7 @@ class ScannerHistoryCard(ft.Container):
 
         super().__init__(
             visible=True,
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             border_radius=16,
             padding=12,
@@ -407,7 +407,7 @@ class ScannerHistoryCard(ft.Container):
                                     controls=[
                                         ft.Container(
                                             content=Text.SMALL(f"{risk_score}", color=Color.WHITE, weight=ft.FontWeight.BOLD),
-                                            bgcolor=Color.PRIMARY if risk_score < 60 else (Color.NEGATIVE_ACTION if risk_score > 75 else "#F59E0B"),
+                                            bgcolor=Color.PRIMARY if risk_score < 60 else (Color.NEGATIVE_ACTION if risk_score > 75 else Color.WARNING_COLOR),
                                             border_radius=12,
                                             padding=ft.Padding(8, 4, 8, 4),
                                         ),
@@ -577,7 +577,7 @@ class ScannerResult(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=24,
             padding=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
@@ -617,7 +617,7 @@ class ScannerResult(ft.Container):
             status_desc = self.lang["purchase_scanner.risk_very_high"]
             pause_time = f"24 {self.lang['generic.hour']}"
         elif risk_val > 35:
-            risk_color = "#F59E0B"
+            risk_color = Color.WARNING_COLOR
             status_desc = self.lang["purchase_scanner.risk_moderate"]
             pause_time = f"60 {self.lang['generic.second']}"
         else:

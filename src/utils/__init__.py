@@ -5,7 +5,7 @@
 """Utils package - Default settings, text utilities, and asset helpers."""
 
 from src.utils.assets import get_asset_path, get_language, TranslationDict
-from src.utils.color import Color
+from src.utils.color import Color, DarkTheme, LightTheme, Theme, ThemeManager, ThemeName, ThemeRegistry
 from src.utils.data import Data
 from src.utils.page import Page
 from src.utils.dialog import Dialog
@@ -20,6 +20,12 @@ __all__ = [
     "TranslationDict",
     # Color
     "Color",
+    "LightTheme",
+    "DarkTheme",
+    "Theme",
+    "ThemeManager",
+    "ThemeName",
+    "ThemeRegistry",
     # Data
     "Data",
     # Dialog

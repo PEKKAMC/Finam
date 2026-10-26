@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 
 from src.logger import Logger
-from src.utils import DefaultSettings
+from src.utils import DefaultSettings, ThemeRegistry
 
 # ==========================================
 # DATABASE CONNECTION
@@ -117,6 +117,13 @@ class DatabaseConnection:
                  )
             ''')
             self.execute('''
+                CREATE TABLE IF NOT EXISTS app_settings (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    theme TEXT NOT NULL DEFAULT 'light'
+                )
+            ''')
+            self.execute("INSERT OR IGNORE INTO app_settings (id) VALUES (1)")
+            self.execute('''
                 CREATE TABLE IF NOT EXISTS app_security_settings (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     app_lock_enabled INTEGER NOT NULL DEFAULT 0,
@@ -141,7 +148,7 @@ class DatabaseConnection:
             except sqlite3.OperationalError:
                 # Column already exists
                 pass
-            
+
             self.execute('''
                 CREATE TABLE IF NOT EXISTS objectives (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -378,6 +385,39 @@ class UserDatabase:
             return True
         except Exception as ex:
             Logger.error(f"Failed to set currency: {ex}")
+            return False
+
+class AppSettingsDatabase:
+    """Stores app-wide settings shared by all users."""
+
+    def __init__(self, connection: DatabaseConnection):
+        self.db = connection
+
+    def get_theme(self) -> str:
+        """Get the app-wide theme setting."""
+        result = self.db.execute(
+            "SELECT theme FROM app_settings WHERE id = 1",
+            fetch_one=True,
+        )
+        theme = result[0] if result and result[0] else DefaultSettings.THEME
+        try:
+            ThemeRegistry.get(theme)
+        except ValueError:
+            Logger.warn(f"Unknown app theme {theme!r}; using default")
+            return DefaultSettings.THEME
+        return theme
+
+    def set_theme(self, theme: str) -> bool:
+        """Set the app-wide theme to a registered theme."""
+        try:
+            ThemeRegistry.get(theme)
+            self.db.execute(
+                "UPDATE app_settings SET theme = ? WHERE id = 1",
+                (theme,),
+            )
+            return True
+        except (ValueError, sqlite3.Error) as ex:
+            Logger.error(f"Failed to set theme: {ex}")
             return False
 
 
@@ -802,6 +842,7 @@ class DatabaseManager:
         self.connection = DatabaseConnection(database_name)
 
         self.users = UserDatabase(self.connection)
+        self.app_settings = AppSettingsDatabase(self.connection)
         self.app_security = AppSecurityDatabase(self.connection)
         self.savings = SavingsDatabase(self.connection, self.users)
         self.spending = SpendingDatabase(self.connection, self.users)

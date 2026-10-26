@@ -100,6 +100,11 @@ class AppLockCard(ft.Container):
             password=True,
             max_length=4,
             keyboard_type=ft.KeyboardType.NUMBER,
+            bgcolor=Color.CARD_BACKGROUND,
+            border_color=Color.INPUT_BORDER,
+            focused_border_color=Color.PRIMARY_ACTION,
+            color=Color.PRIMARY_TEXT,
+            label_style=ft.TextStyle(color=Color.SECONDARY_TEXT),
             on_submit=self._on_unlock
         )
         self.error_text = ft.Text(

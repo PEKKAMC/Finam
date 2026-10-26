@@ -39,7 +39,7 @@ class LessonItemCard(ft.Container):
                                 ],
                                 tight=True
                             ),
-                            bgcolor="#059669",
+                            bgcolor=Color.SUCCESS_BACKGROUND,
                             padding=ft.Padding(8, 4, 8, 4),
                             border_radius=12
                         )
@@ -118,7 +118,7 @@ class LessonItemCard(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             ink=True,
@@ -185,8 +185,8 @@ class LessonSummaryBanner(ft.Container):
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 spacing=2,
                                 controls=[
-                                    Text.H3(f"{total_minutes} {self.lang['generic.minute']}", color=ft.Colors.AMBER_300 if hasattr(ft.Colors, 'AMBER_300') else "#FCD34D", weight=ft.FontWeight.BOLD),
-                                    Text.SMALL(self.lang["lessons.accumulated_time"], color=ft.Colors.AMBER_200 if hasattr(ft.Colors, 'AMBER_200') else "#FDE68A", weight=ft.FontWeight.BOLD)
+                                    Text.H3(f"{total_minutes} {self.lang['generic.minute']}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD),
+                                    Text.SMALL(self.lang["lessons.accumulated_time"], color=Color.SAVINGS_LABEL_TEXT, weight=ft.FontWeight.BOLD)
                                 ]
                             )
                         ),

@@ -10,7 +10,18 @@ import flet as ft
 from src.logger import Logger
 from src.pages.settings.components import SettingCard, SettingDropdown, SettingRow, SettingsHeader
 from src.pages.settings.logic import LogicController
-from src.utils import Color, DefaultSettings, Dialog, Page, get_asset_path, get_safe_page_size, Text, UISettings
+from src.utils import (
+    Color,
+    DefaultSettings,
+    Dialog,
+    Page,
+    ThemeManager,
+    ThemeRegistry,
+    get_asset_path,
+    get_safe_page_size,
+    Text,
+    UISettings,
+)
 from src.database import db
 
 Logger.info("Initializing Settings page...")
@@ -34,6 +45,7 @@ class SettingsView(ft.View):
         username = self.user_info["username"]
         current_language = db.users.get_language(username)
         current_currency = db.users.get_currency(username)
+        current_theme = db.app_settings.get_theme()
 
         language_files = sorted(Path(get_asset_path("lang")).glob("*.json"))
         if not language_files:
@@ -54,6 +66,22 @@ class SettingsView(ft.View):
         # Get currency index
         currency_index = self.currencies.index(current_currency) if current_currency in self.currencies else self.currencies.index(DefaultSettings.CURRENCY)
 
+        theme_names = ThemeRegistry.names()
+        theme_name_to_label = {
+            name: (
+                self.lang[f"settings.theme.{name}"]
+                if f"settings.theme.{name}" in self.lang
+                else name.replace("_", " ").title()
+            )
+            for name in theme_names
+        }
+        theme_label_to_name = {
+            label: name
+            for name, label in theme_name_to_label.items()
+        }
+        theme_options = [theme_name_to_label[name] for name in theme_names]
+        theme_index = theme_names.index(current_theme)
+
         # INITIALIZE PAGE COMPONENTS
         self.settings_header = SettingsHeader(lang=self.lang)
         self.header_divider = ft.Divider(height=10, thickness=1, color=Color.INPUT_BORDER)
@@ -66,6 +94,18 @@ class SettingsView(ft.View):
                     title=self.lang["settings.language"],
                     subtitle=self.lang["settings.language_options"],
                     control=self.language_dropdown
+                )
+            ]
+        )
+
+        self.theme_dropdown = SettingDropdown(theme_options, active_index=theme_index)
+        self.theme_card = SettingCard(
+            controls=[
+                SettingRow(
+                    icon=ft.Icons.PALETTE_OUTLINED,
+                    title=self.lang["settings.theme"],
+                    subtitle=self.lang["settings.theme_options"],
+                    control=self.theme_dropdown
                 )
             ]
         )
@@ -114,6 +154,7 @@ class SettingsView(ft.View):
 
         # Store helpers for saving settings
         self.language_name_to_code = language_name_to_code
+        self.theme_label_to_name = theme_label_to_name
 
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
@@ -130,6 +171,7 @@ class SettingsView(ft.View):
                                 self.settings_header,
                                 self.header_divider,
                                 self.language_card,
+                                self.theme_card,
                                 self.currency_card,
                                 self.system_prefs_card,
                                 self.done_btn
@@ -176,14 +218,24 @@ class SettingsView(ft.View):
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
             password=True,
             max_length=4,
-            keyboard_type=ft.KeyboardType.NUMBER
+            keyboard_type=ft.KeyboardType.NUMBER,
+            bgcolor=Color.CARD_BACKGROUND,
+            border_color=Color.INPUT_BORDER,
+            focused_border_color=Color.PRIMARY_ACTION,
+            color=Color.PRIMARY_TEXT,
+            label_style=ft.TextStyle(color=Color.SECONDARY_TEXT)
         )
         confirm_pin_field = ft.TextField(
             label=self.lang["settings.confirm_pin"],
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
             password=True,
             max_length=4,
-            keyboard_type=ft.KeyboardType.NUMBER
+            keyboard_type=ft.KeyboardType.NUMBER,
+            bgcolor=Color.CARD_BACKGROUND,
+            border_color=Color.INPUT_BORDER,
+            focused_border_color=Color.PRIMARY_ACTION,
+            color=Color.PRIMARY_TEXT,
+            label_style=ft.TextStyle(color=Color.SECONDARY_TEXT)
         )
         error_text = ft.Text(color=Color.NEGATIVE_ACTION)
 
@@ -222,7 +274,7 @@ class SettingsView(ft.View):
                     error_text
                 ]
             ),
-            color=Color.WHITE,
+            color=Color.DIALOG_BACKGROUND,
             options=[
                 ft.TextButton(self.lang["generic.cancel"], on_click=close_dialog),
                 ft.TextButton(self.lang["generic.save"], on_click=save_pin)
@@ -235,14 +287,28 @@ class SettingsView(ft.View):
         """Handle the Done button click - saves settings and navigates."""
         username = self.user_info["username"]
 
-        selected_language_name = self.language_dropdown.dropdown_control.value
-        selected_currency = self.currency_dropdown.dropdown_control.value
+        selected_language_name = self.language_dropdown.dropdown_control.value or ""
+        selected_currency = self.currency_dropdown.dropdown_control.value or DefaultSettings.CURRENCY
         selected_language_code = self.language_name_to_code.get(selected_language_name, "vi")
+        selected_theme_label = self.theme_dropdown.dropdown_control.value or ""
+        selected_theme = self.theme_label_to_name.get(selected_theme_label, DefaultSettings.THEME)
 
+        if not db.app_settings.set_theme(selected_theme):
+            Logger.error("Failed to save app theme setting")
+            return
         db.users.set_language(username, selected_language_code)
         db.users.set_currency(username, selected_currency)
 
-        Logger.info(f"Settings saved - Language: {selected_language_code}, Currency: {selected_currency}")
+        ThemeManager.set_theme(selected_theme)
+        self._page.theme_mode = (
+            ft.ThemeMode.DARK
+            if ThemeManager.get_theme().dark_mode
+            else ft.ThemeMode.LIGHT
+        )
+        Logger.info(
+            f"Settings saved - Language: {selected_language_code}, "
+            f"Currency: {selected_currency}, Theme: {selected_theme}"
+        )
 
         await self._page.push_route("/user_management")
 
@@ -267,6 +333,7 @@ class SettingsView(ft.View):
             # Resizing other components
             self.settings_header.resize(width=page_width)
             self.language_card.resize(width=page_width)
+            self.theme_card.resize(width=page_width)
             self.currency_card.resize(width=page_width)
             self.system_prefs_card.resize(width=page_width)
 

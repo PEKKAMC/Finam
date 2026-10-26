@@ -26,54 +26,52 @@ class UserManagementDialog(Dialog):
                 )
             )
 
-        self.main_container = ft.Column(
-            controls=[
-                ft.Row(controls=header_controls),
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.Row(
-                            spacing=12,
-                            controls=[
-                                ft.Container(
-                                    content=ft.Icon(ft.Icons.PEOPLE_ALT, color=Color.PRIMARY, size=22),
-                                    bgcolor=Color.LIGHT_ACCENT,
-                                    padding=10,
-                                    border_radius=14
-                                ),
-                                Text.H5(self.lang["user_management.header_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
-                            ]
-                        )
-                    ]
-                ),
-                ft.Column(
-                    spacing=10,
-                    controls=[
-                        Text.SMALL(self.lang["user_management.select_account"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                        user_list
-                    ]
-                ),
-                ft.Column(
-                    spacing=10,
-                    controls=[
-                        Text.SMALL(self.lang["user_management.add_new_user"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                        add_form
-                    ]
-                )
-            ]
-        )
-
-        self.card = ft.Container(
-            bgcolor=Color.WHITE,
+        self.main_container = ft.Container(
             border_radius=24,
-            padding=0,
-            content=self.main_container
+            content=ft.Column(
+                controls=[
+                    ft.Row(
+                        controls=header_controls
+                    ),
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        controls=[
+                            ft.Row(
+                                spacing=12,
+                                controls=[
+                                    ft.Container(
+                                        content=ft.Icon(ft.Icons.PEOPLE_ALT, color=Color.PRIMARY, size=22),
+                                        bgcolor=Color.LIGHT_ACCENT,
+                                        padding=10,
+                                        border_radius=14
+                                    ),
+                                    Text.H5(self.lang["user_management.header_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+                                ]
+                            )
+                        ]
+                    ),
+                    ft.Column(
+                        spacing=10,
+                        controls=[
+                            Text.SMALL(self.lang["user_management.select_account"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                            user_list
+                        ]
+                    ),
+                    ft.Column(
+                        spacing=10,
+                        controls=[
+                            Text.SMALL(self.lang["user_management.add_new_user"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                            add_form
+                        ]
+                    )
+                ]
+            )
         )
 
         super().__init__(
-            dialog_content=self.card,
-            color=Color.WHITE
+            dialog_content=self.main_container,
+            color=Color.DIALOG_BACKGROUND
         )
 
     def resize(self, width: int, height: int):
@@ -111,7 +109,7 @@ class UserList(ft.Container):
             self.on_select(name)
 
         return ft.Container(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=20,
             padding=14,
             border=ft.Border.all(2 if is_active else 1, Color.PRIMARY if is_active else Color.INPUT_BORDER),
@@ -247,7 +245,7 @@ class AddUserField(ft.Container):
                 spacing=6,
                 controls=[
                     ft.Icon(ft.Icons.ADD, color=Color.LIGHT_ACCENT, size=16),
-                    Text.MEDIUM(self.lang["user_management.create_btn"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                    Text.MEDIUM(self.lang["user_management.create_btn"], color=Color.DEFAULT_BUTTON, weight=ft.FontWeight.BOLD)
                 ],
                 tight=True
             ),
@@ -278,7 +276,9 @@ class AddUserField(ft.Container):
             ]
         )
 
-        super().__init__(content=self.main_container)
+        super().__init__(
+            content=self.main_container
+        )
 
     def _handle_submit(self, e=None) -> None:
         input_username = self.input_field.value.strip()
@@ -345,8 +345,8 @@ class DeleteUserDialog(Dialog):
         )
 
         super().__init__(
-            color=Color.DIALOG_BACKGROUND,
-            dialog_content=self.main_container
+            dialog_content=self.main_container,
+            color=Color.DIALOG_BACKGROUND
         )
 
     def confirm(self, e=None):

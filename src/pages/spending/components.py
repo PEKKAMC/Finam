@@ -25,22 +25,22 @@ class MetricCards(ft.ResponsiveRow):
         self.balance_title_text = Text.SMALL(self.lang["spending.net_balance"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
 
         # Static icons
-        self.expense_icon = ft.Icon(ft.Icons.SOUTH_EAST, color="#E90C00", size=20)
-        self.income_icon = ft.Icon(ft.Icons.NORTH_EAST, color="#1A4734", size=20)
-        self.balance_icon = ft.Icon(ft.Icons.ACCOUNT_BALANCE_WALLET, color="#DAF1DE", size=20)
+        self.expense_icon = ft.Icon(ft.Icons.SOUTH_EAST, color=Color.EXPENSE_COLOR, size=20)
+        self.income_icon = ft.Icon(ft.Icons.NORTH_EAST, color=Color.INCOME_COLOR, size=20)
+        self.balance_icon = ft.Icon(ft.Icons.ACCOUNT_BALANCE_WALLET, color=Color.LIGHT_ACCENT, size=20)
 
         # Dynamic texts
-        self.income_value_text = Text.H3(f"+{self.total_income}", color="#1A4734", weight=ft.FontWeight.BOLD)
-        self.expense_value_text = Text.H3(f"-{self.total_expense}", color="#E90C00", weight=ft.FontWeight.BOLD)
+        self.income_value_text = Text.H3(f"+{self.total_income}", color=Color.INCOME_COLOR, weight=ft.FontWeight.BOLD)
+        self.expense_value_text = Text.H3(f"-{self.total_expense}", color=Color.EXPENSE_COLOR, weight=ft.FontWeight.BOLD)
         self.balance_value_text = Text.H3(self.net_balance, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
 
         # CONTAINER COMPONENTS
         self.income_card = ft.Container(
             col={"xs": 12, "sm": 4},
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=20,
-            border=ft.Border.only(left=ft.BorderSide(4, "#1A4734")),
+            border=ft.Border.only(left=ft.BorderSide(4, Color.INCOME_COLOR)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -52,7 +52,7 @@ class MetricCards(ft.ResponsiveRow):
                     ),
                     ft.Container(
                         content=self.income_icon,
-                        bgcolor="#DAF1DE",
+                        bgcolor=Color.INCOME_BACKGROUND,
                         width=40,
                         height=40,
                         border_radius=16,
@@ -64,10 +64,10 @@ class MetricCards(ft.ResponsiveRow):
 
         self.expense_card = ft.Container(
             col={"xs": 12, "sm": 4},
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=20,
-            border=ft.Border.only(left=ft.BorderSide(4, "#E90C00")),
+            border=ft.Border.only(left=ft.BorderSide(4, Color.EXPENSE_COLOR)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -79,7 +79,7 @@ class MetricCards(ft.ResponsiveRow):
                     ),
                     ft.Container(
                         content=self.expense_icon,
-                        bgcolor="#FEE2E2",
+                        bgcolor=Color.EXPENSE_BACKGROUND,
                         width=40,
                         height=40,
                         border_radius=16,
@@ -91,10 +91,10 @@ class MetricCards(ft.ResponsiveRow):
 
         self.balance_card = ft.Container(
             col={"xs": 12, "sm": 4},
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=20,
-            border=ft.Border.only(left=ft.BorderSide(4, "#059669")),
+            border=ft.Border.only(left=ft.BorderSide(4, Color.PRIMARY_ACTION)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -106,7 +106,7 @@ class MetricCards(ft.ResponsiveRow):
                     ),
                     ft.Container(
                         content=self.balance_icon,
-                        bgcolor="#064E3B",
+                        bgcolor=Color.DARK_SURFACE,
                         width=40,
                         height=40,
                         border_radius=16,
@@ -163,20 +163,20 @@ class TransactionToolbar(ft.Container):
         def create_filter_button(label: str, f_type: str, active_bg: str):
             is_active = (self.filter_type == f_type)
             return ft.Button(
-                content=Text.SMALL(label, color=ft.Colors.WHITE if is_active else Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                content=Text.SMALL(label, color=Color.WHITE if is_active else Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
                 bgcolor=active_bg if is_active else ft.Colors.TRANSPARENT,
                 on_click=lambda e: self.on_filter(f_type) if self.on_filter else None,
                 style=ft.ButtonStyle(
                     shape=ft.RoundedRectangleBorder(radius=14),
                     padding=ft.Padding(16, 10, 16, 10),
-                    bgcolor=active_bg if is_active else ft.Colors.with_opacity(0.05, ft.Colors.BLACK)
+                    bgcolor=active_bg if is_active else Color.CARD_BACKGROUND
                 )
             )
 
         # TEXT AND ICON COMPONENTS
-        self.all_filter_button = create_filter_button(self.lang["generic.all"], "all", Color.PRIMARY_ACTION)
-        self.expense_filter_button = create_filter_button(self.lang["spending.expense_label"], "expense", Color.PRIMARY_ACTION)
-        self.income_filter_button = create_filter_button(self.lang["spending.income_label"], "income", Color.PRIMARY_ACTION)
+        self.all_filter_button = create_filter_button(self.lang["generic.all"], "all", Color.PRIMARY)
+        self.expense_filter_button = create_filter_button(self.lang["spending.expense_label"], "expense", Color.PRIMARY)
+        self.income_filter_button = create_filter_button(self.lang["spending.income_label"], "income", Color.PRIMARY)
 
         self.add_button = ft.Button(
             content=ft.Row(
@@ -282,7 +282,7 @@ class TransactionToolbar(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
@@ -296,16 +296,16 @@ class TransactionToolbar(ft.Container):
         self.sort_by = sort_by
 
         buttons_info = [
-            (self.all_filter_button, "all", Color.PRIMARY_ACTION),
-            (self.expense_filter_button, "expense", Color.PRIMARY_ACTION),
-            (self.income_filter_button, "income", Color.PRIMARY_ACTION)
+            (self.all_filter_button, "all", Color.PRIMARY),
+            (self.expense_filter_button, "expense", Color.PRIMARY),
+            (self.income_filter_button, "income", Color.PRIMARY)
         ]
 
         for button, f_type, active_bg in buttons_info:
             is_active = (self.filter_type == f_type)
-            button.content.color = ft.Colors.WHITE if is_active else Color.SECONDARY_TEXT
-            button.bgcolor = active_bg if is_active else ft.Colors.TRANSPARENT
-            button.style.bgcolor = active_bg if is_active else ft.Colors.with_opacity(0.05, ft.Colors.BLACK)
+            button.content.color = Color.WHITE if is_active else Color.SECONDARY_TEXT
+            button.bgcolor = active_bg if is_active else Color.TRANSPARENT
+            button.style.bgcolor = active_bg if is_active else Color.CARD_BACKGROUND
 
         self.search_field.value = self.search_query
         self.sort_dropdown.value = self.sort_by if self.sort_by in ["newest", "oldest"] else "newest"
@@ -330,7 +330,7 @@ class TransactionHistoryCard(ft.Container):
         self._render_controls()
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
@@ -418,13 +418,13 @@ class TransactionItemCard(ft.Container):
         self.on_delete = on_delete
 
         is_income = self.tx.get("positive", False)
-        amount_color = "#1A4734" if is_income else "#E90C00"
-        icon_bg = "#DAF1DE" if is_income else "#FEE2E2"
-        icon_color = "#1A4734" if is_income else "#E90C00"
+        amount_color = Color.INCOME_COLOR if is_income else Color.EXPENSE_COLOR
+        icon_bg = Color.INCOME_BACKGROUND if is_income else Color.EXPENSE_BACKGROUND
+        icon_color = amount_color
         icon = ft.Icons.NORTH_EAST if is_income else ft.Icons.SOUTH_EAST
 
         # TEXT AND ICON COMPONENTS
-        self.type_badge_text = Text.SMALL(self.lang["spending.income"] if is_income else self.lang["spending.expense"], color="#334155", weight=ft.FontWeight.BOLD)
+        self.type_badge_text = Text.SMALL(self.lang["spending.income"] if is_income else self.lang["spending.expense"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
         self.title_text = Text.MEDIUM(self.tx["title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
         self.subtitle_text = Text.SMALL(self.tx.get("subtitle", ""), color=Color.SECONDARY_TEXT)
         self.date_text = Text.SMALL(self.tx.get("date", ""), color=Color.SECONDARY_TEXT)
@@ -445,7 +445,7 @@ class TransactionItemCard(ft.Container):
 
         self.badge_box = ft.Container(
             content=self.type_badge_text,
-            bgcolor="#F1F5F9",
+            bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND,
             padding=ft.Padding(8, 2, 8, 2),
             border_radius=10
         )
@@ -511,7 +511,7 @@ class TransactionItemCard(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=18,
             padding=14,
             ink=True,

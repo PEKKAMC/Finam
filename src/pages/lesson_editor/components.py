@@ -13,10 +13,10 @@ class TopNavigationBar(ft.Row):
         self.lang = lang
         self.main_container = ft.Row(
             controls=[
-                Text.MEDIUM(self.lang["lesson_editor.title"], weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_GREY_900, expand=True),
+                Text.MEDIUM(self.lang["lesson_editor.title"], weight=ft.FontWeight.BOLD, color=Color.PRIMARY_TEXT, expand=True),
                 ft.Row([
-                    ft.IconButton(ft.Icons.FOLDER_OPEN, icon_color=ft.Colors.BLUE_GREY_700, tooltip=self.lang["lesson_editor.load_json"], on_click=on_load),
-                    ft.Button(self.lang["lesson_editor.save"], icon=ft.Icons.SAVE, bgcolor="#1d7333", color=Color.WHITE, on_click=on_save),
+                    ft.IconButton(ft.Icons.FOLDER_OPEN, icon_color=Color.SECONDARY_TEXT, tooltip=self.lang["lesson_editor.load_json"], on_click=on_load),
+                    ft.Button(self.lang["lesson_editor.save"], icon=ft.Icons.SAVE, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE, on_click=on_save),
                 ], spacing=5)
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
@@ -90,7 +90,7 @@ class SlideSidebarLayout(ft.Container):
             ft.Divider(),
             sidebar_column or ft.Column()
         ])
-        super().__init__(content=self.main_container, width=170, padding=10, border=ft.Border(right=ft.BorderSide(1, ft.Colors.GREY_300)))
+        super().__init__(content=self.main_container, width=170, padding=10, border=ft.Border(right=ft.BorderSide(1, Color.INPUT_BORDER)), bgcolor=Color.CARD_BACKGROUND)
 
     def resize(self, width: int) -> None:
         self.main_container.width = width

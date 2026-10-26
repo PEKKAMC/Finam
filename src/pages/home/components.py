@@ -268,6 +268,7 @@ class BalanceCard(ft.Container):
 class SavingsGoalItem(ft.Container):
     def __init__(self, item: dict):
         self.item = item
+        self.completed = item.get("completed", False)
 
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
@@ -319,8 +320,8 @@ class SavingsGoalItem(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.GOAL_ITEM_BACKGROUND,
-            border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+            bgcolor=Color.GOAL_ITEM_BACKGROUND if self.completed else Color.CARD_BACKGROUND,
+            border=ft.Border.all(1, Color.GOAL_ITEM_BORDER) if self.completed else ft.Border.all(1, Color.INPUT_BORDER),
             border_radius=16,
             padding=12,
             ink=True,
@@ -329,12 +330,15 @@ class SavingsGoalItem(ft.Container):
 
     def update_data(self, item: dict):
         self.item = item
+        self.completed = item.get("completed", False)
 
         self.title_text.value = item["title"]
         self.progress_text.value = item["progress_text"]
         self.progress_bar.value = item["progress_ratio"]
         self.contributed_label.value = item["contributed_label"]
         self.target_label.value = item["target_label"]
+        self.bgcolor = Color.GOAL_ITEM_BACKGROUND if self.completed else Color.CARD_BACKGROUND
+        self.border = ft.Border.all(1, Color.GOAL_ITEM_BORDER) if self.completed else ft.Border.all(1, Color.INPUT_BORDER)
 
         self.update()
 

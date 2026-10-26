@@ -136,7 +136,7 @@ class FinancialChart(ft.Container):
         super().__init__(
             expand=True,
             height=container_height,
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=24,
             padding=20,
             shadow=ft.BoxShadow(
@@ -521,7 +521,7 @@ class FinancialChart(ft.Container):
                     max_y=self.max_value,
                     interactive=True,
                     tooltip=fc.BarChartTooltip(
-                        bgcolor=Color.WHITE,
+                        bgcolor=Color.CARD_BACKGROUND,
                         border_radius=8,
                         padding=ft.Padding.all(8),
                         border_side=ft.BorderSide(color=Color.DEFAULT_BORDER, width=1),

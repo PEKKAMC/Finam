@@ -54,9 +54,9 @@ class Menu(ft.Container):
 
     @staticmethod
     def build_nav_item(icon: ft.IconData, title_text: str, on_click: Callable | None, is_active: bool) -> ft.Container:
-        active_bg = Color.LIGHT_ACCENT if is_active else Color.TRANSPARENT
-        active_text = Color.PRIMARY_TEXT if is_active else Color.SECONDARY_TEXT
-        active_icon = Color.PRIMARY if is_active else Color.SECONDARY_TEXT
+        active_bg = Color.NAVIGATION_ACTIVE_BACKGROUND if is_active else Color.TRANSPARENT
+        active_text = Color.NAVIGATION_ACTIVE_TEXT if is_active else Color.SECONDARY_TEXT
+        active_icon = Color.NAVIGATION_ACTIVE_ICON if is_active else Color.SECONDARY_TEXT
         change_route = None if is_active else on_click
 
         return ft.Container(

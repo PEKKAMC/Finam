@@ -78,6 +78,7 @@ class LogicController:
                 "target_amount": target_value,
                 "progress_ratio": progress_ratio,
                 "progress_text": f"{int(progress_ratio * 100)}%",
+                "completed": completed_at is not None,
                 "contributed_label": f"{lang['home.contributed']}: {current_amount:,.2f} {currency}",
                 "target_label": f"{lang['home.target']}: {target_value:,.2f} {currency}",
             })

@@ -7,7 +7,7 @@ import os
 import flet as ft
 
 from src.database import db
-from src.utils import DefaultSettings, Page, UISettings, get_language
+from src.utils import DefaultSettings, Page, ThemeManager, UISettings, get_language
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
@@ -86,8 +86,8 @@ async def main(page: Page) -> None:
 
     views_cache: dict[str, tuple[ft.View, str]] = {}
 
-    def get_view_cache_key(route: str, language_code: str, currency: str) -> str:
-        return f"{route}|{language_code}|{currency}"
+    def get_view_cache_key(route: str, language_code: str, currency: str, theme: str) -> str:
+        return f"{route}|{language_code}|{currency}|{theme}"
 
     def build_view_for_route(route: str, lang: dict, user_info: dict) -> ft.View | None:
         troute = ft.TemplateRoute(route)
@@ -156,10 +156,13 @@ async def main(page: Page) -> None:
             current_username = info.get("username", "")
             current_language_code = db.users.get_language(current_username) if current_username else DefaultSettings.LANGUAGE
             current_currency = db.users.get_currency(current_username) if current_username else DefaultSettings.CURRENCY
+            current_theme = db.app_settings.get_theme()
+            ThemeManager.set_theme(current_theme)
+            page.theme_mode = ft.ThemeMode.DARK if ThemeManager.get_theme().dark_mode else ft.ThemeMode.LIGHT
             lang = get_language(current_language_code)
 
             route_name = page.route or "/"
-            cache_key = get_view_cache_key(route_name, current_language_code, current_currency)
+            cache_key = get_view_cache_key(route_name, current_language_code, current_currency, current_theme)
 
             if route_name == "/starter":
                 view = build_view_for_route(route_name, lang, info)

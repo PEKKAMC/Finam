@@ -54,7 +54,7 @@ class LessonPlayerView(ft.View):
         super().__init__(
             route=routing_path,
             padding=0,
-            bgcolor="#FAFAF8",
+            bgcolor=Color.PAGE_BACKGROUND,
             controls=[ft.Stack(controls=[self.main_container], expand=True)]
         )
 
