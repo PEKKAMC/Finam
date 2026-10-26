@@ -3,12 +3,11 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from collections.abc import Callable
-from typing import Any
 import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import Menu
-from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CreateGoalModal, DepositWithdrawModal, CongratulationsModal, DeleteConfirmDialog, GoalDetailsDialog, GoalGrid
+from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CreateGoalModal, DepositWithdrawModal, CongratulationsModal, DeleteConfirmDialog, GoalGrid
 from src.pages.savings.logic import LogicController
 from src.utils import Color, Page, Text, UISettings, get_safe_page_size
 
@@ -64,13 +63,6 @@ class DialogManager:
             controller=self.controller,
             on_success=self._refresh_view,
             trigger_export=self._trigger_export
-        )
-
-        self.goal_details_dialog = GoalDetailsDialog(
-            page=self._page,
-            lang=self.lang,
-            on_deposit_withdraw=self.deposit_withdraw_modal.trigger,
-            on_delete=self.delete_dialog.trigger
         )
 
     def update_currency(self, currency: str) -> None:
@@ -139,7 +131,7 @@ class SavingsView(ft.View):
             filled=True,
         )
         self.search_bar = ft.Container(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
@@ -166,8 +158,6 @@ class SavingsView(ft.View):
             on_export=self.trigger_export,
             on_clear=lambda e: self.dialogs.clear_history_dialog.trigger(),
         )
-
-        self._open_pending_objective_dialog()
 
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
@@ -263,35 +253,6 @@ class SavingsView(ft.View):
                 "completed": 0 < target_amount <= objective_savings,
             })
         return objectives_data
-
-    def _open_pending_objective_dialog(self) -> None:
-        pending_objective_id: int | None = getattr(self._page, "pending_objective_id", None)
-        if pending_objective_id is None:
-            return
-
-        objective_id = int(pending_objective_id)
-
-        objective: dict[str, Any] | None = None
-        for item in self._objective_data:
-            if int(item["objective_id"]) == objective_id:
-                objective = item
-                break
-
-        if objective is None:
-            self._page.pending_objective_id = None
-            return
-
-        self.dialogs.goal_details_dialog.trigger(
-            self._page,
-            objective["objective_id"],
-            objective["title"],
-            objective["reason"],
-            objective["current_value"],
-            objective["target_value"],
-            objective["progress"],
-            objective["completed"],
-        )
-        self._page.pending_objective_id = None
 
     async def trigger_export(self, e=None) -> None:
         try:

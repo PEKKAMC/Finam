@@ -59,8 +59,7 @@ class HomeView(ft.View):
         self.savings_progress_card = SavingsProgressCard(
             lang=self.lang,
             objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang, self.user_info["username"]),
-            on_view_all_click=self._page.navigate_to("/saving"),
-            on_item_click=self._open_objective_details
+            on_view_all_click=self._page.navigate_to("/saving")
         )
 
         self.expense_pie_chart = ExpensePieChart(
@@ -122,19 +121,6 @@ class HomeView(ft.View):
 
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
-
-    def _open_objective_details(self, objective_id: int) -> int:
-        try:
-            Logger.info(f"Opening objective details for objective id: {objective_id}")
-            self._page.pending_objective_id = objective_id
-            self._page.navigate_to("/saving")()
-
-            return 0
-
-        except Exception as ex:
-            Logger.error(f"Failed to open objective {ex}")
-            return -1
-
 
     def _refresh_view(self) -> int:
         try:

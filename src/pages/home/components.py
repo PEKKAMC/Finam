@@ -266,9 +266,8 @@ class BalanceCard(ft.Container):
 
 
 class SavingsGoalItem(ft.Container):
-    def __init__(self, item: dict, on_click_callback: Callable | None = None):
+    def __init__(self, item: dict):
         self.item = item
-        self.on_click_callback = on_click_callback
 
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
@@ -325,7 +324,6 @@ class SavingsGoalItem(ft.Container):
             border_radius=16,
             padding=12,
             ink=True,
-            on_click=lambda e: self.on_click_callback(self.item["id"]) if self.on_click_callback else None,
             content=self.main_container
         )
 
@@ -349,11 +347,10 @@ class SavingsGoalItem(ft.Container):
 
 
 class SavingsProgressCard(ft.Container):
-    def __init__(self, lang: dict, objective_items: tuple[list, int], on_view_all_click: Callable | None, on_item_click: Callable | None = None):
+    def __init__(self, lang: dict, objective_items: tuple[list, int], on_view_all_click: Callable | None):
         self.lang = lang
         self.objective_items, self.objective_count = objective_items
         self.on_view_all_click = on_view_all_click
-        self.on_item_click = on_item_click
 
         # TEXT AND ICON COMPONENTS
         # Static texts
@@ -422,7 +419,7 @@ class SavingsProgressCard(ft.Container):
             content=self.empty_state_text
         )
 
-        self.goal_items: list[SavingsGoalItem] = [SavingsGoalItem(item, self.on_item_click) for item in self.objective_items]
+        self.goal_items: list[SavingsGoalItem] = [SavingsGoalItem(item) for item in self.objective_items]
 
         self.goal_items_column = ft.Column(
             spacing=6,
@@ -443,7 +440,7 @@ class SavingsProgressCard(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=UISettings.CARD_PADDING,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
@@ -466,7 +463,7 @@ class SavingsProgressCard(ft.Container):
                 if i < len(self.goal_items):
                     self.goal_items[i].update_data(item)
                 else:
-                    self.goal_items.append(SavingsGoalItem(item, self.on_item_click))
+                    self.goal_items.append(SavingsGoalItem(item))
 
             self.goal_items_column.controls = list(self.goal_items)
 
@@ -652,7 +649,7 @@ class ExpensePieChart(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=UISettings.CARD_PADDING,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
@@ -841,7 +838,7 @@ class FeaturedLessonCard(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.WHITE,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=UISettings.CARD_PADDING,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
