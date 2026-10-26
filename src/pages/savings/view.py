@@ -185,7 +185,7 @@ class SavingsView(ft.View):
         )
 
         super().__init__(
-            route="/saving",
+            route="/savings",
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.MainAxisAlignment.CENTER,

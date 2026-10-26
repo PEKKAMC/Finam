@@ -101,7 +101,7 @@ async def main(page: Page) -> None:
         if troute.match("/lessons"):
             return get_lessons_view(page, lang, user_info)
 
-        if troute.match("/saving"):
+        if troute.match("/savings"):
             return get_savings_view(page, lang, user_info)
 
         if troute.match("/lesson-player/:lesson_id"):
