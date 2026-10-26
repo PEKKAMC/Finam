@@ -82,6 +82,7 @@ class ThinkingTimeUnitContainer(ft.Container):
             bgcolor=Color.PAGE_BACKGROUND,
             height=48,
             text_size=13,
+            keyboard_type=ft.KeyboardType.NUMBER,
             content_padding=ft.Padding(16, 12, 16, 12),
             expand=True
         )
@@ -146,6 +147,7 @@ class ScannerForm(ft.Container):
             bgcolor=Color.PAGE_BACKGROUND,
             height=48,
             text_size=13,
+            keyboard_type=ft.KeyboardType.NUMBER,
             content_padding=ft.Padding(16, 12, 16, 12)
         )
 

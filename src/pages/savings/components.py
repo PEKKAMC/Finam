@@ -390,6 +390,7 @@ class CreateGoalModal(Dialog):
             label=self.lang["savings.target_amount"],
             color=Color.DEFAULT_TEXT,
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9.]*$", replacement_string=""),
+            keyboard_type=ft.KeyboardType.NUMBER,
             border_radius=16,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
@@ -567,6 +568,7 @@ class DepositWithdrawModal(Dialog):
             input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9.]*$", replacement_string=""),
             border_radius=16,
             border_color=Color.INPUT_BORDER,
+            keyboard_type=ft.KeyboardType.NUMBER,
             focused_border_color=Color.PRIMARY_ACTION,
         )
 
