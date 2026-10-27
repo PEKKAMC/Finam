@@ -485,7 +485,7 @@ class FinancialChart(ft.Container):
                             from_y=0,
                             to_y=income_value,
                             width=bar_size,
-                            color=Color.PRIMARY,
+                            color=Color.INCOME_BACKGROUND,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
                                 text=f"{self.lang['generic.income']}: {income_value:,.2f} {self.currency}"
@@ -495,7 +495,7 @@ class FinancialChart(ft.Container):
                             from_y=0,
                             to_y=expense_value,
                             width=bar_size,
-                            color=Color.EXPENSE_ACTION_BACKGROUND,
+                            color=Color.EXPENSE_BACKGROUND,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
                                 text=f"{self.lang['generic.expense']}: {expense_value:,.2f} {self.currency}"
