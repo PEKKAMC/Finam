@@ -73,6 +73,19 @@ class FallbackView(ft.View):
             case _:
                 return self.lang["fallback.default"]
 
+    def _refresh_view(self) -> int:
+        try:
+            self._on_page_resize()
+            self.message = self.get_fallback_message(self.fallback_reason)
+            self.message_box.message = self.message
+            message_text = self.message_box.message_box.content.controls[0]
+            message_text.value = f"{self.lang['fallback.something_went_wrong']}: {self.message}"
+            self.update()
+            return 0
+        except Exception as ex:
+            Logger.warn(f"Failed to refresh view {ex}")
+            return -1
+
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
         try:
             page_width, page_height = self.get_safe_page_size(self._page)

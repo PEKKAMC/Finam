@@ -314,6 +314,7 @@ class SettingsView(ft.View):
 
     def _refresh_view(self) -> int:
         try:
+            self._on_page_resize()
             self._page.update()
             return 0
         except RuntimeError as ex:

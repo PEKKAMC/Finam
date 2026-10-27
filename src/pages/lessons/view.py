@@ -52,6 +52,15 @@ class LessonsView(ft.View):
             lessons=self.available_lessons
         )
 
+        self.content_column = ft.Column(
+            spacing=20,
+            expand=True,
+            controls=[
+                self.summary_banner,
+                self.lesson_grid
+            ]
+        )
+
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
             content=ft.Column(
@@ -61,14 +70,7 @@ class LessonsView(ft.View):
                     ft.Container(
                         width=UISettings.MAX_APP_WIDTH,
                         padding=UISettings.CARD_PADDING,
-                        content=ft.Column(
-                            spacing=20,
-                            expand=True,
-                            controls=[
-                                self.summary_banner,
-                                self.lesson_grid
-                            ]
-                        )
+                        content=self.content_column
                     )
                 ]
             ),
@@ -100,6 +102,31 @@ class LessonsView(ft.View):
     def _load_data(self):
         Logger.info("Loading lesson data...")
         self.available_lessons = self.controller.load_available_lessons()
+
+    def _refresh_view(self) -> int:
+        try:
+            self._on_page_resize()
+            self._load_data()
+            stats = self.controller.get_user_statistics(self.available_lessons)
+            self.summary_banner = LessonSummaryBanner(
+                page=self._page,
+                lang=self.lang,
+                total_lessons=stats["total_lessons"],
+                completed_lessons=stats["completed_lessons"],
+                total_minutes=stats["total_minutes"],
+                completion_pct=stats["completion_percentage"]
+            )
+            self.lesson_grid = LessonGrid(
+                page=self._page,
+                lang=self.lang,
+                lessons=self.available_lessons
+            )
+            self.content_column.controls = [self.summary_banner, self.lesson_grid]
+            self.update()
+            return 0
+        except Exception as ex:
+            Logger.warn(f"Failed to refresh view {ex}")
+            return -1
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
         try:

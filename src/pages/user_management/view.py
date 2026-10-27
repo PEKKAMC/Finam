@@ -164,7 +164,7 @@ class UserManagementView(ft.View):
             lang=self.lang,
             user_info=self.user_info,
             controller=self.controller,
-            refresh_callback=self.refresh_view
+            refresh_callback=self._refresh_view
         )
 
         # FETCH DASHBOARD DATA
@@ -318,8 +318,9 @@ class UserManagementView(ft.View):
         except Exception as ex:
             Logger.warn(f"Failed to logout: {ex}")
 
-    def refresh_view(self) -> int:
+    def _refresh_view(self) -> int:
         try:
+            self._on_page_resize()
             self.dialogs.user_list.update_data(
                 self.controller.get_all_users(),
                 self.user_info["username"]

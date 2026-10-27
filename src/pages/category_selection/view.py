@@ -260,6 +260,18 @@ class CategorySelectionView(ft.View):
         if self._page is not None:
             self.update()
 
+    def _refresh_view(self) -> int:
+        try:
+            self._on_page_resize()
+            self.load_categories(self.current_type)
+            for item in self.category_items:
+                item.update_selection(item.category_name == self.selected_category)
+            self.update()
+            return 0
+        except Exception as ex:
+            Logger.warn(f"Failed to refresh view {ex}")
+            return -1
+
     def _on_save_clicked(self, values: dict):
         values["category"] = self.selected_category
 

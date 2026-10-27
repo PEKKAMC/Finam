@@ -121,7 +121,7 @@ class ProfileCard(ft.Container):
 
 
 class MenuItem(ft.Container):
-    def __init__(self, icon, icon_color: Color, icon_bg_color: Color, title: str, subtitle: str, badge_text: str | None = None, badge_bg: Color | None = None, badge_color: Color | None = None, trailing: ft.Control | None = None, on_click: Callable | None = None):
+    def __init__(self, icon, icon_color: str, icon_bg_color: str, title: str, subtitle: str, badge_text: str | None = None, badge_bg: str | None = None, badge_color: Color | None = None, trailing: ft.Control | None = None, on_click: Callable | None = None):
         # TEXT AND ICON COMPONENTS
         self.title_text = Text.MEDIUM(title, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
         self.subtitle_text = Text.SMALL(subtitle, color=Color.SECONDARY_TEXT)

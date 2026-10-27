@@ -124,6 +124,7 @@ class HomeView(ft.View):
 
     def _refresh_view(self) -> int:
         try:
+            self._on_page_resize()
             self.objectives = self.controller.get_user_objectives()
             self.metrics = self.controller.get_dashboard_data()
             self.advice = self.controller.get_advice()

@@ -77,6 +77,7 @@ class StarterView(ft.View):
 
     def _refresh_view(self) -> int:
         try:
+            self._on_page_resize()
             self.dialogs.user_list.update_data(
                 self.controller.get_all_users(),
                 self.user_info["username"]

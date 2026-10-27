@@ -123,6 +123,7 @@ class SpendingView(ft.View):
 
     def _refresh_view(self) -> int:
         try:
+            self._on_page_resize()
             self.current_chart_type = self.financial_chart.chart_type
 
             if self.financial_chart.chart_type == self.current_chart_type:

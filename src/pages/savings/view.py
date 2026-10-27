@@ -205,6 +205,7 @@ class SavingsView(ft.View):
         self._on_page_resize()
 
     def _refresh_view(self) -> None:
+        self._on_page_resize()
         total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
         existing_objectives = self.controller.get_user_objectives()
         currency = self.controller.get_currency()

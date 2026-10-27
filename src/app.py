@@ -54,7 +54,13 @@ def initial_setup() -> None:
 async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> None:
     Logger.info("Redirecting to fallback page...")
     await page.push_route("/fallback")
-    page.views.append(get_fallback_view(page, lang, fallback_reason))
+    view = get_fallback_view(page, lang, fallback_reason)
+    page.views.append(view)
+    page.update()
+    refresh_handler = getattr(view, "_refresh_view", None)
+    if callable(refresh_handler):
+        # noinspection PyCallingNonCallable
+        refresh_handler()
 
 
 async def main(page: Page) -> None:
@@ -86,8 +92,8 @@ async def main(page: Page) -> None:
 
     views_cache: dict[str, tuple[ft.View, str]] = {}
 
-    def get_view_cache_key(route: str, language_code: str, currency: str, theme: str) -> str:
-        return f"{route}|{language_code}|{currency}|{theme}"
+    def get_view_cache_key(route: str, language_code: str, currency: str, theme: str, username: str) -> str:
+        return f"{route}|{language_code}|{currency}|{theme}|{username}"
 
     def build_view_for_route(route: str, lang: dict, user_info: dict) -> ft.View | None:
         troute = ft.TemplateRoute(route)
@@ -162,7 +168,13 @@ async def main(page: Page) -> None:
             lang = get_language(current_language_code)
 
             route_name = page.route or "/"
-            cache_key = get_view_cache_key(route_name, current_language_code, current_currency, current_theme)
+            cache_key = get_view_cache_key(
+                route_name,
+                current_language_code,
+                current_currency,
+                current_theme,
+                current_username,
+            )
 
             if route_name == "/starter":
                 view = build_view_for_route(route_name, lang, info)
@@ -181,7 +193,14 @@ async def main(page: Page) -> None:
                 return
 
             page.views.append(view)
+            resize_handler = getattr(view, "_on_page_resize", None)
+            if callable(resize_handler):
+                page.on_resize = resize_handler
             page.update()
+            refresh_handler = getattr(view, "_refresh_view", None)
+            if callable(refresh_handler):
+                # noinspection PyCallingNonCallable
+                refresh_handler()
             if isinstance(view, StarterView) and view.is_unlocked:
                 view.show_user_management_dialog()
 

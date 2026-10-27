@@ -182,6 +182,7 @@ class PurchaseScannerView(ft.View):
 
     def _refresh_view(self) -> int:
         try:
+            self._on_page_resize()
             self.scan_history = self.controller.get_scan_history()
             self.history_card.set_history(self.scan_history)
             return 0
