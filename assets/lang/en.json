@@ -235,6 +235,8 @@
     "settings.title": "System Settings",
     "spending.active": "Active",
     "spending.add_transaction": "Add Transaction",
+    "spending.confirm_delete_content": "Are you sure you want to delete this transaction? This action cannot be undone.",
+    "spending.confirm_delete_title": "Delete transaction",
     "spending.delete": "Delete Transaction",
     "spending.expense": "Expenses",
     "spending.expense_label": "Expenses (-)",

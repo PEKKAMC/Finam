@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import flet as ft
 
-from src.utils import Color, Page, Text, UISettings
+from src.utils import Color, Dialog, Page, Text, UISettings
 
 
 class MetricCards(ft.ResponsiveRow):
@@ -521,3 +521,75 @@ class TransactionItemCard(ft.Container):
     def resize(self, width: int) -> None:
         self.width = width
         self.main_row.width = width
+
+
+class DeleteTransactionDialog(Dialog):
+    def __init__(self, page: Page, lang: dict, on_confirm: Callable[[int], None]):
+        self._page = page
+        self.lang = lang
+        self.on_confirm = on_confirm
+        self.transaction_id: int | None = None
+
+        self.title_text = Text.H3(
+            self.lang["spending.confirm_delete_title"],
+            color=Color.PRIMARY_TEXT,
+        )
+        self.desc_text = Text.P(
+            self.lang["spending.confirm_delete_content"],
+            color=Color.SECONDARY_TEXT,
+        )
+        self.close_button = ft.IconButton(
+            ft.Icons.CLOSE,
+            on_click=lambda e: self.dismiss(),
+            icon_color=Color.PRIMARY_TEXT,
+            tooltip=self.lang["generic.close"],
+        )
+        self.delete_button = ft.Button(
+            self.lang["generic.delete"],
+            on_click=self._confirm,
+            bgcolor=Color.DELETE_ACTION,
+            color=Color.WHITE,
+        )
+
+        self.main_container = ft.Container(
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                tight=True,
+                spacing=12,
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[self.title_text, self.close_button],
+                    ),
+                    self.desc_text,
+                ],
+            ),
+        )
+
+        super().__init__(
+            dialog_content=self.main_container,
+            color=Color.DIALOG_BACKGROUND,
+            options=[self.delete_button],
+            padding=0,
+        )
+        self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
+
+    def trigger(self, transaction_id: int | None) -> None:
+        if transaction_id is None:
+            return
+        self.transaction_id = transaction_id
+        self.show()
+
+    def _confirm(self, e=None) -> None:
+        if self.transaction_id is None:
+            return
+        self.dismiss()
+        self.on_confirm(self.transaction_id)
+
+    def resize(self, width: int) -> None:
+        outer_width = max(width, 0)
+        content_width = max(outer_width - 48, 0)
+        self.main_container.width = outer_width
+        self.main_container.content.width = content_width
+        self.title_text.width = max(content_width - 48, 0)
+        self.desc_text.width = content_width

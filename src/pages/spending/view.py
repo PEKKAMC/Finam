@@ -6,7 +6,12 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import FinancialChart, Menu
-from src.pages.spending.components import MetricCards, TransactionHistoryCard, TransactionToolbar
+from src.pages.spending.components import (
+    DeleteTransactionDialog,
+    MetricCards,
+    TransactionHistoryCard,
+    TransactionToolbar,
+)
 from src.pages.spending.logic import LogicController
 from src.utils import Color, Page, get_safe_page_size, UISettings
 
@@ -68,11 +73,17 @@ class SpendingView(ft.View):
             sort_by=self.sort_by
         )
 
+        self.delete_dialog = DeleteTransactionDialog(
+            page=self._page,
+            lang=self.lang,
+            on_confirm=self._delete_transaction,
+        )
+
         self.history_card = TransactionHistoryCard(
             page=self._page,
             lang=self.lang,
             transactions=filtered_txs,
-            on_delete=lambda tid: self.controller.delete_transaction(tid)
+            on_delete=self.delete_dialog.trigger,
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -160,12 +171,19 @@ class SpendingView(ft.View):
             self.history_card.update_data(filtered_txs)
 
             self.financial_chart.update_data()
+            self._page.update()
 
             return 0
 
         except Exception as ex:
             Logger.warn(f"Failed to refresh view {ex}")
             return -1
+
+    def _delete_transaction(self, transaction_id: int) -> None:
+        if self.controller.delete_transaction(transaction_id):
+            self._refresh_view()
+        else:
+            Logger.warn(f"Failed to delete transaction {transaction_id}")
 
     def on_filter_change(self, f_type: str):
         self.filter_type = f_type
@@ -217,6 +235,10 @@ class SpendingView(ft.View):
 
             self.history_card.resize(
                 width=page_width
+            )
+
+            self.delete_dialog.resize(
+                width=page_width // 7 * 6
             )
 
             return 0

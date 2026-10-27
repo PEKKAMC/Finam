@@ -235,6 +235,8 @@
     "settings.title": "Cài đặt hệ thống",
     "spending.active": "Đang hoạt động",
     "spending.add_transaction": "Thêm giao dịch",
+    "spending.confirm_delete_content": "Bạn có chắc chắn muốn xóa giao dịch này không? Hành động này không thể hoàn tác.",
+    "spending.confirm_delete_title": "Xóa giao dịch",
     "spending.delete": "Xóa giao dịch",
     "spending.expense": "Chi tiêu",
     "spending.expense_label": "Khoản chi (-)",
