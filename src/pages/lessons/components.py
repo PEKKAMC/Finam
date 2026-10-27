@@ -21,13 +21,13 @@ class LessonItemCard(ft.Container):
         self.top_badges = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                ft.Container(
-                    content=Text.SMALL(f"{self.duration} {self.lang["generic.minute"]}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
-                    bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
-                    padding=ft.Padding(10, 4, 10, 4),
-                    border_radius=12,
-                    border=ft.Border.all(1, ft.Colors.with_opacity(0.3, Color.PRIMARY))
-                ),
+                #ft.Container(
+                #    content=Text.SMALL(f"{self.duration} {self.lang["generic.minute"]}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                #    bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
+                #    padding=ft.Padding(10, 4, 10, 4),
+                #    border_radius=12,
+                #    border=ft.Border.all(1, ft.Colors.with_opacity(0.3, Color.PRIMARY))
+                #),
                 *(
                     [
                         ft.Container(
@@ -90,24 +90,24 @@ class LessonItemCard(ft.Container):
                 spacing=12,
                 controls=[
                     Text.SMALL(self.subtitle, color=Color.SECONDARY_TEXT),
-                    ft.Divider(height=1, color=Color.INPUT_BORDER),
-                    ft.Button(
-                        content=ft.Row(
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            spacing=6,
-                            controls=[
-                                ft.Icon(ft.Icons.PLAY_ARROW_ROUNDED, color=Color.LIGHT_ACCENT, size=18),
-                                Text.MEDIUM(self.lang["lessons.review_lesson"] if self.is_completed else self.lang["lessons.start_lesson"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
-                            ],
-                            tight=True
-                        ),
-                        bgcolor=Color.PRIMARY,
-                        on_click=self._page.navigate_to(self.route),
-                        style=ft.ButtonStyle(
-                            shape=ft.RoundedRectangleBorder(radius=16),
-                            padding=12
-                        )
-                    )
+                    #ft.Divider(height=1, color=Color.INPUT_BORDER),
+                    #ft.Button(
+                    #    content=ft.Row(
+                    #        alignment=ft.MainAxisAlignment.CENTER,
+                    #        spacing=6,
+                    #        controls=[
+                    #            ft.Icon(ft.Icons.PLAY_ARROW_ROUNDED, color=Color.LIGHT_ACCENT, size=18),
+                    #            Text.MEDIUM(self.lang["lessons.review_lesson"] if self.is_completed else self.lang["lessons.start_lesson"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                    #        ],
+                    #        tight=True
+                    #    ),
+                    #    bgcolor=Color.PRIMARY,
+                    #    on_click=self._page.navigate_to(self.route),
+                    #    style=ft.ButtonStyle(
+                    #        shape=ft.RoundedRectangleBorder(radius=16),
+                    #        padding=12
+                    #    )
+                    #)
                 ]
             )
         )
@@ -121,8 +121,8 @@ class LessonItemCard(ft.Container):
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
-            ink=True,
-            on_click=self._page.navigate_to(self.route),
+            #ink=True,
+            #on_click=self._page.navigate_to(self.route),
             content=self.main_container,
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
             padding=0,
