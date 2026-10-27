@@ -31,6 +31,8 @@ class UserManagementDialog(Dialog):
             content=ft.Column(
                 controls=[
                     ft.Row(
+                        height=48,
+                        alignment=ft.MainAxisAlignment.END,
                         controls=header_controls
                     ),
                     ft.Row(

@@ -959,7 +959,7 @@ class DeleteConfirmDialog(Dialog):
 
 
 class ClearHistoryDialog(Dialog):
-    def __init__(self, page: Page, lang: dict, controller, on_success: Callable, trigger_export: Callable):
+    def __init__(self, page: Page, lang: dict, controller, on_success: Callable):
         self._page = page
         self.lang = lang
         self.controller = controller
@@ -969,7 +969,6 @@ class ClearHistoryDialog(Dialog):
         self.desc_text = Text.P(self.lang["savings.clear_history_desc"])
 
         self.cancel_button = ft.Button(self.lang["generic.cancel"], on_click=lambda e: self.dismiss(), color=Color.PRIMARY_TEXT)
-        self.export_button = ft.Button(self.lang["savings.export_ledger"], on_click=trigger_export, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE)
         self.clear_button = ft.Button(self.lang["savings.clear_history"], on_click=self._process, bgcolor=Color.DELETE_ACTION, color=Color.WHITE)
 
         self.main_container = ft.Container(
@@ -984,7 +983,7 @@ class ClearHistoryDialog(Dialog):
         super().__init__(
             dialog_content=self.main_container,
             color=Color.DIALOG_BACKGROUND,
-            options=[self.cancel_button, self.export_button, self.clear_button],
+            options=[self.cancel_button, self.clear_button],
             padding=0
         )
 

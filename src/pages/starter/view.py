@@ -104,7 +104,7 @@ class StarterView(ft.View):
             # Resizing other components
             self.dialogs.user_dialog.resize(
                 width=page_width // 3 * 2,
-                height=page_height // 2,
+                height=page_height // 3 * 2,
             )
 
             return 0
