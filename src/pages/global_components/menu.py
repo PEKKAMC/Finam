@@ -31,16 +31,17 @@ class Menu(ft.Container):
                 self.build_nav_item(ft.Icons.EDIT_NOTE_ROUNDED, "editor", self._page.navigate_to("/lesson-editor"), is_active=self.active_icon == "editor")
             )
 
+        self.items_count = len(self.navigation_items)
+
         self.main_container = ft.Container(
-            height=72,
             bgcolor=Color.NAVIGATION_BACKGROUND,
             border_radius=20,
-            padding=10,
+            padding=0,
             shadow=ft.BoxShadow(blur_radius=10, spread_radius=1, color=Color.SHADOW),
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_AROUND,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=8,
+                spacing=0,
                 controls=self.navigation_items,
             ),
         )
@@ -60,21 +61,23 @@ class Menu(ft.Container):
         change_route = None if is_active else on_click
 
         return ft.Container(
-            width=52,
-            height=52,
             border_radius=16,
             ink=True,
             on_click=change_route,
-            bgcolor=active_bg,
             alignment=ft.Alignment.CENTER,
-            content=ft.Column(
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=4,
-                controls=[
-                    ft.Icon(icon, size=20, color=active_icon),
-                    Text.SMALL(title_text, color=active_text),
-                ],
+            content=ft.Container(
+                border_radius=16,
+                bgcolor=active_bg,
+                alignment=ft.Alignment.CENTER,
+                content=ft.Column(
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=4,
+                    controls=[
+                        ft.Icon(icon, size=20, color=active_icon),
+                        Text.SMALL(title_text, color=active_text),
+                    ],
+                ),
             ),
         )
 
@@ -100,4 +103,14 @@ class Menu(ft.Container):
                 return ""
 
     def resize(self, width: int) -> None:
+        item_size = width // self.items_count
+        inside_size = item_size // 6 * 5
+
         self.main_container.width = width
+        self.main_container.height = item_size
+
+        for item in self.navigation_items:
+            item.width = item_size
+            item.height = item_size
+            item.content.width = inside_size
+            item.content.height = inside_size
