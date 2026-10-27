@@ -209,7 +209,6 @@ class SavingsView(ft.View):
         existing_objectives = self.controller.get_user_objectives()
         currency = self.controller.get_currency()
 
-        self._page.delete_cached_view("/home")
         self._objective_data = self._build_objective_data(existing_objectives, currency)
         self.dialogs.update_currency(currency)
         self.summary_banner.update_data(total_savings, total_target, percentage, progress_value, currency)
@@ -309,7 +308,8 @@ class SavingsView(ft.View):
             )
 
             self.dialogs.deposit_withdraw_modal.resize(
-                width=page_width // 7 * 6
+                width=page_width,
+                height=page_height,
             )
 
             self.dialogs.delete_dialog.resize(

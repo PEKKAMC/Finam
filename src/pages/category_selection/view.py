@@ -305,8 +305,6 @@ class CategorySelectionView(ft.View):
                 item.update_selection(False)
             self.keyboard_container.visible = False
             self.keyboard_container.reset_inputs()
-            self._page.delete_cached_view("/home")
-            self._page.delete_cached_view("/spending")
             self._page.navigate_to(self._get_return_route())()
 
         self.update()
