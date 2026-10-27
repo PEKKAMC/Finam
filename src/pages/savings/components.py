@@ -916,13 +916,24 @@ class DeleteConfirmDialog(Dialog):
         self.title_text = Text.H3(self.lang["savings.delete_objective_title"], color=Color.PRIMARY_TEXT)
         self.desc_text = Text.P(self.lang["savings.delete_objective_desc"], color=Color.DEFAULT_TEXT)
 
-        self.cancel_button = ft.Button(self.lang["generic.cancel"], on_click=self._close_dialog, color=Color.PRIMARY_TEXT)
+        self.close_button = ft.IconButton(
+            ft.Icons.CLOSE,
+            on_click=self._close_dialog,
+            icon_color=Color.PRIMARY_TEXT,
+            tooltip=self.lang["generic.close"],
+        )
         self.delete_button = ft.Button(self.lang["generic.delete"], on_click=self._delete, bgcolor=Color.DELETE_ACTION, color=Color.WHITE)
 
         self.main_container = ft.Container(
             content=ft.Column(
                 tight=True,
-                controls=[self.title_text, self.desc_text],
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[self.title_text, self.close_button],
+                    ),
+                    self.desc_text,
+                ],
                 spacing=12,
             ),
             padding=UISettings.CARD_PADDING
@@ -931,7 +942,7 @@ class DeleteConfirmDialog(Dialog):
         super().__init__(
             dialog_content=self.main_container,
             color=Color.DIALOG_BACKGROUND,
-            options=[self.cancel_button, self.delete_button],
+            options=[self.delete_button],
             padding=0
         )
 
@@ -941,7 +952,7 @@ class DeleteConfirmDialog(Dialog):
         self.current_id = objective_id
         self.show()
 
-    def _close_dialog(self, e):
+    def _close_dialog(self, e=None):
         self.dismiss()
 
     def _delete(self, e):
@@ -954,7 +965,7 @@ class DeleteConfirmDialog(Dialog):
         content_width = max(outer_width - 48, 0)
         self.main_container.width = outer_width
         self.main_container.content.width = content_width
-        self.title_text.width = content_width
+        self.title_text.width = max(content_width - 48, 0)
         self.desc_text.width = content_width
 
 
@@ -968,13 +979,24 @@ class ClearHistoryDialog(Dialog):
         self.title_text = Text.H3(self.lang["savings.clear_history_title"], color=Color.PRIMARY_TEXT)
         self.desc_text = Text.P(self.lang["savings.clear_history_desc"])
 
-        self.cancel_button = ft.Button(self.lang["generic.cancel"], on_click=lambda e: self.dismiss(), color=Color.PRIMARY_TEXT)
+        self.close_button = ft.IconButton(
+            ft.Icons.CLOSE,
+            on_click=lambda e: self.dismiss(),
+            icon_color=Color.PRIMARY_TEXT,
+            tooltip=self.lang["generic.close"],
+        )
         self.clear_button = ft.Button(self.lang["savings.clear_history"], on_click=self._process, bgcolor=Color.DELETE_ACTION, color=Color.WHITE)
 
         self.main_container = ft.Container(
             content=ft.Column(
                 tight=True,
-                controls=[self.title_text, self.desc_text],
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[self.title_text, self.close_button],
+                    ),
+                    self.desc_text,
+                ],
                 spacing=12,
             ),
             padding=UISettings.CARD_PADDING
@@ -983,7 +1005,7 @@ class ClearHistoryDialog(Dialog):
         super().__init__(
             dialog_content=self.main_container,
             color=Color.DIALOG_BACKGROUND,
-            options=[self.cancel_button, self.clear_button],
+            options=[self.clear_button],
             padding=0
         )
 
@@ -1002,5 +1024,5 @@ class ClearHistoryDialog(Dialog):
         content_width = max(outer_width - 48, 0)
         self.main_container.width = outer_width
         self.main_container.content.width = content_width
-        self.title_text.width = content_width
+        self.title_text.width = max(content_width - 48, 0)
         self.desc_text.width = content_width
