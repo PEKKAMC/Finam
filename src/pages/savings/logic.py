@@ -111,7 +111,8 @@ class LogicController:
                 surplus = amount - remaining
                 amount = remaining
 
-        db.savings.add_saving_entry(self.current_user, amount, time, objective_id, note)
+        if not db.savings.add_saving_entry(self.current_user, amount, time, objective_id, note):
+            return False, "savings.error.action_failed", current_saved, 0.0
 
         return True, "", 0.0, surplus
 

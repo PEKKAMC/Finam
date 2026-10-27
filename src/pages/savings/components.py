@@ -2,11 +2,14 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import math
 from collections.abc import Callable
 from datetime import datetime
 
 import flet as ft
+
 from src.logger import Logger
+from src.pages.global_components.keyboard_container import KeyboardContainer
 from src.utils import Color, Dialog, Page, Text, UISettings
 
 
@@ -529,7 +532,7 @@ class CreateGoalModal(Dialog):
         self.submit_button.width = content_width
 
 
-class DepositWithdrawModal(Dialog):
+class DepositWithdrawModal(ft.Container):
     def __init__(self, page: Page, lang: dict, controller, on_success: Callable, on_surplus: Callable):
         self._page = page
         self.lang = lang
@@ -542,56 +545,92 @@ class DepositWithdrawModal(Dialog):
         self.title_text = Text.H3(self.lang["savings.deposit_title"], color=Color.PRIMARY_TEXT, expand=True)
         self.close_button = ft.IconButton(
             ft.Icons.CLOSE,
-            on_click=lambda e: self.dismiss(),
+            on_click=self._close,
             icon_color=Color.PRIMARY_TEXT,
+            tooltip=self.lang["generic.close"],
         )
 
-        self.goal_info_text = Text.H6("", color=Color.SECONDARY_TEXT)
-        self.goal_info = Text.MEDIUM("", color=Color.PRIMARY)
-        self.goal_amount = Text.H5("", color=Color.PRIMARY)
+        self.overview_title = Text.SMALL(
+            self.lang["savings.goal_overview"],
+            color=Color.SECONDARY_TEXT,
+            weight=ft.FontWeight.BOLD,
+        )
+        self.goal_title = Text.MEDIUM("", color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.target_amount = Text.MEDIUM("", color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.progress_label = Text.SMALL(
+            self.lang["savings.progress_toward_goal"],
+            color=Color.SECONDARY_TEXT,
+        )
+        self.progress_text = Text.SMALL("", color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.progress_bar = ft.ProgressBar(
+            value=0,
+            color=Color.PRIMARY_ACTION,
+            bgcolor=Color.PROGRESS_TRACK_BACKGROUND,
+            bar_height=12,
+            border_radius=8,
+        )
         self.summary_card = ft.Container(
             padding=14,
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=16,
-            content=ft.Row(
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            content=ft.Column(
+                spacing=8,
                 controls=[
-                    ft.Column([Text.MEDIUM(self.lang["savings.objective"], color=Color.SECONDARY_TEXT), self.goal_info_text], spacing=2),
-                    ft.Column([Text.MEDIUM(self.lang["savings.saved_and_needed"], color=Color.SECONDARY_TEXT), self.goal_info, self.goal_amount], spacing=2, horizontal_alignment=ft.CrossAxisAlignment.END)
-                ]
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[
+                            Text.MEDIUM(self.lang["savings.current_goal"], color=Color.SECONDARY_TEXT),
+                            self.target_amount,
+                        ],
+                    ),
+                    self.goal_title,
+                    self.progress_label,
+                    ft.Stack(
+                        height=16,
+                        controls=[
+                            self.progress_bar,
+                            ft.Container(
+                                alignment=ft.Alignment.CENTER_RIGHT,
+                                padding=ft.Padding.only(right=8),
+                                content=self.progress_text,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        )
+        self.saved_text = Text.MEDIUM("", color=Color.PRIMARY_ACTION, weight=ft.FontWeight.BOLD)
+        self.remaining_text = Text.MEDIUM("", color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.balance_card = ft.Container(
+            padding=14,
+            bgcolor=Color.CARD_BACKGROUND,
+            border_radius=16,
+            content=ft.Column(
+                spacing=4,
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[
+                            Text.MEDIUM(self.lang["savings.saved"], color=Color.SECONDARY_TEXT),
+                            self.saved_text,
+                        ],
+                    ),
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[
+                            Text.MEDIUM(self.lang["savings.remaining_label"], color=Color.SECONDARY_TEXT),
+                            self.remaining_text,
+                        ],
+                    ),
+                ],
             )
         )
-
-        self.amount_input = ft.TextField(
-            label=self.lang["generic.amount"],
-            color=Color.DEFAULT_TEXT,
-            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9.]*$", replacement_string=""),
-            border_radius=16,
-            border_color=Color.INPUT_BORDER,
-            keyboard_type=ft.KeyboardType.NUMBER,
-            focused_border_color=Color.PRIMARY_ACTION,
+        self.keyboard_container = KeyboardContainer(
+            page=self._page,
+            lang=self.lang,
+            on_save=self._process_keyboard_save,
         )
-
-        self.note_input = ft.TextField(
-            label=self.lang["savings.optional_note"],
-            color=Color.DEFAULT_TEXT,
-            border_radius=16,
-            border_color=Color.INPUT_BORDER,
-            focused_border_color=Color.PRIMARY_ACTION,
-        )
-
-        self.error_text = Text.SMALL("", color=Color.NEGATIVE_ACTION)
-        self.error_container = ft.Container(content=self.error_text, visible=False, padding=10, bgcolor=Color.ERROR_TEXT, border_radius=12)
-
-        self.submit_button = ft.Button(
-            self.lang["savings.confirm_deposit"],
-            icon=ft.Icons.ARROW_DOWNWARD,
-            on_click=self._process_submit,
-            bgcolor=Color.PRIMARY_ACTION,
-            color=Color.WHITE,
-            height=52,
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=16)),
-        )
+        self.keyboard_container.bottom = 0
 
         header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -601,33 +640,53 @@ class DepositWithdrawModal(Dialog):
             ],
         )
 
+        self.content_column = ft.Column(
+            tight=True,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=16,
+            scroll=ft.ScrollMode.AUTO,
+            controls=[
+                header_row,
+                self.overview_title,
+                self.summary_card,
+                self.balance_card,
+            ],
+        )
+
         self.main_container = ft.Container(
             padding=24,
             bgcolor=Color.DIALOG_BACKGROUND,
             border_radius=32,
-            content=ft.Column(
-                tight=True,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=16,
-                controls=[
-                    header_row,
-                    self.summary_card,
-                    self.error_container,
-                    self.amount_input,
-                    self.note_input,
-                    ft.Container(height=10),
-                    self.submit_button,
-                ],
-            ),
+            content=self.content_column,
         )
 
+        self.backdrop = ft.Container(
+            expand=True,
+            bgcolor="#80000000",
+            on_click=self._ignore_backdrop_click,
+        )
+        self.dialog_panel = ft.Container(
+            left=0,
+            right=0,
+            top=16,
+            alignment=ft.Alignment.CENTER,
+            content=self.main_container,
+        )
+        self.overlay_stack = ft.Stack(
+            expand=True,
+            controls=[
+                self.backdrop,
+                self.dialog_panel,
+                self.keyboard_container,
+            ],
+        )
         super().__init__(
-            dialog_content=self.main_container,
-            color=Color.TRANSPARENT,
-            padding=0
+            expand=True,
+            visible=False,
+            content=self.overlay_stack,
         )
-
-        self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
+        if self._page.overlay is not None and self not in self._page.overlay:
+            self._page.overlay.append(self)
 
     def trigger(self, goal: dict, mode: str):
         self.goal = goal
@@ -635,69 +694,96 @@ class DepositWithdrawModal(Dialog):
         is_deposit = mode == "deposit"
 
         self.title_text.value = self.lang["savings.deposit_title"] if is_deposit else self.lang["savings.withdraw_title"]
-        self.goal_info_text.value = goal["title"]
-        self.goal_info.value = f"{goal['current_value']} /"
-        self.goal_amount.value = f"{goal['target_value']}"
-        self.amount_input.value = ""
-        self.note_input.value = ""
-        self.error_container.visible = False
+        current_saved, target_amount = self.controller.get_objective_amounts(
+            int(goal["objective_id"])
+        )
+        remaining_amount = max(0.0, target_amount - current_saved)
+        progress = min(current_saved / target_amount, 1.0) if target_amount > 0 else 0.0
+        currency = self.controller.get_currency()
 
-        self.submit_button.content = self.lang["savings.confirm_deposit"] if is_deposit else self.lang["savings.confirm_withdraw"]
-        self.submit_button.bgcolor = Color.PRIMARY_ACTION if is_deposit else Color.NEGATIVE_ACTION
+        self.goal_title.value = goal["title"]
+        self.target_amount.value = f"{target_amount:,.2f} {currency}"
+        self.progress_text.value = f"{int(progress * 100)}%"
+        self.progress_bar.value = progress
+        self.saved_text.value = f"{current_saved:,.2f} {currency}"
+        self.remaining_text.value = f"{remaining_amount:,.2f} {currency}"
 
-        self.show()
+        self.keyboard_container.visible = True
+        self.visible = True
+        self._page.update()
+        self.keyboard_container.reset_inputs()
 
-    def _process_submit(self, e):
+    def _close(self, e=None):
+        self.keyboard_container.visible = False
+        self.visible = False
+        self._page.update()
+
+    @staticmethod
+    def _ignore_backdrop_click(e=None):
+        pass
+
+    def _process_keyboard_save(self, values: dict) -> None:
         try:
-            amount = float(self.amount_input.value or 0)
-        except ValueError:
+            amount = float(values.get("amount") or 0)
+        except (TypeError, ValueError):
             amount = 0.0
 
-        if amount <= 0:
-            self.error_text.value = self.lang["savings.error.invalid_amount"]
-            self.error_container.visible = True
-            self.main_container.update()
+        if not math.isfinite(amount) or amount <= 0:
+            self._show_error(self.lang["savings.error.invalid_amount"])
+            return
+
+        if self.goal is None:
+            Logger.error("Cannot save savings action without a selected goal")
             return
 
         objective_id = int(self.goal["objective_id"])
-        current_saved, target_amount = self.controller.get_objective_amounts(objective_id)
-
-        if self.mode == "withdraw" and amount > current_saved:
-            self.error_text.value = self.lang["savings.error.withdraw_exceeds_balance"]
-            self.error_container.visible = True
-            self.main_container.update()
-            return
-
-        success, error_key, _, surplus = self.controller.process_quick_action(
+        success, error_key, current_saved, surplus = self.controller.process_quick_action(
             objective_id,
             self.mode,
             amount,
-            datetime.now().strftime("%Y-%m-%d %H:%M"),
-            self.note_input.value.strip() if self.note_input.value else ""
+            values.get("date") or datetime.now().strftime("%Y-%m-%d %H:%M"),
+            (values.get("note") or "").strip(),
         )
 
         if not success:
-            self.error_text.value = self.lang["savings.error.action_failed"]
-            self.error_container.visible = True
-            self.main_container.update()
+            message = self.lang.get(error_key, self.lang["savings.error.action_failed"])
+            if "{remaining}" in message:
+                message = message.format(
+                    remaining=f"{current_saved:,.2f}",
+                    currency=self.controller.get_currency(),
+                )
+            self._show_error(message)
             return
 
-        self.dismiss()
+        self.keyboard_container.reset_inputs()
+        self.keyboard_container.visible = False
+        self.visible = False
         self.on_success()
 
         if surplus > 0:
             self.on_surplus(self.goal, surplus)
 
-    def resize(self, width: int) -> None:
-        outer_width = max(width, 0)
+    def _show_error(self, message: str) -> None:
+        snack_bar = ft.SnackBar(Text.MEDIUM(message), bgcolor=Color.DELETE_ACTION)
+        self._page.overlay.append(snack_bar)
+        snack_bar.open = True
+        self._page.update()
+
+    def resize(self, width: int, height: int) -> None:
+        page_width = max(width, 0)
+        outer_width = page_width // 7 * 6
+        dialog_height = max(220, min(480, height - 360))
         content_width = max(outer_width - 48, 0)
+
         self.main_container.width = outer_width
+        self.main_container.height = dialog_height
+        self.dialog_panel.width = page_width
         self.main_container.content.width = content_width
+        self.content_column.height = max(dialog_height - 48, 0)
         self.summary_card.width = content_width
-        self.amount_input.width = content_width
-        self.note_input.width = content_width
-        self.error_container.width = content_width
-        self.submit_button.width = content_width
+        self.balance_card.width = content_width
+        self.keyboard_container.width = page_width
+        self.keyboard_container.resize(page_width)
 
 
 class CongratulationsModal(Dialog):
@@ -739,7 +825,6 @@ class CongratulationsModal(Dialog):
         self.surplus_banner = ft.Container(visible=False)
         self.goals_dropdown_column = ft.Column(spacing=8)
         self.action_button = ft.Button(self.lang["savings.transfer_surplus"], on_click=self._process_transfer, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE, width=380, height=50)
-        self.create_new_button = ft.TextButton(self.lang["savings.create_goal_with_surplus_alternative"], icon=ft.Icons.ADD_CIRCLE, on_click=self._process_create_new)
 
         self.main_container = ft.Container(
             padding=28,
@@ -760,7 +845,6 @@ class CongratulationsModal(Dialog):
                     self.surplus_banner,
                     self.goals_dropdown_column,
                     self.action_button,
-                    self.create_new_button,
                 ],
             ),
         )
@@ -781,7 +865,6 @@ class CongratulationsModal(Dialog):
         self.selected_target_id = None
         self.goal_option_cards.clear()
         self.goals_dropdown_column.controls = []
-        self.create_new_button.visible = True
 
         self.title_text.value = self.lang["savings.goal_completed_title"].format(title=completed_goal["title"])
         self.target_amount_text.value = completed_goal["target_value"]
@@ -831,7 +914,6 @@ class CongratulationsModal(Dialog):
             self.surplus_banner.visible = False
             self.goals_dropdown_column.visible = False
             self.action_button.content = self.lang["savings.continue_saving"]
-            self.create_new_button.visible = False
 
         self.show()
 
@@ -883,14 +965,10 @@ class CongratulationsModal(Dialog):
             self.on_success()
         elif self.surplus_amount > 0 and not self.available_goals:
             self.dismiss()
-            self.on_create_with_surplus(e.page, self.surplus_amount)
+            self.on_create_with_surplus(self.surplus_amount)
         else:
             self.dismiss()
             self.on_success()
-
-    def _process_create_new(self, e):
-        self.dismiss()
-        self.on_create_with_surplus(e.page, self.surplus_amount)
 
     def resize(self, width: int) -> None:
         outer_width = max(width, 0)
@@ -901,7 +979,6 @@ class CongratulationsModal(Dialog):
         self.surplus_banner.width = content_width
         self.goals_dropdown_column.width = content_width
         self.action_button.width = content_width
-        self.create_new_button.width = content_width
 
 
 class DeleteConfirmDialog(Dialog):
