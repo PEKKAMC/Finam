@@ -31,6 +31,14 @@ class Color(metaclass=_ColorMeta):
     BLACK: str = "#000000"
     TRANSPARENT: str = "transparent"
 
+    # PIE CHART COLORS
+    PIE_CHART_RED: str = "#FF0000"
+    PIE_CHART_BLUE: str = "#0000FF"
+    PIE_CHART_GREEN: str = "#00FF00"
+    PIE_CHART_YELLOW: str = "#FFFF00"
+    PIE_CHART_TURQUOISE: str = "#00FFAA"
+    PIE_CHART_PURPLE: str = "#AA00FF"
+
     # UI BACKGROUNDS
     PAGE_BACKGROUND: str
     NAVIGATION_BACKGROUND: str

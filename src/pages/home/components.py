@@ -537,14 +537,12 @@ class ExpensePieChart(ft.Container):
         self.currency = db.users.get_currency(self.username)
 
         self.pie_colors = [
-            Color.EXPENSE_ACTION_BACKGROUND,
-            Color.PRIMARY,
-            Color.GOAL_HEADER_ICON_COLOR,
-            Color.LESSON_ICON_COLOR,
-            Color.SAVINGS_VALUE_TEXT,
-            Color.PROGRESS_ACTIVE,
-            Color.PRIMARY_ACTION,
-            Color.CHART_INCOME,
+            Color.PIE_CHART_RED,
+            Color.PIE_CHART_BLUE,
+            Color.PIE_CHART_GREEN,
+            Color.PIE_CHART_YELLOW,
+            Color.PIE_CHART_TURQUOISE,
+            Color.PIE_CHART_PURPLE
         ]
 
         # TEXT AND ICON COMPONENTS
