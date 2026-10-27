@@ -414,14 +414,14 @@ class FinancialChart(ft.Container):
                         ft.Row(
                             spacing=4,
                             controls=[
-                                ft.Container(width=10, height=10, bgcolor=Color.INCOME_BACKGROUND, border_radius=5),
+                                ft.Container(width=10, height=10, bgcolor=Color.INCOME_COLOR, border_radius=5),
                                 Text.LABEL(self.lang["generic.income"], color=Color.INCOME_COLOR),
                             ]
                         ),
                         ft.Row(
                             spacing=4,
                             controls=[
-                                ft.Container(width=10, height=10, bgcolor=Color.EXPENSE_BACKGROUND, border_radius=5),
+                                ft.Container(width=10, height=10, bgcolor=Color.EXPENSE_COLOR, border_radius=5),
                                 Text.LABEL(self.lang["generic.expense"], color=Color.EXPENSE_COLOR),
                             ]
                         )
@@ -485,7 +485,7 @@ class FinancialChart(ft.Container):
                             from_y=0,
                             to_y=income_value,
                             width=bar_size,
-                            color=Color.INCOME_BACKGROUND,
+                            color=Color.INCOME_COLOR,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
                                 text=f"{self.lang['generic.income']}: {income_value:,.2f} {self.currency}"
@@ -495,7 +495,7 @@ class FinancialChart(ft.Container):
                             from_y=0,
                             to_y=expense_value,
                             width=bar_size,
-                            color=Color.EXPENSE_BACKGROUND,
+                            color=Color.EXPENSE_COLOR,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
                                 text=f"{self.lang['generic.expense']}: {expense_value:,.2f} {self.currency}"

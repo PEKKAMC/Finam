@@ -257,7 +257,7 @@ class DeleteAllDataDialog(Dialog):
         )
 
         super().__init__(
-            color=Color.WHITE,
+            color=Color.DIALOG_BACKGROUND,
             dialog_content=self.main_container
         )
 
