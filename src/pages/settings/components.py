@@ -2,6 +2,8 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from collections.abc import Callable
+
 import flet as ft
 
 from src.utils import Color, Text, UISettings
@@ -78,7 +80,14 @@ class SettingDropdown(ft.Container):
 
 
 class SettingRow(ft.Container):
-    def __init__(self, icon: ft.IconData, title: str, subtitle: str, control: ft.Control):
+    def __init__(
+        self,
+        icon: ft.IconData,
+        title: str,
+        subtitle: str,
+        control: ft.Control,
+        on_click: Callable | None = None,
+    ):
         # TEXT AND ICON COMPONENTS
         self.row_icon = ft.Icon(icon, color=Color.PRIMARY_ACTION, size=24)
         self.title_text = Text.H5(title, color=Color.PRIMARY_TEXT)
@@ -118,7 +127,9 @@ class SettingRow(ft.Container):
 
         super().__init__(
             padding=ft.Padding.symmetric(vertical=6),
-            content=self.main_container
+            content=self.main_container,
+            on_click=on_click,
+            ink=on_click is not None,
         )
 
 

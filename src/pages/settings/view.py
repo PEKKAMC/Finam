@@ -140,6 +140,34 @@ class SettingsView(ft.View):
             ]
         )
 
+        self.cache_card = SettingCard(
+            controls=[
+                SettingRow(
+                    icon=ft.Icons.DELETE_OUTLINE,
+                    title=self.lang["settings.clear_cache_title"],
+                    subtitle=self.lang["settings.clear_cache_desc"],
+                    control=ft.Icon(ft.Icons.CHEVRON_RIGHT, color=Color.SECONDARY_TEXT),
+                    on_click=self._show_clear_cache_dialog,
+                )
+            ]
+        )
+
+        self.clear_cache_dialog = Dialog(
+            dialog_content=ft.Column(
+                tight=True,
+                controls=[
+                    Text.H4(self.lang["settings.clear_cache_confirm_title"], color=Color.PRIMARY_TEXT),
+                    Text.P(self.lang["settings.clear_cache_confirm_desc"], color=Color.SECONDARY_TEXT)
+                ]
+            ),
+            color=Color.DIALOG_BACKGROUND,
+            options=[
+                ft.TextButton(self.lang["generic.cancel"], on_click=self._dismiss_clear_cache_dialog),
+                ft.TextButton(self.lang["settings.clear_cache"], on_click=self._clear_cached_views)
+            ]
+        )
+        self.clear_cache_dialog._dialog_page = self._page
+
         self.done_btn_text = Text.H4(self.lang["settings.done"], color=Color.WHITE)
 
         self.done_btn = ft.Container(
@@ -174,6 +202,7 @@ class SettingsView(ft.View):
                                 self.theme_card,
                                 self.currency_card,
                                 self.system_prefs_card,
+                                self.cache_card,
                                 self.done_btn
                             ]
                         )
@@ -210,6 +239,30 @@ class SettingsView(ft.View):
             return
 
         db.app_security.disable_app_lock()
+        self._page.update()
+
+    def _show_clear_cache_dialog(self, e: ft.ControlEvent | None = None) -> None:
+        self.clear_cache_dialog.show()
+
+    def _dismiss_clear_cache_dialog(self, e: ft.ControlEvent | None = None) -> None:
+        self.clear_cache_dialog.dismiss()
+
+    def _clear_cached_views(self, e: ft.ControlEvent | None = None) -> None:
+        try:
+            self._page.delete_all_cached_views()
+        except Exception as ex:
+            Logger.error(f"Failed to clear cached views: {ex}")
+            self.clear_cache_dialog.dismiss()
+            message = self.lang["settings.clear_cache_failed"]
+            background_color = Color.NEGATIVE_ACTION
+        else:
+            self.clear_cache_dialog.dismiss()
+            message = self.lang["settings.clear_cache_success"]
+            background_color = Color.PRIMARY_ACTION
+
+        snack_bar = ft.SnackBar(Text.P(message), bgcolor=background_color)
+        self._page.overlay.append(snack_bar)
+        snack_bar.open = True
         self._page.update()
 
     def _show_pin_setup_dialog(self) -> None:
@@ -332,11 +385,29 @@ class SettingsView(ft.View):
             self.main_container.height = page_height
 
             # Resizing other components
-            self.settings_header.resize(width=page_width)
-            self.language_card.resize(width=page_width)
-            self.theme_card.resize(width=page_width)
-            self.currency_card.resize(width=page_width)
-            self.system_prefs_card.resize(width=page_width)
+            self.settings_header.resize(
+                width=page_width
+            )
+
+            self.language_card.resize(
+                width=page_width
+            )
+
+            self.theme_card.resize(
+                width=page_width
+            )
+
+            self.currency_card.resize(
+                width=page_width
+            )
+
+            self.system_prefs_card.resize(
+                width=page_width
+            )
+
+            self.cache_card.resize(
+                width=page_width
+            )
 
             return 0
 
