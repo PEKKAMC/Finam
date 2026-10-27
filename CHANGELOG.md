@@ -1,3 +1,47 @@
+# Finam v0.4.0-beta
+
+**Release Date:** October 27, 2026
+
+> **⚠️ BETA WARNING: Read Before Using**
+>
+> Welcome to the Beta build! Core stability and performance have been significantly improved since our Alpha release, but you may still encounter occasional bugs, minor performance hiccups, or incomplete features as we fine-tune the application for full launch.
+>
+> * **Data Backup:** While local database corruption is now far less likely, we still recommend backing up any critical financial data before performing major updates or operations.
+> * **Feedback:** If you run into any issues, softlocks, or unexpected behavior, please submit a report via our GitHub page.
+>
+> Thank you for helping us test and polish this release!
+
+## Features in this version
+
+This version mainly works on features such as theme support, backend security, google account sign-in, improved performance and responsiveness, cleaning up bugs and errors, and more. These features include:
+
+*   **Dark mode**: A new dark theme is now available for a more comfortable viewing experience in low-light conditions.
+*   **Backend security system**: A new backend security system is now in place to enhance the app's protection against potential threats.
+*   **Google account sign-in**: Support signing in with a Google account for backing up data online.
+*   **Better performance**: The application has been optimized for smoother navigation, faster load times, and reduced memory usage.
+*   **Codebase refactoring**: The source code has been cleaned up and reorganized for better maintainability and future development.
+
+## Changes in this version
+
+*   Added experimental light and dark themes, with theme selection in settings.
+*   Added a settings option to clear cached views.
+*   Added confirmation dialogs before deleting transactions.
+*   Reworked savings dialogs and updated dialog styling and behavior throughout the app.
+*   Improved page refresh and resizing behavior.
+*   Refined layouts, navigation menu behavior, and financial chart styling.
+*   Removed unused settings, dialogs, and interface elements.
+
+## Bug fixes in this version
+
+*   Fixed category selection always returning to home page instead of the previous page.
+*   Fixed deleting all app data leaving cached views behind.
+
+## Known Issues & Instability
+
+*   Export feature doesn't work on mobile devices.
+*   Some actions may cause softlocks or crashes.
+*   Various UI elements may not scale perfectly on all screen sizes.
+
 # Finam v0.3.4-beta
 
 **Release Date:** October 24, 2026
