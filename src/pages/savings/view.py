@@ -61,8 +61,7 @@ class DialogManager:
             page=self._page,
             lang=self.lang,
             controller=self.controller,
-            on_success=self._refresh_view,
-            trigger_export=self._trigger_export
+            on_success=self._refresh_view
         )
 
     def update_currency(self, currency: str) -> None:
