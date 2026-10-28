@@ -2,6 +2,7 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from io import BytesIO
 from types import NoneType
 
 import openpyxl
@@ -119,7 +120,7 @@ class LogicController:
     def clear_activity_history(self):
         db.users.clear_activity_history(self.current_user)
 
-    def export_ledger_to_excel(self, file_path: str, lang: dict) -> tuple[bool, str]:
+    def get_ledger_excel_bytes(self, lang: dict) -> tuple[bytes | None, str]:
         activities = self.get_recent_activity(lang)
         try:
             workbook = openpyxl.Workbook()
@@ -130,7 +131,19 @@ class LogicController:
             worksheet.append([lang["generic.date"], lang["savings.ledger.action_type"], lang["savings.ledger.description"]])
             for activity in activities:
                 worksheet.append([activity["date"], lang[f"savings.activity.{activity['type']}"], activity["desc"]])
-            workbook.save(file_path)
+            output = BytesIO()
+            workbook.save(output)
+            return output.getvalue(), ""
+        except Exception as error:
+            return None, str(error)
+
+    def export_ledger_to_excel(self, file_path: str, lang: dict) -> tuple[bool, str]:
+        data, error = self.get_ledger_excel_bytes(lang)
+        if data is None:
+            return False, error
+        try:
+            with open(file_path, "wb") as file:
+                file.write(data)
             return True, ""
         except Exception as error:
             return False, str(error)

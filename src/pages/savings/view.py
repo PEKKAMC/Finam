@@ -255,10 +255,17 @@ class SavingsView(ft.View):
 
     async def trigger_export(self, e=None) -> None:
         try:
-            file_path = await ft.FilePicker().save_file(allowed_extensions=["xlsx", "xls"], file_name="savings.xlsx")
-            if file_path:
-                success, error_message = self.controller.export_ledger_to_excel(file_path, self.lang)
-                snack_bar = ft.SnackBar(Text.MEDIUM(self.lang["savings.export_succeeded"] if success else self.lang["savings.error.export_failed"].format(error=error_message)))
+            file_bytes, error_message = self.controller.get_ledger_excel_bytes(self.lang)
+            if file_bytes is None:
+                raise RuntimeError(error_message)
+
+            saved_file = await ft.FilePicker().save_file(
+                allowed_extensions=["xlsx"],
+                file_name="savings.xlsx",
+                src_bytes=file_bytes,
+            )
+            if saved_file:
+                snack_bar = ft.SnackBar(Text.MEDIUM(self.lang["savings.export_succeeded"]))
                 self._page.overlay.append(snack_bar)
                 snack_bar.open = True
                 self._page.update()
