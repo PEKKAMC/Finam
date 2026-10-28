@@ -222,7 +222,7 @@
     "settings.clear_cache": "Clear cache",
     "settings.clear_cache_confirm_desc": "Only cached page views will be removed. Your data and settings will not be deleted.",
     "settings.clear_cache_confirm_title": "Clear all cached pages?",
-    "settings.clear_cache_desc": "Remove all cached page views. They will be recreated as you navigate.",
+    "settings.clear_cache_desc": "Remove all cached page views.",
     "settings.clear_cache_failed": "Could not clear cached pages.",
     "settings.clear_cache_success": "All cached pages have been cleared.",
     "settings.clear_cache_title": "Cached pages",

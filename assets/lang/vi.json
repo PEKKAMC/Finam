@@ -222,7 +222,7 @@
     "settings.clear_cache": "Xóa bộ nhớ đệm",
     "settings.clear_cache_confirm_desc": "Chỉ các trang được lưu trong bộ nhớ đệm sẽ bị xóa. Dữ liệu và cài đặt của bạn sẽ không bị xóa.",
     "settings.clear_cache_confirm_title": "Xóa toàn bộ trang được lưu?",
-    "settings.clear_cache_desc": "Xóa tất cả trang được lưu trong bộ nhớ đệm. Các trang sẽ được tạo lại khi bạn truy cập.",
+    "settings.clear_cache_desc": "Xóa tất cả trang được lưu trong bộ nhớ đệm.",
     "settings.clear_cache_failed": "Không thể xóa các trang được lưu trong bộ nhớ đệm.",
     "settings.clear_cache_success": "Đã xóa tất cả trang được lưu trong bộ nhớ đệm.",
     "settings.clear_cache_title": "Trang được lưu trong bộ nhớ đệm",
