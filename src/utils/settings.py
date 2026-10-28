@@ -8,7 +8,7 @@ class DefaultSettings:
     CURRENCY: str = "VND (đ)"
     LANGUAGE: str = "vi"
     APP_LOCK: bool = False
-    DIGIT_SEPARATOR: str = ""
+    DIGIT_SEPARATOR: str = ","
     DECIMAL_SEPARATOR: str = "."
 
 
