@@ -216,6 +216,7 @@ class KeyboardContainer(ft.Container):
     @staticmethod
     def _eval_expression(expression: str):
         try:
+            expression = expression.rstrip("+-*/.")
             if not expression:
                 return None
             cleaned = expression.replace("×", "*").replace("÷", "/")
