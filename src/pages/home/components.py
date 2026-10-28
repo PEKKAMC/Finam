@@ -56,7 +56,7 @@ class BalanceCard(ft.Container):
             border=ft.Border.all(1, Color.PRIMARY)
         )
 
-        self.balance_amount_text = ft.Row(
+        self.balance_amount_row = ft.Row(
             controls=[
                 self.balance_amount_text,
                 self.currency_label
@@ -69,7 +69,7 @@ class BalanceCard(ft.Container):
             spacing=4,
             controls=[
                 self.balance_label_container,
-                self.balance_amount_text
+                self.balance_amount_row
             ]
         )
 
