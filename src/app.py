@@ -7,21 +7,13 @@ import os
 import flet as ft
 
 from src.database import db
-from src.utils import (
-    DefaultSettings,
-    Page,
-    ThemeManager,
-    UISettings,
-    get_language,
-    set_decimal_separator,
-    set_digit_separator,
-)
+from src.utils import DefaultSettings, Page, ThemeManager, UISettings, get_language, set_decimal_separator, set_digit_separator
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
 from src.pages.home import get_home_view
 from src.pages.lessons import get_lessons_view
-from src.pages.lesson_player import get_lesson_player_view
+#from src.pages.lesson_player import get_lesson_player_view
 from src.pages.savings import get_savings_view
 from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
@@ -118,12 +110,12 @@ async def main(page: Page) -> None:
         if troute.match("/savings"):
             return get_savings_view(page, lang, user_info)
 
-        if troute.match("/lesson-player/:lesson_id"):
-            lesson_id = getattr(troute, "lesson_id", None)
-            return get_lesson_player_view(page, lang, user_info, lesson_id)
+        #if troute.match("/lesson-player/:lesson_id"):
+        #    lesson_id = getattr(troute, "lesson_id", None)
+        #    return get_lesson_player_view(page, lang, user_info, lesson_id)
 
-        if troute.match("/lesson-player"):
-            return get_lesson_player_view(page, lang, user_info)
+        #if troute.match("/lesson-player"):
+        #    return get_lesson_player_view(page, lang, user_info)
 
         if troute.match("/spending"):
             return get_spending_view(page, lang, user_info)
