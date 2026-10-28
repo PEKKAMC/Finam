@@ -10,7 +10,7 @@ from typing import Callable, Optional
 import flet as ft
 
 from src.logger import Logger
-from src.utils import Color, Page
+from src.utils import Color, Page, format_expression, get_decimal_separator
 
 
 class KeyboardContainer(ft.Container):
@@ -203,7 +203,7 @@ class KeyboardContainer(ft.Container):
                 ft.Row(
                     spacing=6,
                     controls=[
-                        k_btn(".", lambda e: self._on_key_press(".")),
+                        k_btn(get_decimal_separator(), lambda e: self._on_key_press(".")),
                         k_btn("0", lambda e: self._on_key_press("0")),
                         k_btn("", lambda e: self._on_backspace(), icon=ft.Icons.BACKSPACE),
                         k_btn("=", lambda e: self._on_equal_pressed()),
@@ -260,7 +260,7 @@ class KeyboardContainer(ft.Container):
             self.amount_value = val
         else:
             self.amount_value += val
-        self.amount_display.value = self.amount_value
+        self.amount_display.value = format_expression(self.amount_value)
         if self._page is not None:
             self.amount_display.update()
 
@@ -269,7 +269,7 @@ class KeyboardContainer(ft.Container):
             self.amount_value = self.amount_value[:-1]
         else:
             self.amount_value = "0"
-        self.amount_display.value = self.amount_value
+        self.amount_display.value = format_expression(self.amount_value)
         if self._page is not None:
             self.amount_display.update()
 
@@ -278,7 +278,7 @@ class KeyboardContainer(ft.Container):
         if result is None:
             return
         self.amount_value = result
-        self.amount_display.value = self.amount_value
+        self.amount_display.value = format_expression(self.amount_value)
         if self._page is not None:
             self.amount_display.update()
 
@@ -287,7 +287,7 @@ class KeyboardContainer(ft.Container):
             evaluated = self._eval_expression(self.amount_value)
             if evaluated is not None:
                 self.amount_value = evaluated
-                self.amount_display.value = self.amount_value
+                self.amount_display.value = format_expression(self.amount_value)
                 self.update()
 
         values = {

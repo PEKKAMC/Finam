@@ -10,7 +10,7 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components.keyboard_container import KeyboardContainer
-from src.utils import Color, Dialog, Page, Text, UISettings
+from src.utils import Color, Dialog, Page, Text, UISettings, format_number
 
 
 class GoalCard(ft.Container):
@@ -189,8 +189,8 @@ class AggregateCard(ft.Container):
 
         self.title_text = Text.MEDIUM(self.lang["savings.fund_management"].upper(), color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.progress_label = Text.MEDIUM(self.lang["savings.progress"], color=Color.WHITE)
-        self.savings_text = Text.H1(f"{total_savings:,.2f}".translate(str.maketrans(".,", ",.")), color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.target_text = Text.H5(f" / {total_target:,.2f}".translate(str.maketrans(".,", ",.")) + f" {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.savings_text = Text.H1(format_number(total_savings), color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.target_text = Text.H5(f" / {format_number(total_target)} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.percentage_text = Text.MEDIUM(f"{percentage}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
 
         self.add_icon = ft.Icon(ft.Icons.ADD, color=Color.PRIMARY, size=16)
@@ -259,9 +259,9 @@ class AggregateCard(ft.Container):
         )
 
     def update_data(self, total_savings: float, total_target: float, percentage: str, progress_value: float, currency: str):
-        self.savings_text.value = f"{total_savings:,.2f}".translate(str.maketrans(".,", ",."))
+        self.savings_text.value = format_number(total_savings)
         self.currency = currency
-        self.target_text.value = f" / {total_target:,.2f}".translate(str.maketrans(".,", ",.")) + f" {self.currency}"
+        self.target_text.value = f" / {format_number(total_target)} {self.currency}"
         self.percentage_text.value = percentage
         self.progress_bar.value = progress_value
 
@@ -337,7 +337,7 @@ class ActivityHistory(ft.Container):
             icon = ft.Icons.MONEY if activity_type == "saving" else ft.Icons.CHECK_CIRCLE if activity_type == "completed" else ft.Icons.HISTORY
             amount = item.get("amount")
             trailing = (
-                Text.MEDIUM(f"{amount:+,.2f} {self.currency}", color=Color.PRIMARY_ACTION if amount > 0 else Color.NEGATIVE_ACTION)
+                Text.MEDIUM(f"{format_number(amount, signed=True)} {self.currency}", color=Color.PRIMARY_ACTION if amount > 0 else Color.NEGATIVE_ACTION)
                 if amount is not None else None
             )
             self.activity_list.controls.append(
@@ -463,12 +463,12 @@ class CreateGoalModal(Dialog):
             self.title_text.value = self.lang["savings.create_goal_from_surplus_title"]
             self.goal_title_input.value = self.lang["savings.next_objective"]
             self.goal_amount_input.value = str(int(initial_surplus * 5))
-            self.reason_input.value = self.lang["savings.surplus_reason"].format(amount=f"{initial_surplus:,.0f}", currency=self.currency)
+            self.reason_input.value = self.lang["savings.surplus_reason"].format(amount=format_number(initial_surplus, decimals=0), currency=self.currency)
             self.surplus_banner.visible = True
             self.surplus_banner.content = ft.Row(
                 controls=[
                     ft.Icon(ft.Icons.AUTO_AWESOME, size=16, color=Color.PRIMARY),
-                    Text.SMALL(self.lang["savings.surplus_prefill"].format(amount=f"{initial_surplus:,.0f}", currency=self.currency), color=Color.PRIMARY)
+                    Text.SMALL(self.lang["savings.surplus_prefill"].format(amount=format_number(initial_surplus, decimals=0), currency=self.currency), color=Color.PRIMARY)
                 ]
             )
             self.surplus_banner.bgcolor = Color.LIGHT_ACCENT
@@ -702,11 +702,11 @@ class DepositWithdrawModal(ft.Container):
         currency = self.controller.get_currency()
 
         self.goal_title.value = goal["title"]
-        self.target_amount.value = f"{target_amount:,.2f} {currency}"
+        self.target_amount.value = f"{format_number(target_amount)} {currency}"
         self.progress_text.value = f"{int(progress * 100)}%"
         self.progress_bar.value = progress
-        self.saved_text.value = f"{current_saved:,.2f} {currency}"
-        self.remaining_text.value = f"{remaining_amount:,.2f} {currency}"
+        self.saved_text.value = f"{format_number(current_saved)} {currency}"
+        self.remaining_text.value = f"{format_number(remaining_amount)} {currency}"
 
         self.keyboard_container.visible = True
         self.visible = True
@@ -749,7 +749,7 @@ class DepositWithdrawModal(ft.Container):
             message = self.lang.get(error_key, self.lang["savings.error.action_failed"])
             if "{remaining}" in message:
                 message = message.format(
-                    remaining=f"{current_saved:,.2f}",
+                    remaining=format_number(current_saved),
                     currency=self.controller.get_currency(),
                 )
             self._show_error(message)
@@ -878,7 +878,7 @@ class CongratulationsModal(Dialog):
                 content=ft.Row([
                     ft.Icon(ft.Icons.ADD, color=Color.NEGATIVE_ACTION),
                     ft.Column([
-                        Text.SMALL(self.lang["savings.surplus_exceeded"].format(amount=f"{surplus_amount:,.0f}", currency=self.currency), color=Color.NEGATIVE_ACTION),
+                        Text.SMALL(self.lang["savings.surplus_exceeded"].format(amount=format_number(surplus_amount, decimals=0), currency=self.currency), color=Color.NEGATIVE_ACTION),
                         Text.SMALL(self.lang["savings.surplus_transfer_desc"], color=Color.SECONDARY_TEXT)
                     ], spacing=2)
                 ])
@@ -897,7 +897,7 @@ class CongratulationsModal(Dialog):
                         on_click=lambda e, gid=g["objective_id"]: self._select_target(gid),
                         content=ft.Row([
                             Text.MEDIUM(g["title"], color=Color.PRIMARY_TEXT),
-                            Text.SMALL(self.lang["savings.surplus_amount"].format(amount=f"{surplus_amount:,.0f}", currency=self.currency), color=Color.PRIMARY)
+                            Text.SMALL(self.lang["savings.surplus_amount"].format(amount=format_number(surplus_amount, decimals=0), currency=self.currency), color=Color.PRIMARY)
                         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
                     )
                     goal_cards.append(option_card)

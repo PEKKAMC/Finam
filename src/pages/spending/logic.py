@@ -5,6 +5,7 @@
 from src.database import db
 from src.logger import Logger
 from src.pages.global_components.financial_chart import get_financial_chart_data
+from src.utils import format_number
 
 
 class LogicController:
@@ -23,9 +24,9 @@ class LogicController:
         currency = db.users.get_currency(self.current_user)
 
         balance_data = {
-            "incomes": f"+{total_income:,.2f} {currency}",
-            "expenses": f"-{total_expense:,.2f} {currency}",
-            "current": f"{net_balance:,.2f} {currency}",
+            "incomes": f"+{format_number(total_income)} {currency}",
+            "expenses": f"-{format_number(total_expense)} {currency}",
+            "current": f"{format_number(net_balance)} {currency}",
         }
 
         transactions: dict[str, list[dict]] = {}

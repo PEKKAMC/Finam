@@ -8,6 +8,7 @@ from types import NoneType
 import openpyxl
 
 from src.database import db
+from src.utils import format_number
 
 
 class LogicController:
@@ -61,7 +62,7 @@ class LogicController:
                     action = lang["savings.added_to"] if item.get("amount", 0) > 0 else lang["savings.removed_from"]
                     item["desc"] = f"{action} {target}"
                 else:
-                    item["desc"] = f"{lang['savings.transaction']} ({item.get('amount'):,.2f} {currency})"
+                    item["desc"] = f"{lang['savings.transaction']} ({format_number(item.get('amount'))} {currency})"
 
             match item["type"]:
                 case "completed":

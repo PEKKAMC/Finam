@@ -46,6 +46,8 @@ class SettingsView(ft.View):
         current_language = db.users.get_language(username)
         current_currency = db.users.get_currency(username)
         current_theme = db.app_settings.get_theme()
+        current_digit_separator = db.app_settings.get_digit_separator()
+        current_decimal_separator = db.app_settings.get_decimal_separator()
 
         language_files = sorted(Path(get_asset_path("lang")).glob("*.json"))
         if not language_files:
@@ -81,6 +83,11 @@ class SettingsView(ft.View):
         }
         theme_options = [theme_name_to_label[name] for name in theme_names]
         theme_index = theme_names.index(current_theme)
+        digit_separator_options = ["None", ".", ",", "_"]
+        digit_separator_values = ["", ".", ",", "_"]
+        digit_separator_index = digit_separator_values.index(current_digit_separator)
+        decimal_separator_options = [".", ","]
+        decimal_separator_index = decimal_separator_options.index(current_decimal_separator)
 
         # INITIALIZE PAGE COMPONENTS
         self.settings_header = SettingsHeader(lang=self.lang)
@@ -118,6 +125,36 @@ class SettingsView(ft.View):
                     title=self.lang["settings.currency"],
                     subtitle=self.lang["settings.currency_format"],
                     control=self.currency_dropdown
+                )
+            ]
+        )
+
+        self.digit_separator_dropdown = SettingDropdown(
+            digit_separator_options,
+            active_index=digit_separator_index,
+        )
+        self.digit_separator_card = SettingCard(
+            controls=[
+                SettingRow(
+                    icon=ft.Icons.FORMAT_LIST_NUMBERED,
+                    title=self.lang["settings.digit_separator"],
+                    subtitle=self.lang["settings.digit_separator_options"],
+                    control=self.digit_separator_dropdown,
+                )
+            ]
+        )
+
+        self.decimal_separator_dropdown = SettingDropdown(
+            decimal_separator_options,
+            active_index=decimal_separator_index,
+        )
+        self.decimal_separator_card = SettingCard(
+            controls=[
+                SettingRow(
+                    icon=ft.Icons.NUMBERS,
+                    title=self.lang["settings.decimal_separator"],
+                    subtitle=self.lang["settings.decimal_separator_options"],
+                    control=self.decimal_separator_dropdown,
                 )
             ]
         )
@@ -168,6 +205,21 @@ class SettingsView(ft.View):
         )
         self.clear_cache_dialog._dialog_page = self._page
 
+        self.separator_warning_dialog = Dialog(
+            dialog_content=ft.Column(
+                tight=True,
+                controls=[
+                    Text.H4(self.lang["settings.separator_conflict_title"], color=Color.PRIMARY_TEXT),
+                    Text.P(self.lang["settings.separator_conflict_desc"], color=Color.SECONDARY_TEXT),
+                ],
+            ),
+            color=Color.DIALOG_BACKGROUND,
+            options=[
+                ft.TextButton(self.lang["generic.close"], on_click=lambda e: self.separator_warning_dialog.dismiss())
+            ],
+        )
+        self.separator_warning_dialog._dialog_page = self._page
+
         self.done_btn_text = Text.H4(self.lang["settings.done"], color=Color.WHITE)
 
         self.done_btn = ft.Container(
@@ -201,6 +253,8 @@ class SettingsView(ft.View):
                                 self.language_card,
                                 self.theme_card,
                                 self.currency_card,
+                                self.digit_separator_card,
+                                self.decimal_separator_card,
                                 self.system_prefs_card,
                                 self.cache_card,
                                 self.done_btn
@@ -345,9 +399,27 @@ class SettingsView(ft.View):
         selected_language_code = self.language_name_to_code.get(selected_language_name, "vi")
         selected_theme_label = self.theme_dropdown.dropdown_control.value or ""
         selected_theme = self.theme_label_to_name.get(selected_theme_label, DefaultSettings.THEME)
+        selected_separator_label = self.digit_separator_dropdown.dropdown_control.value or "None"
+        selected_separator = {
+            "None": "",
+            ".": ".",
+            ",": ",",
+            "_": "_",
+        }[selected_separator_label]
+        selected_decimal_separator = self.decimal_separator_dropdown.dropdown_control.value or "."
+
+        if selected_separator and selected_separator == selected_decimal_separator:
+            self.separator_warning_dialog.show()
+            return
 
         if not db.app_settings.set_theme(selected_theme):
             Logger.error("Failed to save app theme setting")
+            return
+        if not db.app_settings.set_digit_separator(selected_separator):
+            Logger.error("Failed to save digit separator setting")
+            return
+        if not db.app_settings.set_decimal_separator(selected_decimal_separator):
+            Logger.error("Failed to save decimal separator setting")
             return
         db.users.set_language(username, selected_language_code)
         db.users.set_currency(username, selected_currency)
@@ -398,6 +470,14 @@ class SettingsView(ft.View):
             )
 
             self.currency_card.resize(
+                width=page_width
+            )
+
+            self.digit_separator_card.resize(
+                width=page_width
+            )
+
+            self.decimal_separator_card.resize(
                 width=page_width
             )
 

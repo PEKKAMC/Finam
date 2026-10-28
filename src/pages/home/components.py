@@ -8,7 +8,7 @@ import flet as ft
 import flet_charts as fc
 
 from src.database import db
-from src.utils import Color, Text, UISettings
+from src.utils import Color, Text, UISettings, format_number
 
 
 class BalanceCard(ft.Container):
@@ -41,10 +41,10 @@ class BalanceCard(ft.Container):
         self.ai_icon = ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=16)
 
         # Dynamic texts
-        self.balance_amount_text = Text.H1(f"{self.net_balance:,.2f}", color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.income_text = Text.MEDIUM(f"{self.income:,.2f} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.expense_text = Text.MEDIUM(f"{self.expense:,.2f} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
-        self.savings_text = Text.MEDIUM(f"{self.savings:,.2f} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.balance_amount_text = Text.H1(format_number(self.net_balance), color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.income_text = Text.MEDIUM(f"{format_number(self.income)} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.expense_text = Text.MEDIUM(f"{format_number(self.expense)} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.savings_text = Text.MEDIUM(f"{format_number(self.savings)} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
         self.advice_text = Text.SMALL(self.advice, color=Color.WHITE)
 
         # CONTAINER COMPONENTS
@@ -247,11 +247,11 @@ class BalanceCard(ft.Container):
         self.advice = ai_advice
         self.currency = db.users.get_currency(self.username)
 
-        self.balance_amount_text.value = f"{self.net_balance:,.2f}"
+        self.balance_amount_text.value = format_number(self.net_balance)
         self.currency_label.value = self.currency
-        self.income_text.value = f"{self.income:,.2f} {self.currency}"
-        self.expense_text.value = f"{self.expense:,.2f} {self.currency}"
-        self.savings_text.value = f"{self.savings:,.2f} {self.currency}"
+        self.income_text.value = f"{format_number(self.income)} {self.currency}"
+        self.expense_text.value = f"{format_number(self.expense)} {self.currency}"
+        self.savings_text.value = f"{format_number(self.savings)} {self.currency}"
         self.advice_text.value = self.advice
 
         self.update()
@@ -491,7 +491,7 @@ class ExpenseCategoryItem(ft.Row):
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
         self.expense_name_text = Text.SMALL(name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
-        self.expense_value_text = Text.SMALL(f"{val:,.2f} {currency_lang}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+        self.expense_value_text = Text.SMALL(f"{format_number(val)} {currency_lang}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
 
         # CONTAINER COMPONENTS
         self.color_box = ft.Container(
@@ -520,7 +520,7 @@ class ExpenseCategoryItem(ft.Row):
     def update_data(self, name: str, val: float, currency_lang: str, color: str):
         self.color_box.bgcolor = color
         self.expense_name_text.value = name
-        self.expense_value_text.value = f"{val:,.2f} {currency_lang}"
+        self.expense_value_text.value = f"{format_number(val)} {currency_lang}"
 
         self.update()
 

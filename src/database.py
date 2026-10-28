@@ -119,10 +119,22 @@ class DatabaseConnection:
             self.execute('''
                 CREATE TABLE IF NOT EXISTS app_settings (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
-                    theme TEXT NOT NULL DEFAULT 'light'
+                    theme TEXT NOT NULL DEFAULT 'light',
+                    digit_separator TEXT NOT NULL DEFAULT '',
+                    decimal_separator TEXT NOT NULL DEFAULT '.'
                 )
             ''')
             self.execute("INSERT OR IGNORE INTO app_settings (id) VALUES (1)")
+            try:
+                self.execute("ALTER TABLE app_settings ADD COLUMN digit_separator TEXT NOT NULL DEFAULT ''")
+                Logger.info("Added digit_separator column to app_settings table")
+            except sqlite3.OperationalError:
+                pass
+            try:
+                self.execute("ALTER TABLE app_settings ADD COLUMN decimal_separator TEXT NOT NULL DEFAULT '.'")
+                Logger.info("Added decimal_separator column to app_settings table")
+            except sqlite3.OperationalError:
+                pass
             self.execute('''
                 CREATE TABLE IF NOT EXISTS app_security_settings (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -418,6 +430,56 @@ class AppSettingsDatabase:
             return True
         except (ValueError, sqlite3.Error) as ex:
             Logger.error(f"Failed to set theme: {ex}")
+            return False
+
+    def get_digit_separator(self) -> str:
+        result = self.db.execute(
+            "SELECT digit_separator FROM app_settings WHERE id = 1",
+            fetch_one=True,
+        )
+        separator = result[0] if result and result[0] is not None else DefaultSettings.DIGIT_SEPARATOR
+        if separator not in ("", ".", ",", "_"):
+            Logger.warn(f"Unknown digit separator {separator!r}; using default")
+            return DefaultSettings.DIGIT_SEPARATOR
+        return separator
+
+    def set_digit_separator(self, separator: str) -> bool:
+        if separator not in ("", ".", ",", "_"):
+            Logger.error(f"Unsupported digit separator: {separator!r}")
+            return False
+        try:
+            self.db.execute(
+                "UPDATE app_settings SET digit_separator = ? WHERE id = 1",
+                (separator,),
+            )
+            return True
+        except sqlite3.Error as ex:
+            Logger.error(f"Failed to set digit separator: {ex}")
+            return False
+
+    def get_decimal_separator(self) -> str:
+        result = self.db.execute(
+            "SELECT decimal_separator FROM app_settings WHERE id = 1",
+            fetch_one=True,
+        )
+        separator = result[0] if result and result[0] is not None else DefaultSettings.DECIMAL_SEPARATOR
+        if separator not in (".", ","):
+            Logger.warn(f"Unknown decimal separator {separator!r}; using default")
+            return DefaultSettings.DECIMAL_SEPARATOR
+        return separator
+
+    def set_decimal_separator(self, separator: str) -> bool:
+        if separator not in (".", ","):
+            Logger.error(f"Unsupported decimal separator: {separator!r}")
+            return False
+        try:
+            self.db.execute(
+                "UPDATE app_settings SET decimal_separator = ? WHERE id = 1",
+                (separator,),
+            )
+            return True
+        except sqlite3.Error as ex:
+            Logger.error(f"Failed to set decimal separator: {ex}")
             return False
 
 

@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import flet as ft
 
-from src.utils import Color, Page, Text
+from src.utils import Color, Page, Text, format_number
 
 
 class SelectableOptionGroup(ft.Container):
@@ -384,7 +384,7 @@ class ScannerHistoryCard(ft.Container):
                 spacing=4,
                 visible=False,
                 controls=[
-                    Text.SMALL(f"{price:,.2f} {self.currency} • {trigger_display}", color=Color.SECONDARY_TEXT),
+                    Text.SMALL(f"{format_number(price)} {self.currency} • {trigger_display}", color=Color.SECONDARY_TEXT),
                     Text.SMALL(created_at, color=Color.SECONDARY_TEXT),
                     Text.SMALL(advice, color=Color.DEFAULT_TEXT),
                 ],
@@ -635,7 +635,7 @@ class ScannerResult(ft.Container):
         self.progress_bar.color = risk_color
         self.advice_text.value = ai_advice if ai_advice else f"Món đồ {item_name} đang chịu ảnh hưởng từ {trigger_display}."
 
-        formatted_price = f"{price:,.2f} {self.currency}" if price > 0 else "chưa nhập"
+        formatted_price = f"{format_number(price)} {self.currency}" if price > 0 else "chưa nhập"
         interventions = [
             InterventionItem(self._page, self.lang["purchase_scanner.pause_rule"], f"Đợi ít nhất {pause_time} trước khi thanh toán."),
             InterventionItem(self._page, self.lang["purchase_scanner.budget_check"], f"Món này có giá {formatted_price}. Hãy so với mục tiêu tiết kiệm."),

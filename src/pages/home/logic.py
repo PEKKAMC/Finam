@@ -4,7 +4,7 @@
 
 from src.database import db
 from src.logger import Logger
-from src.utils import Data
+from src.utils import Data, format_number
 
 
 class LogicController:
@@ -79,8 +79,8 @@ class LogicController:
                 "progress_ratio": progress_ratio,
                 "progress_text": f"{int(progress_ratio * 100)}%",
                 "completed": completed_at is not None,
-                "contributed_label": f"{lang['home.contributed']}: {current_amount:,.2f} {currency}",
-                "target_label": f"{lang['home.target']}: {target_value:,.2f} {currency}",
+                "contributed_label": f"{lang['home.contributed']}: {format_number(current_amount)} {currency}",
+                "target_label": f"{lang['home.target']}: {format_number(target_value)} {currency}",
             })
 
         return goal_items, len(objectives)

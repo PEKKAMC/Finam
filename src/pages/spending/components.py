@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import flet as ft
 
-from src.utils import Color, Dialog, Page, Text, UISettings
+from src.utils import Color, Dialog, Page, Text, UISettings, format_number
 
 
 class MetricCards(ft.ResponsiveRow):
@@ -428,7 +428,7 @@ class TransactionItemCard(ft.Container):
         self.title_text = Text.MEDIUM(self.tx["title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
         self.subtitle_text = Text.SMALL(self.tx.get("subtitle", ""), color=Color.SECONDARY_TEXT)
         self.date_text = Text.SMALL(self.tx.get("date", ""), color=Color.SECONDARY_TEXT)
-        self.amount_text = Text.MEDIUM(f"{self.tx['amount']:,.2f}", color=amount_color, weight=ft.FontWeight.BOLD)
+        self.amount_text = Text.MEDIUM(format_number(self.tx["amount"]), color=amount_color, weight=ft.FontWeight.BOLD)
 
         self.item_icon = ft.Icon(icon, color=icon_color, size=18)
         self.calendar_icon = ft.Icon(ft.Icons.CALENDAR_MONTH, color=Color.SECONDARY_TEXT, size=12)

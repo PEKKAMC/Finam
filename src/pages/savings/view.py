@@ -9,7 +9,7 @@ from src.logger import Logger
 from src.pages.global_components import Menu
 from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CreateGoalModal, DepositWithdrawModal, CongratulationsModal, DeleteConfirmDialog, GoalGrid
 from src.pages.savings.logic import LogicController
-from src.utils import Color, Page, Text, UISettings, get_safe_page_size
+from src.utils import Color, Page, Text, UISettings, format_number, get_safe_page_size
 
 Logger.info("Initializing Savings page...")
 
@@ -238,7 +238,7 @@ class SavingsView(ft.View):
             remaining_amt = max(0, target_amount - objective_savings)
 
             def format_amount(amount: float) -> str:
-                return f"{amount:,.2f}".translate(str.maketrans(".,", ",."))
+                return format_number(amount)
 
             objectives_data.append({
                 "objective_id": objective_id,

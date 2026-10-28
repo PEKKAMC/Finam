@@ -7,7 +7,15 @@ import os
 import flet as ft
 
 from src.database import db
-from src.utils import DefaultSettings, Page, ThemeManager, UISettings, get_language
+from src.utils import (
+    DefaultSettings,
+    Page,
+    ThemeManager,
+    UISettings,
+    get_language,
+    set_decimal_separator,
+    set_digit_separator,
+)
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
@@ -92,8 +100,8 @@ async def main(page: Page) -> None:
 
     views_cache: dict[str, tuple[ft.View, str]] = {}
 
-    def get_view_cache_key(route: str, language_code: str, currency: str, theme: str, username: str) -> str:
-        return f"{route}|{language_code}|{currency}|{theme}|{username}"
+    def get_view_cache_key(route: str, language_code: str, currency: str, theme: str, digit_separator: str, decimal_separator: str, username: str) -> str:
+        return f"{route}|{language_code}|{currency}|{theme}|{digit_separator}|{decimal_separator}|{username}"
 
     def build_view_for_route(route: str, lang: dict, user_info: dict) -> ft.View | None:
         troute = ft.TemplateRoute(route)
@@ -163,6 +171,10 @@ async def main(page: Page) -> None:
             current_language_code = db.users.get_language(current_username) if current_username else DefaultSettings.LANGUAGE
             current_currency = db.users.get_currency(current_username) if current_username else DefaultSettings.CURRENCY
             current_theme = db.app_settings.get_theme()
+            current_digit_separator = db.app_settings.get_digit_separator()
+            current_decimal_separator = db.app_settings.get_decimal_separator()
+            set_digit_separator(current_digit_separator)
+            set_decimal_separator(current_decimal_separator)
             ThemeManager.set_theme(current_theme)
             page.theme_mode = ft.ThemeMode.DARK if ThemeManager.get_theme().dark_mode else ft.ThemeMode.LIGHT
             lang = get_language(current_language_code)
@@ -173,6 +185,8 @@ async def main(page: Page) -> None:
                 current_language_code,
                 current_currency,
                 current_theme,
+                current_digit_separator,
+                current_decimal_separator,
                 current_username,
             )
 

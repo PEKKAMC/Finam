@@ -10,7 +10,7 @@ import flet_charts as fc
 
 from src.database import db
 from src.logger import Logger
-from src.utils import Color, Text, UISettings
+from src.utils import Color, Text, UISettings, format_number
 
 Logger.info("Building financial chart...")
 
@@ -488,7 +488,7 @@ class FinancialChart(ft.Container):
                             color=Color.INCOME_COLOR,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang['generic.income']}: {income_value:,.2f} {self.currency}"
+                                text=f"{self.lang['generic.income']}: {format_number(income_value)} {self.currency}"
                             ),
                         ),
                         fc.BarChartRod(
@@ -498,7 +498,7 @@ class FinancialChart(ft.Container):
                             color=Color.EXPENSE_COLOR,
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang['generic.expense']}: {expense_value:,.2f} {self.currency}"
+                                text=f"{self.lang['generic.expense']}: {format_number(expense_value)} {self.currency}"
                             ),
                         )
                     ]
