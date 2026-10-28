@@ -1,3 +1,33 @@
+# Finam v0.4.1-beta
+
+**Release Date:** October 28, 2026
+
+> **⚠️ BETA WARNING: Read Before Using**
+>
+> Welcome to the Beta build! Core stability and performance have been significantly improved since our Alpha release, but you may still encounter occasional bugs, minor performance hiccups, or incomplete features as we fine-tune the application for full launch.
+>
+> * **Data Backup:** While local database corruption is now far less likely, we still recommend backing up any critical financial data before performing major updates or operations.
+> * **Feedback:** If you run into any issues, softlocks, or unexpected behavior, please submit a report via our GitHub page.
+>
+> Thank you for helping us test and polish this release!
+
+## Changes in this version
+
+*   Added digit separator.
+*   Trailing symbols are now allowed in the calculator.
+
+## Bug fixes in this version
+
+*   Fixed lesson page immediately crashing when entered.
+*   Fixed net balance in home page not getting updated.
+*   Fixed pie chart related issues
+*   Mobile app can now export savings data to a file.
+
+## Known Issues & Instability
+
+*   Some actions may cause softlocks or crashes.
+*   Various UI elements may not scale perfectly on all screen sizes.
+
 # Finam v0.4.0-beta
 
 **Release Date:** October 27, 2026
