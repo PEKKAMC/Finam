@@ -535,6 +535,8 @@ class ExpensePieChart(ft.Container):
         self.category_data = category_data or {}
         self.on_details_click = on_details_click
         self.currency = db.users.get_currency(self.username)
+        self.chart_radius = 45
+        self.center_radius = 40
 
         self.pie_colors = [
             Color.PIE_CHART_RED,
@@ -558,11 +560,15 @@ class ExpensePieChart(ft.Container):
 
         self.pie_chart = fc.PieChart(
             sections=[
-                fc.PieChartSection(val, color=self.pie_colors[idx % len(self.pie_colors)], radius=45)
+                fc.PieChartSection(
+                    val,
+                    color=self._get_section_color(idx, len(self.category_data)),
+                    radius=self.chart_radius,
+                )
                 for idx, val in enumerate(self.category_data.values())
-            ] if self.category_data else [fc.PieChartSection(1, color=Color.TRANSPARENT, radius=45)],
+            ] if self.category_data else [fc.PieChartSection(1, color=Color.TRANSPARENT, radius=self.chart_radius)],
             sections_space=2,
-            center_space_radius=40,
+            center_space_radius=self.center_radius,
             expand=True
         )
 
@@ -659,6 +665,15 @@ class ExpensePieChart(ft.Container):
             content=self.main_container
         )
 
+    def _get_section_color(self, index: int, section_count: int) -> str:
+        if (
+            section_count > 1
+            and section_count % len(self.pie_colors) == 1
+            and index == section_count - 1
+        ):
+            return self.pie_colors[1]
+        return self.pie_colors[index % len(self.pie_colors)]
+
     def update_data(self, category_data: dict):
         self.category_data = category_data or {}
         self.currency = db.users.get_currency(self.username)
@@ -666,29 +681,21 @@ class ExpensePieChart(ft.Container):
         if not self.category_data:
             self.legend_items.clear()
             self.chart_content_area.content = self.empty_state_container
-            self.pie_chart.sections = [fc.PieChartSection(1, color=Color.TRANSPARENT, radius=45)]
+            self.pie_chart.sections = [
+                fc.PieChartSection(1, color=Color.TRANSPARENT, radius=self.chart_radius)
+            ]
         else:
             self.chart_content_area.content = self.active_chart_layout
             categories = list(self.category_data.items())
-
-            if len(self.pie_chart.sections) == 1 and self.pie_chart.sections[0].color == Color.TRANSPARENT:
-                self.pie_chart.sections.clear()
-
-            while len(self.pie_chart.sections) > len(categories):
-                self.pie_chart.sections.pop()
             while len(self.legend_items) > len(categories):
                 self.legend_items.pop()
 
+            sections = []
             for idx, (name, val) in enumerate(categories):
-                color = self.pie_colors[idx % len(self.pie_colors)]
-
-                if idx < len(self.pie_chart.sections):
-                    self.pie_chart.sections[idx].value = val
-                    self.pie_chart.sections[idx].color = color
-                else:
-                    self.pie_chart.sections.append(
-                        fc.PieChartSection(val, color=color, radius=45)
-                    )
+                color = self._get_section_color(idx, len(categories))
+                sections.append(
+                    fc.PieChartSection(val, color=color, radius=self.chart_radius)
+                )
 
                 if idx < len(self.legend_items):
                     self.legend_items[idx].update_data(name, val, self.currency, color)
@@ -697,6 +704,7 @@ class ExpensePieChart(ft.Container):
                         ExpenseCategoryItem(name, val, self.currency, color)
                     )
 
+            self.pie_chart.sections = sections
             self.legend_list.controls = list(self.legend_items)
 
         self.update()
@@ -710,6 +718,8 @@ class ExpensePieChart(ft.Container):
 
         chart_radius = int(height * 0.06)
         center_radius = int(height * 0.045)
+        self.chart_radius = chart_radius
+        self.center_radius = center_radius
 
         for section in self.pie_chart.sections:
             section.radius = chart_radius
