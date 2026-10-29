@@ -672,13 +672,16 @@ class DepositWithdrawModal(ft.Container):
             alignment=ft.Alignment.CENTER,
             content=self.main_container,
         )
-        self.overlay_stack = ft.Stack(
+        self.overlay_stack = ft.SafeArea(
             expand=True,
-            controls=[
-                self.backdrop,
-                self.dialog_panel,
-                self.keyboard_container,
-            ],
+            content=ft.Stack(
+                expand=True,
+                controls=[
+                    self.backdrop,
+                    self.dialog_panel,
+                    self.keyboard_container,
+                ],
+            ),
         )
         super().__init__(
             expand=True,
