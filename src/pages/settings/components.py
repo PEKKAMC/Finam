@@ -97,6 +97,7 @@ class SettingRow(ft.Container):
         # CONTAINER COMPONENTS
         self.text_column = ft.Column(
             spacing=2,
+            expand=True,
             controls=[
                 self.title_text,
                 self.subtitle_text
@@ -113,11 +114,17 @@ class SettingRow(ft.Container):
         )
 
         self.main_row = ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                self.left_group,
-                self.action_control
+                ft.Container(
+                    content=self.left_group,
+                    expand=1,
+                ),
+                ft.Container(
+                    content=self.action_control,
+                    alignment=ft.Alignment.CENTER_RIGHT,
+                    expand=1,
+                ),
             ]
         )
 
