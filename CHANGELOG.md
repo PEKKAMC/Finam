@@ -1,6 +1,6 @@
 # Finam v0.4.1-beta
 
-**Release Date:** October 28, 2026
+**Release Date:** October 29, 2026
 
 > **⚠️ BETA WARNING: Read Before Using**
 >
@@ -15,6 +15,7 @@
 
 *   Added digit separator.
 *   Trailing symbols are now allowed in the calculator.
+*   Locked lesson page.
 
 ## Bug fixes in this version
 
