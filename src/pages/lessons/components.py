@@ -90,24 +90,24 @@ class LessonItemCard(ft.Container):
                 spacing=12,
                 controls=[
                     Text.SMALL(self.subtitle, color=Color.SECONDARY_TEXT),
-                    #ft.Divider(height=1, color=Color.INPUT_BORDER),
-                    #ft.Button(
-                    #    content=ft.Row(
-                    #        alignment=ft.MainAxisAlignment.CENTER,
-                    #        spacing=6,
-                    #        controls=[
-                    #            ft.Icon(ft.Icons.PLAY_ARROW_ROUNDED, color=Color.LIGHT_ACCENT, size=18),
-                    #            Text.MEDIUM(self.lang["lessons.review_lesson"] if self.is_completed else self.lang["lessons.start_lesson"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
-                    #        ],
-                    #        tight=True
-                    #    ),
-                    #    bgcolor=Color.PRIMARY,
-                    #    on_click=self._page.navigate_to(self.route),
-                    #    style=ft.ButtonStyle(
-                    #        shape=ft.RoundedRectangleBorder(radius=16),
-                    #        padding=12
-                    #    )
-                    #)
+                    ft.Divider(height=1, color=Color.INPUT_BORDER),
+                    ft.Button(
+                        content=ft.Row(
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=6,
+                            controls=[
+                                ft.Icon(ft.Icons.PLAY_ARROW_ROUNDED, color=Color.LIGHT_ACCENT, size=18),
+                                Text.MEDIUM(self.lang["lessons.review_lesson"] if self.is_completed else self.lang["lessons.start_lesson"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                            ],
+                            tight=True
+                        ),
+                        bgcolor=Color.PRIMARY,
+                        on_click=self._page.navigate_to(self.route),
+                        style=ft.ButtonStyle(
+                            shape=ft.RoundedRectangleBorder(radius=16),
+                            padding=12
+                        )
+                    )
                 ]
             )
         )
@@ -223,7 +223,7 @@ class LessonSummaryBanner(ft.Container):
         )
 
 
-class LessonGrid(ft.ResponsiveRow):
+class LessonGrid(ft.Stack):
     def __init__(self, page: Page, lang: dict, lessons: list):
         self._page = page
         self.lang = lang
@@ -242,10 +242,24 @@ class LessonGrid(ft.ResponsiveRow):
         ]
 
         super().__init__(
-            spacing=20,
-            run_spacing=20,
             controls=[
-                ft.Container(content=card, col={"xs": 12, "sm": 6, "lg": 4})
-                for card in lesson_cards
+                ft.ResponsiveRow(
+                    spacing=20,
+                    run_spacing=20,
+                    controls=[
+                        ft.Container(content=card, col={"xs": 12, "sm": 6, "lg": 4})
+                        for card in lesson_cards
+                    ]
+                ),
+                ft.Container(
+                    left=0,
+                    top=0,
+                    right=0,
+                    bottom=0,
+                    blur=ft.Blur(6, 6),
+                    bgcolor=ft.Colors.with_opacity(0.45, Color.DARK_SURFACE),
+                    alignment=ft.Alignment.CENTER,
+                    content=Text.H2("Coming soon", color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                )
             ]
         )

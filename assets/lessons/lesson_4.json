@@ -1,0 +1,701 @@
+{
+  "lesson_id": 4,
+  "title": "Bài 4: Quỹ khẩn cấp",
+  "subtitle": "Thử lấy quỹ khẩn cấp của bố mẹ đi nạp game đi, bạn sẽ được một vé đi không trở về",
+  "cover_image": "images/lesson_4/cover.png",
+  "content": [
+    {
+      "elements": [
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/wLBzOzZxC9pjDQVTdZHPUw.1443401870.webp",
+          "x": 129.40234375,
+          "y": 97.921875,
+          "timer_in": "0",
+          "timer_out": "7.4",
+          "entrance": 0,
+          "duration_in": "0.1",
+          "exit": 1,
+          "duration_out": "",
+          "scale": 1.0
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1)/images/image1.png",
+          "x": 40.546875,
+          "y": 60.4921875,
+          "timer_in": "7.4",
+          "timer_out": "8",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.5"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1)/images/image4.png",
+          "x": 41.83984375,
+          "y": 111.69921875,
+          "timer_in": "15",
+          "timer_out": "16.1",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.5"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1)/images/image2.png",
+          "x": 35.23828125,
+          "y": 217.0234375,
+          "timer_in": "17.9",
+          "timer_out": "20.5",
+          "entrance": 3,
+          "duration_in": "0.2",
+          "exit": 2,
+          "duration_out": "0.1",
+          "scale": "1.6"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1)/images/image7.png",
+          "x": 36.3984375,
+          "y": 159.70703125,
+          "timer_in": "24.8",
+          "timer_out": "26.3",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.6"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1)/images/image6.png",
+          "x": -15.03125,
+          "y": 164.48828125,
+          "timer_in": "32.3",
+          "timer_out": "",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 0,
+          "duration_out": "",
+          "scale": "2"
+        },
+        {
+          "type": "audio",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Bản âm thanh slide 1.mp3",
+          "timer_in": "0"
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": "text",
+          "content": "Quỹ khẩn cấp chính là \"tấm khiên\" bảo vệ bạn khỏi những thảm họa đó. Đây là một khoản tiền mặt được cất riêng ra, chỉ để sử dụng cho những sự kiện tồi tệ, ngoài tầm kiểm soát và mang tính cấp bách.\n",
+          "x": 38.55859375,
+          "y": 28.35546875,
+          "timer_in": "2.18",
+          "timer_out": "13.8",
+          "entrance": 2,
+          "duration_in": "10",
+          "exit": 1,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Bản sao Nội dung về bài học và giảng dạy (1)/images/image3.png",
+          "x": 15.42578125,
+          "y": 211.59375,
+          "timer_in": "3.15",
+          "timer_out": "5.12",
+          "entrance": 2,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.7"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Bản sao Nội dung về bài học và giảng dạy (1)/images/image2.jpg",
+          "x": 83.4921875,
+          "y": 130.015625,
+          "timer_in": "9.32",
+          "timer_out": "10.95",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.3"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Bản sao Nội dung về bài học và giảng dạy (1)/images/image1.png",
+          "x": -3.17578125,
+          "y": 269.234375,
+          "timer_in": "11",
+          "timer_out": "13",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "audio",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Bản âm thanh slide 2.mp3",
+          "timer_in": "0"
+        },
+        {
+          "type": "text",
+          "content": "Có quỹ khẩn cấp thì khi có việc gì xảy ra, bạn không phải lo lắng quá nhiều. Tất nhiên là nó chẳng giúp bạn được lâu, nhưng bạn có 1 thứ: Sự an tâm tạm thời.\n",
+          "x": 38.47265625,
+          "y": 28.5078125,
+          "timer_in": "14",
+          "timer_out": "",
+          "entrance": 1,
+          "duration_in": "11",
+          "exit": 0,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1) 2/images/image1.png",
+          "x": -1.42578125,
+          "y": 139.5234375,
+          "timer_in": "23",
+          "timer_out": "",
+          "entrance": 3,
+          "duration_in": "0.3",
+          "exit": 0,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "audio",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/bản âm thanh slide 3.mp3",
+          "timer_in": "14"
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": "audio",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Bản âm thanh slide 4.mp3",
+          "timer_in": "0"
+        },
+        {
+          "type": "text",
+          "content": "Vậy quỹ khẩn cấp bao nhiêu thì đủ? Nếu bạn là một người sống một mình{pause:1} và có công việc ổn định, không gặp quá nhiều khó khăn tài chính thì số tiền để bạn sống sót trong 3 tháng là đủ. Còn nếu bạn là một người có gia đình{pause:1} thì bạn cần khoảng 6 tháng chi tiêu để có thể chống cự\n",
+          "x": 27.59375,
+          "y": 20.58203125,
+          "timer_in": "0",
+          "timer_out": "",
+          "entrance": 2,
+          "duration_in": "17",
+          "exit": 0,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1) 3/images/image4.png",
+          "x": 128.05078125,
+          "y": 192.078125,
+          "timer_in": "0.5",
+          "timer_out": "2.2",
+          "entrance": 4,
+          "duration_in": "0.2",
+          "exit": 1,
+          "duration_out": "",
+          "scale": 1.0
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1) 3/you-feel-the-most-alone-in-your-life-and-are-prone-to-v0-1ja0bskrvskc1.webp",
+          "x": 35.56640625,
+          "y": 161.99609375,
+          "timer_in": "2.8",
+          "timer_out": "4.1",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.6"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1) 3/images/image2.png",
+          "x": 36.03515625,
+          "y": 162.54296875,
+          "timer_in": "4.2",
+          "timer_out": "5.3",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.6"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1) 3/images/image1.png",
+          "x": 47.86328125,
+          "y": 208.20703125,
+          "timer_in": "12.23",
+          "timer_out": "13",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.5"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (1) 3/images/image3.png",
+          "x": 26.44921875,
+          "y": 151.78515625,
+          "timer_in": "13.03",
+          "timer_out": "14.1",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.6"
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": "text",
+          "content": "Có 2 quy tắc của dòng tiền này chính là: AN TOÀN TUYỆT ĐỐI và THANH KHOẢN CỰC CAO. \n",
+          "x": 29.9921875,
+          "y": 18.2578125,
+          "timer_in": "0",
+          "timer_out": "7.5",
+          "entrance": 2,
+          "duration_in": "6.5",
+          "exit": 1,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "text",
+          "content": "An toàn tuyệt đối: Số tiền này chắc chắn không bị lấy đi bởi bất kì ai mình không muốn hoặc vào lúc chưa cần thiết. Nơi cất giữ số tiền này nên là ngân hàng hoặc các sổ tiết kiệm kì hạn ngắn.",
+          "x": 30.4609375,
+          "y": 18.41796875,
+          "timer_in": "7.8",
+          "timer_out": "22.9",
+          "entrance": 2,
+          "duration_in": "9",
+          "exit": 1,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (2)/images/image2.png",
+          "x": 16.4453125,
+          "y": 128.46484375,
+          "timer_in": "14.6",
+          "timer_out": "21.6",
+          "entrance": 3,
+          "duration_in": "0.2",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.7"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (2)/images/image1.png",
+          "x": 3.890625,
+          "y": 124.0,
+          "timer_in": "15.8",
+          "timer_out": "21.6",
+          "entrance": 3,
+          "duration_in": "0.2",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (2)/images/image3.png",
+          "x": 2.203125,
+          "y": 160.4609375,
+          "timer_in": "21.63",
+          "timer_out": "22.9",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "audio",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Bản âm thanh đoạn 1 slide 5.mp3",
+          "timer_in": "0"
+        },
+        {
+          "type": "text",
+          "content": "Tính thanh khoản cực cao: Nó có nghĩa là bạn muốn rút tiền lúc nào thì rút. Nếu có trường hợp khẩn cấp thì bạn dễ dàng lấy được tiền.",
+          "x": 30.6328125,
+          "y": 18.24609375,
+          "timer_in": "23",
+          "timer_out": "",
+          "entrance": 2,
+          "duration_in": "7.8",
+          "exit": 0,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/got-my-foreskin-stuck-in-the-door-again-v0-pnb72jn667q41.webp",
+          "x": 9.828125,
+          "y": 118.0390625,
+          "timer_in": "32.15",
+          "timer_out": "",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 0,
+          "duration_out": "",
+          "scale": "1.7"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/aoz3nKA_460s.jpg",
+          "x": -4.12109375,
+          "y": 138.4375,
+          "timer_in": "35.6",
+          "timer_out": "",
+          "entrance": 2,
+          "duration_in": "",
+          "exit": 0,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "audio",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Bản âm thanh phần 2 slide 5.mp3",
+          "timer_in": "23"
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": "text",
+          "content": "Và bạn không nên để số tiền này ở đâu: Cổ phiếu, vàng ,bất động sản, nhà người yêu cũ hay 2 mét dưới sân nhà bạn. Nếu có trường hợp bất trắc xảy ra thì bạn có thể trở tay không kịp hoặc lỗ nặng\n",
+          "x": 34.50390625,
+          "y": 9.66796875,
+          "timer_in": "0",
+          "timer_out": "12.8",
+          "entrance": 2,
+          "duration_in": "12",
+          "exit": 1,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "text",
+          "content": "Vậy những lúc nào được coi là khẩn cấp? Khi bạn bị thương hay bị ốm. Hoặc khi kinh tế thị trường bị bấp bênh.",
+          "x": 34.96484375,
+          "y": 8.76171875,
+          "timer_in": "13",
+          "timer_out": "",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 0,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "audio",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/bản âm thanh slide 6 phần 1 bài 4.mp3",
+          "timer_in": "0"
+        },
+        {
+          "type": "audio",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/bản âm thanh bài 6 phần 2.mp3",
+          "timer_in": "13"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (2) 2/images/image4.png",
+          "x": 46.80078125,
+          "y": 143.5859375,
+          "timer_in": "3",
+          "timer_out": "3.8",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.5"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (2) 2/images/image3.png",
+          "x": -1.36328125,
+          "y": 165.765625,
+          "timer_in": "3.8",
+          "timer_out": "4.3",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (2) 2/images/image5.png",
+          "x": 8.921875,
+          "y": 178.12109375,
+          "timer_in": "4.3",
+          "timer_out": "6.3",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (2) 2/images/image1.png",
+          "x": 12.125,
+          "y": 167.41015625,
+          "timer_in": "6.3",
+          "timer_out": "12.8",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/Nội dung về bài học và giảng dạy (2) 2/images/image2.png",
+          "x": -0.46875,
+          "y": 167.12109375,
+          "timer_in": "16.1",
+          "timer_out": "17.2",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/image.webp",
+          "x": 3.19140625,
+          "y": 206.671875,
+          "timer_in": "17.2",
+          "timer_out": "19.2",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/eyJidWNrZXQiOiJjb250ZW50Lmhzd3N0YXRpYy5jb20iLCJrZXkiOiJnaWZcL0Z1dHVyaXN0aWMtcGhvbmUuanBnIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjo4Mjh9fX0=.webp",
+          "x": 1.4375,
+          "y": 198.03125,
+          "timer_in": "21.3",
+          "timer_out": "22.6",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/tim-hieu-ve-chip-amd-uu-nhuoc-diem-cua-chip-amd-so-voi-intel-4.jpg",
+          "x": -1.38671875,
+          "y": 176.40625,
+          "timer_in": "22.6",
+          "timer_out": "27",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "1.8"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/townhouse-helium.gif",
+          "x": -5.09375,
+          "y": 227.0546875,
+          "timer_in": "27",
+          "timer_out": "",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 0,
+          "duration_out": "",
+          "scale": 1.0
+        },
+        {
+          "type": "text",
+          "content": "Thằng này nói lâu vl",
+          "x": 301.78125,
+          "y": 364.98046875,
+          "timer_in": "28",
+          "timer_out": "32",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "width": 300.0
+        },
+        {
+          "type": "text",
+          "content": "Đoạn này liên quan dell j nhỉ",
+          "x": 311.484375,
+          "y": 366.05078125,
+          "timer_in": "32",
+          "timer_out": "35",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "width": 300.0
+        },
+        {
+          "type": "text",
+          "content": "???? Sao tiếng bé dần vậy",
+          "x": 306.76953125,
+          "y": 365.55859375,
+          "timer_in": "36",
+          "timer_out": "39.8",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "width": 300.0
+        },
+        {
+          "type": "text",
+          "content": "Chả biết thg này nói j nx",
+          "x": 303.35546875,
+          "y": 367.796875,
+          "timer_in": "40",
+          "timer_out": "44.5",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "width": 300.0
+        },
+        {
+          "type": "text",
+          "content": "...",
+          "x": 298.58984375,
+          "y": 365.59375,
+          "timer_in": "48",
+          "timer_out": "50",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "width": 300.0
+        },
+        {
+          "type": "text",
+          "content": "Hết rồi đấy",
+          "x": 300.00390625,
+          "y": 366.53515625,
+          "timer_in": "50",
+          "timer_out": "53",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "width": 300.0
+        }
+      ]
+    },
+    {
+      "elements": [
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/i'm done.jpeg",
+          "x": -44.91015625,
+          "y": 95.94921875,
+          "timer_in": "0",
+          "timer_out": "8",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "2"
+        },
+        {
+          "type": "audio",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/kết bài.mp3",
+          "timer_in": "0"
+        },
+        {
+          "type": "text",
+          "content": "WOW Bạn thật sự nghe hết cái recording đấy à",
+          "x": 56.61328125,
+          "y": 41.64453125,
+          "timer_in": "45",
+          "timer_out": "49",
+          "entrance": 2,
+          "duration_in": "1",
+          "exit": 1,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "text",
+          "content": "Xứng đáng làm người rảnh nhất thế giới",
+          "x": 56.73046875,
+          "y": 43.17578125,
+          "timer_in": "49.5",
+          "timer_out": "53",
+          "entrance": 2,
+          "duration_in": "1",
+          "exit": 1,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "text",
+          "content": "??? Bài học xong rồi ở đây làm gì, out đi",
+          "x": 56.265625,
+          "y": 40.76953125,
+          "timer_in": "60",
+          "timer_out": "",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 0,
+          "duration_out": "",
+          "width": "480"
+        },
+        {
+          "type": "image",
+          "content": "/Users/macbook/Downloads/FILE TẤT CẢ ANH BÀI 4/someone-has-to-say-it-v0-zgsh3b65mszd1.jpg",
+          "x": -21.6328125,
+          "y": 129.54296875,
+          "timer_in": "8.2",
+          "timer_out": "44.9",
+          "entrance": 1,
+          "duration_in": "",
+          "exit": 1,
+          "duration_out": "",
+          "scale": "2"
+        }
+      ]
+    }
+  ]
+}
