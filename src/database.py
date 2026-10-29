@@ -116,20 +116,45 @@ class DatabaseConnection:
                     FOREIGN KEY (user_id) REFERENCES users (id)
                  )
             ''')
-            self.execute('''
+            self.execute(f'''
                 CREATE TABLE IF NOT EXISTS app_settings (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     theme TEXT NOT NULL DEFAULT 'light',
-                    digit_separator TEXT NOT NULL DEFAULT '',
+                    digit_separator TEXT NOT NULL DEFAULT '{DefaultSettings.DIGIT_SEPARATOR}',
                     decimal_separator TEXT NOT NULL DEFAULT '.'
                 )
             ''')
-            self.execute("INSERT OR IGNORE INTO app_settings (id) VALUES (1)")
             try:
-                self.execute("ALTER TABLE app_settings ADD COLUMN digit_separator TEXT NOT NULL DEFAULT ''")
+                self.execute(
+                    "ALTER TABLE app_settings ADD COLUMN digit_separator "
+                    f"TEXT NOT NULL DEFAULT '{DefaultSettings.DIGIT_SEPARATOR}'"
+                )
                 Logger.info("Added digit_separator column to app_settings table")
             except sqlite3.OperationalError:
                 pass
+            self.execute(
+                "INSERT OR IGNORE INTO app_settings (id, digit_separator) VALUES (1, ?)",
+                (DefaultSettings.DIGIT_SEPARATOR,),
+            )
+            self.execute(
+                "CREATE TABLE IF NOT EXISTS app_settings_migrations "
+                "(migration TEXT PRIMARY KEY)"
+            )
+            separator_migration = self.execute(
+                "SELECT 1 FROM app_settings_migrations "
+                "WHERE migration = 'digit_separator_default_v1'",
+                fetch_one=True,
+            )
+            if not separator_migration:
+                self.execute(
+                    "UPDATE app_settings SET digit_separator = ? "
+                    "WHERE digit_separator = ''",
+                    (DefaultSettings.DIGIT_SEPARATOR,),
+                )
+                self.execute(
+                    "INSERT INTO app_settings_migrations (migration) "
+                    "VALUES ('digit_separator_default_v1')"
+                )
             try:
                 self.execute("ALTER TABLE app_settings ADD COLUMN decimal_separator TEXT NOT NULL DEFAULT '.'")
                 Logger.info("Added decimal_separator column to app_settings table")
