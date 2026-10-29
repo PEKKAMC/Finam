@@ -231,6 +231,14 @@ class SettingsView(ft.View):
             margin=ft.Margin.only(top=10),
             on_click=self._on_done_click
         )
+        self.done_btn_wrapper = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=ft.Padding.symmetric(
+                horizontal=UISettings.CARD_PADDING,
+                vertical=12,
+            ),
+            content=self.done_btn,
+        )
 
         # Store helpers for saving settings
         self.language_name_to_code = language_name_to_code
@@ -257,7 +265,7 @@ class SettingsView(ft.View):
                                 self.decimal_separator_card,
                                 self.system_prefs_card,
                                 self.cache_card,
-                                self.done_btn
+                                ft.Container(height=UISettings.CARD_PADDING * 2 + 56)
                             ]
                         )
                     )
@@ -278,7 +286,15 @@ class SettingsView(ft.View):
                 content=ft.Stack(
                     expand=True,
                     controls=[
-                        self.main_container
+                        self.main_container,
+                        ft.Container(
+                            left=0,
+                            right=0,
+                            bottom=0,
+                            alignment=ft.Alignment.CENTER,
+                            bgcolor=Color.PAGE_BACKGROUND,
+                            content=self.done_btn_wrapper,
+                        ),
                     ]
                 )
             )
@@ -455,6 +471,7 @@ class SettingsView(ft.View):
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            self.done_btn_wrapper.width = min(page_width, UISettings.MAX_APP_WIDTH)
 
             # Resizing other components
             self.settings_header.resize(
