@@ -12,9 +12,9 @@ authors = [
     { name = "PEKKAMC", email = "prochess960@gmail.com" }
 ]
 dependencies = [
-    "flet>=1.0.4",
-    "flet_audio>=1.0.4",
-    "flet-charts>=1.0.4",
+    "flet>=1.0.5",
+    "flet_audio>=1.0.5",
+    "flet-charts>=1.0.5",
     "colorlog>=6.12.0",
     "openpyxl>=3.1.5",
     "requests>=2.34.2"
@@ -22,9 +22,9 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "flet-cli>=1.0.4",
-    "flet-desktop>=1.0.4",
-    "flet-web>=1.0.4"
+    "flet-cli>=1.0.5",
+    "flet-desktop>=1.0.5",
+    "flet-web>=1.0.5"
 ]
 
 [tool.flet]
