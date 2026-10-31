@@ -11,6 +11,9 @@ class LogicController:
     def __init__(self, current_user: str):
         self.current_user = current_user
 
+    def get_currency(self) -> str:
+        return db.users.get_currency(self.current_user)
+
     def get_dashboard_data(self) -> dict:
         Logger.info("Loading dashboard data...")
         total_savings = db.savings.get_total_savings(self.current_user)
@@ -57,12 +60,10 @@ class LogicController:
         return db.savings.get_user_objectives(self.current_user)
 
     @staticmethod
-    def get_saving_progress_items(objectives: list, lang: dict, username: str = "") -> tuple[list, int]:
+    def get_saving_progress_items(objectives: list, lang: dict, currency: str = "") -> tuple[list, int]:
         goal_items = []
         if not objectives:
             return goal_items, 0
-
-        currency = db.users.get_currency(username)
 
         for objective in objectives[:3]:
             objective_id, objective_title, objective_reason, target_amount, completed_at = objective

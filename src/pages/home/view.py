@@ -25,7 +25,8 @@ class HomeView(ft.View):
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info["username"])
 
-        # FETCH DASHBOARD DATA
+        # FETCH DASHBOARD DATA & CURRENCY
+        self.currency = self.controller.get_currency()
         self.objectives = self.controller.get_user_objectives()
         self.metrics = self.controller.get_dashboard_data()
         self.advice = self.controller.get_advice()
@@ -39,7 +40,7 @@ class HomeView(ft.View):
 
         self.balance_card = BalanceCard(
             lang=self.lang,
-            username=self.user_info["username"],
+            currency=self.currency,
             net_balance=self.metrics["net_balance"],
             income=self.metrics["total_income"],
             expense=self.metrics["total_expense"],
@@ -58,13 +59,13 @@ class HomeView(ft.View):
 
         self.savings_progress_card = SavingsProgressCard(
             lang=self.lang,
-            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang, self.user_info["username"]),
+            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang, self.currency),
             on_view_all_click=self._page.navigate_to("/savings")
         )
 
         self.expense_pie_chart = ExpensePieChart(
             lang=self.lang,
-            username=self.user_info["username"],
+            currency=self.currency,
             category_data=self.metrics["category_expenses"],
             on_details_click=self._page.navigate_to("/spending")
         )
@@ -73,7 +74,6 @@ class HomeView(ft.View):
             lang=self.lang,
             on_learn_click=self._page.navigate_to("/lessons")
         )
-
 
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
@@ -125,6 +125,7 @@ class HomeView(ft.View):
     def _refresh_view(self) -> int:
         try:
             self._on_page_resize()
+            self.currency = self.controller.get_currency()
             self.objectives = self.controller.get_user_objectives()
             self.metrics = self.controller.get_dashboard_data()
             self.advice = self.controller.get_advice()
@@ -134,7 +135,8 @@ class HomeView(ft.View):
                 income=self.metrics["total_income"],
                 expense=self.metrics["total_expense"],
                 savings=self.metrics["total_savings"],
-                ai_advice=self.advice
+                ai_advice=self.advice,
+                currency=self.currency
             )
 
             self.financial_chart.update_data()
@@ -143,12 +145,13 @@ class HomeView(ft.View):
                 objective_items=self.controller.get_saving_progress_items(
                     objectives=self.objectives,
                     lang=self.lang,
-                    username=self.user_info["username"]
+                    currency=self.currency
                 )[0]
             )
 
             self.expense_pie_chart.update_data(
-                category_data=self.metrics["category_expenses"]
+                category_data=self.metrics["category_expenses"],
+                currency=self.currency
             )
 
             return 0
@@ -158,11 +161,17 @@ class HomeView(ft.View):
             return -1
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
-        page_width, page_height = self.get_safe_page_size(
-            page=self._page
-        )
-
         try:
+            # Get page size
+            page_width, page_height = self.get_safe_page_size(page=self._page)
+
+            # Get component size values
+            inner_width = page_width - (UISettings.CARD_PADDING * 2)
+            savings_inner_width = max(0, inner_width)
+            chart_radius = int(page_height * 0.06)
+            center_radius = int(page_height * 0.045)
+            legend_height = int(page_height * 0.15)
+
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
@@ -173,11 +182,13 @@ class HomeView(ft.View):
             )
 
             self.balance_card.resize(
-                width=page_width
+                width=page_width,
+                inner_width=inner_width
             )
 
             self.featured_lesson_card.resize(
-                width=page_width
+                width=page_width,
+                inner_width=inner_width
             )
 
             self.financial_chart.resize(
@@ -185,15 +196,16 @@ class HomeView(ft.View):
             )
 
             self.savings_progress_card.resize(
-                width=page_width
+                width=page_width,
+                inner_width=savings_inner_width
             )
 
             self.expense_pie_chart.resize(
                 width=page_width,
-                height=page_height
-            )
-            self.featured_lesson_card.resize(
-                width=page_width
+                inner_width=inner_width,
+                chart_radius=chart_radius,
+                center_radius=center_radius,
+                legend_height=legend_height
             )
 
             return 0

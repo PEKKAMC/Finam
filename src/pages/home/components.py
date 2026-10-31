@@ -7,14 +7,13 @@ from collections.abc import Callable
 import flet as ft
 import flet_charts as fc
 
-from src.database import db
 from src.utils import Color, Text, UISettings, format_number
 
 
 class BalanceCard(ft.Container):
-    def __init__(self, lang: dict, username: dict, net_balance: float, income: float, expense: float, savings: float, advice: str, on_add_click: Callable, on_scan_click: Callable | None):
+    def __init__(self, lang: dict, currency: str, net_balance: float, income: float, expense: float, savings: float, advice: str, on_add_click: Callable, on_scan_click: Callable | None):
         self.lang = lang
-        self.username = username
+        self.currency = currency
         self.net_balance = net_balance
         self.income = income
         self.expense = expense
@@ -22,7 +21,6 @@ class BalanceCard(ft.Container):
         self.advice = advice
         self.on_add_click = on_add_click
         self.on_scan_click = on_scan_click
-        self.currency = db.users.get_currency(self.username)
 
         # TEXT AND ICON COMPONENTS
         # Static texts
@@ -239,13 +237,13 @@ class BalanceCard(ft.Container):
             content=self.main_container
         )
 
-    def update_data(self, net_balance: float, income: float, expense: float, savings: float, ai_advice: str):
+    def update_data(self, net_balance: float, income: float, expense: float, savings: float, ai_advice: str, currency: str):
         self.net_balance = net_balance
         self.income = income
         self.expense = expense
         self.savings = savings
         self.advice = ai_advice
-        self.currency = db.users.get_currency(self.username)
+        self.currency = currency
 
         self.balance_amount_text.value = format_number(self.net_balance)
         self.currency_label.value = self.currency
@@ -256,10 +254,8 @@ class BalanceCard(ft.Container):
 
         self.update()
 
-    def resize(self, width: int):
+    def resize(self, width: int, inner_width: int):
         self.main_container.width = width
-
-        inner_width = width - (UISettings.CARD_PADDING * 2)
         self.balance_top_row.width = inner_width
         self.metrics_row.width = inner_width
         self.ai_banner_container.width = inner_width
@@ -344,7 +340,6 @@ class SavingsGoalItem(ft.Container):
 
     def resize(self, width: int):
         self.main_container.width = width
-
         self.header_row.width = width
         self.progress_bar.width = width
         self.footer_row.width = width
@@ -473,10 +468,8 @@ class SavingsProgressCard(ft.Container):
 
         self.update()
 
-    def resize(self, width: int):
+    def resize(self, width: int, inner_width: int):
         self.main_container.width = width
-
-        inner_width = max(0, width - (UISettings.CARD_PADDING * 2))
         self.goal_header_row.width = inner_width
         self.goal_items_column.width = inner_width
 
@@ -485,20 +478,23 @@ class SavingsProgressCard(ft.Container):
 
 
 class ExpenseCategoryItem(ft.Row):
-    def __init__(self, name: str, val: float, currency_lang: str, color: str):
-
+    def __init__(self, name: str, value: float, currency: str, color: str):
+        self.name = name
+        self.value = value
+        self.currency = currency
+        self.color = color
 
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
-        self.expense_name_text = Text.SMALL(name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
-        self.expense_value_text = Text.SMALL(f"{format_number(val)} {currency_lang}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+        self.expense_name_text = Text.SMALL(self.name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
+        self.expense_value_text = Text.SMALL(f"{format_number(self.value)} {self.currency}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
 
         # CONTAINER COMPONENTS
         self.color_box = ft.Container(
             width=10,
             height=10,
             border_radius=5,
-            bgcolor=color
+            bgcolor=self.color
         )
 
         self.category_label = ft.Row(
@@ -517,10 +513,10 @@ class ExpenseCategoryItem(ft.Row):
             ]
         )
 
-    def update_data(self, name: str, val: float, currency_lang: str, color: str):
+    def update_data(self, name: str, value: float, currency: str, color: str):
         self.color_box.bgcolor = color
         self.expense_name_text.value = name
-        self.expense_value_text.value = f"{format_number(val)} {currency_lang}"
+        self.expense_value_text.value = f"{format_number(value)} {currency}"
 
         self.update()
 
@@ -529,12 +525,11 @@ class ExpenseCategoryItem(ft.Row):
 
 
 class ExpensePieChart(ft.Container):
-    def __init__(self, lang: dict, username: dict, category_data: dict, on_details_click: Callable | None):
+    def __init__(self, lang: dict, currency: str, category_data: dict, on_details_click: Callable | None):
         self.lang = lang
-        self.username = username
+        self.currency = currency
         self.category_data = category_data or {}
         self.on_details_click = on_details_click
-        self.currency = db.users.get_currency(self.username)
         self.chart_radius = 45
         self.center_radius = 40
 
@@ -558,6 +553,7 @@ class ExpensePieChart(ft.Container):
         self.view_details_icon = ft.Icon(ft.Icons.ARROW_FORWARD, color=Color.PRIMARY, size=14)
         self.no_data_icon = ft.Icon(ft.Icons.ERROR_OUTLINE, color=Color.DEFAULT_BORDER, size=32)
 
+        # CONTAINER COMPONENTS
         self.pie_chart = fc.PieChart(
             sections=[
                 fc.PieChartSection(
@@ -584,7 +580,6 @@ class ExpensePieChart(ft.Container):
             controls=self.legend_items
         )
 
-        # CONTAINER COMPONENTS
         self.chart_icon_container = ft.Container(
             width=32,
             height=32,
@@ -667,16 +662,16 @@ class ExpensePieChart(ft.Container):
 
     def _get_section_color(self, index: int, section_count: int) -> str:
         if (
-            section_count > 1
-            and section_count % len(self.pie_colors) == 1
-            and index == section_count - 1
+                section_count > 1
+                and section_count % len(self.pie_colors) == 1
+                and index == section_count - 1
         ):
             return self.pie_colors[1]
         return self.pie_colors[index % len(self.pie_colors)]
 
-    def update_data(self, category_data: dict):
+    def update_data(self, category_data: dict, currency: str):
         self.category_data = category_data or {}
-        self.currency = db.users.get_currency(self.username)
+        self.currency = currency
 
         if not self.category_data:
             self.legend_items.clear()
@@ -709,15 +704,11 @@ class ExpensePieChart(ft.Container):
 
         self.update()
 
-    def resize(self, width: int, height: int):
+    def resize(self, width: int, inner_width: int, chart_radius: int, center_radius: int, legend_height: int):
         self.main_container.width = width
-
-        inner_width = width - (UISettings.CARD_PADDING * 2)
         self.chart_header_row.width = inner_width
         self.chart_content_area.width = inner_width
 
-        chart_radius = int(height * 0.06)
-        center_radius = int(height * 0.045)
         self.chart_radius = chart_radius
         self.center_radius = center_radius
 
@@ -725,7 +716,7 @@ class ExpensePieChart(ft.Container):
             section.radius = chart_radius
 
         self.pie_chart.center_space_radius = center_radius
-        self.legend_list.height = int(height * 0.15)
+        self.legend_list.height = legend_height
 
         for item in self.legend_items:
             item.resize(inner_width)
@@ -858,10 +849,8 @@ class FeaturedLessonCard(ft.Container):
             content=self.main_container
         )
 
-    def resize(self, width: int):
+    def resize(self, width: int, inner_width: int):
         self.main_container.width = width
-
-        inner_width = width - (UISettings.CARD_PADDING * 2)
         self.lesson_header_row.width = inner_width
         self.lesson_banner_container.width = inner_width
         self.footer_row.width = inner_width
