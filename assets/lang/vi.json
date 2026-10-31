@@ -147,7 +147,7 @@
     "purchase_scanner.trigger_question": "Yếu tố thôi thúc bạn mua?",
     "purchase_scanner.trigger_social_media": "TikTok / Mạng xã hội",
     "purchase_scanner.usage_loading": "Đang kiểm tra lượt quét hôm nay...",
-    "purchase_scanner.usage_remaining": "Còn {remaining}/1 lượt quét hôm nay · đặt lại lúc {reset} · UTC",
+    "purchase_scanner.usage_remaining": "Còn {remaining}/1 lượt quét hôm nay. Đặt lại lúc {reset} giờ",
     "purchase_scanner.usage_unavailable": "Hiện không thể kiểm tra lượt quét hôm nay.",
     "purchase_scanner.waiting": "Trí tuệ nhân tạo đang phân tích quyết định của bạn...",
     "savings.accumulated": "Đã tích lũy",

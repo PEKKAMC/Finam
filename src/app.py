@@ -161,6 +161,7 @@ async def main(page: Page) -> None:
 
         if await complete_google_web_callback(page.route or ""):
             delete_cached_view("/user_management")
+            delete_cached_view("/purchase_scanner")
             await page.push_route("/user_management")
         else:
             await page.push_route("/starter")

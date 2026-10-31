@@ -672,6 +672,7 @@ class UserManagementView(ft.View):
 
             account = db.app_settings.get_google_account()
             self.google_account_card.set_account(account["email"] if account else None)
+            self._page.delete_cached_view("/purchase_scanner")
             Logger.info("Google account signed in for the app")
         except (requests.RequestException, KeyError, RuntimeError, sqlite3.Error, ValueError) as ex:
             Logger.warning(f"Could not complete Google authorization: {ex}")
@@ -687,6 +688,7 @@ class UserManagementView(ft.View):
                 self.lang["user_management.google_auth_failed"]
             )
             return
+        self._page.delete_cached_view("/purchase_scanner")
         self.google_account_card.set_account(None)
 
     def _refresh_view(self) -> int:

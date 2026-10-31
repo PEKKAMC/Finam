@@ -2,7 +2,7 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import flet as ft
 
@@ -115,6 +115,16 @@ class PurchaseScannerView(ft.View):
                 controls=[self.usage_label, self.usage_progress],
             ),
         )
+        self.scanner_locked_overlay = ft.Container(
+            visible=not db.app_settings.has_google_account_session(),
+            left=0,
+            top=0,
+            right=0,
+            bottom=0,
+            blur=ft.Blur(6, 6),
+            bgcolor=ft.Colors.with_opacity(0.45, Color.DARK_SURFACE),
+            alignment=ft.Alignment.CENTER
+        )
 
         header_banner = ft.Container(
             bgcolor=Color.PRIMARY,
@@ -165,13 +175,19 @@ class PurchaseScannerView(ft.View):
                                 header_banner,
                                 self.google_required_card,
                                 self.usage_card,
-                                ft.ResponsiveRow(
-                                    spacing=20,
-                                    run_spacing=20,
+                                ft.Stack(
+                                    expand=True,
                                     controls=[
-                                        ft.Container(self.form_card, col={"sm": 12, "md": 6}),
-                                        ft.Container(self.result_card, col={"sm": 12, "md": 6}),
-                                    ]
+                                        ft.ResponsiveRow(
+                                            spacing=20,
+                                            run_spacing=20,
+                                            controls=[
+                                                ft.Container(self.form_card, col={"sm": 12, "md": 6}),
+                                                ft.Container(self.result_card, col={"sm": 12, "md": 6}),
+                                            ],
+                                        ),
+                                        self.scanner_locked_overlay,
+                                    ],
                                 ),
                                 ft.Container(
                                     self.history_card,
@@ -215,6 +231,7 @@ class PurchaseScannerView(ft.View):
         signed_in = db.app_settings.has_google_account_session()
         self.google_required_card.visible = not signed_in
         self.usage_card.visible = signed_in
+        self.scanner_locked_overlay.visible = not signed_in
         self.form_card.set_enabled(signed_in)
 
     def _load_daily_usage(self):
@@ -222,7 +239,9 @@ class PurchaseScannerView(ft.View):
         try:
             usage = self.controller.get_daily_usage(refresh_token or "")
             reset_at = datetime.fromisoformat(usage["reset_at"])
-            reset_label = reset_at.strftime("%Y-%m-%d %H:%M")
+            if reset_at.tzinfo is None:
+                reset_at = reset_at.replace(tzinfo=timezone.utc)
+            reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
             remaining = usage["remaining"]
             self.usage_label.value = self.lang[
                 "purchase_scanner.usage_remaining"
@@ -243,6 +262,7 @@ class PurchaseScannerView(ft.View):
                 ]
                 self.google_required_card.visible = True
                 self.usage_card.visible = False
+                self.scanner_locked_overlay.visible = True
                 self.form_card.set_enabled(False)
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid purchase scanner usage response: {ex}")
@@ -274,7 +294,6 @@ class PurchaseScannerView(ft.View):
                     self.history_card.set_history(self.controller.get_scan_history())
 
                 self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
-                self._load_daily_usage()
 
             except ScannerApiError as ex:
                 Logger.warning(f"Purchase scanner request rejected: {ex}")
@@ -284,17 +303,19 @@ class PurchaseScannerView(ft.View):
                     error_message = self.lang["purchase_scanner.sign_in_required"]
                     self.google_required_card.visible = True
                     self.usage_card.visible = False
+                    self.scanner_locked_overlay.visible = True
                     self.form_card.set_enabled(False)
                 else:
                     error_message = self.lang["purchase_scanner.service_error"]
                 self.result_card.show_error(error_message)
-                if ex.status_code not in (401, 403):
-                    self._load_daily_usage()
             except Exception as ex:
                 Logger.error(f"Error during background analysis: {ex}")
                 self.result_card.show_error(
                     self.lang["purchase_scanner.service_error"]
                 )
+            finally:
+                if db.app_settings.get_google_refresh_token():
+                    self._load_daily_usage()
 
         self._page.run_thread(worker)
 

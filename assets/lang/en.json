@@ -147,7 +147,7 @@
     "purchase_scanner.trigger_question": "What's Pushing You to Buy?",
     "purchase_scanner.trigger_social_media": "TikTok / Social Media",
     "purchase_scanner.usage_loading": "Checking today's scanner usage...",
-    "purchase_scanner.usage_remaining": "{remaining} of 1 scan remaining today · resets at {reset} · UTC",
+    "purchase_scanner.usage_remaining": "{remaining} of 1 scan remaining today. Resets at {reset}",
     "purchase_scanner.usage_unavailable": "Today's scanner usage is temporarily unavailable.",
     "purchase_scanner.waiting": "AI is analyzing your decision...",
     "savings.accumulated": "Accumulated",
