@@ -17,7 +17,11 @@
 *   Restricted purchase scanning to signed-in Google accounts and added daily usage-limit information.
 *   Updated the purchase scanner interface and improved usage status and reset-time display.
 *   Redesigned app-lock PIN entry with individual digit fields.
-* 
+
+## Bug fixes in this version
+
+*   Logging out all accounts without closing and reopening the app no longer requires app-lock PIN to be re-entered if it's enabled.
+
 ## Known Issues & Instability
 
 *   Some actions may cause softlocks or crashes.
