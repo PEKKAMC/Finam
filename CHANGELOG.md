@@ -14,6 +14,7 @@
 ## Changes in this version
 
 *   Added Google account sign-in and account linking in user management.
+*   Added safety features to protect backend. However, this means older version of the app will no longer be able to use the AI scanner.
 *   Restricted purchase scanning to signed-in Google accounts and added daily usage-limit information.
 *   Updated the purchase scanner interface and improved usage status and reset-time display.
 *   Redesigned app-lock PIN entry with individual digit fields.
