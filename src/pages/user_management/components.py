@@ -200,7 +200,11 @@ class GoogleAccountCard(ft.Container):
         self._update_if_attached()
 
     def _update_if_attached(self) -> None:
-        if self.page is not None:
+        try:
+            self.page is not None
+        except RuntimeError:
+            pass
+        else:
             self.update()
 
     def resize(self, width: int) -> None:
