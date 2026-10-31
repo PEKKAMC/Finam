@@ -275,7 +275,8 @@ class LessonPlayerView(ft.View):
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
         try:
-            page_width, page_height = self.get_safe_page_size(self._page)
+            # Get page size
+            page_width, page_height = self.get_safe_page_size(page=self._page)
 
             # Keep legacy safe caps for content sizing
             safe_width_value = min(page_width, 650)

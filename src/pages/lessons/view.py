@@ -130,12 +130,13 @@ class LessonsView(ft.View):
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
         try:
-            page_width, page_height = self.get_safe_page_size(
-                page=self._page
-            )
+            # Get page size
+            page_width, page_height = self.get_safe_page_size(page=self._page)
 
+            # Resizing main container
             self.main_container.width = page_width
 
+            # Resizing other components
             self.menu.resize(
                 width=page_width
             )

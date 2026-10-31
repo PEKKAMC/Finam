@@ -12,7 +12,7 @@ from src.logger import Logger
 from src.pages.global_components import Menu
 from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, LogicController, safe_float, calculate_pan_position
 from src.pages.lesson_editor.components import EditorToolbar, PropertiesTabs, SlideSidebarLayout
-from src.utils import Color, Page, create_text, Text, UISettings
+from src.utils import Color, Page, create_text, Text, UISettings, get_safe_page_size
 
 Logger.info("Loading Lesson Editor page...")
 
@@ -24,6 +24,9 @@ class LessonEditorView(ft.View):
         self.user_info = user_info
         self.menu = Menu(self._page, self.lang, self.user_info)
         self.logic = LogicController()
+
+        # Imported functions
+        self.get_safe_page_size = get_safe_page_size
 
         # Input Fields
         self.lesson_id_input = ft.TextField(label=self.lang["lesson_editor.lesson_id"], value="1", width=100, color=Color.DEFAULT_TEXT)
@@ -101,14 +104,6 @@ class LessonEditorView(ft.View):
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
         self.refresh_editor()
-
-    def get_safe_page_size(self) -> tuple[int, int]:
-        current_width: float = self._page.width or UISettings.MAX_APP_WIDTH
-        current_height: float = self._page.height or UISettings.MAX_APP_HEIGHT
-
-        safe_width = min(int(current_width), UISettings.MAX_APP_WIDTH)
-        safe_height = min(int(current_height), UISettings.MAX_APP_HEIGHT)
-        return safe_width, safe_height
 
     def show_snackbar(self, message: str, color: str):
         self.snack_bar = ft.SnackBar(Text.MEDIUM(message), bgcolor=color)
@@ -390,11 +385,12 @@ class LessonEditorView(ft.View):
 
     def _on_page_resize(self, e = None) -> int:
         try:
-            w, h = self.get_safe_page_size()
+            # Get page size
+            page_width, page_height = self.get_safe_page_size(page=self._page)
 
-            available_height = max(500, h - 130)
+            available_height = max(500, page_height - 130)
             self.editor_layout.height = available_height
-            self.canvas_container.width = min(550, int(w * 0.35))
+            self.canvas_container.width = min(550, int(page_width * 0.35))
             self.canvas_container.height = int(available_height * 0.75)
 
             return 0

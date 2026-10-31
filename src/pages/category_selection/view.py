@@ -310,7 +310,7 @@ class CategorySelectionView(ft.View):
         self.update()
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
-        page_width, _ = self.get_safe_page_size(
+        page_width, page_height = self.get_safe_page_size(
             page=self._page
         )
 

@@ -278,11 +278,10 @@ class SavingsView(ft.View):
             self._page.update()
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
-        page_width, page_height = self.get_safe_page_size(
-            page=self._page
-        )
-
         try:
+            # Get page size
+            page_width, page_height = self.get_safe_page_size(page=self._page)
+
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height

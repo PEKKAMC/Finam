@@ -706,38 +706,50 @@ class UserManagementView(ft.View):
             Logger.warn(f"Failed to refresh view {ex}")
             return -1
 
-    def _on_page_resize(self, e = None) -> ft.PageResizeEvent | None:
-        page_width, page_height = self.get_safe_page_size(
-            page=self._page
-        )
+    def _on_page_resize(self, e = ft.PageResizeEvent | None) -> int:
+        try:
+            # Get page size
+            page_width, page_height = self.get_safe_page_size(page=self._page)
 
-        # Resizing main container
-        self.main_container.width = page_width
-        self.main_container.height = page_height
+            # Resizing main container
+            self.main_container.width = page_width
+            self.main_container.height = page_height
 
-        # Resizing other components
-        self.menu.resize(
-            width=page_width
-        )
-        self.profile_card.resize(
-            width=page_width
-        )
-        self.google_account_card.resize(
-            width=page_width
-        )
-        self.services_card.resize(
-            width=page_width
-        )
-        self.support_card.resize(
-            width=page_width
-        )
+            # Resizing other components
+            self.menu.resize(
+                width=page_width
+            )
+            self.profile_card.resize(
+                width=page_width
+            )
+            self.google_account_card.resize(
+                width=page_width
+            )
+            self.services_card.resize(
+                width=page_width
+            )
+            self.support_card.resize(
+                width=page_width
+            )
 
-        self.dialogs.user_dialog.resize(
-            width=page_width // 3 * 2,
-            height=page_height // 3 * 2,
-        )
+            self.dialogs.user_dialog.resize(
+                width=page_width // 3 * 2,
+                height=page_height // 3 * 2,
+            )
 
-        return e
+            return 0
+
+        except AttributeError as ex:
+            Logger.error(f"Failed to get width/height of the page: {ex}")
+            return 1
+
+        except (TypeError, ValueError) as ex:
+            Logger.error(f"Value of width/height of the page is invalid: {ex}")
+            return 2
+
+        except Exception as ex:
+            Logger.error(f"Error during page resize: {ex}, event: {e}")
+            return -1
 
 def get_user_management_view(page: Page, lang: dict, user_info: dict) -> ft.View:
     Logger.info("Loading User Management page...")
