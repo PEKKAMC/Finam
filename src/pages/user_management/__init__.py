@@ -10,6 +10,7 @@ from src.pages.user_management.logic import LogicController
 from src.pages.user_management.view import (
     DialogManager,
     UserManagementView,
+    complete_google_mobile_callback,
     complete_google_web_callback,
     get_user_management_view,
 )
@@ -28,5 +29,6 @@ __all__ = [
     "DialogManager",
     "UserManagementView",
     "complete_google_web_callback",
+    "complete_google_mobile_callback",
     "get_user_management_view"
 ]

@@ -34,6 +34,9 @@ Logger.info("Initializing User Management page...")
 _pending_web_google_auth: dict[
     str, tuple[float, AuthorizationService, str]
 ] = {}
+_pending_mobile_google_auth: dict[
+    str, tuple[float, AuthorizationService, str]
+] = {}
 _web_google_auth_result: str | None = None
 
 
@@ -118,6 +121,52 @@ async def complete_google_web_callback(route: str) -> bool:
         result = "signed_in" if signed_in else "failed"
     except Exception as ex:
         Logger.warning(f"Could not complete Google web authorization: {ex}", exc_info=True)
+    _web_google_auth_result = result
+    return True
+
+
+async def complete_google_mobile_callback(route: str) -> bool:
+    global _web_google_auth_result
+    callback = urlparse(route)
+    if callback.path != "/oauth_callback":
+        return False
+
+    query = parse_qs(callback.query)
+    state = query.get("state", [""])[0]
+    pending = _pending_mobile_google_auth.pop(state, None)
+    if pending is None:
+        Logger.warning("Google mobile callback has no matching pending authorization")
+        _web_google_auth_result = "failed"
+        return True
+
+    expires_at, authorization, backend_url = pending
+    result = "failed"
+    try:
+        if time.monotonic() > expires_at:
+            raise RuntimeError("Google mobile authorization expired")
+        if query.get("error"):
+            raise RuntimeError(f"Google authorization failed: {query['error'][0]}")
+
+        code = query.get("code", [""])[0]
+        if not code:
+            raise RuntimeError("Google mobile authorization code is missing")
+
+        await authorization.request_token(code)
+        token = await authorization.get_token()
+        if token is None:
+            raise RuntimeError("Firebase ID token is missing")
+
+        signed_in = await _save_google_account_globally(
+            token.access_token,
+            backend_url,
+            token.refresh_token or "",
+        )
+        result = "signed_in" if signed_in else "failed"
+    except Exception as ex:
+        Logger.warning(
+            f"Could not complete Google mobile authorization: {ex}",
+            exc_info=True,
+        )
     _web_google_auth_result = result
     return True
 
@@ -503,13 +552,28 @@ class UserManagementView(ft.View):
         client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip() or str(
             config.get("google_client_id", "")
         ).strip()
-        redirect_url = os.getenv("GOOGLE_OAUTH_REDIRECT_URL", "").strip() or str(
-            config.get("redirect_url", "")
-        ).strip()
         backend_url = os.getenv("FINAM_BACKEND_URL", "").strip() or str(
             config.get("backend_url", "")
         ).strip()
         backend_url = backend_url.rstrip("/")
+        is_mobile = bool(
+            not self._page.web
+            and self._page.platform
+            and self._page.platform.is_mobile()
+        )
+        if is_mobile:
+            redirect_url = os.getenv(
+                "GOOGLE_OAUTH_MOBILE_REDIRECT_URL", ""
+            ).strip() or str(
+                config.get(
+                    "mobile_redirect_url",
+                    f"{backend_url}/api/v1/auth/google/mobile-callback",
+                )
+            ).strip()
+        else:
+            redirect_url = os.getenv(
+                "GOOGLE_OAUTH_REDIRECT_URL", ""
+            ).strip() or str(config.get("redirect_url", "")).strip()
         missing_settings = [
             setting
             for setting, value in (
@@ -582,6 +646,39 @@ class UserManagementView(ft.View):
                     )
                 except Exception:
                     _pending_web_google_auth.pop(state, None)
+                    raise
+                return
+
+            if is_mobile:
+                backend_origin = urlparse(backend_url)
+                if (
+                    redirect.scheme != "https"
+                    or backend_origin.scheme != "https"
+                    or not redirect.hostname
+                    or redirect.netloc != backend_origin.netloc
+                    or redirect.path != "/api/v1/auth/google/mobile-callback"
+                    or redirect.query
+                    or redirect.fragment
+                ):
+                    raise ValueError(
+                        "Mobile sign-in requires the HTTPS backend mobile callback URL"
+                    )
+
+                now = time.monotonic()
+                for pending_state, pending in list(
+                    _pending_mobile_google_auth.items()
+                ):
+                    if pending[0] < now:
+                        _pending_mobile_google_auth.pop(pending_state, None)
+                _pending_mobile_google_auth[state] = (
+                    now + 300,
+                    authorization,
+                    backend_url,
+                )
+                try:
+                    await ft.UrlLauncher().launch_url(authorization_url)
+                except Exception:
+                    _pending_mobile_google_auth.pop(state, None)
                     raise
                 return
 
