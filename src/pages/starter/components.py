@@ -92,32 +92,43 @@ class DialogManager:
 
 
 class AppLockCard(ft.Container):
-    def __init__(self, lang: dict, on_unlock: Callable[[str], None]):
+    def __init__(
+        self, page: Page, lang: dict, on_unlock: Callable[[str], None]
+    ):
+        self._page = page
         self.on_unlock = on_unlock
-        self.pin_field = ft.TextField(
-            label=lang["app_lock.pin"],
-            input_filter=ft.InputFilter(allow=True, regex_string=r"^[0-9]*$", replacement_string=""),
-            password=True,
-            max_length=4,
-            keyboard_type=ft.KeyboardType.NUMBER,
-            bgcolor=Color.CARD_BACKGROUND,
-            border_color=Color.INPUT_BORDER,
-            focused_border_color=Color.PRIMARY_ACTION,
-            color=Color.PRIMARY_TEXT,
-            label_style=ft.TextStyle(color=Color.SECONDARY_TEXT),
-            on_submit=self._on_unlock
-        )
+        self._submitting = False
+        self._active_index = 0
+        self.pin_fields = [
+            ft.TextField(
+                autofocus=index == 0,
+                input_filter=ft.InputFilter(
+                    allow=True,
+                    regex_string=r"^[0-9]$",
+                    replacement_string="",
+                ),
+                password=True,
+                keyboard_type=ft.KeyboardType.NUMBER,
+                text_align=ft.TextAlign.CENTER,
+                width=56,
+                height=64,
+                bgcolor=Color.CARD_BACKGROUND,
+                border_color=Color.INPUT_BORDER,
+                focused_border_color=Color.PRIMARY_ACTION,
+                color=Color.PRIMARY_TEXT,
+                text_size=24,
+                on_change=lambda e, field_index=index: self._on_digit_change(
+                    field_index, e.control.value or ""
+                ),
+                on_focus=lambda e, field_index=index: self._on_field_focus(
+                    field_index
+                ),
+            )
+            for index in range(4)
+        ]
         self.error_text = ft.Text(
             color=Color.NEGATIVE_ACTION,
-            text_align=ft.TextAlign.CENTER
-        )
-        unlock_button = ft.Container(
-            content=Text.H4(lang["app_lock.unlock"], color=Color.WHITE),
-            alignment=ft.Alignment.CENTER,
-            bgcolor=Color.PRIMARY_ACTION,
-            padding=16,
-            border_radius=20,
-            on_click=self._on_unlock
+            text_align=ft.TextAlign.CENTER,
         )
 
         super().__init__(
@@ -132,21 +143,55 @@ class AppLockCard(ft.Container):
                 controls=[
                     ft.Icon(ft.Icons.LOCK_OUTLINE, color=Color.PRIMARY, size=40),
                     Text.H3(lang["app_lock.title"], color=Color.PRIMARY_TEXT),
-                    self.pin_field,
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        spacing=10,
+                        controls=self.pin_fields,
+                    ),
                     self.error_text,
-                    unlock_button
-                ]
-            )
+                ],
+            ),
         )
 
-    def _on_unlock(self, e=None) -> None:
-        self.on_unlock(self.pin_field.value or "")
+    def _on_field_focus(self, index: int) -> None:
+        if index != self._active_index:
+            self._page.run_task(self.pin_fields[self._active_index].focus)
+
+    def _focus_field(self, index: int) -> None:
+        self._active_index = index
+        self._page.run_task(self.pin_fields[index].focus)
+
+    def _on_digit_change(self, index: int, value: str) -> None:
+        if self._submitting:
+            return
+
+        value = next((character for character in value if character.isdigit()), "")
+        if len(value) > 1:
+            value = value[0]
+            self.pin_fields[index].value = value
+
+        if value and index < len(self.pin_fields) - 1:
+            self._focus_field(index + 1)
+        elif not value and index > 0:
+            self._focus_field(index - 1)
+        else:
+            self._active_index = index
+
+        pin = "".join(field.value or "" for field in self.pin_fields)
+        if len(pin) == 4:
+            self._submitting = True
+            self.on_unlock(pin)
 
     def show_error(self, message: str) -> None:
         self.error_text.value = message
-        self.pin_field.value = ""
+        self._submitting = False
+        for field in self.pin_fields:
+            field.value = ""
         self.update()
+        self._focus_field(0)
 
     def clear(self) -> None:
-        self.pin_field.value = ""
+        for field in self.pin_fields:
+            field.value = ""
         self.error_text.value = ""
+        self._active_index = 0

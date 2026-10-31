@@ -470,6 +470,7 @@ class UserManagementView(ft.View):
         try:
             self._page.logout()
             self.user_info["username"] = ""
+            self._page.skip_app_lock_once = True
             self._page.navigate_to("/starter")()
         except Exception as ex:
             Logger.warn(f"Failed to logout: {ex}")

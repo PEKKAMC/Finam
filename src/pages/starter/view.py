@@ -18,7 +18,12 @@ class StarterView(ft.View):
         self._page = page
         self.lang = lang
         self.user_info = user_info
-        self.is_unlocked = not db.app_security.is_app_lock_enabled()
+        skip_app_lock = getattr(self._page, "skip_app_lock_once", False)
+        if skip_app_lock:
+            self._page.skip_app_lock_once = False
+        self.is_unlocked = (
+            skip_app_lock or not db.app_security.is_app_lock_enabled()
+        )
         self.get_safe_page_size = get_safe_page_size
         self.controller = LogicController(self.user_info)
         self.dialogs = DialogManager(
@@ -61,7 +66,11 @@ class StarterView(ft.View):
         return self.dialogs.show_user_management_dialog()
 
     def _show_lock_screen(self) -> None:
-        self.lock_screen = AppLockCard(self.lang, self._on_unlock_click)
+        self.lock_screen = AppLockCard(
+            self._page,
+            self.lang,
+            self._on_unlock_click,
+        )
         self.main_container.content.controls = [self.lock_screen]
 
     def _on_unlock_click(self, pin: str) -> None:
