@@ -121,9 +121,19 @@ class DatabaseConnection:
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     theme TEXT NOT NULL DEFAULT 'light',
                     digit_separator TEXT NOT NULL DEFAULT '{DefaultSettings.DIGIT_SEPARATOR}',
-                    decimal_separator TEXT NOT NULL DEFAULT '.'
+                    decimal_separator TEXT NOT NULL DEFAULT '.',
+                    google_uid TEXT,
+                    google_email TEXT,
+                    google_refresh_token TEXT
                 )
             ''')
+            for column in ("google_uid", "google_email", "google_refresh_token"):
+                try:
+                    self.execute(
+                        f"ALTER TABLE app_settings ADD COLUMN {column} TEXT"
+                    )
+                except sqlite3.OperationalError:
+                    pass
             try:
                 self.execute(
                     "ALTER TABLE app_settings ADD COLUMN digit_separator "
@@ -136,6 +146,30 @@ class DatabaseConnection:
                 "INSERT OR IGNORE INTO app_settings (id, digit_separator) VALUES (1, ?)",
                 (DefaultSettings.DIGIT_SEPARATOR,),
             )
+            user_columns = {
+                row[1]
+                for row in self.execute("PRAGMA table_info(users)", fetch_all=True)
+            }
+            if {"google_uid", "google_email"}.issubset(user_columns):
+                legacy_account = self.execute(
+                    "SELECT google_uid, google_email FROM users "
+                    "WHERE google_uid IS NOT NULL LIMIT 1",
+                    fetch_one=True,
+                )
+                if legacy_account:
+                    self.execute(
+                        """
+                        UPDATE app_settings
+                        SET google_uid = ?, google_email = ?
+                        WHERE id = 1 AND google_uid IS NULL
+                        """,
+                        legacy_account,
+                    )
+                self.execute(
+                    "UPDATE users SET google_uid = NULL, google_email = NULL "
+                    "WHERE google_uid IS NOT NULL"
+                )
+                self.execute("DROP INDEX IF EXISTS idx_users_google_uid")
             self.execute(
                 "CREATE TABLE IF NOT EXISTS app_settings_migrations "
                 "(migration TEXT PRIMARY KEY)"
@@ -429,6 +463,69 @@ class AppSettingsDatabase:
 
     def __init__(self, connection: DatabaseConnection):
         self.db = connection
+
+    def get_google_account(self) -> Optional[Dict[str, str]]:
+        result = self.db.execute(
+            "SELECT google_uid, google_email FROM app_settings WHERE id = 1",
+            fetch_one=True,
+        )
+        if not result or not result[0]:
+            return None
+        return {"uid": result[0], "email": result[1] or ""}
+
+    def has_google_account_session(self) -> bool:
+        return (
+            self.get_google_account() is not None
+            and self.get_google_refresh_token() is not None
+        )
+
+    def set_google_account(
+        self, google_uid: str, email: str, refresh_token: str
+    ) -> bool:
+        if not google_uid or not email or not refresh_token:
+            return False
+        try:
+            self.db.execute(
+                "UPDATE app_settings SET google_uid = ?, google_email = ?, "
+                "google_refresh_token = ? WHERE id = 1",
+                (google_uid, email, refresh_token),
+            )
+            return True
+        except sqlite3.Error as ex:
+            Logger.error(f"Failed to save app-wide Google account: {ex}")
+            return False
+
+    def get_google_refresh_token(self) -> Optional[str]:
+        result = self.db.execute(
+            "SELECT google_refresh_token FROM app_settings WHERE id = 1",
+            fetch_one=True,
+        )
+        return result[0] if result and result[0] else None
+
+    def update_google_refresh_token(self, refresh_token: str) -> bool:
+        if not refresh_token:
+            return False
+        try:
+            self.db.execute(
+                "UPDATE app_settings SET google_refresh_token = ? WHERE id = 1",
+                (refresh_token,),
+            )
+            return True
+        except sqlite3.Error as ex:
+            Logger.error(f"Failed to update Google refresh token: {ex}")
+            return False
+
+    def clear_google_account(self) -> bool:
+        try:
+            self.db.execute(
+                "UPDATE app_settings SET google_uid = NULL, google_email = NULL, "
+                "google_refresh_token = NULL "
+                "WHERE id = 1"
+            )
+            return True
+        except sqlite3.Error as ex:
+            Logger.error(f"Failed to clear app-wide Google account: {ex}")
+            return False
 
     def get_theme(self) -> str:
         """Get the app-wide theme setting."""

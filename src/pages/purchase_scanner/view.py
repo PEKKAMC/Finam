@@ -2,11 +2,14 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from datetime import datetime
+
 import flet as ft
 
 from src.logger import Logger
+from src.database import db
 from src.pages.global_components import Menu
-from src.pages.purchase_scanner.logic import LogicController
+from src.pages.purchase_scanner.logic import LogicController, ScannerApiError
 from src.pages.purchase_scanner.components import ScannerForm, ScannerResult, ScannerHistoryCard
 from src.utils import Color, Page, get_safe_page_size, Text, UISettings
 
@@ -54,6 +57,64 @@ class PurchaseScannerView(ft.View):
         )
 
         self.history_card.set_history(self.scan_history)
+        self.google_required_message = Text.SMALL(
+            self.lang["purchase_scanner.google_required"],
+            color=Color.SECONDARY_TEXT,
+        )
+        self.google_required_card = ft.Container(
+            visible=not db.app_settings.has_google_account_session(),
+            bgcolor=Color.CARD_BACKGROUND,
+            border_radius=18,
+            padding=18,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            content=ft.Row(
+                spacing=12,
+                controls=[
+                    ft.Icon(
+                        ft.Icons.ACCOUNT_CIRCLE_OUTLINED,
+                        color=Color.PRIMARY_ACTION,
+                        size=24,
+                    ),
+                    ft.Column(
+                        expand=True,
+                        spacing=4,
+                        controls=[
+                            Text.MEDIUM(
+                                self.lang["purchase_scanner.google_required_title"],
+                                color=Color.PRIMARY_TEXT,
+                                weight=ft.FontWeight.BOLD,
+                            ),
+                            self.google_required_message,
+                        ],
+                    ),
+                    ft.TextButton(
+                        content=self.lang["purchase_scanner.google_login_action"],
+                        on_click=self._open_google_settings,
+                    ),
+                ],
+            ),
+        )
+        self.usage_label = Text.MEDIUM(
+            self.lang["purchase_scanner.usage_loading"],
+            color=Color.PRIMARY_TEXT,
+        )
+        self.usage_progress = ft.ProgressBar(
+            value=1,
+            color=Color.PROGRESS_ACTIVE,
+            bgcolor=Color.DARK_BUTTON,
+            height=8,
+        )
+        self.usage_card = ft.Container(
+            visible=db.app_settings.has_google_account_session(),
+            bgcolor=Color.CARD_BACKGROUND,
+            border_radius=18,
+            padding=18,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            content=ft.Column(
+                spacing=10,
+                controls=[self.usage_label, self.usage_progress],
+            ),
+        )
 
         header_banner = ft.Container(
             bgcolor=Color.PRIMARY,
@@ -102,6 +163,8 @@ class PurchaseScannerView(ft.View):
                             expand=True,
                             controls=[
                                 header_banner,
+                                self.google_required_card,
+                                self.usage_card,
                                 ft.ResponsiveRow(
                                     spacing=20,
                                     run_spacing=20,
@@ -143,6 +206,53 @@ class PurchaseScannerView(ft.View):
 
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
+        self._update_google_access()
+
+    def _open_google_settings(self, e=None):
+        self._page.navigate_to("/user_management")()
+
+    def _update_google_access(self):
+        signed_in = db.app_settings.has_google_account_session()
+        self.google_required_card.visible = not signed_in
+        self.usage_card.visible = signed_in
+        self.form_card.set_enabled(signed_in)
+
+    def _load_daily_usage(self):
+        refresh_token = db.app_settings.get_google_refresh_token()
+        try:
+            usage = self.controller.get_daily_usage(refresh_token or "")
+            reset_at = datetime.fromisoformat(usage["reset_at"])
+            reset_label = reset_at.strftime("%Y-%m-%d %H:%M")
+            remaining = usage["remaining"]
+            self.usage_label.value = self.lang[
+                "purchase_scanner.usage_remaining"
+            ].format(remaining=remaining, reset=reset_label)
+            self.usage_progress.value = remaining
+            self.form_card.set_enabled(
+                remaining > 0 and db.app_settings.has_google_account_session()
+            )
+            self.usage_progress.color = (
+                Color.PROGRESS_ACTIVE if remaining else Color.WARNING_COLOR
+            )
+        except ScannerApiError as ex:
+            Logger.warning(f"Could not load purchase scanner usage: {ex}")
+            self.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
+            if ex.status_code in (401, 403):
+                self.google_required_message.value = self.lang[
+                    "purchase_scanner.google_session_expired"
+                ]
+                self.google_required_card.visible = True
+                self.usage_card.visible = False
+                self.form_card.set_enabled(False)
+        except (KeyError, TypeError, ValueError) as ex:
+            Logger.warning(f"Invalid purchase scanner usage response: {ex}")
+            self.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
+        try:
+            self.usage_card.update()
+            self.google_required_card.update()
+            self.form_card.update()
+        except RuntimeError:
+            pass
 
     def handle_scan_click(self, name, price, reason, trigger, time):
         self.result_card.set_loading_state()
@@ -151,7 +261,12 @@ class PurchaseScannerView(ft.View):
         def worker():
             try:
                 risk, trigger_display, price_val, ai_advice = self.controller.analyze_purchase(
-                    item_name, price, reason, trigger, time
+                    item_name,
+                    price,
+                    reason,
+                    trigger,
+                    time,
+                    db.app_settings.get_google_refresh_token() or "",
                 )
 
                 if risk is not None:
@@ -159,15 +274,26 @@ class PurchaseScannerView(ft.View):
                     self.history_card.set_history(self.controller.get_scan_history())
 
                 self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
+                self._load_daily_usage()
 
+            except ScannerApiError as ex:
+                Logger.warning(f"Purchase scanner request rejected: {ex}")
+                if ex.status_code == 429:
+                    error_message = self.lang["purchase_scanner.daily_limit"]
+                elif ex.status_code in (401, 403):
+                    error_message = self.lang["purchase_scanner.sign_in_required"]
+                    self.google_required_card.visible = True
+                    self.usage_card.visible = False
+                    self.form_card.set_enabled(False)
+                else:
+                    error_message = self.lang["purchase_scanner.service_error"]
+                self.result_card.show_error(error_message)
+                if ex.status_code not in (401, 403):
+                    self._load_daily_usage()
             except Exception as ex:
                 Logger.error(f"Error during background analysis: {ex}")
-                self.result_card.update_result(
-                    30,
-                    "yếu tố bên ngoài",
-                    0.0,
-                    item_name,
-                    "Không thể hiển thị kết quả do lỗi giao diện. Vui lòng thử lại."
+                self.result_card.show_error(
+                    self.lang["purchase_scanner.service_error"]
                 )
 
         self._page.run_thread(worker)
@@ -182,9 +308,12 @@ class PurchaseScannerView(ft.View):
 
     def _refresh_view(self) -> int:
         try:
+            self._update_google_access()
             self._on_page_resize()
             self.scan_history = self.controller.get_scan_history()
             self.history_card.set_history(self.scan_history)
+            if db.app_settings.has_google_account_session():
+                self._page.run_thread(self._load_daily_usage)
             return 0
 
         except Exception as ex:

@@ -65,6 +65,14 @@ class SelectableOptionGroup(ft.Container):
                 btn.border = ft.Border.all(1, Color.INPUT_BORDER)
                 text_ctrl.color = Color.DEFAULT_TEXT
 
+    def set_enabled(self, enabled: bool) -> None:
+        for val_id, button in self.button_controls.items():
+            button.on_click = (
+                (lambda e, option=val_id: self._select(option))
+                if enabled
+                else None
+            )
+
 
 class ThinkingTimeUnitContainer(ft.Container):
     """Input field for thinking time value combined with a time unit dropdown."""
@@ -189,6 +197,7 @@ class ScannerForm(ft.Container):
             padding=ft.Padding(0, 14, 0, 14),
             on_click=self._handle_scan_click
         )
+        self._scan_enabled = True
 
         self.main_container = ft.Column(
             spacing=16,
@@ -246,6 +255,8 @@ class ScannerForm(ft.Container):
         )
 
     def _handle_scan_click(self):
+        if not self._scan_enabled:
+            return
         self.on_scan_click(
             self.item_name.value,
             self.item_price.value,
@@ -264,6 +275,21 @@ class ScannerForm(ft.Container):
         self.thinking_time.value_field.value = "0"
         self.thinking_time.unit_dropdown.value = "hour"
         self._page.update()
+
+    def set_enabled(self, enabled: bool) -> None:
+        self._scan_enabled = enabled
+        self.item_name.disabled = not enabled
+        self.item_price.disabled = not enabled
+        self.item_reason.disabled = not enabled
+        self.thinking_time.value_field.disabled = not enabled
+        self.thinking_time.unit_dropdown.disabled = not enabled
+        self.submit_btn.on_click = self._handle_scan_click if enabled else None
+        self.trigger.set_enabled(enabled)
+        try:
+            self.page
+        except RuntimeError:
+            return
+        self.update()
 
     def resize(self, page_width: int):
         self.main_container.width = max(page_width, 0)
@@ -457,6 +483,11 @@ class ScannerResult(ft.Container):
         self._page = page
         self.lang = lang
         self.currency = currency
+        self.empty_message = Text.SMALL(
+            self.lang["purchase_scanner.fill_info"],
+            color=Color.SECONDARY_TEXT,
+            text_align=ft.TextAlign.CENTER,
+        )
 
         # Empty state display
         self.empty_state = ft.Column(
@@ -466,11 +497,7 @@ class ScannerResult(ft.Container):
             controls=[
                 ft.Icon(ft.Icons.SHIELD_OUTLINED, color=Color.PRIMARY, size=52),
                 Text.H4(self.lang["purchase_scanner.no_results"], color=Color.DEFAULT_TEXT),
-                Text.SMALL(
-                    self.lang["purchase_scanner.fill_info"],
-                    color=Color.SECONDARY_TEXT,
-                    text_align=ft.TextAlign.CENTER
-                )
+                self.empty_message,
             ]
         )
 
@@ -591,8 +618,16 @@ class ScannerResult(ft.Container):
         self.empty_state.visible = False
         self.loading_container.visible = True
         self.result_container.visible = False
+        self.empty_message.value = self.lang["purchase_scanner.fill_info"]
         self.advice_text.value = ""
         self.interventions_col.controls.clear()
+        self.update()
+
+    def show_error(self, message: str):
+        self.loading_container.visible = False
+        self.result_container.visible = False
+        self.empty_state.visible = True
+        self.empty_message.value = message
         self.update()
 
     def update_result(self, risk: int | None, trigger_display: str, price: float, item_name: str, ai_advice: str = ""):

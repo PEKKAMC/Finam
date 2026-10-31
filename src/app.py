@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import os
+from urllib.parse import urlparse
 
 import flet as ft
 
@@ -19,7 +20,10 @@ from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.purchase_scanner import get_scanner_view
 from src.pages.starter.view import StarterView, get_starter_view
-from src.pages.user_management import get_user_management_view
+from src.pages.user_management import (
+    complete_google_web_callback,
+    get_user_management_view,
+)
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
@@ -151,8 +155,22 @@ async def main(page: Page) -> None:
     page.delete_cached_view = delete_cached_view
     page.delete_all_cached_views = delete_all_cached_views
 
+    async def handle_google_web_callback() -> bool:
+        if not page.web or urlparse(page.route or "").path != "/oauth_callback":
+            return False
+
+        if await complete_google_web_callback(page.route or ""):
+            delete_cached_view("/user_management")
+            await page.push_route("/user_management")
+        else:
+            await page.push_route("/starter")
+        return True
+
     async def route_change(e: ft.RouteChangeEvent) -> None:
         try:
+            if await handle_google_web_callback():
+                return
+
             page.views.clear()
             if page.route:
                 Logger.info(f"Redirecting to {page.route} route...")
@@ -222,4 +240,5 @@ async def main(page: Page) -> None:
     page.on_error = on_error
     page.on_route_change = route_change
 
-    await page.push_route("/starter")
+    if not await handle_google_web_callback():
+        await page.push_route("/starter")

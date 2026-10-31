@@ -1,0 +1,5 @@
+{
+  "backend_url": "https://finam-backend.vercel.app",
+  "google_client_id": "497828867279-aad9ud6102pi88hgbapmtb4buthm74q0.apps.googleusercontent.com",
+  "redirect_url": "http://localhost:8550/oauth_callback"
+}

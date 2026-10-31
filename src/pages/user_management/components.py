@@ -120,6 +120,98 @@ class ProfileCard(ft.Container):
         self.main_container.content.width = width
 
 
+class GoogleAccountCard(ft.Container):
+    def __init__(self, lang: dict, on_connect: Callable, on_disconnect: Callable):
+        self.lang = lang
+        self.account_status = Text.SMALL(
+            self.lang["user_management.google_not_connected"],
+            color=Color.SECONDARY_TEXT,
+        )
+        self.error_text = Text.SMALL("", color=Color.ERROR_TEXT)
+        self.connect_button = ft.TextButton(
+            content=self.lang["user_management.google_sign_in"],
+            on_click=on_connect,
+        )
+        self.disconnect_button = ft.TextButton(
+            content=self.lang["user_management.google_disconnect"],
+            on_click=on_disconnect,
+            visible=False,
+        )
+        self.main_container = ft.Column(
+            spacing=8,
+            controls=[
+                ft.Row(
+                    spacing=12,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Container(
+                            content=ft.Icon(ft.Icons.ACCOUNT_CIRCLE, color=Color.PRIMARY_ACTION, size=22),
+                            bgcolor=Color.AGGREGATE_BACKGROUND,
+                            padding=10,
+                            border_radius=14,
+                        ),
+                        ft.Column(
+                            expand=True,
+                            spacing=2,
+                            controls=[
+                                Text.MEDIUM(
+                                    self.lang["user_management.google_title"],
+                                    color=Color.PRIMARY_TEXT,
+                                    weight=ft.FontWeight.BOLD,
+                                ),
+                                self.account_status,
+                            ],
+                        ),
+                    ],
+                ),
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.END,
+                    spacing=0,
+                    controls=[self.connect_button, self.disconnect_button],
+                ),
+                self.error_text,
+            ],
+        )
+
+        super().__init__(
+            bgcolor=Color.CARD_BACKGROUND,
+            border_radius=UISettings.CARD_BORDER_RADIUS,
+            padding=UISettings.CARD_PADDING,
+            content=self.main_container,
+        )
+
+    def set_account(self, email: str | None) -> None:
+        self.account_status.value = (
+            f"{self.lang['user_management.google_connected']}: {email}"
+            if email
+            else self.lang["user_management.google_not_connected"]
+        )
+        self.disconnect_button.visible = bool(email)
+        self.error_text.value = ""
+        self._update_if_attached()
+
+    def set_busy(self, busy: bool) -> None:
+        self.connect_button.disabled = busy
+        self.disconnect_button.disabled = busy
+        self._update_if_attached()
+
+    def show_error(self, message: str) -> None:
+        self.error_text.value = message
+        self._update_if_attached()
+
+    def _update_if_attached(self) -> None:
+        try:
+            self.page
+        except RuntimeError:
+            return
+        else:
+            self.update()
+
+    def resize(self, width: int) -> None:
+        self.width = width
+        self.main_container.width = width
+
+
 class MenuItem(ft.Container):
     def __init__(self, icon, icon_color: str, icon_bg_color: str, title: str, subtitle: str, badge_text: str | None = None, badge_bg: str | None = None, badge_color: Color | None = None, trailing: ft.Control | None = None, on_click: Callable | None = None):
         # TEXT AND ICON COMPONENTS
