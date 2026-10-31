@@ -285,10 +285,6 @@ class ScannerForm(ft.Container):
         self.thinking_time.unit_dropdown.disabled = not enabled
         self.submit_btn.on_click = self._handle_scan_click if enabled else None
         self.trigger.set_enabled(enabled)
-        try:
-            self.page
-        except RuntimeError:
-            return
         self.update()
 
     def resize(self, page_width: int):
