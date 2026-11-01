@@ -2,6 +2,7 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import asyncio
 from collections.abc import Callable
 
 import flet as ft
@@ -479,6 +480,7 @@ class ScannerResult(ft.Container):
         self._page = page
         self.lang = lang
         self.currency = currency
+        self._request_generation = 0
         self.empty_message = Text.SMALL(
             self.lang["purchase_scanner.fill_info"],
             color=Color.SECONDARY_TEXT,
@@ -514,6 +516,14 @@ class ScannerResult(ft.Container):
                     )
                 ]
             )
+        )
+
+        self.troll_animation = ft.Image(
+            src="gif/the_rock.gif",
+            width=240,
+            height=240,
+            fit=ft.BoxFit.CONTAIN,
+            visible=False,
         )
 
         # Dynamic results controls
@@ -593,7 +603,12 @@ class ScannerResult(ft.Container):
 
         self.main_container = ft.Container(
             content=ft.Column(
-                controls=[self.empty_state, self.loading_container, self.result_container],
+                controls=[
+                    self.empty_state,
+                    self.loading_container,
+                    self.troll_animation,
+                    self.result_container,
+                ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER
             ),
@@ -610,17 +625,43 @@ class ScannerResult(ft.Container):
             content=self.main_container
         )
 
-    def set_loading_state(self):
+    def set_loading_state(self) -> int:
+        self._request_generation += 1
         self.empty_state.visible = False
         self.loading_container.visible = True
+        self.troll_animation.visible = False
         self.result_container.visible = False
         self.empty_message.value = self.lang["purchase_scanner.fill_info"]
         self.advice_text.value = ""
         self.interventions_col.controls.clear()
         self.update()
+        return self._request_generation
+
+    async def show_troll_result(
+        self,
+        request_generation: int,
+        risk: int | None,
+        trigger_display: str,
+        price: float,
+        item_name: str,
+        ai_advice: str,
+    ) -> None:
+        if request_generation != self._request_generation:
+            return
+        self.empty_state.visible = False
+        self.loading_container.visible = False
+        self.result_container.visible = False
+        self.troll_animation.visible = True
+        self.update()
+        await asyncio.sleep(1.5)
+        if request_generation != self._request_generation:
+            return
+        self.troll_animation.visible = False
+        self.update_result(risk, trigger_display, price, item_name, ai_advice)
 
     def show_error(self, message: str):
         self.loading_container.visible = False
+        self.troll_animation.visible = False
         self.result_container.visible = False
         self.empty_state.visible = True
         self.empty_message.value = message
@@ -629,6 +670,7 @@ class ScannerResult(ft.Container):
     def update_result(self, risk: int | None, trigger_display: str, price: float, item_name: str, ai_advice: str = ""):
         self.empty_state.visible = False
         self.loading_container.visible = False
+        self.troll_animation.visible = False
         self.result_container.visible = True
 
         if risk is None:

@@ -275,7 +275,7 @@ class PurchaseScannerView(ft.View):
             pass
 
     def handle_scan_click(self, name, price, reason, trigger, time):
-        self.result_card.set_loading_state()
+        request_generation = self.result_card.set_loading_state()
         item_name = name if name else self.lang["purchase_scanner.item"]
 
         def worker():
@@ -293,7 +293,24 @@ class PurchaseScannerView(ft.View):
                     self.controller.save_scan_result(item_name, price_val, trigger, reason, time, risk, trigger_display, ai_advice)
                     self.history_card.set_history(self.controller.get_scan_history())
 
-                self.result_card.update_result(risk, trigger_display, price_val, item_name, ai_advice)
+                if risk is None:
+                    self._page.run_task(
+                        self.result_card.show_troll_result,
+                        request_generation,
+                        risk,
+                        trigger_display,
+                        price_val,
+                        item_name,
+                        ai_advice,
+                    )
+                else:
+                    self.result_card.update_result(
+                        risk,
+                        trigger_display,
+                        price_val,
+                        item_name,
+                        ai_advice,
+                    )
 
             except ScannerApiError as ex:
                 Logger.warning(f"Purchase scanner request rejected: {ex}")
