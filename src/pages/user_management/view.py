@@ -94,7 +94,8 @@ async def complete_google_web_callback(route: str) -> bool:
     pending = _pending_web_google_auth.pop(state, None)
     if pending is None:
         Logger.warning("Google web callback has no matching pending authorization")
-        return False
+        _web_google_auth_result = "failed"
+        return True
 
     expires_at, authorization, backend_url = pending
     result = "failed"
@@ -384,9 +385,13 @@ class UserManagementView(ft.View):
         )
         self.google_account_card = GoogleAccountCard(
             lang=self.lang,
-            on_connect=self._connect_google_account,
+            on_connect=(
+                None if self._page.web else self._connect_google_account
+            ),
             on_disconnect=self._disconnect_google_account,
         )
+        if self._page.web:
+            self._prepare_web_google_authorization()
         self._refresh_google_account()
         google_auth_result = take_google_web_auth_result()
         if google_auth_result == "failed":
@@ -539,6 +544,83 @@ class UserManagementView(ft.View):
             raise ValueError("Google auth configuration must be a JSON object")
         return config
 
+    def _prepare_web_google_authorization(self) -> None:
+        try:
+            config = self._get_google_auth_config()
+            client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip() or str(
+                config.get("google_client_id", "")
+            ).strip()
+            backend_url = os.getenv("FINAM_BACKEND_URL", "").strip() or str(
+                config.get("backend_url", "")
+            ).strip()
+            backend_url = backend_url.rstrip("/")
+            redirect_url = os.getenv(
+                "GOOGLE_OAUTH_REDIRECT_URL", ""
+            ).strip() or str(config.get("redirect_url", "")).strip()
+            if not client_id or not backend_url or not redirect_url:
+                raise ValueError(
+                    "Google client, backend, and redirect URLs are required"
+                )
+
+            redirect = urlparse(redirect_url)
+            app_origin = urlparse(self._page.url or "")
+            if (
+                redirect.scheme not in ("http", "https")
+                or not redirect.hostname
+                or redirect.path != "/oauth_callback"
+                or (redirect.scheme, redirect.netloc)
+                != (app_origin.scheme, app_origin.netloc)
+            ):
+                raise ValueError(
+                    "Web sign-in requires an /oauth_callback URL on this app's origin"
+                )
+
+            verifier = secrets.token_urlsafe(64)
+            challenge = base64.urlsafe_b64encode(
+                hashlib.sha256(verifier.encode("ascii")).digest()
+            ).rstrip(b"=").decode("ascii")
+            provider = GoogleOAuthProvider(
+                client_id=client_id,
+                client_secret="",
+                redirect_url=redirect_url,
+            )
+            provider.token_endpoint = f"{backend_url}/api/v1/auth/google/token"
+            provider.scopes = ["openid", "email"]
+            provider.code_challenge = challenge
+            provider.code_challenge_method = "S256"
+            provider.code_verifier = verifier
+            provider.authorization_params["prompt"] = "select_account"
+            authorization = AuthorizationService(
+                provider,
+                fetch_user=False,
+                fetch_groups=False,
+            )
+            authorization_url, state = authorization.get_authorization_data()
+
+            now = time.monotonic()
+            for pending_state, pending in list(_pending_web_google_auth.items()):
+                if pending[0] < now:
+                    _pending_web_google_auth.pop(pending_state, None)
+            _pending_web_google_auth[state] = (
+                now + 300,
+                authorization,
+                backend_url,
+            )
+            self.google_account_card.connect_button.action = ft.OpenUrl(
+                authorization_url,
+                target=ft.UrlTarget.BLANK,
+            )
+        except (
+            FileNotFoundError,
+            json.JSONDecodeError,
+            RuntimeError,
+            ValueError,
+        ) as ex:
+            Logger.warning(f"Could not prepare Google web authorization: {ex}")
+            self.google_account_card.show_error(
+                self.lang["user_management.google_not_configured"]
+            )
+
     async def _connect_google_account(self, e=None) -> None:
         try:
             config = self._get_google_auth_config()
@@ -639,14 +721,18 @@ class UserManagementView(ft.View):
                     authorization,
                     backend_url,
                 )
+                self.google_account_card.set_busy(False)
+                self._page.update()
                 try:
                     await ft.UrlLauncher().launch_url(
                         authorization_url,
-                        web_only_window_name="_self",
+                        web_only_window_name="_blank",
                     )
                 except Exception:
                     _pending_web_google_auth.pop(state, None)
                     raise
+                finally:
+                    self.google_account_card.set_busy(False)
                 return
 
             if is_mobile:

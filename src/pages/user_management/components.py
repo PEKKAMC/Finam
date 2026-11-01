@@ -121,7 +121,12 @@ class ProfileCard(ft.Container):
 
 
 class GoogleAccountCard(ft.Container):
-    def __init__(self, lang: dict, on_connect: Callable, on_disconnect: Callable):
+    def __init__(
+        self,
+        lang: dict,
+        on_connect: Callable,
+        on_disconnect: Callable,
+    ):
         self.lang = lang
         self.account_status = Text.SMALL(
             self.lang["user_management.google_not_connected"],
@@ -191,7 +196,6 @@ class GoogleAccountCard(ft.Container):
         self._update_if_attached()
 
     def set_busy(self, busy: bool) -> None:
-        self.connect_button.disabled = busy
         self.disconnect_button.disabled = busy
         self._update_if_attached()
 
