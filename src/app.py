@@ -192,7 +192,11 @@ async def main(page: Page) -> None:
                 Logger.info("Page not found")
 
             current_username = info.get("username", "")
-            current_language_code = db.users.get_language(current_username) if current_username else DefaultSettings.LANGUAGE
+            current_language_code = (
+                db.users.get_language(current_username)
+                if current_username
+                else db.app_settings.get_starter_language()
+            )
             current_currency = db.users.get_currency(current_username) if current_username else DefaultSettings.CURRENCY
             current_theme = db.app_settings.get_theme()
             current_digit_separator = db.app_settings.get_digit_separator()

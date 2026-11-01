@@ -522,6 +522,10 @@ class UserManagementView(ft.View):
 
     async def logout(self, e=None) -> None:
         try:
+            language = db.users.get_language(self.user_info["username"])
+            if not db.app_settings.set_starter_language(language):
+                Logger.error("Failed to persist starter language on logout")
+                return
             self._page.logout()
             self.user_info["username"] = ""
             self._page.skip_app_lock_once = True

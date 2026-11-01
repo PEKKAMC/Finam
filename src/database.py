@@ -122,12 +122,18 @@ class DatabaseConnection:
                     theme TEXT NOT NULL DEFAULT 'light',
                     digit_separator TEXT NOT NULL DEFAULT '{DefaultSettings.DIGIT_SEPARATOR}',
                     decimal_separator TEXT NOT NULL DEFAULT '.',
+                    starter_language TEXT,
                     google_uid TEXT,
                     google_email TEXT,
                     google_refresh_token TEXT
                 )
             ''')
-            for column in ("google_uid", "google_email", "google_refresh_token"):
+            for column in (
+                "starter_language",
+                "google_uid",
+                "google_email",
+                "google_refresh_token",
+            ):
                 try:
                     self.execute(
                         f"ALTER TABLE app_settings ADD COLUMN {column} TEXT"
@@ -474,6 +480,44 @@ class AppSettingsDatabase:
 
     def __init__(self, connection: DatabaseConnection):
         self.db = connection
+
+    def get_starter_language(self) -> str:
+        result = self.db.execute(
+            "SELECT starter_language FROM app_settings WHERE id = 1",
+            fetch_one=True,
+        )
+        if result and result[0]:
+            return result[0]
+
+        first_user_language = self.db.execute(
+            """
+            SELECT s.language
+            FROM users u
+            LEFT JOIN user_settings s ON s.user_id = u.id
+            ORDER BY u.id
+            LIMIT 1
+            """,
+            fetch_one=True,
+        )
+        return (
+            first_user_language[0]
+            if first_user_language and first_user_language[0]
+            else DefaultSettings.LANGUAGE
+        )
+
+    def set_starter_language(self, language: str) -> bool:
+        if not language:
+            Logger.error("Cannot save an empty starter language")
+            return False
+        try:
+            self.db.execute(
+                "UPDATE app_settings SET starter_language = ? WHERE id = 1",
+                (language,),
+            )
+            return True
+        except sqlite3.Error as ex:
+            Logger.error(f"Failed to set starter language: {ex}")
+            return False
 
     def get_google_account(self) -> Optional[Dict[str, str]]:
         result = self.db.execute(

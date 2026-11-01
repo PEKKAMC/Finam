@@ -437,7 +437,12 @@ class SettingsView(ft.View):
         if not db.app_settings.set_decimal_separator(selected_decimal_separator):
             Logger.error("Failed to save decimal separator setting")
             return
-        db.users.set_language(username, selected_language_code)
+        if not db.users.set_language(username, selected_language_code):
+            Logger.error("Failed to save user language setting")
+            return
+        if not db.app_settings.set_starter_language(selected_language_code):
+            Logger.error("Failed to save starter language setting")
+            return
         db.users.set_currency(username, selected_currency)
 
         ThemeManager.set_theme(selected_theme)

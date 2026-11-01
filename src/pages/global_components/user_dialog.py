@@ -238,7 +238,8 @@ class AddUserField(ft.Container):
             text_size=13,
             content_padding=12,
             filled=True,
-            width=120,
+            width=175,
+            menu_height=240
         )
 
         self.error_message = Text.SMALL("", color=Color.ERROR_TEXT)
@@ -247,7 +248,7 @@ class AddUserField(ft.Container):
                 spacing=6,
                 controls=[
                     ft.Icon(ft.Icons.ADD, color=Color.LIGHT_ACCENT, size=16),
-                    Text.MEDIUM(self.lang["user_management.create_btn"], color=Color.DEFAULT_BUTTON, weight=ft.FontWeight.BOLD)
+                    Text.MEDIUM(self.lang["user_management.create_btn"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
                 ],
                 tight=True
             ),
