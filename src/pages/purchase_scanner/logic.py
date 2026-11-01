@@ -8,6 +8,10 @@ from src.database import db
 from src.logger import Logger
 
 BACKEND_URL = "https://finam-backend.vercel.app/"
+NON_PURCHASABLE_ADVICE = {
+    "en": "Please enter a real purchasable item so I can provide accurate financial advice.",
+    "vi": "Hãy nhập tên một món hàng thực tế để mình có thể tư vấn tài chính chính xác nhé!",
+}
 
 
 class ScannerApiError(RuntimeError):
@@ -41,6 +45,7 @@ class LogicController:
             "emotion": "cảm xúc nhất thời",
         }
         trigger_display = trigger_texts.get(trigger, "yếu tố bên ngoài")
+        language = db.users.get_language(self.current_user)
 
         try:
             base_url = BACKEND_URL.rstrip("/")
@@ -56,6 +61,7 @@ class LogicController:
                 "category": trigger_display,
                 "monthly_budget_remaining": 5000000.0,
                 "user_notes": f"Lý do: {reason or 'Không có'}. Thời gian suy nghĩ: {time}.",
+                "language": language,
             }
             headers = {
                 "Content-Type": "application/json",
@@ -80,7 +86,10 @@ class LogicController:
             ) from ex
 
         if risk is None:
-            ai_advice = ai_advice or "Đầu vào bị đánh dấu là nội dung troll hoặc không hợp lệ để phân tích."
+            ai_advice = ai_advice or NON_PURCHASABLE_ADVICE.get(
+                language,
+                NON_PURCHASABLE_ADVICE["vi"],
+            )
 
         return risk, trigger_display, price, ai_advice
 
