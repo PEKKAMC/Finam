@@ -22,6 +22,5 @@ class UISettings:
     METRIC_PILL_BORDER_RADIUS: int = 16
     METRIC_PILL_PADDING: int = 8
     TOP_NAVIGATION_HEIGHT: int = 50
-    MENU_HEIGHT: int = 72
     SHADOW_BLUR: int = 10
     SHADOW_SPREAD: int = 1

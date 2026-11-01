@@ -99,7 +99,7 @@ class HomeView(ft.View):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=UISettings.MENU_HEIGHT)
+            margin=ft.Margin(bottom=0)
         )
 
         super().__init__(
@@ -168,6 +168,8 @@ class HomeView(ft.View):
             # Get component size values
             inner_width = page_width - (UISettings.CARD_PADDING * 2)
             savings_inner_width = max(0, inner_width)
+            menu_item_size = page_width // self.menu.items_count
+            menu_inside_size = menu_item_size // 6 * 5
             chart_radius = int(page_height * 0.06)
             center_radius = int(page_height * 0.045)
             legend_height = int(page_height * 0.15)
@@ -175,10 +177,13 @@ class HomeView(ft.View):
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            self.main_container.margin.bottom = menu_item_size
 
             # Resizing other components
             self.menu.resize(
-                width=page_width
+                width=page_width,
+                item_size=menu_item_size,
+                inside_size=menu_inside_size,
             )
 
             self.balance_card.resize(

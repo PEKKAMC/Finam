@@ -183,7 +183,7 @@ class SavingsView(ft.View):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=UISettings.MENU_HEIGHT)
+            margin=ft.Margin(bottom=0)
         )
 
         super().__init__(
@@ -275,14 +275,19 @@ class SavingsView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
+            menu_item_size = page_width // self.menu.items_count
+            menu_inside_size = menu_item_size // 6 * 5
 
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            self.main_container.margin.bottom = menu_item_size
 
             # Resizing other components
             self.menu.resize(
-                width=page_width
+                width=page_width,
+                item_size=menu_item_size,
+                inside_size=menu_inside_size,
             )
 
             self.summary_banner.resize(

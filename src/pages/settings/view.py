@@ -291,7 +291,7 @@ class SettingsView(ft.View):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=UISettings.MENU_HEIGHT)
+            margin=ft.Margin(bottom=0)
         )
 
         super().__init__(

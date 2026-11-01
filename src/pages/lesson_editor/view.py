@@ -81,7 +81,7 @@ class LessonEditorView(ft.View):
             content=ft.Column(scroll=ft.ScrollMode.AUTO, controls=[page_content]),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=UISettings.MENU_HEIGHT)
+            margin=ft.Margin(bottom=0)
         )
 
         super().__init__(

@@ -102,10 +102,7 @@ class Menu(ft.Container):
             case _:
                 return ""
 
-    def resize(self, width: int) -> None:
-        item_size = width // self.items_count
-        inside_size = item_size // 6 * 5
-
+    def resize(self, width: int, item_size: int, inside_size: int) -> None:
         self.main_container.width = width
         self.main_container.height = item_size
 
