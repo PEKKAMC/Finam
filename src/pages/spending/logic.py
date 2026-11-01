@@ -5,7 +5,7 @@
 from src.database import db
 from src.logger import Logger
 from src.pages.global_components.financial_chart import get_financial_chart_data
-from src.utils import format_number
+from src.utils import Data, format_number
 
 
 class LogicController:
@@ -13,6 +13,19 @@ class LogicController:
 
     def __init__(self, current_user: str):
         self.current_user = current_user
+        self.data = Data()
+
+    def get_category_icon_map(self) -> dict[str, str]:
+        categories = (
+            self.data.default_expense_categories
+            + self.data.default_income_categories
+            + db.categories.get_custom_categories(self.current_user, "expense")
+            + db.categories.get_custom_categories(self.current_user, "income")
+        )
+        return {
+            category["name"]: category["icon"]
+            for category in categories
+        }
 
     def get_transaction_data(self) -> tuple[dict, dict]:
         expenses = db.spending.get_user_expenses(self.current_user) or []

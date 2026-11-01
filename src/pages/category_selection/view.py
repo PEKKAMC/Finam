@@ -2,22 +2,19 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-from typing import TypedDict
-
 import flet as ft
 
 from src.logger import Logger
-from src.pages.category_selection.components import CategoryItem
+from src.pages.category_selection.components import (
+    CategoryEditorDialog,
+    CategoryItem,
+    DeleteCategoryDialog,
+)
 from src.pages.category_selection.logic import LogicController
 from src.pages.global_components import KeyboardContainer
 from src.utils import Color, Page, Text, UISettings, get_safe_page_size
 
 Logger.info("Initializing Category Selection page...")
-
-
-class _Category(TypedDict):
-    name: str
-    icon: ft.IconData
 
 
 class CategorySelectionView(ft.View):
@@ -38,8 +35,16 @@ class CategorySelectionView(ft.View):
             on_click=self._on_cancel_clicked
         )
 
-        self.expense_text = Text.P(self.lang["generic.expense"], color=Color.NAVIGATION_ACTIVE_TEXT, weight=ft.FontWeight.BOLD)
-        self.income_text = Text.P(self.lang["generic.income"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.NORMAL)
+        self.expense_text = Text.P(
+            self.lang["generic.expense"],
+            color=Color.NAVIGATION_ACTIVE_TEXT,
+            weight=ft.FontWeight.BOLD,
+        )
+        self.income_text = Text.P(
+            self.lang["generic.income"],
+            color=Color.DEFAULT_TEXT,
+            weight=ft.FontWeight.NORMAL,
+        )
 
         self.expense_button = ft.Container(
             content=self.expense_text,
@@ -87,7 +92,18 @@ class CategorySelectionView(ft.View):
             on_save=self._on_save_clicked,
         )
         self.keyboard_container.bottom = None
-
+        self.category_editor = CategoryEditorDialog(
+            self._page,
+            self.lang,
+            self.controller.data.category_icons,
+            self._save_custom_category,
+            self._confirm_delete_category,
+        )
+        self.delete_category_dialog = DeleteCategoryDialog(
+            self._page,
+            self.lang,
+            self._delete_custom_category,
+        )
         self.load_categories("expense")
 
         self.main_container = ft.Container(
@@ -149,7 +165,7 @@ class CategorySelectionView(ft.View):
 
     def load_categories(self, category_type: str) -> None:
         if category_type == "expense":
-            self.expense_button.bgcolor = Color.NAVIGATION_ACTIVE_BACKGROUND
+            self.expense_button.bgcolor = Color.EXPENSE_BACKGROUND
             self.expense_text.color = Color.NAVIGATION_ACTIVE_TEXT
             self.expense_text.weight = ft.FontWeight.BOLD
 
@@ -157,7 +173,7 @@ class CategorySelectionView(ft.View):
             self.income_text.color = Color.DEFAULT_TEXT
             self.income_text.weight = ft.FontWeight.NORMAL
         elif category_type == "income":
-            self.income_button.bgcolor = Color.NAVIGATION_ACTIVE_BACKGROUND
+            self.income_button.bgcolor = Color.INCOME_BACKGROUND
             self.income_text.color = Color.NAVIGATION_ACTIVE_TEXT
             self.income_text.weight = ft.FontWeight.BOLD
 
@@ -165,80 +181,67 @@ class CategorySelectionView(ft.View):
             self.expense_text.color = Color.DEFAULT_TEXT
             self.expense_text.weight = ft.FontWeight.NORMAL
 
-        categories: list[list[_Category]] = []
-
-        match category_type:
-            case "expense":
-                categories = [
-                    [
-                        {"name": "Mua sắm", "icon": ft.Icons.SHOPPING_CART},
-                        {"name": "Đồ ăn", "icon": ft.Icons.RESTAURANT},
-                        {"name": "Điện thoại", "icon": ft.Icons.SMARTPHONE},
-                        {"name": "Giải trí", "icon": ft.Icons.SPORTS_ESPORTS}
-                    ],
-                    [
-                        {"name": "Giáo dục", "icon": ft.Icons.SCHOOL},
-                        {"name": "Làm đẹp", "icon": ft.Icons.CONTENT_CUT},
-                        {"name": "Thể thao", "icon": ft.Icons.DIRECTIONS_RUN},
-                        {"name": "Giao lưu", "icon": ft.Icons.PEOPLE}
-                    ],
-                    [
-                        {"name": "Đi lại", "icon": ft.Icons.DIRECTIONS_BUS},
-                        {"name": "Quần áo", "icon": ft.Icons.CHECKROOM},
-                        {"name": "Ô tô", "icon": ft.Icons.DIRECTIONS_CAR},
-                        {"name": "Thiết bị điện tử", "icon": ft.Icons.COMPUTER}
-                    ],
-                    [
-                        {"name": "Du lịch", "icon": ft.Icons.FLIGHT},
-                        {"name": "Sức khỏe", "icon": ft.Icons.FAVORITE},
-                        {"name": "Thú cưng", "icon": ft.Icons.PETS},
-                        {"name": "Sửa chữa", "icon": ft.Icons.BUILD}
-                    ],
-                    [
-                        {"name": "Nhà ở", "icon": ft.Icons.HOME},
-                        {"name": "Nhà", "icon": ft.Icons.CHAIR},
-                        {"name": "Quà tặng", "icon": ft.Icons.CARD_GIFTCARD},
-                        {"name": "Quyên góp", "icon": ft.Icons.VOLUNTEER_ACTIVISM}
-                    ],
-                    [
-                        {"name": "Vé số", "icon": ft.Icons.CASINO},
-                        {"name": "Ăn vặt", "icon": ft.Icons.BAKERY_DINING},
-                        {"name": "Trẻ em", "icon": ft.Icons.CHILD_CARE},
-                        {"name": "Rau quả", "icon": ft.Icons.LOCAL_FLORIST}
-                    ],
-                    [
-                        {"name": "Hoa quả", "icon": ft.Icons.APPLE},
-                        {"name": "Thêm", "icon": ft.Icons.ADD}
-                    ]
-                ]
-            case "income":
-                categories = [
-                    [
-                        {"name": "Lương", "icon": ft.Icons.WORK},
-                        {"name": "Khoản đầu tư", "icon": ft.Icons.TRENDING_UP},
-                        {"name": "Làm thêm", "icon": ft.Icons.MONEY},
-                        {"name": "Tiền thưởng", "icon": ft.Icons.EMOJI_EVENTS}
-                    ],
-                    [
-                        {"name": "Khác", "icon": ft.Icons.MONETIZATION_ON},
-                        {"name": "Thêm", "icon": ft.Icons.ADD}
-                    ]
-                ]
-
         self.category_list.controls.clear()
         self.category_items.clear()
-        for row in categories:
+        categories = self.controller.get_default_categories(
+            category_type
+        ) + self.controller.get_custom_categories(category_type)
+        grid_items = [
+            (
+                category,
+                "id" in category,
+                False,
+            )
+            for category in categories
+        ]
+        grid_items.append(
+            (
+                {
+                    "name": self.lang["category_selection.add_category"],
+                    "icon": "ADD",
+                },
+                False,
+                True,
+            )
+        )
+        for start in range(0, len(grid_items), 4):
             category_row = ft.Row(vertical_alignment=ft.CrossAxisAlignment.CENTER)
-            for category in row:
+            for category, is_custom, is_add_action in grid_items[start : start + 4]:
+                icon_name = category["icon"]
                 item = CategoryItem(
                     page=self._page,
                     lang=self.lang,
                     name=category["name"],
-                    icon=category["icon"],
-                    on_click=self._create_category_handler(category["name"]),
-                    is_selected=False
+                    icon=getattr(ft.Icons, icon_name),
+                    on_click=(
+                        self._open_add_category
+                        if is_add_action
+                        else self._create_category_handler(category["name"])
+                    ),
+                    is_selected=(
+                        not is_add_action
+                        and category["name"] == self.selected_category
+                    ),
+                    icon_color=(
+                        Color.EXPENSE_COLOR
+                        if category_type == "expense"
+                        else Color.INCOME_COLOR
+                    ),
+                    selected_background_color=(
+                        Color.EXPENSE_BACKGROUND
+                        if category_type == "expense"
+                        else Color.INCOME_BACKGROUND
+                    ),
+                    on_edit=(
+                        lambda e, custom_category=category: self._edit_custom_category(
+                            custom_category
+                        )
+                    )
+                    if is_custom
+                    else None,
                 )
-                self.category_items.append(item)
+                if not is_add_action:
+                    self.category_items.append(item)
                 category_row.controls.append(item)
 
             while len(category_row.controls) < 4:
@@ -250,6 +253,64 @@ class CategorySelectionView(ft.View):
         def handler(e=None) -> None:
             self.set_category(name)
         return handler
+
+    def _open_add_category(self, e=None) -> None:
+        self.category_editor.show_editor()
+
+    def _edit_custom_category(self, category: dict) -> None:
+        self.category_editor.show_editor(category)
+
+    def _save_custom_category(
+        self, name: str, icon_name: str, category_id: int | None
+    ) -> str | None:
+        success, code = self.controller.save_custom_category(
+            self.current_type,
+            name,
+            icon_name,
+            category_id,
+        )
+        if not success:
+            error_keys = {
+                "INVALID_NAME": "category_selection.category_name_invalid",
+                "INVALID_ICON": "category_selection.category_icon_invalid",
+                "DUPLICATE_NAME": "category_selection.category_name_exists",
+                "SAVE_FAILED": "category_selection.category_save_error",
+            }
+            return error_keys.get(code, "category_selection.category_save_error")
+
+        if (
+            category_id is not None
+            and self.selected_category == self.category_editor.original_name
+        ):
+            self.selected_category = name.strip()
+        self.load_categories(self.current_type)
+        self.update()
+        return None
+
+    def _confirm_delete_category(self, category: dict) -> None:
+        transaction_count = self.controller.get_category_transaction_count(
+            self.current_type,
+            category["name"],
+        )
+        self.delete_category_dialog.show_confirmation(
+            category, transaction_count
+        )
+
+    def _delete_custom_category(self, category_id: int) -> bool:
+        category = self.delete_category_dialog.category
+        success = self.controller.delete_custom_category(
+            category_id,
+            self.current_type,
+        )
+        if not success:
+            return False
+        if category and self.selected_category == category["name"]:
+            self.selected_category = ""
+            self.keyboard_container.visible = False
+            self.keyboard_container.reset_inputs()
+        self.load_categories(self.current_type)
+        self.update()
+        return True
 
     def set_category(self, category_name: str):
         self.selected_category = category_name

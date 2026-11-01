@@ -42,6 +42,7 @@ class SpendingView(ft.View):
         filtered_txs = self.controller.filter_transactions(
             self.raw_transactions, self.filter_type, self.sort_by, self.search_query
         )
+        self.category_icons = self.controller.get_category_icon_map()
 
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(self._page, self.lang, self.user_info)
@@ -84,6 +85,7 @@ class SpendingView(ft.View):
             lang=self.lang,
             transactions=filtered_txs,
             on_delete=self.delete_dialog.trigger,
+            category_icons=self.category_icons,
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -145,6 +147,7 @@ class SpendingView(ft.View):
                 target_year = None
 
             balance_data, self.raw_transactions = self.controller.get_transaction_data()
+            self.category_icons = self.controller.get_category_icon_map()
 
             self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data(
                 self.current_chart_type,
@@ -168,7 +171,7 @@ class SpendingView(ft.View):
                 sort_by=self.sort_by
             )
 
-            self.history_card.update_data(filtered_txs)
+            self.history_card.update_data(filtered_txs, self.category_icons)
 
             self.financial_chart.update_data()
             self._page.update()

@@ -269,6 +269,17 @@ class DatabaseConnection:
                 )
             ''')
             self.execute('''
+                CREATE TABLE IF NOT EXISTS custom_categories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    category_type TEXT NOT NULL CHECK (category_type IN ('expense', 'income')),
+                    name TEXT NOT NULL,
+                    icon_name TEXT NOT NULL,
+                    UNIQUE (user_id, category_type, name),
+                    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+                )
+            ''')
+            self.execute('''
                 CREATE TABLE IF NOT EXISTS purchase_scan_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -938,6 +949,136 @@ class SpendingDatabase:
             Logger.error(f"Error deleting entry {entry_id} for user {username}: {ex}")
             return False
 
+
+class CategoryDatabase:
+    """Stores user-specific category definitions and migrates transaction names."""
+
+    def __init__(self, connection: DatabaseConnection, user_db: UserDatabase):
+        self.db = connection
+        self.user_db = user_db
+
+    def get_custom_categories(
+        self, username: str, category_type: str
+    ) -> list[dict]:
+        rows = self.db.execute(
+            """
+            SELECT c.id, c.name, c.icon_name
+            FROM custom_categories c
+            JOIN users u ON u.id = c.user_id
+            WHERE u.name = ? AND c.category_type = ?
+            ORDER BY c.name COLLATE NOCASE
+            """,
+            (username, category_type),
+            fetch_all=True,
+        )
+        return [
+            {"id": row[0], "name": row[1], "icon": row[2]}
+            for row in rows
+        ]
+
+    def add_custom_category(
+        self, username: str, category_type: str, name: str, icon_name: str
+    ) -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return False
+        try:
+            self.db.execute(
+                """
+                INSERT INTO custom_categories
+                    (user_id, category_type, name, icon_name)
+                VALUES (?, ?, ?, ?)
+                """,
+                (user_id, category_type, name, icon_name),
+            )
+            return True
+        except sqlite3.IntegrityError:
+            return False
+        except sqlite3.Error as ex:
+            Logger.error(f"Error adding custom category for {username}: {ex}")
+            return False
+
+    def update_custom_category(
+        self,
+        username: str,
+        category_id: int,
+        category_type: str,
+        name: str,
+        icon_name: str,
+    ) -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return False
+        try:
+            with sqlite3.connect(self.db.database_name) as connection:
+                connection.execute("PRAGMA foreign_keys = ON")
+                row = connection.execute(
+                    """
+                    SELECT name FROM custom_categories
+                    WHERE id = ? AND user_id = ? AND category_type = ?
+                    """,
+                    (category_id, user_id, category_type),
+                ).fetchone()
+                if row is None:
+                    return False
+
+                old_name = row[0]
+                if old_name != name:
+                    table = "expenses" if category_type == "expense" else "incomes"
+                    connection.execute(
+                        f"UPDATE {table} SET category = ? "
+                        "WHERE user_id = ? AND category = ?",
+                        (name, user_id, old_name),
+                    )
+                connection.execute(
+                    """
+                    UPDATE custom_categories
+                    SET name = ?, icon_name = ?
+                    WHERE id = ? AND user_id = ? AND category_type = ?
+                    """,
+                    (name, icon_name, category_id, user_id, category_type),
+                )
+                return True
+        except sqlite3.IntegrityError:
+            return False
+        except sqlite3.Error as ex:
+            Logger.error(f"Error updating custom category for {username}: {ex}")
+            return False
+
+    def get_category_transaction_count(
+        self, username: str, category_type: str, category_name: str
+    ) -> int:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return 0
+        table = "expenses" if category_type == "expense" else "incomes"
+        result = self.db.execute(
+            f"SELECT COUNT(*) FROM {table} WHERE user_id = ? AND category = ?",
+            (user_id, category_name),
+            fetch_one=True,
+        )
+        return int(result[0]) if result else 0
+
+    def delete_custom_category(
+        self, username: str, category_id: int, category_type: str
+    ) -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return False
+        try:
+            with sqlite3.connect(self.db.database_name) as connection:
+                cursor = connection.execute(
+                    """
+                    DELETE FROM custom_categories
+                    WHERE id = ? AND user_id = ? AND category_type = ?
+                    """,
+                    (category_id, user_id, category_type),
+                )
+                return cursor.rowcount > 0
+        except sqlite3.Error as ex:
+            Logger.error(f"Error deleting custom category for {username}: {ex}")
+            return False
+
 # ==========================================
 # PURCHASE SCANNER LOGIC
 # ==========================================
@@ -1030,6 +1171,7 @@ class DatabaseManager:
         self.app_security = AppSecurityDatabase(self.connection)
         self.savings = SavingsDatabase(self.connection, self.users)
         self.spending = SpendingDatabase(self.connection, self.users)
+        self.categories = CategoryDatabase(self.connection, self.users)
         self.scanner_history = PurchaseScannerDatabase(self.connection, self.users)
 
     def initialize_database(self) -> None:

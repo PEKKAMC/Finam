@@ -40,7 +40,7 @@ class MetricCards(ft.ResponsiveRow):
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=20,
-            border=ft.Border.only(left=ft.BorderSide(4, Color.INCOME_COLOR)),
+            border=ft.Border.only(left=ft.BorderSide(4, Color.INCOME_BACKGROUND)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -67,7 +67,7 @@ class MetricCards(ft.ResponsiveRow):
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=20,
-            border=ft.Border.only(left=ft.BorderSide(4, Color.EXPENSE_COLOR)),
+            border=ft.Border.only(left=ft.BorderSide(4, Color.EXPENSE_BACKGROUND)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -319,11 +319,19 @@ class TransactionToolbar(ft.Container):
 
 class TransactionHistoryCard(ft.Container):
     """Transaction History Container matching HomeView component style."""
-    def __init__(self, page: Page, lang: dict, transactions: list, on_delete: Callable):
+    def __init__(
+        self,
+        page: Page,
+        lang: dict,
+        transactions: list,
+        on_delete: Callable,
+        category_icons: dict[str, str] | None = None,
+    ):
         self._page = page
         self.lang = lang
         self.transactions = transactions
         self.on_delete = on_delete
+        self.category_icons = category_icons or {}
         self.is_expanded = True
 
         self.history_column = ft.Column(spacing=12, controls=[])
@@ -366,6 +374,7 @@ class TransactionHistoryCard(ft.Container):
                         lang=self.lang,
                         tx=tx,
                         on_delete=self.on_delete,
+                        category_icons=self.category_icons,
                     )
                 )
         else:
@@ -399,8 +408,14 @@ class TransactionHistoryCard(ft.Container):
         if self._page is not None:
             self._page.update()
 
-    def update_data(self, transactions: list):
+    def update_data(
+        self,
+        transactions: list,
+        category_icons: dict[str, str] | None = None,
+    ):
         self.transactions = transactions
+        if category_icons is not None:
+            self.category_icons = category_icons
         self._render_controls()
         if self.page:
             self.update()
@@ -411,7 +426,14 @@ class TransactionHistoryCard(ft.Container):
 
 
 class TransactionItemCard(ft.Container):
-    def __init__(self, page: Page, lang: dict, tx: dict, on_delete: Callable | None = None):
+    def __init__(
+        self,
+        page: Page,
+        lang: dict,
+        tx: dict,
+        on_delete: Callable | None = None,
+        category_icons: dict[str, str] | None = None,
+    ):
         self._page = page
         self.lang = lang
         self.tx = tx
@@ -421,7 +443,12 @@ class TransactionItemCard(ft.Container):
         amount_color = Color.INCOME_COLOR if is_income else Color.EXPENSE_COLOR
         icon_bg = Color.INCOME_BACKGROUND if is_income else Color.EXPENSE_BACKGROUND
         icon_color = amount_color
-        icon = ft.Icons.NORTH_EAST if is_income else ft.Icons.SOUTH_EAST
+        icon_name = (category_icons or {}).get(self.tx["title"])
+        icon = (
+            getattr(ft.Icons, icon_name)
+            if icon_name and hasattr(ft.Icons, icon_name)
+            else ft.Icons.NORTH_EAST if is_income else ft.Icons.SOUTH_EAST
+        )
 
         # TEXT AND ICON COMPONENTS
         self.type_badge_text = Text.SMALL(self.lang["spending.income"] if is_income else self.lang["spending.expense"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)

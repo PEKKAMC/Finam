@@ -117,14 +117,9 @@ class KeyboardContainer(ft.Container):
                 spacing=8,
                 controls=[
                     ft.Row(
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        alignment=ft.MainAxisAlignment.END,
                         controls=[
-                            ft.IconButton(
-                                icon=ft.Icons.CREDIT_CARD,
-                                icon_color=Color.PRIMARY,
-                                icon_size=20,
-                            ),
-                            self.amount_display,
+                            self.amount_display
                         ],
                     ),
                     ft.Container(
