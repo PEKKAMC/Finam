@@ -24,15 +24,7 @@ class LogicController:
     def get_currency(self) -> str:
         return db.users.get_currency(self.current_user)
 
-    def analyze_purchase(
-        self,
-        name: str,
-        price: str,
-        reason: str,
-        trigger: str,
-        time: str,
-        refresh_token: str,
-    ):
+    def analyze_purchase(self, name: str, price: str, reason: str, trigger: str, time: str, refresh_token: str):
         if not refresh_token:
             raise ScannerApiError(401, "Google sign-in is required.")
 

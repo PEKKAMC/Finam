@@ -260,15 +260,8 @@ class CategorySelectionView(ft.View):
     def _edit_custom_category(self, category: dict) -> None:
         self.category_editor.show_editor(category)
 
-    def _save_custom_category(
-        self, name: str, icon_name: str, category_id: int | None
-    ) -> str | None:
-        success, code = self.controller.save_custom_category(
-            self.current_type,
-            name,
-            icon_name,
-            category_id,
-        )
+    def _save_custom_category(self, name: str, icon_name: str, category_id: int | None) -> str | None:
+        success, code = self.controller.save_custom_category(self.current_type, name, icon_name, category_id)
         if not success:
             error_keys = {
                 "INVALID_NAME": "category_selection.category_name_invalid",

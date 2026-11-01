@@ -490,9 +490,7 @@ class AppSettingsDatabase:
             and self.get_google_refresh_token() is not None
         )
 
-    def set_google_account(
-        self, google_uid: str, email: str, refresh_token: str
-    ) -> bool:
+    def set_google_account(self, google_uid: str, email: str, refresh_token: str) -> bool:
         if not google_uid or not email or not refresh_token:
             return False
         try:
@@ -957,9 +955,7 @@ class CategoryDatabase:
         self.db = connection
         self.user_db = user_db
 
-    def get_custom_categories(
-        self, username: str, category_type: str
-    ) -> list[dict]:
+    def get_custom_categories(self, username: str, category_type: str) -> list[dict]:
         rows = self.db.execute(
             """
             SELECT c.id, c.name, c.icon_name
@@ -976,9 +972,7 @@ class CategoryDatabase:
             for row in rows
         ]
 
-    def add_custom_category(
-        self, username: str, category_type: str, name: str, icon_name: str
-    ) -> bool:
+    def add_custom_category(self, username: str, category_type: str, name: str, icon_name: str) -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id:
             return False
@@ -998,14 +992,7 @@ class CategoryDatabase:
             Logger.error(f"Error adding custom category for {username}: {ex}")
             return False
 
-    def update_custom_category(
-        self,
-        username: str,
-        category_id: int,
-        category_type: str,
-        name: str,
-        icon_name: str,
-    ) -> bool:
+    def update_custom_category(self, username: str, category_id: int, category_type: str, name: str, icon_name: str) -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id:
             return False
@@ -1045,9 +1032,7 @@ class CategoryDatabase:
             Logger.error(f"Error updating custom category for {username}: {ex}")
             return False
 
-    def get_category_transaction_count(
-        self, username: str, category_type: str, category_name: str
-    ) -> int:
+    def get_category_transaction_count(self, username: str, category_type: str, category_name: str) -> int:
         user_id = self.user_db.get_user_id(username)
         if not user_id:
             return 0
@@ -1059,9 +1044,7 @@ class CategoryDatabase:
         )
         return int(result[0]) if result else 0
 
-    def delete_custom_category(
-        self, username: str, category_id: int, category_type: str
-    ) -> bool:
+    def delete_custom_category(self, username: str, category_id: int, category_type: str) -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id:
             return False

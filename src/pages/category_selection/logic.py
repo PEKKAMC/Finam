@@ -20,13 +20,7 @@ class LogicController:
     def get_custom_categories(self, category_type: str) -> list[dict]:
         return db.categories.get_custom_categories(self.current_user, category_type)
 
-    def save_custom_category(
-        self,
-        category_type: str,
-        name: str,
-        icon_name: str,
-        category_id: int | None = None,
-    ) -> tuple[bool, str]:
+    def save_custom_category(self, category_type: str, name: str, icon_name: str, category_id: int | None = None) -> tuple[bool, str]:
         name = name.strip()
         if not name or len(name) > 40:
             return False, "INVALID_NAME"
@@ -62,19 +56,11 @@ class LogicController:
             )
         return (True, "") if saved else (False, "SAVE_FAILED")
 
-    def get_category_transaction_count(
-        self, category_type: str, name: str
-    ) -> int:
-        return db.categories.get_category_transaction_count(
-            self.current_user, category_type, name
-        )
+    def get_category_transaction_count(self, category_type: str, name: str) -> int:
+        return db.categories.get_category_transaction_count(self.current_user, category_type, name)
 
-    def delete_custom_category(
-        self, category_id: int, category_type: str
-    ) -> bool:
-        return db.categories.delete_custom_category(
-            self.current_user, category_id, category_type
-        )
+    def delete_custom_category(self, category_id: int, category_type: str) -> bool:
+        return db.categories.delete_custom_category(self.current_user, category_id, category_type)
 
     def add_income_entry(self, vals: dict) -> tuple[bool, str]:
         amount = vals.get("amount", '0')

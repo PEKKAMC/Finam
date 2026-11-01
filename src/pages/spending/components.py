@@ -319,14 +319,7 @@ class TransactionToolbar(ft.Container):
 
 class TransactionHistoryCard(ft.Container):
     """Transaction History Container matching HomeView component style."""
-    def __init__(
-        self,
-        page: Page,
-        lang: dict,
-        transactions: list,
-        on_delete: Callable,
-        category_icons: dict[str, str] | None = None,
-    ):
+    def __init__(self, page: Page, lang: dict, transactions: list, on_delete: Callable, category_icons: dict[str, str] | None = None, ):
         self._page = page
         self.lang = lang
         self.transactions = transactions
@@ -408,11 +401,7 @@ class TransactionHistoryCard(ft.Container):
         if self._page is not None:
             self._page.update()
 
-    def update_data(
-        self,
-        transactions: list,
-        category_icons: dict[str, str] | None = None,
-    ):
+    def update_data(self, transactions: list, category_icons: dict[str, str] | None = None):
         self.transactions = transactions
         if category_icons is not None:
             self.category_icons = category_icons
@@ -426,14 +415,7 @@ class TransactionHistoryCard(ft.Container):
 
 
 class TransactionItemCard(ft.Container):
-    def __init__(
-        self,
-        page: Page,
-        lang: dict,
-        tx: dict,
-        on_delete: Callable | None = None,
-        category_icons: dict[str, str] | None = None,
-    ):
+    def __init__(self, page: Page, lang: dict, tx: dict, on_delete: Callable | None = None, category_icons: dict[str, str] | None = None):
         self._page = page
         self.lang = lang
         self.tx = tx

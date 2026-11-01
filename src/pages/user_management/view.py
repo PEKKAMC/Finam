@@ -837,12 +837,7 @@ class UserManagementView(ft.View):
             )
             self.google_account_card.set_busy(False)
 
-    async def _save_google_account(
-        self,
-        firebase_id_token: str,
-        backend_url: str,
-        refresh_token: str,
-    ) -> None:
+    async def _save_google_account(self, firebase_id_token: str, backend_url: str, refresh_token: str) -> None:
         try:
             if not refresh_token:
                 raise RuntimeError("Firebase refresh token is missing")

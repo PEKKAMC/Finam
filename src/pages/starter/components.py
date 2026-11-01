@@ -92,9 +92,7 @@ class DialogManager:
 
 
 class AppLockCard(ft.Container):
-    def __init__(
-        self, page: Page, lang: dict, on_unlock: Callable[[str], None]
-    ):
+    def __init__(self, page: Page, lang: dict, on_unlock: Callable[[str], None]):
         self._page = page
         self.on_unlock = on_unlock
         self._submitting = False

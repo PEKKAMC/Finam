@@ -10,18 +10,7 @@ from src.utils import Color, Dialog, Page, Text, UISettings
 
 
 class CategoryItem(ft.Container):
-    def __init__(
-        self,
-        page: Page,
-        lang: dict,
-        name: str,
-        icon: ft.IconData,
-        on_click: Callable,
-        is_selected: bool = False,
-        on_edit: Callable | None = None,
-        icon_color: str = Color.PRIMARY,
-        selected_background_color: str = Color.NAVIGATION_ACTIVE_BACKGROUND,
-    ):
+    def __init__(self, page: Page, lang: dict, name: str, icon: ft.IconData, on_click: Callable, is_selected: bool = False, on_edit: Callable | None = None, icon_color: str = Color.PRIMARY, selected_background_color: str = Color.NAVIGATION_ACTIVE_BACKGROUND):
         self._page = page
         self.lang = lang
         self.category_name = name
