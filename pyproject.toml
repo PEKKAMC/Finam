@@ -4,7 +4,7 @@
 
 [project]
 name = "Finam"
-version = "0.4.3"
+version = "0.4.4"
 description = "Financial Learning App"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -32,6 +32,10 @@ org = "net.pekkamc"
 product = "Finam"
 company = "PEKKAMC"
 copyright = "Copyright (C) 2026 by PEKKAMC"
+
+[tool.flet.deep_linking]
+scheme = "net.pekkamc.finam"
+host = "oauth_callback"
 
 [tool.flet.app]
 path = ""
