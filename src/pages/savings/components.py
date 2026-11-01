@@ -2,6 +2,7 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import asyncio
 import math
 from collections.abc import Callable
 from datetime import datetime
@@ -27,6 +28,8 @@ class GoalCard(ft.Container):
         self.current_value_text = Text.H4(goal["current_value"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
         self.target_text = Text.SMALL(self.lang["savings.target"].format(target_value=goal["target_value"]), color=Color.SECONDARY_TEXT)
         self.remaining_text = Text.SMALL(goal["remaining_value"], color=Color.SECONDARY_TEXT)
+        self.action_message_text = Text.SMALL("", color=Color.ERROR_TEXT)
+
         self.progress_bar = ft.ProgressBar(
             value=goal["progress"],
             color=Color.PRIMARY,
@@ -35,23 +38,42 @@ class GoalCard(ft.Container):
         )
 
         self.deposit_button = ft.Button(
-            self.lang["savings.add_money"],
-            icon=ft.Icons.ADD,
+            content=Text.BUTTON(self.lang["savings.deposit_money"], color=Color.LIGHT_ACCENT),
             on_click=lambda: on_deposit(goal, "deposit"),
-            bgcolor=Color.PRIMARY,
-            color=Color.WHITE,
+            bgcolor=Color.PRIMARY_ACTION,
+            color=Color.LIGHT_ACCENT
         )
-        self.withdraw_button = ft.OutlinedButton(
-            self.lang["savings.remove_money"],
-            icon=ft.Icons.REMOVE,
+
+        self.withdraw_button = ft.Button(
+            content=Text.BUTTON(self.lang["savings.withdraw_money"], color=Color.LIGHT_ACCENT),
             on_click=lambda: on_withdraw(goal, "withdraw"),
+            bgcolor=Color.NEGATIVE_ACTION,
+            color=Color.LIGHT_ACCENT
         )
+
         self.delete_button = ft.IconButton(
             icon=ft.Icons.DELETE_OUTLINE,
             icon_color=Color.DELETE_ACTION,
             tooltip=self.lang["generic.delete"],
             on_click=lambda: on_delete(self.objective_id),
         )
+
+        self.action_message_icon = ft.Icon(
+            ft.Icons.ERROR_OUTLINE,
+            color=Color.ERROR_TEXT,
+            size=14,
+        )
+        self.action_message_row = ft.Container(
+            content=ft.Row(
+                spacing=6,
+                controls=[
+                    self.action_message_icon,
+                    self.action_message_text,
+                ],
+            ),
+            visible=False,
+        )
+        self._action_message_generation = 0
 
         self.main_container = ft.Column(
             spacing=12,
@@ -107,10 +129,15 @@ class GoalCard(ft.Container):
                     ],
                 ),
                 ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     spacing=10,
                     wrap=True,
-                    controls=[self.deposit_button, self.withdraw_button],
+                    controls=[
+                        self.deposit_button,
+                        self.withdraw_button
+                    ],
                 ),
+                self.action_message_row,
             ],
         )
 
@@ -167,6 +194,35 @@ class GoalGrid(ft.Column):
         self.title_text.value = self.lang["savings.objectives"].format(len=len(objectives_data))
         self.objectives_column.controls = cards
         self.objectives_column.visible = self.is_expanded
+
+    async def show_action_message(
+        self,
+        objective_id: int,
+        message: str,
+        is_success: bool = False,
+    ) -> None:
+        await asyncio.sleep(0.1)
+        for card in self.objectives_column.controls:
+            if isinstance(card, GoalCard) and card.objective_id == objective_id:
+                card._action_message_generation += 1
+                generation = card._action_message_generation
+                color = Color.INCOME_COLOR if is_success else Color.ERROR_TEXT
+                card.action_message_text.value = message
+                card.action_message_text.color = color
+                card.action_message_icon.icon = (
+                    ft.Icons.CHECK_CIRCLE if is_success else ft.Icons.ERROR_OUTLINE
+                )
+                card.action_message_icon.color = color
+                card.action_message_row.visible = True
+                card.update()
+                await asyncio.sleep(3)
+                if generation == card._action_message_generation:
+                    card.action_message_row.visible = False
+                    card.update()
+                return
+        Logger.error(
+            f"Cannot display savings action message: goal {objective_id} is not rendered"
+        )
 
     def _toggle_expanded(self, e):
         self.is_expanded = not self.is_expanded
@@ -533,12 +589,21 @@ class CreateGoalModal(Dialog):
 
 
 class DepositWithdrawModal(ft.Container):
-    def __init__(self, page: Page, lang: dict, controller, on_success: Callable, on_surplus: Callable):
+    def __init__(
+        self,
+        page: Page,
+        lang: dict,
+        controller,
+        on_success: Callable,
+        on_surplus: Callable,
+        on_action_message: Callable[[int, str, bool], None] | None = None,
+    ):
         self._page = page
         self.lang = lang
         self.controller = controller
         self.on_success = on_success
         self.on_surplus = on_surplus
+        self.on_action_message = on_action_message
         self.goal = None
         self.mode = "deposit"
 
@@ -762,15 +827,39 @@ class DepositWithdrawModal(ft.Container):
         self.keyboard_container.visible = False
         self.visible = False
         self.on_success()
+        success_message_key = (
+            "savings.success.deposit"
+            if self.mode == "deposit"
+            else "savings.success.withdraw"
+        )
+        self._schedule_action_message(
+            self.lang[success_message_key],
+            is_success=True,
+        )
 
         if surplus > 0:
             self.on_surplus(self.goal, surplus)
 
     def _show_error(self, message: str) -> None:
-        snack_bar = ft.SnackBar(Text.MEDIUM(message), bgcolor=Color.DELETE_ACTION)
-        self._page.overlay.append(snack_bar)
-        snack_bar.open = True
-        self._page.update()
+        if self.goal is None:
+            Logger.error(f"Cannot display savings action error without a goal: {message}")
+            return
+        if self.on_action_message is None:
+            Logger.error(f"No savings action error handler is configured: {message}")
+            return
+        self._close()
+        self._schedule_action_message(message, is_success=False)
+
+    def _schedule_action_message(self, message: str, is_success: bool) -> None:
+        if self._page is not None:
+            self._page.run_task(
+                self.on_action_message,
+                int(self.goal["objective_id"]),
+                message,
+                is_success,
+            )
+        else:
+            Logger.error(f"Cannot schedule savings action message: {message}")
 
     def resize(self, width: int, height: int) -> None:
         page_width = max(width, 0)

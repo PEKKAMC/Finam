@@ -203,6 +203,8 @@
     "savings.error.withdraw_exceeds_balance": "The withdrawal amount cannot exceed the current balance",
     "savings.export_ledger": "Export data",
     "savings.export_succeeded": "Data exported successfully",
+    "savings.success.deposit": "Deposit successful",
+    "savings.success.withdraw": "Withdrawal successful",
     "savings.fund_management": "Savings Fund Management",
     "savings.goal_completed_desc": "You have completed 100% of your savings goal.",
     "savings.goal_completed_title": "Congratulations on completing {title}!",

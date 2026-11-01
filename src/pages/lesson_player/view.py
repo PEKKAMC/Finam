@@ -71,12 +71,6 @@ class LessonPlayerView(ft.View):
         self._page.on_route_change = self.cleanup_audio_resources
         self._page.on_disconnect = self.cleanup_audio_resources
 
-    def display_snackbar_message(self, message_text: str, background_color: str):
-        snackbar_control = ft.SnackBar(Text.P(message_text), bgcolor=background_color)
-        self._page.overlay.append(snackbar_control)
-        snackbar_control.open = True
-        self._page.update()
-
     async def build_and_play_current_slide(self, sequence_identifier: int):
         self.slide_canvas.clear_canvas()
         current_elements = self.lesson_logic.get_current_slide_elements()
@@ -217,7 +211,7 @@ class LessonPlayerView(ft.View):
                 self._page.update()
                 await self.build_and_play_current_slide(new_sequence_identifier)
         except Exception as exception_error:
-            self.display_snackbar_message(f"Navigation Error: {str(exception_error)}", ft.Colors.RED)
+            Logger.error(f"Navigation Error: {exception_error}")
         finally:
             self.is_constructing_slide = False
 
@@ -232,7 +226,7 @@ class LessonPlayerView(ft.View):
         if not success:
             self.lesson_header.title_display.value = "Error Loading File"
             self.lesson_header.title_display.update()
-            self.display_snackbar_message("Failed to load lesson or lesson is empty.", ft.Colors.RED_700)
+            Logger.error("Failed to load lesson or lesson is empty.")
             return
 
         self.lesson_header.update_header_information(

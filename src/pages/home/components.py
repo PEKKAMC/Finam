@@ -817,7 +817,10 @@ class FeaturedLessonCard(ft.Container):
             )
         )
 
-        self.footer_divider = ft.Divider(height=1, color=Color.CARD_DIVIDER)
+        self.footer_divider = ft.Divider(
+            height=1,
+            color=Color.CARD_DIVIDER
+        )
 
         self.footer_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,

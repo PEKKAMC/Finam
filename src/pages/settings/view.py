@@ -204,6 +204,24 @@ class SettingsView(ft.View):
             ]
         )
         self.clear_cache_dialog._dialog_page = self._page
+        self.clear_cache_result_text = Text.H4(
+            "",
+            color=Color.PRIMARY_TEXT,
+        )
+        self.clear_cache_result_dialog = Dialog(
+            dialog_content=ft.Column(
+                tight=True,
+                controls=[self.clear_cache_result_text],
+            ),
+            color=Color.DIALOG_BACKGROUND,
+            options=[
+                ft.TextButton(
+                    self.lang["generic.close"],
+                    on_click=self._dismiss_clear_cache_result_dialog,
+                )
+            ],
+        )
+        self.clear_cache_result_dialog._dialog_page = self._page
 
         self.separator_warning_dialog = Dialog(
             dialog_content=ft.Column(
@@ -317,23 +335,27 @@ class SettingsView(ft.View):
     def _dismiss_clear_cache_dialog(self, e: ft.ControlEvent | None = None) -> None:
         self.clear_cache_dialog.dismiss()
 
+    def _dismiss_clear_cache_result_dialog(
+        self, e: ft.ControlEvent | None = None
+    ) -> None:
+        self.clear_cache_result_dialog.dismiss()
+
     def _clear_cached_views(self, e: ft.ControlEvent | None = None) -> None:
         try:
             self._page.delete_all_cached_views()
         except Exception as ex:
             Logger.error(f"Failed to clear cached views: {ex}")
             self.clear_cache_dialog.dismiss()
-            message = self.lang["settings.clear_cache_failed"]
-            background_color = Color.NEGATIVE_ACTION
+            self.clear_cache_result_text.value = self.lang[
+                "settings.clear_cache_failed"
+            ]
         else:
             self.clear_cache_dialog.dismiss()
-            message = self.lang["settings.clear_cache_success"]
-            background_color = Color.PRIMARY_ACTION
+            self.clear_cache_result_text.value = self.lang[
+                "settings.clear_cache_success"
+            ]
 
-        snack_bar = ft.SnackBar(Text.P(message), bgcolor=background_color)
-        self._page.overlay.append(snack_bar)
-        snack_bar.open = True
-        self._page.update()
+        self.clear_cache_result_dialog.show()
 
     def _show_pin_setup_dialog(self) -> None:
         pin_field = ft.TextField(

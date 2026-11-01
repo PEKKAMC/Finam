@@ -27,6 +27,12 @@ class KeyboardContainer(ft.Container):
         self.amount_display = ft.Text(
             value="0", size=32, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD
         )
+        self.status_message = ft.Text(
+            value="",
+            size=12,
+            color=Color.ERROR_TEXT,
+            visible=False,
+        )
 
         self.note_input = ft.TextField(
             hint_text=self.lang["category_selection.note_hint"],
@@ -121,6 +127,10 @@ class KeyboardContainer(ft.Container):
                         controls=[
                             self.amount_display
                         ],
+                    ),
+                    ft.Container(
+                        content=self.status_message,
+                        alignment=ft.Alignment.CENTER_RIGHT,
                     ),
                     ft.Container(
                         bgcolor=Color.PAGE_BACKGROUND,
@@ -292,6 +302,15 @@ class KeyboardContainer(ft.Container):
         }
         self.on_save(values)
 
+    def show_status_message(self, message: str, is_success: bool = False) -> None:
+        self.status_message.value = message
+        self.status_message.color = (
+            Color.INCOME_COLOR if is_success else Color.ERROR_TEXT
+        )
+        self.status_message.visible = bool(message)
+        if self._page is not None:
+            self.status_message.update()
+
     def _handle_date_toggle(self, e=None):
         try:
             if self._page is not None:
@@ -354,6 +373,8 @@ class KeyboardContainer(ft.Container):
     def reset_inputs(self):
         self.amount_value = ""
         self.amount_display.value = ""
+        self.status_message.value = ""
+        self.status_message.visible = False
         self.note_input.value = ""
         self.selected_date = datetime.now().strftime("%Y-%m-%d")
         self.selected_time = datetime.now().strftime("%H:%M")

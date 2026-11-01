@@ -203,6 +203,8 @@
     "savings.error.withdraw_exceeds_balance": "Số tiền rút không được vượt quá số dư hiện có",
     "savings.export_ledger": "Xuất dữ liệu",
     "savings.export_succeeded": "Xuất dữ liệu thành công",
+    "savings.success.deposit": "Nạp tiền thành công",
+    "savings.success.withdraw": "Rút tiền thành công",
     "savings.fund_management": "Quản lý quỹ tiết kiệm",
     "savings.goal_completed_desc": "Bạn đã hoàn thành 100% mục tiêu tích lũy.",
     "savings.goal_completed_title": "Chúc mừng bạn đã hoàn thành {title}!",

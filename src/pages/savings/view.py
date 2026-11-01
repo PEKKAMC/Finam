@@ -116,6 +116,9 @@ class SavingsView(ft.View):
             on_withdraw=self.dialogs.deposit_withdraw_modal.trigger,
             on_delete=self.dialogs.delete_dialog.trigger,
         )
+        self.dialogs.deposit_withdraw_modal.on_action_message = (
+            self.goal_grid.show_action_message
+        )
 
         self.search_field = ft.TextField(
             value=self.search_query,
@@ -259,23 +262,14 @@ class SavingsView(ft.View):
             if file_bytes is None:
                 raise RuntimeError(error_message)
 
-            saved_file = await ft.FilePicker().save_file(
+            await ft.FilePicker().save_file(
                 allowed_extensions=["xlsx"],
                 file_name="savings.xlsx",
                 src_bytes=file_bytes,
             )
-            if saved_file:
-                snack_bar = ft.SnackBar(Text.MEDIUM(self.lang["savings.export_succeeded"]))
-                self._page.overlay.append(snack_bar)
-                snack_bar.open = True
-                self._page.update()
 
         except Exception as ex:
             Logger.error(f"Error during export: {ex}, Event: {e}")
-            snack_bar = ft.SnackBar(Text.MEDIUM(self.lang["savings.error.export_failed"].format(error=str(ex))))
-            self._page.overlay.append(snack_bar)
-            snack_bar.open = True
-            self._page.update()
 
     def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
         try:

@@ -27,7 +27,6 @@ class CategorySelectionView(ft.View):
         self.controller = LogicController(self.user_info["username"])
         self.current_type = "expense"
         self.selected_category = ""
-        self.snack_bar = ft.SnackBar
         self.category_items: list[CategoryItem] = []
 
         self.cancel_button = ft.TextButton(
@@ -349,17 +348,11 @@ class CategorySelectionView(ft.View):
         else:
             message = ""
 
-        self.snack_bar = ft.SnackBar(Text.MEDIUM(message))
-        self._page.overlay.append(self.snack_bar)
-        self.snack_bar.open = True
-
         if success:
-            self.selected_category = ""
-            for item in self.category_items:
-                item.update_selection(False)
-            self.keyboard_container.visible = False
             self.keyboard_container.reset_inputs()
-            self._page.navigate_to(self._get_return_route())()
+            self.keyboard_container.show_status_message(message, is_success=True)
+        else:
+            self.keyboard_container.show_status_message(message)
 
         self.update()
 

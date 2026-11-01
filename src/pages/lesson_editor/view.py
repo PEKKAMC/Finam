@@ -105,12 +105,6 @@ class LessonEditorView(ft.View):
         self._on_page_resize()
         self.refresh_editor()
 
-    def show_snackbar(self, message: str, color: str):
-        self.snack_bar = ft.SnackBar(Text.MEDIUM(message), bgcolor=color)
-        self._page.overlay.append(self.snack_bar)
-        self.snack_bar.open = True
-        self._page.update()
-
     async def save_file(self, e):
         path = await ft.FilePicker().save_file(allowed_extensions=["json"], file_name="new_lesson.json")
         if path:
@@ -126,9 +120,8 @@ class LessonEditorView(ft.View):
             try:
                 with open(path, "w", encoding="utf-8") as f:
                     json.dump(data, f, ensure_ascii=False, indent=2)
-                self.show_snackbar(self.lang["lesson_editor.saved_successfully"], ft.Colors.GREEN_700)
             except Exception as ex:
-                self.show_snackbar(f"{self.lang['lesson_editor.failed_to_save']}: {ex}", ft.Colors.RED_700)
+                Logger.error(f"{self.lang['lesson_editor.failed_to_save']}: {ex}")
 
     async def load_file(self, e):
         files = await ft.FilePicker().pick_files(allowed_extensions=["json"])
@@ -141,9 +134,8 @@ class LessonEditorView(ft.View):
                     self.subtitle_input.value = data.get("subtitle", self.lang["lesson_editor.no_subtitle"])
                     self.logic.process_loaded_data(data)
                     self.refresh_editor()
-                    self.show_snackbar(self.lang["lesson_editor.loaded_successfully"], ft.Colors.GREEN_700)
             except Exception as ex:
-                self.show_snackbar(f"{self.lang['lesson_editor.failed_to_load']}: {ex}", ft.Colors.RED_700)
+                Logger.error(f"{self.lang['lesson_editor.failed_to_load']}: {ex}")
 
     async def pick_image(self, e, tf_control, key):
         files = await ft.FilePicker().pick_files(allow_multiple=False, allowed_extensions=["png", "jpg", "jpeg", "gif", "webp", "svg"])
@@ -371,9 +363,6 @@ class LessonEditorView(ft.View):
     def delete_slide_handler(self, e):
         if self.logic.delete_slide():
             self.refresh_editor()
-            self.show_snackbar("Slide deleted.", ft.Colors.BLUE_GREY_700)
-        else:
-            self.show_snackbar("Cannot delete the last slide.", ft.Colors.RED_700)
 
     def move_slide_up_handler(self, e):
         self.logic.move_slide_up()
