@@ -431,7 +431,8 @@ class UserManagementView(ft.View):
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
                     title=self.lang["user_management.help_faq"],
-                    subtitle=self.lang["user_management.guide_expense_mgmt"]
+                    subtitle=self.lang["user_management.guide_expense_mgmt"],
+                    on_click=self._page.navigate_to("/help")
                 ),
                 MenuItem(
                     icon=ft.Icons.LOGOUT,

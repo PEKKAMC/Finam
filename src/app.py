@@ -12,6 +12,7 @@ from src.utils import DefaultSettings, Page, ThemeManager, UISettings, get_langu
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
+from src.pages.help import get_help_view
 from src.pages.home import get_home_view
 from src.pages.lessons import get_lessons_view
 #from src.pages.lesson_player import get_lesson_player_view
@@ -108,6 +109,9 @@ async def main(page: Page) -> None:
 
         if troute.match("/home"):
             return get_home_view(page, lang, user_info)
+
+        if troute.match("/help"):
+            return get_help_view(page, lang, user_info)
 
         if troute.match("/lessons"):
             return get_lessons_view(page, lang, user_info)
