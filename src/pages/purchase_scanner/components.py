@@ -6,7 +6,9 @@ import asyncio
 from collections.abc import Callable
 
 import flet as ft
+import flet_audio as fta
 
+from src.logger import Logger
 from src.utils import Color, Page, Text, format_number
 
 
@@ -481,6 +483,9 @@ class ScannerResult(ft.Container):
         self.lang = lang
         self.currency = currency
         self._request_generation = 0
+        self._troll_audio: fta.Audio | None = None
+        self._troll_audio_loaded: asyncio.Event | None = None
+        self._troll_audio_finished: asyncio.Event | None = None
         self.empty_message = Text.SMALL(
             self.lang["purchase_scanner.fill_info"],
             color=Color.SECONDARY_TEXT,
@@ -627,6 +632,8 @@ class ScannerResult(ft.Container):
 
     def set_loading_state(self) -> int:
         self._request_generation += 1
+        if self._troll_audio is not None:
+            self._page.run_task(self._stop_troll_audio, self._troll_audio)
         self.empty_state.visible = False
         self.loading_container.visible = True
         self.troll_animation.visible = False
@@ -637,27 +644,74 @@ class ScannerResult(ft.Container):
         self.update()
         return self._request_generation
 
-    async def show_troll_result(
-        self,
-        request_generation: int,
-        risk: int | None,
-        trigger_display: str,
-        price: float,
-        item_name: str,
-        ai_advice: str,
-    ) -> None:
+    async def show_troll_result(self, request_generation: int, risk: int | None, trigger_display: str, price: float, item_name: str, ai_advice: str) -> None:
         if request_generation != self._request_generation:
             return
         self.empty_state.visible = False
-        self.loading_container.visible = False
+        self.loading_container.visible = True
         self.result_container.visible = False
+        self.troll_animation.visible = False
+        self._troll_audio_loaded = asyncio.Event()
+        self._troll_audio_finished = asyncio.Event()
+        audio = fta.Audio(
+            src="/audio/the_rock.mp3",
+            autoplay=False,
+            on_state_change=self._on_troll_audio_state_change,
+            on_loaded=self._on_troll_audio_loaded,
+        )
+        self._troll_audio = audio
+        self._page.services.append(audio)
+        self._page.update()
+        try:
+            await asyncio.wait_for(self._troll_audio_loaded.wait(), timeout=3.0)
+        except TimeoutError:
+            Logger.warning("Purchase scanner troll audio did not load within 3 seconds")
+        if request_generation != self._request_generation:
+            await self._stop_troll_audio(audio)
+            return
+        self.loading_container.visible = False
         self.troll_animation.visible = True
-        self.update()
-        await asyncio.sleep(1.5)
+        self._page.update()
+        self._page.run_task(self._play_troll_audio, audio)
+        try:
+            await asyncio.wait_for(self._troll_audio_finished.wait(), timeout=3.0)
+        except TimeoutError:
+            Logger.warning("Purchase scanner troll audio did not finish within 3 seconds")
+        finally:
+            await self._stop_troll_audio(audio)
         if request_generation != self._request_generation:
             return
         self.troll_animation.visible = False
         self.update_result(risk, trigger_display, price, item_name, ai_advice)
+
+    def _on_troll_audio_loaded(self, e: ft.ControlEvent) -> None:
+        if self._troll_audio_loaded is not None:
+            self._troll_audio_loaded.set()
+
+    @staticmethod
+    async def _play_troll_audio(audio: fta.Audio) -> None:
+        try:
+            await audio.play()
+        except Exception as ex:
+            Logger.warning(f"Could not play purchase scanner troll audio: {ex}")
+
+    def _on_troll_audio_state_change(self, e: fta.AudioStateChangeEvent) -> None:
+        if (
+            e.state == fta.AudioState.COMPLETED
+            and self._troll_audio_finished is not None
+        ):
+            self._troll_audio_finished.set()
+
+    async def _stop_troll_audio(self, audio: fta.Audio) -> None:
+        try:
+            await audio.pause()
+        except Exception as ex:
+            Logger.debug(f"Could not pause audio: {ex}")
+        if audio in self._page.services:
+            self._page.services.remove(audio)
+            self._page.update()
+        if self._troll_audio is audio:
+            self._troll_audio = None
 
     def show_error(self, message: str):
         self.loading_container.visible = False
