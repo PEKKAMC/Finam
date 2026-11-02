@@ -322,6 +322,8 @@ class PurchaseScannerView(ft.View):
                     self.usage_card.visible = False
                     self.scanner_locked_overlay.visible = True
                     self.form_card.set_enabled(False)
+                elif ex.status_code == 0:
+                    error_message = self.lang["purchase_scanner.connection_error"]
                 else:
                     error_message = self.lang["purchase_scanner.service_error"]
                 self.result_card.show_error(error_message)

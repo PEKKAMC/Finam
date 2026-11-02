@@ -504,6 +504,17 @@ class ScannerResult(ft.Container):
             ]
         )
 
+        self.error_text = Text.SMALL(
+            "",
+            color=Color.NEGATIVE_ACTION,
+            text_align=ft.TextAlign.CENTER,
+        )
+        self.error_state = ft.Container(
+            visible=False,
+            alignment=ft.Alignment.CENTER,
+            content=self.error_text,
+        )
+
         # Loading display while AI is evaluating the purchase
         self.loading_container = ft.Container(
             visible=False,
@@ -610,6 +621,7 @@ class ScannerResult(ft.Container):
             content=ft.Column(
                 controls=[
                     self.empty_state,
+                    self.error_state,
                     self.loading_container,
                     self.troll_animation,
                     self.result_container,
@@ -635,9 +647,11 @@ class ScannerResult(ft.Container):
         if self._troll_audio is not None:
             self._page.run_task(self._stop_troll_audio, self._troll_audio)
         self.empty_state.visible = False
+        self.error_state.visible = False
         self.loading_container.visible = True
         self.troll_animation.visible = False
         self.result_container.visible = False
+        self.advice_box.visible = True
         self.empty_message.value = self.lang["purchase_scanner.fill_info"]
         self.advice_text.value = ""
         self.interventions_col.controls.clear()
@@ -648,6 +662,7 @@ class ScannerResult(ft.Container):
         if request_generation != self._request_generation:
             return
         self.empty_state.visible = False
+        self.error_state.visible = False
         self.loading_container.visible = True
         self.result_container.visible = False
         self.troll_animation.visible = False
@@ -714,18 +729,24 @@ class ScannerResult(ft.Container):
             self._troll_audio = None
 
     def show_error(self, message: str):
+        self._request_generation += 1
+        if self._troll_audio is not None:
+            self._page.run_task(self._stop_troll_audio, self._troll_audio)
         self.loading_container.visible = False
         self.troll_animation.visible = False
         self.result_container.visible = False
-        self.empty_state.visible = True
-        self.empty_message.value = message
+        self.empty_state.visible = False
+        self.error_text.value = message
+        self.error_state.visible = True
         self.update()
 
     def update_result(self, risk: int | None, trigger_display: str, price: float, item_name: str, ai_advice: str = ""):
         self.empty_state.visible = False
+        self.error_state.visible = False
         self.loading_container.visible = False
         self.troll_animation.visible = False
         self.result_container.visible = True
+        self.advice_box.visible = bool(ai_advice)
 
         if risk is None:
             self.risk_score_text.value = "—"
@@ -734,7 +755,7 @@ class ScannerResult(ft.Container):
             self.risk_badge_text.value = "Bỏ qua"
             self.progress_bar.value = 0.0
             self.progress_bar.color = Color.BLAND_TEXT
-            self.advice_text.value = ai_advice or "Đầu vào này bị xác định là troll hoặc không hợp lệ nên không được lưu vào lịch sử."
+            self.advice_text.value = ai_advice
             self.interventions_col.controls.clear()
             self.update()
             return
@@ -760,7 +781,7 @@ class ScannerResult(ft.Container):
         self.risk_badge_text.value = pause_time
         self.progress_bar.value = risk_val / 100.0
         self.progress_bar.color = risk_color
-        self.advice_text.value = ai_advice if ai_advice else f"Món đồ {item_name} đang chịu ảnh hưởng từ {trigger_display}."
+        self.advice_text.value = ai_advice
 
         formatted_price = f"{format_number(price)} {self.currency}" if price > 0 else "chưa nhập"
         interventions = [

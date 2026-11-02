@@ -8,12 +8,6 @@ from src.database import db
 from src.logger import Logger
 
 BACKEND_URL = "https://finam-backend.vercel.app/"
-NON_PURCHASABLE_ADVICE = {
-    "en": "Please enter a real purchasable item so I can provide accurate financial advice.",
-    "vi": "Hãy nhập tên một món hàng thực tế để mình có thể tư vấn tài chính chính xác nhé!",
-}
-
-
 class ScannerApiError(RuntimeError):
     def __init__(self, status_code: int, detail: str):
         super().__init__(detail)
@@ -84,12 +78,6 @@ class LogicController:
                 0,
                 "Could not connect to the purchase scanner service.",
             ) from ex
-
-        if risk is None:
-            ai_advice = ai_advice or NON_PURCHASABLE_ADVICE.get(
-                language,
-                NON_PURCHASABLE_ADVICE["vi"],
-            )
 
         return risk, trigger_display, price, ai_advice
 
