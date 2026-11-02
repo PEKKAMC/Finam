@@ -128,6 +128,7 @@
     "purchase_scanner.clear_history": "Xoá toàn bộ lịch sử",
     "purchase_scanner.delete_item": "Xoá mục này",
     "purchase_scanner.description": "Nhập thông tin món đồ bạn đang muốn xuống tiền để AI phân tích chỉ số rủi ro phung phí và đưa ra quy tắc trì hoãn mua sắm thông minh.",
+    "purchase_scanner.connection_error": "Không thể kết nối Internet. Hãy kiểm tra kết nối và thử lại.",
     "purchase_scanner.daily_limit": "Bạn đã sử dụng lượt quét hôm nay. Hãy thử lại sau 00:00 UTC.",
     "purchase_scanner.expert_perspective": "Góc nhìn từ chuyên gia Finam:",
     "purchase_scanner.fill_info": "Điền thông tin sản phẩm bên trên để AI đánh giá mức độ bốc đồng và bảo vệ ví tiền của bạn.",

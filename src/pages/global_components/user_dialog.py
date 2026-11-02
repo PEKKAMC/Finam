@@ -13,6 +13,7 @@ class UserManagementDialog(Dialog):
     def __init__(self, page: Page, lang: dict, user_list: UserList, add_form, on_close_callback: Callable, has_cancel_button: bool = True):
         self._page = page
         self.lang = lang
+        self.add_form = add_form
         self._close_dialog = on_close_callback
 
         header_controls = []
@@ -29,6 +30,8 @@ class UserManagementDialog(Dialog):
         self.main_container = ft.Container(
             border_radius=24,
             content=ft.Column(
+                tight=True,
+                spacing=16,
                 controls=[
                     ft.Row(
                         height=48,
@@ -54,6 +57,7 @@ class UserManagementDialog(Dialog):
                         ]
                     ),
                     ft.Column(
+                        tight=True,
                         spacing=10,
                         controls=[
                             Text.SMALL(self.lang["user_management.select_account"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
@@ -61,6 +65,7 @@ class UserManagementDialog(Dialog):
                         ]
                     ),
                     ft.Column(
+                        tight=True,
                         spacing=10,
                         controls=[
                             Text.SMALL(self.lang["user_management.add_new_user"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
@@ -76,9 +81,9 @@ class UserManagementDialog(Dialog):
             color=Color.DIALOG_BACKGROUND
         )
 
-    def resize(self, width: int, height: int):
+    def resize(self, width: int):
         self.main_container.width = width
-        self.main_container.height = height
+        self.add_form.resize(width)
 
 class UserList(ft.Container):
     def __init__(self, page: Page, lang: dict, current_user: str, on_select_callback, on_delete_callback):
@@ -238,28 +243,29 @@ class AddUserField(ft.Container):
             text_size=13,
             content_padding=12,
             filled=True,
-            width=175,
+            expand=True,
             menu_height=240
         )
 
         self.error_message = Text.SMALL("", color=Color.ERROR_TEXT)
-        self.submit_button = ft.Button(
-            content=ft.Row(
-                spacing=6,
-                controls=[
-                    ft.Icon(ft.Icons.ADD, color=Color.LIGHT_ACCENT, size=16),
-                    Text.MEDIUM(self.lang["user_management.create_btn"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-                ],
-                tight=True
+        self.submit_button = ft.Container(
+            content=Text.H4(
+                self.lang["user_management.create_btn"],
+                color=Color.WHITE,
+                text_align=ft.TextAlign.CENTER,
             ),
-            bgcolor=Color.PRIMARY,
+            alignment=ft.Alignment.CENTER,
+            bgcolor=Color.PRIMARY_ACTION,
+            padding=16,
+            border_radius=25,
+            margin=ft.Margin.only(top=10),
             on_click=self._handle_submit,
-            style=ft.ButtonStyle(
-                shape=ft.RoundedRectangleBorder(radius=16),
-                padding=16
-            )
+        )
+        self.create_button_row = ft.Row(
+            controls=[self.submit_button],
         )
         self.main_container = ft.Column(
+            tight=True,
             spacing=6,
             controls=[
                 ft.Row(
@@ -269,12 +275,9 @@ class AddUserField(ft.Container):
                     ]
                 ),
                 ft.Row(
-                    spacing=12,
-                    controls=[
-                        self.currency_dropdown,
-                        self.submit_button
-                    ]
+                    controls=[self.currency_dropdown],
                 ),
+                self.create_button_row,
                 self.error_message
             ]
         )
@@ -305,7 +308,11 @@ class AddUserField(ft.Container):
             Logger.debug(f"Render skipped: {ex}")
 
     def resize(self, width: int):
-        pass
+        self.width = width
+        self.main_container.width = width
+        self.currency_dropdown.width = width
+        self.submit_button.width = width
+        self.create_button_row.width = width
 
 
 class DeleteUserDialog(Dialog):
