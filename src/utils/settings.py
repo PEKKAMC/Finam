@@ -5,9 +5,21 @@
 import locale
 import os
 
-from babel.numbers import get_territory_currencies
-
 from src.utils.data import Data
+
+_REGION_CURRENCY_FALLBACK = {
+    "AU": "AUD", "BR": "BRL", "CA": "CAD", "CH": "CHF", "CN": "CNY",
+    "CZ": "CZK", "DK": "DKK", "GB": "GBP", "HK": "HKD", "ID": "IDR",
+    "IL": "ILS", "IN": "INR", "IS": "ISK", "JP": "JPY", "KR": "KRW",
+    "MX": "MXN", "MY": "MYR", "NO": "NOK", "NZ": "NZD", "PH": "PHP",
+    "PL": "PLN", "RU": "RUB", "SE": "SEK", "SG": "SGD", "TH": "THB",
+    "TW": "TWD", "US": "USD", "VN": "VND",
+}
+_EURO_REGIONS = {
+    "AD", "AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR", "HR",
+    "IE", "IT", "LT", "LU", "LV", "MC", "ME", "MT", "NL", "PT", "SI",
+    "SK", "SM", "VA", "XK",
+}
 
 
 def _detect_default_language() -> str:
@@ -41,9 +53,19 @@ def currency_for_region(
         return fallback
 
     try:
+        from babel.numbers import get_territory_currencies
+
         currency_codes = get_territory_currencies(region_code.upper())
+    except ImportError:
+        region = region_code.upper()
+        currency_codes = (
+            ["EUR"] if region in _EURO_REGIONS
+            else [_REGION_CURRENCY_FALLBACK[region]]
+            if region in _REGION_CURRENCY_FALLBACK
+            else []
+        )
     except ValueError:
-        return fallback
+        currency_codes = []
 
     currencies = (
         supported_currencies
