@@ -305,6 +305,7 @@
     "settings.theme": "App Theme",
     "settings.theme.dark": "Dark",
     "settings.theme.light": "Light",
+    "settings.theme.system": "System",
     "settings.theme_options": "Choose the app appearance",
     "settings.title": "System Settings",
     "spending.active": "Active",

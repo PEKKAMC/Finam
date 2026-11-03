@@ -8,7 +8,16 @@ from urllib.parse import urlparse
 import flet as ft
 
 from src.database import db
-from src.utils import DefaultSettings, Page, ThemeManager, UISettings, get_language, set_decimal_separator, set_digit_separator
+from src.utils import (
+    DefaultSettings,
+    Page,
+    ThemeManager,
+    UISettings,
+    get_language,
+    language_for_device_locale,
+    set_decimal_separator,
+    set_digit_separator,
+)
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
@@ -71,6 +80,14 @@ async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> 
 
 async def main(page: Page) -> None:
     initial_setup()
+    try:
+        device_info = await page.get_device_info()
+        if device_info and device_info.locales:
+            DefaultSettings.LANGUAGE = language_for_device_locale(
+                device_info.locales[0].language_code
+            )
+    except Exception as ex:
+        Logger.warning(f"Could not read the device language; using the host locale: {ex}")
     db.initialize_database()
 
     info: dict[str, str] = {
@@ -78,7 +95,7 @@ async def main(page: Page) -> None:
     }
 
     page.title = "Finam"
-    page.theme_mode = ft.ThemeMode.LIGHT
+    page.theme_mode = ft.ThemeMode.SYSTEM
     page.theme = ft.Theme(
         page_transitions=ft.PageTransitionsTheme(
             android=ft.PageTransitionTheme.FADE_UPWARDS,
@@ -207,8 +224,19 @@ async def main(page: Page) -> None:
             current_decimal_separator = db.app_settings.get_decimal_separator()
             set_digit_separator(current_digit_separator)
             set_decimal_separator(current_decimal_separator)
-            ThemeManager.set_theme(current_theme)
-            page.theme_mode = ft.ThemeMode.DARK if ThemeManager.get_theme().dark_mode else ft.ThemeMode.LIGHT
+            ThemeManager.set_theme(
+                current_theme,
+                system_dark=page.platform_brightness == ft.Brightness.DARK,
+            )
+            page.theme_mode = (
+                ft.ThemeMode.SYSTEM
+                if current_theme == "system"
+                else (
+                    ft.ThemeMode.DARK
+                    if ThemeManager.get_theme().dark_mode
+                    else ft.ThemeMode.LIGHT
+                )
+            )
             lang = get_language(current_language_code)
 
             route_name = page.route or "/"
@@ -261,6 +289,18 @@ async def main(page: Page) -> None:
 
     page.on_error = on_error
     page.on_route_change = route_change
+
+    async def on_platform_brightness_change(e: ft.PlatformBrightnessChangeEvent) -> None:
+        if db.app_settings.get_theme() != "system":
+            return
+        ThemeManager.set_theme(
+            "system",
+            system_dark=e.brightness == ft.Brightness.DARK,
+        )
+        delete_all_cached_views()
+        await route_change(e)
+
+    page.on_platform_brightness_change = on_platform_brightness_change
 
     if not await handle_google_mobile_callback() and not await handle_google_web_callback():
         await page.push_route("/starter")

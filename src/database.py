@@ -107,11 +107,11 @@ class DatabaseConnection:
                 "UPDATE users SET created_at = ? WHERE created_at IS NULL OR created_at = ''",
                 (datetime.now().strftime("%Y-%m-%d %H:%M"),)
             )
-            self.execute('''
+            self.execute(f'''
                 CREATE TABLE IF NOT EXISTS user_settings (
                     user_id INTEGER PRIMARY KEY,
                     history_cleared_at TEXT,
-                    language TEXT DEFAULT 'vi',
+                    language TEXT DEFAULT '{DefaultSettings.LANGUAGE}',
                     currency TEXT DEFAULT 'VND (đ)',
                     FOREIGN KEY (user_id) REFERENCES users (id)
                  )
@@ -119,7 +119,7 @@ class DatabaseConnection:
             self.execute(f'''
                 CREATE TABLE IF NOT EXISTS app_settings (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
-                    theme TEXT NOT NULL DEFAULT 'light',
+                    theme TEXT NOT NULL DEFAULT '{DefaultSettings.THEME}',
                     digit_separator TEXT NOT NULL DEFAULT '{DefaultSettings.DIGIT_SEPARATOR}',
                     decimal_separator TEXT NOT NULL DEFAULT '.',
                     starter_language TEXT,
@@ -213,7 +213,10 @@ class DatabaseConnection:
             )
 
             try:
-                self.execute("ALTER TABLE user_settings ADD COLUMN language TEXT DEFAULT 'vi'")
+                self.execute(
+                    "ALTER TABLE user_settings ADD COLUMN "
+                    f"language TEXT DEFAULT '{DefaultSettings.LANGUAGE}'"
+                )
                 Logger.info("Added language column to user_settings table")
             except sqlite3.OperationalError:
                 # Column already exists
@@ -225,6 +228,51 @@ class DatabaseConnection:
             except sqlite3.OperationalError:
                 # Column already exists
                 pass
+
+            theme_default_migration = self.execute(
+                "SELECT 1 FROM app_settings_migrations "
+                "WHERE migration = 'system_theme_and_language_default_v1'",
+                fetch_one=True,
+            )
+            if not theme_default_migration:
+                configured_language = self.execute(
+                    "SELECT starter_language FROM app_settings WHERE id = 1",
+                    fetch_one=True,
+                )
+                if not configured_language or not configured_language[0]:
+                    self.execute(
+                        "UPDATE user_settings SET language = ? "
+                        "WHERE language = 'vi'",
+                        (DefaultSettings.LANGUAGE,),
+                    )
+                    self.execute(
+                        "UPDATE app_settings SET theme = 'system' "
+                        "WHERE theme = 'light'",
+                    )
+                self.execute(
+                    "INSERT INTO app_settings_migrations (migration) "
+                    "VALUES ('system_theme_and_language_default_v1')"
+                )
+            language_default_migration = self.execute(
+                "SELECT 1 FROM app_settings_migrations "
+                "WHERE migration = 'device_language_default_v1'",
+                fetch_one=True,
+            )
+            if not language_default_migration:
+                configured_language = self.execute(
+                    "SELECT starter_language FROM app_settings WHERE id = 1",
+                    fetch_one=True,
+                )
+                if not configured_language or not configured_language[0]:
+                    self.execute(
+                        "UPDATE user_settings SET language = ? "
+                        "WHERE language = 'vi'",
+                        (DefaultSettings.LANGUAGE,),
+                    )
+                self.execute(
+                    "INSERT INTO app_settings_migrations (migration) "
+                    "VALUES ('device_language_default_v1')"
+                )
 
             self.execute('''
                 CREATE TABLE IF NOT EXISTS objectives (
@@ -352,6 +400,7 @@ class UserDatabase:
                 "INSERT INTO users (name, created_at) VALUES (?, ?)",
                 (username, created_at)
             )
+            self.set_language(username, DefaultSettings.LANGUAGE)
             self.set_currency(username, currency)
             return True
         except sqlite3.IntegrityError:
@@ -401,9 +450,9 @@ class UserDatabase:
             )
 
     def get_language(self, username: str) -> str:
-        """Get the language setting for a user. Returns 'vi' by default."""
+        """Get a user's language, using the detected device locale as the default."""
         user_id = self.get_user_id(username)
-        if not user_id: return 'vi'
+        if not user_id: return DefaultSettings.LANGUAGE
 
         result = self.db.execute(
             "SELECT language FROM user_settings WHERE user_id = ?",
@@ -594,6 +643,8 @@ class AppSettingsDatabase:
             fetch_one=True,
         )
         theme = result[0] if result and result[0] else DefaultSettings.THEME
+        if theme == "system":
+            return theme
         try:
             ThemeRegistry.get(theme)
         except ValueError:
@@ -602,9 +653,10 @@ class AppSettingsDatabase:
         return theme
 
     def set_theme(self, theme: str) -> bool:
-        """Set the app-wide theme to a registered theme."""
+        """Set the app-wide theme preference."""
         try:
-            ThemeRegistry.get(theme)
+            if theme != "system":
+                ThemeRegistry.get(theme)
             self.db.execute(
                 "UPDATE app_settings SET theme = ? WHERE id = 1",
                 (theme,),

@@ -352,8 +352,10 @@ class ThemeManager:
     _current_theme = ThemeName.LIGHT.value
 
     @classmethod
-    def set_theme(cls, name: str | ThemeName) -> None:
+    def set_theme(cls, name: str | ThemeName, system_dark: bool = False) -> None:
         theme_name = str(name)
+        if theme_name == "system":
+            theme_name = ThemeName.DARK.value if system_dark else ThemeName.LIGHT.value
         ThemeRegistry.get(theme_name)
         cls._current_theme = theme_name
 

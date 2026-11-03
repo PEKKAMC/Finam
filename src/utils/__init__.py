@@ -11,7 +11,7 @@ from src.utils.number_format import format_expression, format_number, get_decima
 from src.utils.page import Page
 from src.utils.dialog import Dialog
 from src.utils.resizing import get_safe_page_size
-from src.utils.settings import DefaultSettings, UISettings
+from src.utils.settings import DefaultSettings, UISettings, language_for_device_locale
 from src.utils.text import Text, TEXT_STYLES, create_text
 
 __all__ = [
@@ -44,6 +44,7 @@ __all__ = [
     # Settings
     "DefaultSettings",
     "UISettings",
+    "language_for_device_locale",
     # Text
     "Text",
     "TEXT_STYLES",

@@ -68,7 +68,7 @@ class SettingsView(ft.View):
         # Get currency index
         currency_index = self.currencies.index(current_currency) if current_currency in self.currencies else self.currencies.index(DefaultSettings.CURRENCY)
 
-        theme_names = ThemeRegistry.names()
+        theme_names = (*ThemeRegistry.names(), "system")
         theme_name_to_label = {
             name: (
                 self.lang[f"settings.theme.{name}"]
@@ -434,7 +434,10 @@ class SettingsView(ft.View):
 
         selected_language_name = self.language_dropdown.dropdown_control.value or ""
         selected_currency = self.currency_dropdown.dropdown_control.value or DefaultSettings.CURRENCY
-        selected_language_code = self.language_name_to_code.get(selected_language_name, "vi")
+        selected_language_code = self.language_name_to_code.get(
+            selected_language_name,
+            DefaultSettings.LANGUAGE,
+        )
         selected_theme_label = self.theme_dropdown.dropdown_control.value or ""
         selected_theme = self.theme_label_to_name.get(selected_theme_label, DefaultSettings.THEME)
         selected_separator_label = self.digit_separator_dropdown.dropdown_control.value or "None"
@@ -467,11 +470,18 @@ class SettingsView(ft.View):
             return
         db.users.set_currency(username, selected_currency)
 
-        ThemeManager.set_theme(selected_theme)
+        ThemeManager.set_theme(
+            selected_theme,
+            system_dark=self._page.platform_brightness == ft.Brightness.DARK,
+        )
         self._page.theme_mode = (
-            ft.ThemeMode.DARK
-            if ThemeManager.get_theme().dark_mode
-            else ft.ThemeMode.LIGHT
+            ft.ThemeMode.SYSTEM
+            if selected_theme == "system"
+            else (
+                ft.ThemeMode.DARK
+                if ThemeManager.get_theme().dark_mode
+                else ft.ThemeMode.LIGHT
+            )
         )
         Logger.info(
             f"Settings saved - Language: {selected_language_code}, "
