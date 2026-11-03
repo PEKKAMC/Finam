@@ -767,7 +767,10 @@ class UserManagementView(ft.View):
                     backend_url,
                 )
                 try:
-                    await ft.UrlLauncher().launch_url(authorization_url)
+                    await ft.UrlLauncher().launch_url(
+                        authorization_url,
+                        mode=ft.LaunchMode.EXTERNAL_APPLICATION,
+                    )
                 except Exception:
                     _pending_mobile_google_auth.pop(state, None)
                     raise
