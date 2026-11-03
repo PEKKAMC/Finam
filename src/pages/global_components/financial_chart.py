@@ -15,8 +15,13 @@ from src.utils import Color, Text, UISettings, format_number
 Logger.info("Building financial chart...")
 
 
-def get_financial_chart_data(username: str, chart_type: str = "daily", date_offset: int = 0, target_year: int | None = None) -> tuple[dict, list]:
-    """Fetches expenses and incomes directly from the database and structures data for the requested period and mode."""
+def get_financial_chart_data(
+    username: str,
+    chart_type: str = "daily",
+    date_offset: int = 0,
+    target_year: int | None = None,
+) -> tuple[dict, list]:
+    """Fetches aggregated database totals and structures them for the requested chart period."""
     now = datetime.datetime.now()
 
     if chart_type == "daily":
@@ -45,43 +50,32 @@ def get_financial_chart_data(username: str, chart_type: str = "daily", date_offs
     else:
         chart_data = []
 
-    start_of_week = target_date - datetime.timedelta(days=target_date.weekday())
-    start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
-    end_of_week = start_of_week + datetime.timedelta(days=6, hours=23, minutes=59, seconds=59)
+    if chart_type == "daily":
+        start_date = (target_date - datetime.timedelta(days=target_date.weekday())).replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+        end_date = start_date + datetime.timedelta(days=7)
+    elif chart_type == "weekly":
+        start_date = target_date.replace(day=1)
+        end_date = (start_date.replace(day=28) + datetime.timedelta(days=4)).replace(day=1)
+    elif chart_type == "monthly":
+        start_date = target_date.replace(year=target_date.year, month=1, day=1)
+        end_date = start_date.replace(year=start_date.year + 1)
+    else:
+        raise ValueError(f"Unknown chart type: {chart_type}")
 
-    expenses = db.spending.get_user_expenses(username) or []
-    incomes = db.spending.get_user_incomes(username) or []
-
-    try:
-        for expense in expenses:
-            try:
-                exp_date = datetime.datetime.strptime(str(expense["date"])[:16], "%Y-%m-%d %H:%M")
-                amount = float(expense.get("amount", 0))
-                if chart_type == "daily" and start_of_week <= exp_date <= end_of_week:
-                    chart_data[exp_date.weekday()]["expense"] += amount
-                elif chart_type == "weekly" and exp_date.year == target_date.year and exp_date.month == target_date.month:
-                    week_of_month = min((exp_date.day - 1) // 7, 3)
-                    chart_data[week_of_month]["expense"] += amount
-                elif chart_type == "monthly" and exp_date.year == target_date.year:
-                    chart_data[exp_date.month - 1]["expense"] += amount
-            except (ValueError, TypeError):
-                pass
-
-        for income in incomes:
-            try:
-                inc_date = datetime.datetime.strptime(str(income["date"])[:16], "%Y-%m-%d %H:%M")
-                amount = float(income.get("amount", 0))
-                if chart_type == "daily" and start_of_week <= inc_date <= end_of_week:
-                    chart_data[inc_date.weekday()]["income"] += amount
-                elif chart_type == "weekly" and inc_date.year == target_date.year and inc_date.month == target_date.month:
-                    week_of_month = min((inc_date.day - 1) // 7, 3)
-                    chart_data[week_of_month]["income"] += amount
-                elif chart_type == "monthly" and inc_date.year == target_date.year:
-                    chart_data[inc_date.month - 1]["income"] += amount
-            except (ValueError, TypeError):
-                pass
-    except Exception as ex:
-        Logger.error(f"Error formatting dashboard chart data: {ex}")
+    totals = db.spending.get_user_chart_totals(
+        username,
+        chart_type,
+        start_date.strftime("%Y-%m-%d %H:%M"),
+        end_date.strftime("%Y-%m-%d %H:%M"),
+    )
+    for bucket, kind, amount in totals:
+        if bucket is not None and 0 <= bucket < len(chart_data):
+            chart_data[bucket][kind] = float(amount or 0)
 
     return chart_date, chart_data
 
@@ -103,9 +97,7 @@ class FinancialChart(ft.Container):
         self.date_offset = 0
         self.monthly_year = self.real_current_year
 
-        temp_date, _ = get_financial_chart_data(username=self.username, chart_type="monthly", target_year=self.monthly_year)
-        month_val = temp_date.get("month", self.real_current_month)
-        self.monthly_page = 0 if month_val <= 6 else 1
+        self.monthly_page = 0 if self.real_current_month <= 6 else 1
 
         self.total_pan_x = 0.0
         self.is_dragging = False
@@ -114,8 +106,9 @@ class FinancialChart(ft.Container):
         self.next_container = None
         self.chart_width = 380
         self.drag_sensitivity = 4
+        self._period_data_cache = {}
 
-        self._load_all_periods_data()
+        self._load_all_periods_data(refresh=True)
 
         controls = []
         if self.show_mode_buttons:
@@ -181,26 +174,39 @@ class FinancialChart(ft.Container):
         except TypeError:
             callback(*args)
 
+    def _update_controls(self, *controls):
+        controls = [control for control in controls if control is not None]
+        if not controls:
+            return
+        if self.page:
+            self.page.update(*controls)
+            return
+        for control in controls:
+            control.update()
+
     def _prepare_containers_for_animation(self):
         """Makes adjacent charts visible and resets offsets before starting an animation."""
         self.is_dragging = True
 
+        controls = []
         if self.prev_container:
             self.prev_container.visible = self.can_go_prev
             self.prev_container.animate_offset = None
             self.prev_container.offset = ft.Offset(-1.0, 0.0)
-            self.prev_container.update()
+            controls.append(self.prev_container)
 
         if self.curr_container:
             self.curr_container.animate_offset = None
             self.curr_container.offset = ft.Offset(0.0, 0.0)
-            self.curr_container.update()
+            controls.append(self.curr_container)
 
         if self.next_container:
             self.next_container.visible = self.can_go_next
             self.next_container.animate_offset = None
             self.next_container.offset = ft.Offset(1.0, 0.0)
-            self.next_container.update()
+            controls.append(self.next_container)
+
+        self._update_controls(*controls)
 
     def _handle_pan_start(self, e: ft.DragStartEvent) -> ft.DragStartEvent:
         """Resets accumulated drag distance and makes adjacent charts visible for dragging."""
@@ -235,17 +241,20 @@ class FinancialChart(ft.Container):
 
                     fraction = max(-1.0, min(1.0, fraction))
 
+                    controls = []
                     if self.prev_container and self.prev_container.visible:
                         self.prev_container.offset = ft.Offset(-1.0 + fraction, 0.0)
-                        self.prev_container.update()
+                        controls.append(self.prev_container)
 
                     if self.curr_container:
                         self.curr_container.offset = ft.Offset(0.0 + fraction, 0.0)
-                        self.curr_container.update()
+                        controls.append(self.curr_container)
 
                     if self.next_container and self.next_container.visible:
                         self.next_container.offset = ft.Offset(1.0 + fraction, 0.0)
-                        self.next_container.update()
+                        controls.append(self.next_container)
+
+                    self._update_controls(*controls)
             except Exception as ex:
                 Logger.error(f"Error occurred while handling pan update: {ex}")
 
@@ -267,68 +276,78 @@ class FinancialChart(ft.Container):
     async def _handle_pan_end_async(self, direction: str):
         anim = ft.Animation(duration=250, curve=ft.AnimationCurve.EASE_OUT)
 
+        animated_controls = []
         for c in [self.prev_container, self.curr_container, self.next_container]:
             if c and c.visible:
                 c.animate_offset = anim
-                c.update()
+                animated_controls.append(c)
+        self._update_controls(*animated_controls)
 
         await asyncio.sleep(0.02)
 
         if direction == "prev":
+            controls = []
             if self.prev_container:
                 self.prev_container.offset = ft.Offset(0.0, 0.0)
-                self.prev_container.update()
+                controls.append(self.prev_container)
             if self.curr_container:
                 self.curr_container.offset = ft.Offset(1.0, 0.0)
-                self.curr_container.update()
+                controls.append(self.curr_container)
             if self.next_container and self.next_container.visible:
                 self.next_container.offset = ft.Offset(2.0, 0.0)
-                self.next_container.update()
+                controls.append(self.next_container)
+            self._update_controls(*controls)
         elif direction == "next":
+            controls = []
             if self.prev_container and self.prev_container.visible:
                 self.prev_container.offset = ft.Offset(-2.0, 0.0)
-                self.prev_container.update()
+                controls.append(self.prev_container)
             if self.curr_container:
                 self.curr_container.offset = ft.Offset(-1.0, 0.0)
-                self.curr_container.update()
+                controls.append(self.curr_container)
             if self.next_container:
                 self.next_container.offset = ft.Offset(0.0, 0.0)
-                self.next_container.update()
+                controls.append(self.next_container)
+            self._update_controls(*controls)
         else:
+            controls = []
             if self.prev_container and self.prev_container.visible:
                 self.prev_container.offset = ft.Offset(-1.0, 0.0)
-                self.prev_container.update()
+                controls.append(self.prev_container)
             if self.curr_container:
                 self.curr_container.offset = ft.Offset(0.0, 0.0)
-                self.curr_container.update()
+                controls.append(self.curr_container)
             if self.next_container and self.next_container.visible:
                 self.next_container.offset = ft.Offset(1.0, 0.0)
-                self.next_container.update()
+                controls.append(self.next_container)
+            self._update_controls(*controls)
 
         await asyncio.sleep(0.25)
 
         if direction == "prev":
             self._apply_prev_state()
-            self.update_data()
+            self._refresh_chart_from_cache()
         elif direction == "next":
             self._apply_next_state()
-            self.update_data()
+            self._refresh_chart_from_cache()
         else:
             self.is_dragging = False
+            controls = []
             if self.prev_container:
                 self.prev_container.visible = False
                 self.prev_container.animate_offset = None
                 self.prev_container.offset = ft.Offset(-1.0, 0.0)
-                self.prev_container.update()
+                controls.append(self.prev_container)
             if self.curr_container:
                 self.curr_container.animate_offset = None
                 self.curr_container.offset = ft.Offset(0.0, 0.0)
-                self.curr_container.update()
+                controls.append(self.curr_container)
             if self.next_container:
                 self.next_container.visible = False
                 self.next_container.animate_offset = None
                 self.next_container.offset = ft.Offset(1.0, 0.0)
-                self.next_container.update()
+                controls.append(self.next_container)
+            self._update_controls(*controls)
 
     def _refresh_ui(self):
         controls = []
@@ -433,13 +452,21 @@ class FinancialChart(ft.Container):
     def _generate_y_axis_labels(self):
         max_val = max(1, self.max_value)
         step = max_val / 4.0
+        if max_val >= 1_000_000_000:
+            divisor, suffix = 1_000_000_000, "B"
+        elif max_val >= 1_000_000:
+            divisor, suffix = 1_000_000, "M"
+        elif max_val >= 1_000:
+            divisor, suffix = 1_000, "K"
+        else:
+            divisor, suffix = 1, ""
         labels = []
         for i in range(5):
             value = i * step
             labels.append(
                 fc.ChartAxisLabel(
                     value=float(value),
-                    label=Text.LABEL(f"{value / 1000:g}K", color=Color.SECONDARY_TEXT)
+                    label=Text.LABEL(f"{value / divisor:g}{suffix}", color=Color.SECONDARY_TEXT)
                 )
             )
         return labels
@@ -447,7 +474,7 @@ class FinancialChart(ft.Container):
     def _build_single_chart(self, chart_data_subset, start_index=0):
         chart_label = []
         groups = []
-        bar_size = 18
+        bar_size = 15
 
         for index, data in enumerate(chart_data_subset):
             actual_index = start_index + index
@@ -515,7 +542,7 @@ class FinancialChart(ft.Container):
                     ),
                     left_axis=fc.ChartAxis(
                         labels=self._generate_y_axis_labels(),
-                        label_size=35,
+                        label_size=25,
                     ),
                     horizontal_grid_lines=fc.ChartGridLines(color=Color.TRANSPARENT),
                     max_y=self.max_value,
@@ -543,22 +570,22 @@ class FinancialChart(ft.Container):
         next_enabled = self.can_go_next
 
         prev_btn = ft.IconButton(
-            width=28,
-            height=28,
-            padding=0,
+            width=40,
+            height=56,
+            padding=4,
             icon=ft.Icons.CHEVRON_LEFT,
-            icon_size=18,
+            icon_size=22,
             icon_color=Color.PRIMARY if prev_enabled else Color.SECONDARY_TEXT,
             disabled=not prev_enabled,
             on_click=lambda _: self._handle_prev(),
             tooltip="Previous"
         )
         next_btn = ft.IconButton(
-            width=28,
-            height=28,
-            padding=0,
+            width=40,
+            height=56,
+            padding=4,
             icon=ft.Icons.CHEVRON_RIGHT,
-            icon_size=18,
+            icon_size=22,
             icon_color=Color.PRIMARY if next_enabled else Color.SECONDARY_TEXT,
             disabled=not next_enabled,
             on_click=lambda _: self._handle_next(),
@@ -596,57 +623,80 @@ class FinancialChart(ft.Container):
 
         chart_viewport = ft.Stack(
             expand=True,
+            margin=ft.Margin(left=-20, right=-20),
             controls=[
-                chart_stack,
+                ft.Container(
+                    expand=True,
+                    padding=ft.Padding.only(left=48, right=48),
+                    content=chart_stack,
+                ),
                 ft.Container(
                     expand=True,
                     bgcolor=ft.Colors.TRANSPARENT,
                     content=ft.GestureDetector(
                         expand=True,
-                        drag_interval=10,
+                        drag_interval=16,
                         mouse_cursor=ft.MouseCursor.MOVE,
                         on_horizontal_drag_start=self._handle_pan_start,
                         on_horizontal_drag_update=self._handle_pan_update,
                         on_horizontal_drag_end=self._handle_pan_end,
-                        on_pan_start=self._handle_pan_start,
-                        on_pan_update=self._handle_pan_update,
-                        on_pan_end=self._handle_pan_end,
                     )
-                )
+                ),
+                ft.Container(
+                    left=0,
+                    top=0,
+                    bottom=0,
+                    width=48,
+                    bgcolor=Color.CARD_BACKGROUND,
+                    alignment=ft.Alignment.CENTER,
+                    content=prev_btn,
+                ),
+                ft.Container(
+                    right=0,
+                    top=0,
+                    bottom=0,
+                    width=48,
+                    bgcolor=Color.CARD_BACKGROUND,
+                    alignment=ft.Alignment.CENTER,
+                    content=next_btn,
+                ),
             ]
         )
 
-        return ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            expand=True,
-            controls=[
-                prev_btn,
-                ft.Container(content=chart_viewport, expand=True),
-                next_btn,
-            ]
-        )
+        return chart_viewport
 
     def resize(self, width: int) -> None:
         self.chart_width = width
         self.main_container.width = width
 
-    def _load_all_periods_data(self):
+    def _load_all_periods_data(self, refresh: bool = False):
         """Fetches data for previous, current, and next periods to enable live drag previews."""
+        if refresh:
+            self._period_data_cache.clear()
+
         curr_offset = 0 if self.chart_type == "monthly" else self.date_offset
-        self.chart_date, self.curr_data, self.curr_start_idx = self._get_period_data(
-            self.chart_type, curr_offset, self.monthly_year, self.monthly_page
-        )
-
         prev_offset, prev_year, prev_page = self._get_prev_coords()
-        _, self.prev_data, self.prev_start_idx = self._get_period_data(
-            self.chart_type, prev_offset, prev_year, prev_page
-        )
-
         next_offset, next_year, next_page = self._get_next_coords()
-        _, self.next_data, self.next_start_idx = self._get_period_data(
-            self.chart_type, next_offset, next_year, next_page
-        )
+        requests = [
+            (curr_offset, self.monthly_year, self.monthly_page),
+            (prev_offset, prev_year, prev_page),
+            (next_offset, next_year, next_page),
+        ]
+        curr_result, prev_result, next_result = [
+            self._get_period_data(self.chart_type, offset, year, page)
+            for offset, year, page in requests
+        ]
+        self.chart_date, self.curr_data, self.curr_start_idx = curr_result
+        _, self.prev_data, self.prev_start_idx = prev_result
+        _, self.next_data, self.next_start_idx = next_result
+        cache_keys = {
+            self._period_cache_key(self.chart_type, offset, year, page)
+            for offset, year, page in requests
+        }
+        self._period_data_cache = {
+            key: self._period_data_cache[key]
+            for key in cache_keys
+        }
 
         all_data = self.prev_data + self.curr_data + self.next_data
         max_chart_value = (
@@ -659,6 +709,11 @@ class FinancialChart(ft.Container):
     def update_data(self):
         """Fetches fresh chart data for all three periods and refreshes the UI."""
         self.is_dragging = False
+        self._load_all_periods_data(refresh=True)
+        self._refresh_ui()
+
+    def _refresh_chart_from_cache(self):
+        self.is_dragging = False
         self._load_all_periods_data()
         self._refresh_ui()
 
@@ -670,7 +725,7 @@ class FinancialChart(ft.Container):
         self.date_offset = 0
         self.monthly_year = self.real_current_year
         self.monthly_page = 0 if self.real_current_month <= 6 else 1
-        self.update_data()
+        self._refresh_chart_from_cache()
 
     def _apply_prev_state(self):
         if self.chart_type == "monthly":
@@ -725,16 +780,23 @@ class FinancialChart(ft.Container):
 
     def _get_period_data(self, chart_type: str, date_offset: int, target_year: int | None = None, page: int | None = None):
         """Loads chart data for a designated period and slices the monthly view to the proper half-year."""
-        chart_date, chart_data = get_financial_chart_data(
-            username=self.username,
-            chart_type=chart_type,
-            date_offset=date_offset,
-            target_year=target_year,
-        )
+        cache_key = self._period_cache_key(chart_type, date_offset, target_year, page)
+        if cache_key not in self._period_data_cache:
+            chart_date, chart_data = get_financial_chart_data(
+                username=self.username,
+                chart_type=chart_type,
+                date_offset=date_offset,
+                target_year=target_year,
+            )
+            self._period_data_cache[cache_key] = (chart_date, chart_data, 0)
+        chart_date, chart_data, _ = self._period_data_cache[cache_key]
 
         if chart_type == "monthly":
             if page == 1:
                 return chart_date, chart_data[6:12], 6
             return chart_date, chart_data[0:6], 0
-
         return chart_date, chart_data, 0
+
+    @staticmethod
+    def _period_cache_key(chart_type: str, date_offset: int, target_year: int | None, page: int | None):
+        return chart_type, date_offset, target_year, None if chart_type == "monthly" else page

@@ -304,6 +304,13 @@ class DatabaseConnection:
 
             self._migrate_money_columns_to_real()
 
+            self.execute(
+                "CREATE INDEX IF NOT EXISTS idx_expenses_user_date ON expenses(user_id, date)"
+            )
+            self.execute(
+                "CREATE INDEX IF NOT EXISTS idx_incomes_user_date ON incomes(user_id, date)"
+            )
+
             count = self.execute(
                 "SELECT COUNT(*) FROM users",
                 fetch_one=True
@@ -965,6 +972,42 @@ class SpendingDatabase:
             fetch_all=True
         )
         return [{"id": row[0], "amount": float(row[1]), "category": row[2], "date": row[3], "note": row[4]} for row in rows]
+
+    def get_user_chart_totals(
+        self,
+        username: str,
+        chart_type: str,
+        start_date: str,
+        end_date: str,
+    ) -> list:
+        """Aggregate chart buckets in SQLite without loading transaction rows into Python."""
+        bucket_expression = {
+            "daily": "(CAST(strftime('%w', date) AS INTEGER) + 6) % 7",
+            "weekly": "MIN((CAST(strftime('%d', date) AS INTEGER) - 1) / 7, 3)",
+            "monthly": "CAST(strftime('%m', date) AS INTEGER) - 1",
+        }.get(chart_type)
+        if bucket_expression is None:
+            raise ValueError(f"Unsupported chart type: {chart_type}")
+
+        return self.db.execute(
+            f"""
+            SELECT {bucket_expression} AS bucket, kind, SUM(amount)
+            FROM (
+                SELECT date, amount, 'expense' AS kind
+                FROM expenses
+                WHERE user_id = (SELECT id FROM users WHERE name = ?)
+                  AND date >= ? AND date < ?
+                UNION ALL
+                SELECT date, amount, 'income' AS kind
+                FROM incomes
+                WHERE user_id = (SELECT id FROM users WHERE name = ?)
+                  AND date >= ? AND date < ?
+            )
+            GROUP BY bucket, kind
+            """,
+            (username, start_date, end_date, username, start_date, end_date),
+            fetch_all=True,
+        )
 
     def delete_entry(self, username: str, entry_id: int) -> bool:
         """Delete an expense or income entry by ID. Tries both tables and returns success."""
