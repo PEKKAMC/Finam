@@ -481,12 +481,42 @@ class FinancialChart(ft.Container):
 
             match self.chart_type:
                 case "daily":
-                    days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+                    days = [
+                        self.lang[f"financial_chart.weekday_{day}"]
+                        for day in (
+                            "monday",
+                            "tuesday",
+                            "wednesday",
+                            "thursday",
+                            "friday",
+                            "saturday",
+                            "sunday",
+                        )
+                    ]
                     label_text = days[actual_index] if actual_index < len(days) else ""
                 case "weekly":
                     label_text = f"{self.lang['generic.week']} {data.get('week', index+1)}"
                 case "monthly":
-                    label_text = f"{self.lang['generic.month']} {data.get('month', actual_index+1)}"
+                    months = (
+                        "jan",
+                        "feb",
+                        "mar",
+                        "apr",
+                        "may",
+                        "jun",
+                        "jul",
+                        "aug",
+                        "sep",
+                        "oct",
+                        "nov",
+                        "dec",
+                    )
+                    month_index = data.get("month", actual_index + 1) - 1
+                    label_text = (
+                        self.lang[f"financial_chart.month_{months[month_index]}"]
+                        if 0 <= month_index < len(months)
+                        else ""
+                    )
                 case _:
                     label_text = ""
                     Logger.error("Unknown chart type")
