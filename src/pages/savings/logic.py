@@ -98,25 +98,27 @@ class LogicController:
     def delete_objective(objective_id: int):
         db.savings.delete_objective(objective_id)
 
-    def process_quick_action(self, objective_id: int, action: str, amount: float, time: str, note: str = "") -> tuple[bool, str, float, float]:
+    def process_quick_action(self, objective_id: int, action: str, amount: float, time: str, note: str = "") -> tuple[bool, str, float, float, bool]:
         current_saved = db.savings.get_objective_progress(objective_id)
         target = db.savings.get_objective_target(objective_id)
         surplus = 0.0
+        reached_target = False
 
         if action in ("remove", "withdraw"):
             if amount > current_saved:
-                return False, "savings.error.not_enough_balance", current_saved, 0.0
+                return False, "savings.error.not_enough_balance", current_saved, 0.0, False
             amount = -amount
         else:
             remaining = max(0.0, target - current_saved)
+            reached_target = amount >= remaining
             if amount > remaining:
                 surplus = amount - remaining
                 amount = remaining
 
         if not db.savings.add_saving_entry(self.current_user, amount, time, objective_id, note):
-            return False, "savings.error.action_failed", current_saved, 0.0
+            return False, "savings.error.action_failed", current_saved, 0.0, False
 
-        return True, "", 0.0, surplus
+        return True, "", current_saved + amount, surplus, reached_target
 
     def clear_activity_history(self):
         db.users.clear_activity_history(self.current_user)

@@ -805,7 +805,7 @@ class DepositWithdrawModal(ft.Container):
             return
 
         objective_id = int(self.goal["objective_id"])
-        success, error_key, current_saved, surplus = self.controller.process_quick_action(
+        success, error_key, current_saved, surplus, reached_target = self.controller.process_quick_action(
             objective_id,
             self.mode,
             amount,
@@ -837,7 +837,7 @@ class DepositWithdrawModal(ft.Container):
             is_success=True,
         )
 
-        if surplus > 0:
+        if surplus > 0 or reached_target:
             self.on_surplus(self.goal, surplus)
 
     def _show_error(self, message: str) -> None:
@@ -1005,6 +1005,7 @@ class CongratulationsModal(Dialog):
         else:
             self.surplus_banner.visible = False
             self.goals_dropdown_column.visible = False
+            self.action_button.visible = True
             self.action_button.content = self.lang["savings.continue_saving"]
 
         self.show()
