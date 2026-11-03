@@ -1,6 +1,6 @@
 # Finam v0.4.4-beta
 
-**Release Date:** November 1, 2026
+**Release Date:** November 3, 2026
 
 > **⚠️ BETA WARNING: Read Before Using**
 >
@@ -14,20 +14,22 @@
 ## Changes in this version
 
 *   Added Help and FAQ page.
-*   Added multilingual support to AI scanner
+*   Added multilingual support to AI scanner.
 *   Reworked category selector.
-*   Removed some unnecessary assets
+*   Removed some unnecessary assets.
+*   Default settings is now based on device's system settings.
+*   Improved app stability and performance, especially the financial chart.
+*   some.secret.stuff.
 
 ## Bug fixes in this version
 
 *   Fixed mobile Google authentication not working.
-*   Fixed user dialog showing incorrect language in starter page.
-*   Every page now has correct bottom margin
+*   Fixed A LOT OF incorrect translations.
+*   Every page now has correct bottom margin.
 
 ## Known Issues & Instability
 
 *   Various UI elements may not scale perfectly on all screen sizes.
-*   the.rock.does.not.have.sound
 
 # Finam v0.4.3-beta
 
