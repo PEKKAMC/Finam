@@ -112,7 +112,7 @@ class DatabaseConnection:
                     user_id INTEGER PRIMARY KEY,
                     history_cleared_at TEXT,
                     language TEXT DEFAULT '{DefaultSettings.LANGUAGE}',
-                    currency TEXT DEFAULT 'VND (đ)',
+                    currency TEXT DEFAULT '{DefaultSettings.CURRENCY}',
                     FOREIGN KEY (user_id) REFERENCES users (id)
                  )
             ''')
@@ -223,11 +223,19 @@ class DatabaseConnection:
                 pass
             
             try:
-                self.execute("ALTER TABLE user_settings ADD COLUMN currency TEXT DEFAULT 'VND (đ)'")
+                self.execute(
+                    "ALTER TABLE user_settings ADD COLUMN "
+                    f"currency TEXT DEFAULT '{DefaultSettings.CURRENCY}'"
+                )
                 Logger.info("Added currency column to user_settings table")
             except sqlite3.OperationalError:
                 # Column already exists
                 pass
+            self.execute(
+                "UPDATE user_settings SET currency = ? "
+                "WHERE currency IS NULL OR currency = ''",
+                (DefaultSettings.CURRENCY,),
+            )
 
             theme_default_migration = self.execute(
                 "SELECT 1 FROM app_settings_migrations "

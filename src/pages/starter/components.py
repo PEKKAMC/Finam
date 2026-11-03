@@ -8,7 +8,7 @@ import flet as ft
 
 from src.pages.global_components import AddUserField, DeleteUserDialog, UserList, UserManagementDialog
 from src.pages.starter.logic import LogicController
-from src.utils import Color, Page, Text, UISettings
+from src.utils import Color, DefaultSettings, Page, Text, UISettings
 
 
 class DialogManager:
@@ -31,7 +31,8 @@ class DialogManager:
             page=self._page,
             lang=self.lang,
             on_submit_callback=self.handle_add_user,
-            currencies=self.controller.get_currencies()
+            currencies=self.controller.get_currencies(),
+            default_currency=DefaultSettings.CURRENCY,
         )
 
         self.user_dialog = UserManagementDialog(

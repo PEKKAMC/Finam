@@ -13,6 +13,7 @@ from src.utils import (
     Page,
     ThemeManager,
     UISettings,
+    currency_for_region,
     get_language,
     language_for_device_locale,
     set_decimal_separator,
@@ -83,11 +84,11 @@ async def main(page: Page) -> None:
     try:
         device_info = await page.get_device_info()
         if device_info and device_info.locales:
-            DefaultSettings.LANGUAGE = language_for_device_locale(
-                device_info.locales[0].language_code
-            )
+            primary_locale = device_info.locales[0]
+            DefaultSettings.LANGUAGE = language_for_device_locale(primary_locale.language_code)
+            DefaultSettings.CURRENCY = currency_for_region(primary_locale.country_code)
     except Exception as ex:
-        Logger.warning(f"Could not read the device language; using the host locale: {ex}")
+        Logger.warning(f"Could not read device locale preferences; using host defaults: {ex}")
     db.initialize_database()
 
     info: dict[str, str] = {

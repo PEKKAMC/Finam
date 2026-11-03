@@ -26,7 +26,15 @@ from src.logger import Logger
 from src.pages.global_components import AddUserField, DeleteUserDialog, Menu, UserList, UserManagementDialog
 from src.pages.user_management.components import GoogleAccountCard, MenuItem, MenuSectionCard, ProfileCard, DeleteAllDataDialog
 from src.pages.user_management.logic import LogicController
-from src.utils import Color, Page, get_asset_path, get_safe_page_size, Text, UISettings
+from src.utils import (
+    Color,
+    DefaultSettings,
+    Page,
+    Text,
+    UISettings,
+    get_asset_path,
+    get_safe_page_size,
+)
 from src.version_manager import get_version
 
 Logger.info("Initializing User Management page...")
@@ -230,7 +238,7 @@ class DialogManager:
             lang=self.lang,
             on_submit_callback=self._handle_add_user,
             currencies=self.controller.get_currencies(),
-            default_currency=self.controller.get_currency(self.user_info["username"])
+            default_currency=DefaultSettings.CURRENCY,
         )
 
         self.user_dialog = UserManagementDialog(
