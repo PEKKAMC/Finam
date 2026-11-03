@@ -10,18 +10,7 @@ import flet as ft
 from src.logger import Logger
 from src.pages.settings.components import SettingCard, SettingDropdown, SettingRow, SettingsHeader
 from src.pages.settings.logic import LogicController
-from src.utils import (
-    Color,
-    DefaultSettings,
-    Dialog,
-    Page,
-    ThemeManager,
-    ThemeRegistry,
-    get_asset_path,
-    get_safe_page_size,
-    Text,
-    UISettings,
-)
+from src.utils import Color, DefaultSettings, Dialog, Page, ThemeManager, ThemeRegistry, get_asset_path, get_safe_page_size, Text, UISettings
 from src.database import db
 
 Logger.info("Initializing Settings page...")

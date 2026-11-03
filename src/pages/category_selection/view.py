@@ -5,11 +5,7 @@
 import flet as ft
 
 from src.logger import Logger
-from src.pages.category_selection.components import (
-    CategoryEditorDialog,
-    CategoryItem,
-    DeleteCategoryDialog,
-)
+from src.pages.category_selection.components import CategoryEditorDialog, CategoryItem, DeleteCategoryDialog
 from src.pages.category_selection.logic import LogicController
 from src.pages.global_components import KeyboardContainer
 from src.utils import Color, Page, Text, UISettings, get_safe_page_size

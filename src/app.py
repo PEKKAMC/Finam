@@ -8,17 +8,7 @@ from urllib.parse import urlparse
 import flet as ft
 
 from src.database import db
-from src.utils import (
-    DefaultSettings,
-    Page,
-    ThemeManager,
-    UISettings,
-    currency_for_region,
-    get_language,
-    language_for_device_locale,
-    set_decimal_separator,
-    set_digit_separator,
-)
+from src.utils import DefaultSettings, Page, ThemeManager, UISettings, currency_for_region, get_language, language_for_device_locale, set_decimal_separator, set_digit_separator
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
@@ -31,11 +21,7 @@ from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.purchase_scanner import get_scanner_view
 from src.pages.starter.view import StarterView, get_starter_view
-from src.pages.user_management import (
-    complete_google_mobile_callback,
-    complete_google_web_callback,
-    get_user_management_view,
-)
+from src.pages.user_management import complete_google_mobile_callback, complete_google_web_callback, get_user_management_view
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
@@ -279,29 +265,17 @@ async def main(page: Page) -> None:
             if isinstance(view, StarterView) and view.is_unlocked:
                 view.show_user_management_dialog()
 
-        except Exception as ex:
-            await on_error(e, ex)
+        except Exception as exc:
+            await on_error(e, exc)
 
-    async def on_error(e, ex: Exception | None = None) -> None:
+    async def on_error(e, exc: Exception | None = None) -> None:
         event_data = getattr(e, "data", None)
-        Logger.critical(f"Unexpected error occurred: \nEvent data: {event_data}\nException: {ex}", exc_info=True)
+        Logger.critical(f"Unexpected error occurred: \nEvent data: {event_data}\nException: {exc}", exc_info=True)
 
         await page.window.destroy()
 
     page.on_error = on_error
     page.on_route_change = route_change
-
-    async def on_platform_brightness_change(e: ft.PlatformBrightnessChangeEvent) -> None:
-        if db.app_settings.get_theme() != "system":
-            return
-        ThemeManager.set_theme(
-            "system",
-            system_dark=e.brightness == ft.Brightness.DARK,
-        )
-        delete_all_cached_views()
-        await route_change(e)
-
-    page.on_platform_brightness_change = on_platform_brightness_change
 
     if not await handle_google_mobile_callback() and not await handle_google_web_callback():
         await page.push_route("/starter")

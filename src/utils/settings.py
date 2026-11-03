@@ -43,29 +43,19 @@ def _detect_default_region() -> str | None:
     )
 
 
-def currency_for_region(
-    region_code: str | None,
-    supported_currencies: list[str] | None = None,
-) -> str:
+def currency_for_region(region_code: str | None, supported_currencies: list[str] | None = None) -> str:
     """Return the region's current standard currency from the app's supported list."""
     fallback = "USD ($)"
     if not region_code or len(region_code) != 2:
         return fallback
 
-    try:
-        from babel.numbers import get_territory_currencies
-
-        currency_codes = get_territory_currencies(region_code.upper())
-    except ImportError:
-        region = region_code.upper()
-        currency_codes = (
-            ["EUR"] if region in _EURO_REGIONS
-            else [_REGION_CURRENCY_FALLBACK[region]]
-            if region in _REGION_CURRENCY_FALLBACK
-            else []
-        )
-    except ValueError:
-        currency_codes = []
+    region = region_code.upper()
+    currency_codes = (
+        ["EUR"] if region in _EURO_REGIONS
+        else [_REGION_CURRENCY_FALLBACK[region]]
+        if region in _REGION_CURRENCY_FALLBACK
+        else []
+    )
 
     currencies = (
         supported_currencies

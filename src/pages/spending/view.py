@@ -6,12 +6,7 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import FinancialChart, Menu
-from src.pages.spending.components import (
-    DeleteTransactionDialog,
-    MetricCards,
-    TransactionHistoryCard,
-    TransactionToolbar,
-)
+from src.pages.spending.components import DeleteTransactionDialog, MetricCards, TransactionHistoryCard, TransactionToolbar
 from src.pages.spending.logic import LogicController
 from src.utils import Color, Page, get_safe_page_size, UISettings
 

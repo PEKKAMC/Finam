@@ -11,12 +11,7 @@ from src.utils.number_format import format_expression, format_number, get_decima
 from src.utils.page import Page
 from src.utils.dialog import Dialog
 from src.utils.resizing import get_safe_page_size
-from src.utils.settings import (
-    DefaultSettings,
-    UISettings,
-    currency_for_region,
-    language_for_device_locale,
-)
+from src.utils.settings import DefaultSettings, UISettings, currency_for_region, language_for_device_locale
 from src.utils.text import Text, TEXT_STYLES, create_text
 
 __all__ = [
