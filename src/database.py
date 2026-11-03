@@ -4,6 +4,7 @@
 
 import hashlib
 import hmac
+import json
 import re
 import secrets
 import sqlite3
@@ -125,7 +126,8 @@ class DatabaseConnection:
                     starter_language TEXT,
                     google_uid TEXT,
                     google_email TEXT,
-                    google_refresh_token TEXT
+                    google_refresh_token TEXT,
+                    mobile_google_oauth_pending TEXT
                 )
             ''')
             for column in (
@@ -133,6 +135,7 @@ class DatabaseConnection:
                 "google_uid",
                 "google_email",
                 "google_refresh_token",
+                "mobile_google_oauth_pending",
             ):
                 try:
                     self.execute(
@@ -544,6 +547,69 @@ class AppSettingsDatabase:
 
     def __init__(self, connection: DatabaseConnection):
         self.db = connection
+
+    def save_mobile_google_oauth(
+        self,
+        state: str,
+        verifier: str,
+        expires_at: float,
+        backend_url: str,
+        client_id: str,
+        redirect_url: str,
+    ) -> bool:
+        pending = json.dumps({
+            "state": state,
+            "verifier": verifier,
+            "expires_at": expires_at,
+            "backend_url": backend_url,
+            "client_id": client_id,
+            "redirect_url": redirect_url,
+        })
+        try:
+            self.db.execute(
+                "UPDATE app_settings SET mobile_google_oauth_pending = ? "
+                "WHERE id = 1",
+                (pending,),
+            )
+            return True
+        except sqlite3.Error as ex:
+            Logger.error(f"Failed to save pending mobile Google authorization: {ex}")
+            return False
+
+    def take_mobile_google_oauth(self, state: str) -> Optional[Dict[str, Any]]:
+        pending_row = self.db.execute(
+            "SELECT mobile_google_oauth_pending FROM app_settings WHERE id = 1",
+            fetch_one=True,
+        )
+        if not pending_row or not pending_row[0]:
+            return None
+        try:
+            pending = json.loads(pending_row[0])
+        except (json.JSONDecodeError, TypeError):
+            self.clear_mobile_google_oauth()
+            Logger.warning("Discarded invalid pending mobile Google authorization")
+            return None
+        pending_state = pending.get("state") if isinstance(pending, dict) else None
+        if (
+            not isinstance(pending_state, str)
+            or not pending_state.isascii()
+            or not state.isascii()
+            or not hmac.compare_digest(pending_state, state)
+        ):
+            return None
+        self.clear_mobile_google_oauth()
+        return pending
+
+    def clear_mobile_google_oauth(self) -> bool:
+        try:
+            self.db.execute(
+                "UPDATE app_settings SET mobile_google_oauth_pending = NULL "
+                "WHERE id = 1"
+            )
+            return True
+        except sqlite3.Error as ex:
+            Logger.error(f"Failed to clear pending mobile Google authorization: {ex}")
+            return False
 
     def get_starter_language(self) -> str:
         result = self.db.execute(

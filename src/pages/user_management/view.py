@@ -142,14 +142,45 @@ async def complete_google_mobile_callback(route: str) -> bool:
     state = query.get("state", [""])[0]
     pending = _pending_mobile_google_auth.pop(state, None)
     if pending is None:
-        Logger.warning("Google mobile callback has no matching pending authorization")
-        _web_google_auth_result = "failed"
-        return True
+        persisted = db.app_settings.take_mobile_google_oauth(state)
+        if persisted is None:
+            Logger.warning("Google mobile callback has no matching pending authorization")
+            _web_google_auth_result = "failed"
+            return True
+        try:
+            provider = GoogleOAuthProvider(
+                client_id=persisted["client_id"],
+                client_secret="",
+                redirect_url=persisted["redirect_url"],
+            )
+            provider.token_endpoint = (
+                f"{persisted['backend_url']}/api/v1/auth/google/token"
+            )
+            provider.code_verifier = persisted["verifier"]
+            authorization = AuthorizationService(
+                provider,
+                fetch_user=False,
+                fetch_groups=False,
+            )
+            pending = (
+                float(persisted["expires_at"]),
+                authorization,
+                persisted["backend_url"],
+            )
+        except (KeyError, TypeError, ValueError) as ex:
+            Logger.warning(
+                f"Could not restore pending mobile Google authorization: {ex}",
+                exc_info=True,
+            )
+            _web_google_auth_result = "failed"
+            return True
+    else:
+        db.app_settings.clear_mobile_google_oauth()
 
     expires_at, authorization, backend_url = pending
     result = "failed"
     try:
-        if time.monotonic() > expires_at:
+        if time.time() > expires_at:
             raise RuntimeError("Google mobile authorization expired")
         if query.get("error"):
             raise RuntimeError(f"Google authorization failed: {query['error'][0]}")
@@ -761,17 +792,31 @@ class UserManagementView(ft.View):
                         "Mobile sign-in requires the HTTPS backend mobile callback URL"
                     )
 
-                now = time.monotonic()
+                now = time.time()
                 for pending_state, pending in list(
                     _pending_mobile_google_auth.items()
                 ):
                     if pending[0] < now:
                         _pending_mobile_google_auth.pop(pending_state, None)
+                expires_at = now + 300
+                if not db.app_settings.save_mobile_google_oauth(
+                    state,
+                    verifier,
+                    expires_at,
+                    backend_url,
+                    client_id,
+                    redirect_url,
+                ):
+                    raise RuntimeError(
+                        "Could not persist pending mobile Google authorization"
+                    )
                 _pending_mobile_google_auth[state] = (
-                    now + 300,
+                    expires_at,
                     authorization,
                     backend_url,
                 )
+                self.google_account_card.set_busy(False)
+                self._page.update()
                 try:
                     await ft.UrlLauncher().launch_url(
                         authorization_url,
@@ -779,7 +824,10 @@ class UserManagementView(ft.View):
                     )
                 except Exception:
                     _pending_mobile_google_auth.pop(state, None)
+                    db.app_settings.clear_mobile_google_oauth()
                     raise
+                finally:
+                    self.google_account_card.set_busy(False)
                 return
 
             if (
