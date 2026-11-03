@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import os
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 import flet as ft
 
@@ -21,7 +21,12 @@ from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.purchase_scanner import get_scanner_view
 from src.pages.starter.view import StarterView, get_starter_view
-from src.pages.user_management import complete_google_mobile_callback, complete_google_web_callback, get_user_management_view
+from src.pages.user_management import (
+    complete_google_mobile_callback,
+    complete_google_web_callback,
+    get_user_management_view,
+    is_google_oauth_callback_route,
+)
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
@@ -165,10 +170,17 @@ async def main(page: Page) -> None:
     page.delete_all_cached_views = delete_all_cached_views
 
     async def handle_google_web_callback() -> bool:
-        if not page.web or urlparse(page.route or "").path != "/oauth_callback":
+        if not page.web or not is_google_oauth_callback_route(page.route or ""):
             return False
 
-        if await complete_google_web_callback(page.route or ""):
+        callback_route = page.route or ""
+        if not urlparse(callback_route).query:
+            page.query()
+            callback_query = page.query.to_dict
+            if callback_query:
+                callback_route += f"?{urlencode(callback_query)}"
+
+        if await complete_google_web_callback(callback_route):
             delete_cached_view("/user_management")
             delete_cached_view("/purchase_scanner")
             await page.push_route("/user_management")
@@ -177,10 +189,17 @@ async def main(page: Page) -> None:
         return True
 
     async def handle_google_mobile_callback() -> bool:
-        if page.web or urlparse(page.route or "").path != "/oauth_callback":
+        if page.web or not is_google_oauth_callback_route(page.route or ""):
             return False
 
-        if await complete_google_mobile_callback(page.route or ""):
+        callback_route = page.route or ""
+        if not urlparse(callback_route).query:
+            page.query()
+            callback_query = page.query.to_dict
+            if callback_query:
+                callback_route += f"?{urlencode(callback_query)}"
+
+        if await complete_google_mobile_callback(callback_route):
             delete_cached_view("/user_management")
             delete_cached_view("/purchase_scanner")
             await page.push_route("/user_management")

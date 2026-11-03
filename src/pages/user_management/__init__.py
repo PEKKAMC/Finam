@@ -7,7 +7,14 @@
 from src.pages.global_components.user_dialog import AddUserField, DeleteUserDialog, UserList, UserManagementDialog
 from src.pages.user_management.components import GoogleAccountCard, MenuItem, MenuSectionCard, ProfileCard, DeleteAllDataDialog
 from src.pages.user_management.logic import LogicController
-from src.pages.user_management.view import DialogManager, UserManagementView, complete_google_mobile_callback, complete_google_web_callback, get_user_management_view
+from src.pages.user_management.view import (
+    DialogManager,
+    UserManagementView,
+    complete_google_mobile_callback,
+    complete_google_web_callback,
+    get_user_management_view,
+    is_google_oauth_callback_route,
+)
 
 __all__ = [
     "AddUserField",
@@ -24,5 +31,6 @@ __all__ = [
     "UserManagementView",
     "complete_google_web_callback",
     "complete_google_mobile_callback",
+    "is_google_oauth_callback_route",
     "get_user_management_view"
 ]

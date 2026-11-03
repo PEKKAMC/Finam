@@ -40,6 +40,12 @@ _pending_mobile_google_auth: dict[
 _web_google_auth_result: str | None = None
 
 
+def is_google_oauth_callback_route(route: str) -> bool:
+    """Match OAuth callback paths in both browser and native deep-link routes."""
+    path = urlparse(route).path.rstrip("/")
+    return bool(path) and path.rsplit("/", maxsplit=1)[-1] == "oauth_callback"
+
+
 def _create_oauth_callback_handler(expected_state: str, loop, result_future):
     class OAuthCallbackHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -86,7 +92,7 @@ def _create_oauth_callback_handler(expected_state: str, loop, result_future):
 async def complete_google_web_callback(route: str) -> bool:
     global _web_google_auth_result
     callback = urlparse(route)
-    if callback.path != "/oauth_callback":
+    if not is_google_oauth_callback_route(route):
         return False
 
     query = parse_qs(callback.query)
@@ -129,7 +135,7 @@ async def complete_google_web_callback(route: str) -> bool:
 async def complete_google_mobile_callback(route: str) -> bool:
     global _web_google_auth_result
     callback = urlparse(route)
-    if callback.path != "/oauth_callback":
+    if not is_google_oauth_callback_route(route):
         return False
 
     query = parse_qs(callback.query)
