@@ -140,11 +140,19 @@ async def complete_google_mobile_callback(route: str) -> bool:
 
     query = parse_qs(callback.query)
     state = query.get("state", [""])[0]
+    Logger.info(
+        "Google mobile OAuth callback received "
+        f"(path={callback.path!r}, has_code={bool(query.get('code'))}, "
+        f"has_error={bool(query.get('error'))}, has_state={bool(state)})"
+    )
     pending = _pending_mobile_google_auth.pop(state, None)
     if pending is None:
         persisted = db.app_settings.take_mobile_google_oauth(state)
         if persisted is None:
-            Logger.warning("Google mobile callback has no matching pending authorization")
+            Logger.warning(
+                "Google mobile callback has no matching pending authorization "
+                "(state may be missing, expired, or app data was unavailable)"
+            )
             _web_google_auth_result = "failed"
             return True
         try:
@@ -167,6 +175,7 @@ async def complete_google_mobile_callback(route: str) -> bool:
                 authorization,
                 persisted["backend_url"],
             )
+            Logger.info("Restored pending mobile Google authorization from SQLite")
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(
                 f"Could not restore pending mobile Google authorization: {ex}",
@@ -189,23 +198,33 @@ async def complete_google_mobile_callback(route: str) -> bool:
         if not code:
             raise RuntimeError("Google mobile authorization code is missing")
 
+        Logger.info("Exchanging mobile Google authorization code with backend")
         await authorization.request_token(code)
+        Logger.info("Mobile Google token exchange succeeded")
         token = await authorization.get_token()
         if token is None:
             raise RuntimeError("Firebase ID token is missing")
 
+        Logger.info(
+            "Received Firebase credentials "
+            f"(has_id_token={bool(token.access_token)}, "
+            f"has_refresh_token={bool(token.refresh_token)})"
+        )
+        Logger.info("Validating Google account and saving app-wide session")
         signed_in = await _save_google_account_globally(
             token.access_token,
             backend_url,
             token.refresh_token or "",
         )
         result = "signed_in" if signed_in else "failed"
+        Logger.info(f"Mobile Google OAuth account save result: {result}")
     except Exception as ex:
         Logger.warning(
             f"Could not complete Google mobile authorization: {ex}",
             exc_info=True,
         )
     _web_google_auth_result = result
+    Logger.info(f"Mobile Google OAuth callback processing finished: {result}")
     return True
 
 
@@ -778,6 +797,7 @@ class UserManagementView(ft.View):
                 return
 
             if is_mobile:
+                Logger.info("Starting mobile Google OAuth handoff")
                 backend_origin = urlparse(backend_url)
                 if (
                     redirect.scheme != "https"
@@ -810,6 +830,7 @@ class UserManagementView(ft.View):
                     raise RuntimeError(
                         "Could not persist pending mobile Google authorization"
                     )
+                Logger.info("Persisted pending mobile Google OAuth state")
                 _pending_mobile_google_auth[state] = (
                     expires_at,
                     authorization,
@@ -822,6 +843,7 @@ class UserManagementView(ft.View):
                         authorization_url,
                         mode=ft.LaunchMode.EXTERNAL_APPLICATION,
                     )
+                    Logger.info("Returned from external Google sign-in browser")
                 except Exception:
                     _pending_mobile_google_auth.pop(state, None)
                     db.app_settings.clear_mobile_google_oauth()

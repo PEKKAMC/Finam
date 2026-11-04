@@ -189,17 +189,24 @@ async def main(page: Page) -> None:
         return True
 
     async def handle_google_mobile_callback() -> bool:
-        if page.web or not is_google_oauth_callback_route(page.route or ""):
+        route = page.route or ""
+        if page.web or not is_google_oauth_callback_route(route):
             return False
 
-        callback_route = page.route or ""
+        Logger.info(
+            "Detected native Google OAuth callback route "
+            f"(path={urlparse(route).path!r}, query_in_route={bool(urlparse(route).query)})"
+        )
+        callback_route = route
         if not urlparse(callback_route).query:
             page.query()
             callback_query = page.query.to_dict
             if callback_query:
                 callback_route += f"?{urlencode(callback_query)}"
+                Logger.info("Recovered Google OAuth callback parameters from page query")
 
         if await complete_google_mobile_callback(callback_route):
+            Logger.info("Google mobile OAuth callback was handled; returning to profile")
             delete_cached_view("/user_management")
             delete_cached_view("/purchase_scanner")
             await page.push_route("/user_management")
@@ -207,6 +214,11 @@ async def main(page: Page) -> None:
 
     async def route_change(e: ft.RouteChangeEvent) -> None:
         try:
+            if not page.web and is_google_oauth_callback_route(page.route or ""):
+                Logger.info(
+                    "Native route-change event reached Google OAuth callback "
+                    f"(path={urlparse(page.route or '').path!r})"
+                )
             if await handle_google_mobile_callback():
                 return
             if await handle_google_web_callback():
@@ -295,6 +307,16 @@ async def main(page: Page) -> None:
 
     page.on_error = on_error
     page.on_route_change = route_change
+    if not page.web:
+        def app_lifecycle_change(e: ft.AppLifecycleStateChangeEvent) -> None:
+            Logger.info(f"Native app lifecycle changed: {e.state}")
 
+        page.on_app_lifecycle_state_change = app_lifecycle_change
+
+    if not page.web and is_google_oauth_callback_route(page.route or ""):
+        Logger.info(
+            "App launched on native Google OAuth callback "
+            f"(path={urlparse(page.route or '').path!r})"
+        )
     if not await handle_google_mobile_callback() and not await handle_google_web_callback():
         await page.push_route("/starter")
