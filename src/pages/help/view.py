@@ -103,7 +103,6 @@ class HelpView(ft.View):
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
-            self.main_container.margin.bottom = menu_item_size
 
             # Resizing other components
             self.menu.resize(
@@ -111,6 +110,7 @@ class HelpView(ft.View):
                 item_size=menu_item_size,
                 inside_size=menu_inside_size,
             )
+            self.main_container.margin.bottom = self.menu.reserved_height
 
             self.help_form.resize(
                 width=page_width - (UISettings.CARD_PADDING * 2),

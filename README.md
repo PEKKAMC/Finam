@@ -54,6 +54,7 @@ The web callback is kept in server memory while sign-in is pending, so the callb
 The app stores the Firebase refresh token in its local SQLite settings to keep Google sign-in active across launches. Signing out clears this token.
 
 The purchase scanner requires Google sign-in and allows one scan per Google account per UTC day. Its usage card shows the remaining allowance and next reset time.
+
 | Variable                    | Purpose                                                                              |
 | :-------------------------- | :----------------------------------------------------------------------------------- |
 | `FINAM_BACKEND_URL`         | HTTPS base URL of the Finam backend (defaults to `https://finam-backend.vercel.app`) |
@@ -62,3 +63,7 @@ The purchase scanner requires Google sign-in and allows one scan per Google acco
 | `GOOGLE_OAUTH_MOBILE_REDIRECT_URL` | HTTPS backend mobile callback URI, if overriding the packaged configuration |
 
 Use the deployed Vercel domain (not the Vercel dashboard URL) for `backend_url`. Configure the matching callback URI and keep the Google client secret and Firebase service-account JSON only in the backend Vercel environment; the backend README lists those server variables.
+
+## Mobile ads
+
+The navigation menu shows a 50-dp AdMob banner on Android and iOS when the screen can fit the standard banner width. The project currently uses Google's test app and banner IDs; replace the test IDs in `src/pages/global_components/menu.py` and `pyproject.toml` with your own AdMob app and platform-specific banner IDs before publishing.

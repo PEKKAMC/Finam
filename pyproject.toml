@@ -13,6 +13,7 @@ authors = [
 ]
 dependencies = [
     "flet>=1.0.5",
+    "flet_ads>=1.0.5",
     "flet_audio>=1.0.5",
     "flet-charts>=1.0.5",
     "colorlog>=6.12.0",
@@ -36,6 +37,12 @@ copyright = "Copyright (C) 2026 by PEKKAMC"
 [tool.flet.deep_linking]
 scheme = "net.pekkamc.finam"
 host = "oauth_callback"
+
+[tool.flet.android.meta_data]
+"com.google.android.gms.ads.APPLICATION_ID" = "ca-app-pub-3940256099942544~3347511713"
+
+[tool.flet.ios.info]
+GADApplicationIdentifier = "ca-app-pub-3940256099942544~3347511713"
 
 [tool.flet.app]
 path = ""

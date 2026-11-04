@@ -9,7 +9,7 @@ from src.logger import Logger
 from src.pages.global_components import Menu
 from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CreateGoalModal, DepositWithdrawModal, CongratulationsModal, DeleteConfirmDialog, GoalGrid
 from src.pages.savings.logic import LogicController
-from src.utils import Color, Page, Text, UISettings, format_number, get_safe_page_size
+from src.utils import Color, Page, UISettings, format_number, get_safe_page_size
 
 Logger.info("Initializing Savings page...")
 
@@ -281,7 +281,6 @@ class SavingsView(ft.View):
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
-            self.main_container.margin.bottom = menu_item_size
 
             # Resizing other components
             self.menu.resize(
@@ -289,6 +288,7 @@ class SavingsView(ft.View):
                 item_size=menu_item_size,
                 inside_size=menu_inside_size,
             )
+            self.main_container.margin.bottom = self.menu.reserved_height
 
             self.summary_banner.resize(
                 width=page_width
