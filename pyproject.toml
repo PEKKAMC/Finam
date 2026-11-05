@@ -38,6 +38,14 @@ copyright = "Copyright (C) 2026 by PEKKAMC"
 scheme = "net.pekkamc.finam"
 host = "oauth_callback"
 
+[tool.flet.android.deep_linking]
+scheme = "net.pekkamc.finam"
+host = "oauth_callback"
+
+[tool.flet.ios.deep_linking]
+scheme = "net.pekkamc.finam"
+host = "oauth_callback"
+
 [tool.flet.android.meta_data]
 "com.google.android.gms.ads.APPLICATION_ID" = "ca-app-pub-3940256099942544~3347511713"
 
