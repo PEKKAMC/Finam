@@ -32,7 +32,7 @@ class Menu(ft.Container):
 
         if not page.web and page.platform in self.TEST_BANNER_IDS:
             self.ad_banner = fta.BannerAd(
-                unit_id=self.TEST_BANNER_IDS[page.platform],
+                unit_id=self.TEST_BANNER_IDS[page.platform or ft.PagePlatform.ANDROID],
                 width=self.BANNER_WIDTH,
                 height=self.BANNER_HEIGHT,
                 request=fta.AdRequest(non_personalized_ads=True),
