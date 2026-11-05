@@ -4,10 +4,12 @@
 
 import asyncio
 import math
+import random
 from collections.abc import Callable
 from datetime import datetime
 
 import flet as ft
+import flet.canvas as flet_canvas
 
 from src.logger import Logger
 from src.pages.global_components.keyboard_container import KeyboardContainer
@@ -880,6 +882,12 @@ class CongratulationsDialog(Dialog):
         self.selected_target_id = None
         self.goal_option_cards: dict[int, ft.Container] = {}
         self.pending_followup: tuple[dict, float | int, list[dict]] | None = None
+        self._confetti_canvas = flet_canvas.Canvas(
+            visible=False,
+            disabled=True,
+            expand=True,
+        )
+        self._confetti_generation = 0
 
         self.title_text = Text.H3(self.lang["savings.congratulations"], color=Color.PRIMARY_TEXT, expand=True)
         self.close_button = ft.IconButton(
@@ -906,27 +914,28 @@ class CongratulationsDialog(Dialog):
         self.goals_dropdown_column = ft.Column(spacing=8)
         self.action_button = ft.Button(self.lang["savings.transfer_surplus"], on_click=self._process_transfer, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE, width=380, height=50)
 
+        self.content_column = ft.Column(
+            tight=True,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=16,
+            controls=[
+                ft.Row(
+                    [self.title_text, self.close_button],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                ft.Icon(ft.Icons.EMOJI_EVENTS, size=48, color=Color.PRIMARY),
+                self.desc_text,
+                self.achievement_card,
+                self.surplus_banner,
+                self.goals_dropdown_column,
+                self.action_button,
+            ],
+        )
         self.main_container = ft.Container(
             padding=28,
             bgcolor=Color.DIALOG_BACKGROUND,
             border_radius=32,
-            content=ft.Column(
-                tight=True,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=16,
-                controls=[
-                    ft.Row(
-                        [self.title_text, self.close_button],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    ),
-                    ft.Icon(ft.Icons.EMOJI_EVENTS, size=48, color=Color.PRIMARY),
-                    self.desc_text,
-                    self.achievement_card,
-                    self.surplus_banner,
-                    self.goals_dropdown_column,
-                    self.action_button,
-                ],
-            ),
+            content=self.content_column,
         )
 
         super().__init__(
@@ -938,7 +947,21 @@ class CongratulationsDialog(Dialog):
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
         self.on_dismiss = self._handle_dismiss
 
-    def trigger(self, completed_goal: dict, surplus_amount: float | int, available_goals: list[dict]):
+    def trigger(
+        self,
+        completed_goal: dict,
+        surplus_amount: float | int,
+        available_goals: list[dict],
+        confetti: bool = False,
+    ):
+        self._confetti_generation += 1
+        generation = self._confetti_generation
+        if not confetti:
+            self._confetti_canvas.visible = False
+            self._confetti_canvas.shapes = []
+            if self._confetti_canvas in self._page.overlay:
+                self._page.overlay.remove(self._confetti_canvas)
+
         self.completed_goal = completed_goal
         self.surplus_amount = surplus_amount
         self.available_goals = [g for g in available_goals if g["objective_id"] != completed_goal["objective_id"]]
@@ -997,6 +1020,69 @@ class CongratulationsDialog(Dialog):
             self.action_button.content = self.lang["savings.continue_saving"]
 
         self.show()
+        if confetti:
+            self._page.run_task(self._animate_confetti, generation)
+
+    async def _animate_confetti(self, generation: int) -> None:
+        width = max(float(self._page.width or 800), 1)
+        height = max(float(self._page.height or 600), 1)
+        colors = ["#F44336", "#FFC107", "#4CAF50", "#2196F3", "#9C27B0", "#FF9800"]
+        paints = {color: ft.Paint(color=color) for color in colors}
+        particles = []
+        for _ in range(120):
+            x = random.uniform(0, width)
+            y = random.uniform(-height * 0.25, height * 0.65)
+            size = random.uniform(5, 10)
+            color = random.choice(colors)
+            shape = flet_canvas.Rect(
+                x,
+                y,
+                size,
+                size * 1.6,
+                paint=paints[color],
+            )
+            particles.append(
+                (x, y, random.uniform(-1.5, 1.5), random.uniform(3, 6), size, shape)
+            )
+
+        self._confetti_canvas.width = width
+        self._confetti_canvas.height = height
+        self._confetti_canvas.left = 0
+        self._confetti_canvas.top = 0
+        self._confetti_canvas.shapes = [particle[5] for particle in particles]
+        self._confetti_canvas.visible = True
+        if self._confetti_canvas in self._page.overlay:
+            self._page.overlay.remove(self._confetti_canvas)
+        self._page.overlay.append(self._confetti_canvas)
+        self._page.update()
+
+        loop = asyncio.get_running_loop()
+        animation_start = loop.time()
+        for frame in range(300):
+            if generation != self._confetti_generation:
+                return
+
+            updated_particles = []
+            for x, y, x_speed, y_speed, size, shape in particles:
+                x += x_speed
+                y += y_speed
+                if y < height:
+                    shape.x = x
+                    shape.y = y
+                    updated_particles.append(
+                        (x, y, x_speed, y_speed + 0.01, size, shape)
+                    )
+            particles = updated_particles
+            self._confetti_canvas.shapes = [particle[5] for particle in particles]
+            self._confetti_canvas.update()
+            next_frame = animation_start + (frame + 1) / 60
+            await asyncio.sleep(max(0, next_frame - loop.time()))
+
+        self._confetti_canvas.visible = False
+        self._confetti_canvas.shapes = []
+        if self._confetti_canvas in self._page.overlay:
+            self._page.overlay.remove(self._confetti_canvas)
+        self._page.update()
 
     def _select_target(self, objective_id: int):
         if objective_id not in self.goal_option_cards:

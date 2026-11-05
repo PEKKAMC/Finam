@@ -47,7 +47,12 @@ class DialogManager:
             lang=self.lang,
             controller=self.controller,
             on_success=self._refresh_view,
-            on_surplus=lambda goal, surplus: self.congratulations_dialog.trigger(goal, surplus, self._get_objectives())
+            on_surplus=lambda goal, surplus: self.congratulations_dialog.trigger(
+                goal,
+                surplus,
+                self._get_objectives(),
+                confetti=True,
+            )
         )
 
         self.delete_dialog = DeleteConfirmDialog(
