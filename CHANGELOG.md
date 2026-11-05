@@ -1,6 +1,6 @@
 # Finam v0.4.4-beta
 
-**Release Date:** November 3, 2026
+**Release Date:** November 5, 2026
 
 > **⚠️ BETA WARNING: Read Before Using**
 >
@@ -10,6 +10,8 @@
 > * **Feedback:** If you run into any issues, softlocks, or unexpected behavior, please submit a report via our GitHub page.
 >
 > Thank you for helping us test and polish this release!
+
+This version is likely going to be the last beta version before going through the next state. If you encounter any issues, please report them.
 
 ## Changes in this version
 
