@@ -419,7 +419,7 @@ class ActivityHistory(ft.Container):
         self.main_container.width = width
 
 
-class CreateGoalModal(Dialog):
+class CreateGoalDialog(Dialog):
     def __init__(self, page: Page, lang: dict, controller, currency: str, on_success: Callable):
         self._page = page
         self.lang = lang
@@ -588,7 +588,7 @@ class CreateGoalModal(Dialog):
         self.submit_button.width = content_width
 
 
-class DepositWithdrawModal(ft.Container):
+class DepositWithdrawDialog(ft.Container):
     def __init__(
         self,
         page: Page,
@@ -851,15 +851,7 @@ class DepositWithdrawModal(ft.Container):
         self._schedule_action_message(message, is_success=False)
 
     def _schedule_action_message(self, message: str, is_success: bool) -> None:
-        if self._page is not None:
-            self._page.run_task(
-                self.on_action_message,
-                int(self.goal["objective_id"]),
-                message,
-                is_success,
-            )
-        else:
-            Logger.error(f"Cannot schedule savings action message: {message}")
+        self._page.run_task(self.on_action_message, int(self.goal["objective_id"]), message, is_success)
 
     def resize(self, width: int, height: int) -> None:
         page_width = max(width, 0)
@@ -878,7 +870,7 @@ class DepositWithdrawModal(ft.Container):
         self.keyboard_container.resize(page_width)
 
 
-class CongratulationsModal(Dialog):
+class CongratulationsDialog(Dialog):
     def __init__(self, page: Page, lang: dict, controller, currency: str, on_success: Callable, on_create_with_surplus: Callable):
         self._page = page
         self.lang = lang

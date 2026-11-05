@@ -7,7 +7,7 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.global_components import Menu
-from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CreateGoalModal, DepositWithdrawModal, CongratulationsModal, DeleteConfirmDialog, GoalGrid
+from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CreateGoalDialog, DepositWithdrawDialog, CongratulationsDialog, DeleteConfirmDialog, GoalGrid
 from src.pages.savings.logic import LogicController
 from src.utils import Color, Page, UISettings, format_number, get_safe_page_size
 
@@ -25,7 +25,7 @@ class DialogManager:
         self._trigger_export = trigger_export_callback
         self._get_objectives = get_objectives_callback
 
-        self.create_goal_modal = CreateGoalModal(
+        self.create_goal_dialog = CreateGoalDialog(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
@@ -33,21 +33,21 @@ class DialogManager:
             on_success=self._refresh_view
         )
 
-        self.congratulations_modal = CongratulationsModal(
+        self.congratulations_dialog = CongratulationsDialog(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
             currency=self.currency,
             on_success=self._refresh_view,
-            on_create_with_surplus=lambda surplus: self.create_goal_modal.trigger(surplus)
+            on_create_with_surplus=lambda surplus: self.create_goal_dialog.trigger(surplus)
         )
 
-        self.deposit_withdraw_modal = DepositWithdrawModal(
+        self.deposit_withdraw_dialog = DepositWithdrawDialog(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
             on_success=self._refresh_view,
-            on_surplus=lambda goal, surplus: self.congratulations_modal.trigger(goal, surplus, self._get_objectives())
+            on_surplus=lambda goal, surplus: self.congratulations_dialog.trigger(goal, surplus, self._get_objectives())
         )
 
         self.delete_dialog = DeleteConfirmDialog(
@@ -66,8 +66,8 @@ class DialogManager:
 
     def update_currency(self, currency: str) -> None:
         self.currency = currency
-        self.create_goal_modal.currency = currency
-        self.congratulations_modal.currency = currency
+        self.create_goal_dialog.currency = currency
+        self.congratulations_dialog.currency = currency
 
 
 class SavingsView(ft.View):
@@ -112,11 +112,11 @@ class SavingsView(ft.View):
             page=self._page,
             lang=self.lang,
             objectives_data=self._objective_data,
-            on_deposit=self.dialogs.deposit_withdraw_modal.trigger,
-            on_withdraw=self.dialogs.deposit_withdraw_modal.trigger,
+            on_deposit=self.dialogs.deposit_withdraw_dialog.trigger,
+            on_withdraw=self.dialogs.deposit_withdraw_dialog.trigger,
             on_delete=self.dialogs.delete_dialog.trigger,
         )
-        self.dialogs.deposit_withdraw_modal.on_action_message = (
+        self.dialogs.deposit_withdraw_dialog.on_action_message = (
             self.goal_grid.show_action_message
         )
 
@@ -149,7 +149,7 @@ class SavingsView(ft.View):
             percentage=percentage,
             progress_value=progress_value,
             currency=currency,
-            on_create_click=lambda e: self.dialogs.create_goal_modal.trigger()
+            on_create_click=lambda e: self.dialogs.create_goal_dialog.trigger()
         )
 
         self.activity_history = ActivityHistory(
@@ -304,15 +304,15 @@ class SavingsView(ft.View):
                 width=page_width
             )
 
-            self.dialogs.create_goal_modal.resize(
+            self.dialogs.create_goal_dialog.resize(
                 width=page_width // 7 * 6
             )
 
-            self.dialogs.congratulations_modal.resize(
+            self.dialogs.congratulations_dialog.resize(
                 width=page_width // 7 * 6
             )
 
-            self.dialogs.deposit_withdraw_modal.resize(
+            self.dialogs.deposit_withdraw_dialog.resize(
                 width=page_width,
                 height=page_height,
             )
