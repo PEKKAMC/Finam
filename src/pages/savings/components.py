@@ -15,7 +15,7 @@ from src.utils import Color, Dialog, Page, Text, UISettings, format_number
 
 
 class GoalCard(ft.Container):
-    def __init__(self, page: Page, lang: dict, goal: dict, on_deposit: Callable, on_withdraw: Callable, on_delete: Callable):
+    def __init__(self, page: Page, lang: dict, goal: dict, on_deposit: Callable, on_achievement: Callable, on_withdraw: Callable, on_delete: Callable):
         self._page = page
         self.lang = lang
         self.goal = goal
@@ -38,17 +38,22 @@ class GoalCard(ft.Container):
         )
 
         self.deposit_button = ft.Button(
-            content=Text.BUTTON(self.lang["savings.deposit_money"], color=Color.LIGHT_ACCENT),
-            on_click=lambda: on_deposit(goal, "deposit"),
-            bgcolor=Color.PRIMARY_ACTION,
-            color=Color.LIGHT_ACCENT
+            content=Text.BUTTON(
+                self.lang["savings.achievement"] if self.completed else self.lang["savings.deposit_money"],
+                color=Color.WHITE,
+            ),
+            on_click=lambda: (
+                on_achievement(goal)
+                if self.completed
+                else on_deposit(goal, "deposit")
+            ),
+            bgcolor=Color.COMPLETED_ACTION if self.completed else Color.PRIMARY_ACTION
         )
 
         self.withdraw_button = ft.Button(
-            content=Text.BUTTON(self.lang["savings.withdraw_money"], color=Color.LIGHT_ACCENT),
+            content=Text.BUTTON(self.lang["savings.withdraw_money"], color=Color.WHITE),
             on_click=lambda: on_withdraw(goal, "withdraw"),
-            bgcolor=Color.NEGATIVE_ACTION,
-            color=Color.LIGHT_ACCENT
+            bgcolor=Color.NEGATIVE_ACTION
         )
 
         self.delete_button = ft.IconButton(
@@ -156,10 +161,11 @@ class GoalCard(ft.Container):
 
 
 class GoalGrid(ft.Column):
-    def __init__(self, page: Page, lang: dict, objectives_data: list, on_deposit: Callable, on_withdraw: Callable, on_delete: Callable):
+    def __init__(self, page: Page, lang: dict, objectives_data: list, on_deposit: Callable, on_achievement: Callable, on_withdraw: Callable, on_delete: Callable):
         self._page = page
         self.lang = lang
         self.on_deposit = on_deposit
+        self.on_achievement = on_achievement
         self.on_withdraw = on_withdraw
         self.on_delete = on_delete
         self.is_expanded = True
@@ -188,6 +194,7 @@ class GoalGrid(ft.Column):
                 lang=self.lang,
                 goal=data,
                 on_deposit=self.on_deposit,
+                on_achievement=self.on_achievement,
                 on_withdraw=self.on_withdraw,
                 on_delete=self.on_delete,
             ))
@@ -589,15 +596,7 @@ class CreateGoalDialog(Dialog):
 
 
 class DepositWithdrawDialog(ft.Container):
-    def __init__(
-        self,
-        page: Page,
-        lang: dict,
-        controller,
-        on_success: Callable,
-        on_surplus: Callable,
-        on_action_message: Callable[[int, str, bool], None] | None = None,
-    ):
+    def __init__(self, page: Page, lang: dict, controller, on_success: Callable, on_surplus: Callable, on_action_message: Callable[[int, str, bool], None] | None = None):
         self._page = page
         self.lang = lang
         self.controller = controller
@@ -853,17 +852,14 @@ class DepositWithdrawDialog(ft.Container):
     def _schedule_action_message(self, message: str, is_success: bool) -> None:
         self._page.run_task(self.on_action_message, int(self.goal["objective_id"]), message, is_success)
 
-    def resize(self, width: int, height: int) -> None:
+    def resize(self, width: int) -> None:
         page_width = max(width, 0)
         outer_width = page_width // 7 * 6
-        dialog_height = max(220, min(480, height - 360))
         content_width = max(outer_width - 48, 0)
 
         self.main_container.width = outer_width
-        self.main_container.height = dialog_height
         self.dialog_panel.width = page_width
         self.main_container.content.width = content_width
-        self.content_column.height = max(dialog_height - 48, 0)
         self.summary_card.width = content_width
         self.balance_card.width = content_width
         self.keyboard_container.width = page_width

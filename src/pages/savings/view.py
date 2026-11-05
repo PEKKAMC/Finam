@@ -113,6 +113,11 @@ class SavingsView(ft.View):
             lang=self.lang,
             objectives_data=self._objective_data,
             on_deposit=self.dialogs.deposit_withdraw_dialog.trigger,
+            on_achievement=lambda goal: self.dialogs.congratulations_dialog.trigger(
+                goal,
+                0,
+                self._objective_data,
+            ),
             on_withdraw=self.dialogs.deposit_withdraw_dialog.trigger,
             on_delete=self.dialogs.delete_dialog.trigger,
         )
@@ -313,8 +318,7 @@ class SavingsView(ft.View):
             )
 
             self.dialogs.deposit_withdraw_dialog.resize(
-                width=page_width,
-                height=page_height,
+                width=page_width
             )
 
             self.dialogs.delete_dialog.resize(
