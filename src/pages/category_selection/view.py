@@ -90,7 +90,7 @@ class CategorySelectionView(ft.View):
         self.category_editor = CategoryEditorDialog(
             self._page,
             self.lang,
-            self.controller.data.category_icons,
+            self.controller.data.get_category_icons(),
             self._save_custom_category,
             self._confirm_delete_category,
         )

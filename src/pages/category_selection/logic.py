@@ -14,8 +14,8 @@ class LogicController:
 
     def get_default_categories(self, category_type: str) -> list[dict]:
         if category_type == "expense":
-            return self.data.default_expense_categories
-        return self.data.default_income_categories
+            return self.data.get_default_expense_categories()
+        return self.data.get_default_income_categories()
 
     def get_custom_categories(self, category_type: str) -> list[dict]:
         return db.categories.get_custom_categories(self.current_user, category_type)
@@ -24,7 +24,7 @@ class LogicController:
         name = name.strip()
         if not name or len(name) > 40:
             return False, "INVALID_NAME"
-        if icon_name not in self.data.category_icons:
+        if icon_name not in self.data.get_category_icons():
             return False, "INVALID_ICON"
 
         categories = (

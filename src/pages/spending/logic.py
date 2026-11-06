@@ -17,8 +17,8 @@ class LogicController:
 
     def get_category_icon_map(self) -> dict[str, str]:
         categories = (
-            self.data.default_expense_categories
-            + self.data.default_income_categories
+            self.data.get_default_expense_categories()
+            + self.data.get_default_income_categories()
             + db.categories.get_custom_categories(self.current_user, "expense")
             + db.categories.get_custom_categories(self.current_user, "income")
         )
