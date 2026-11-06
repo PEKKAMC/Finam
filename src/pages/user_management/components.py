@@ -105,6 +105,11 @@ class ProfileCard(ft.Container):
             bgcolor=Color.PRIMARY,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=UISettings.CARD_PADDING,
+            shadow=ft.BoxShadow(
+                spread_radius=UISettings.SHADOW_SPREAD,
+                blur_radius=UISettings.SHADOW_BLUR,
+                color=Color.SHADOW,
+            ),
             content=self.main_container
         )
 
@@ -177,6 +182,11 @@ class GoogleAccountCard(ft.Container):
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             padding=UISettings.CARD_PADDING,
+            shadow=ft.BoxShadow(
+                spread_radius=UISettings.SHADOW_SPREAD,
+                blur_radius=UISettings.SHADOW_BLUR,
+                color=Color.SHADOW,
+            ),
             content=self.main_container,
         )
 
@@ -299,6 +309,11 @@ class MenuSectionCard(ft.Container):
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
+            shadow=ft.BoxShadow(
+                spread_radius=UISettings.SHADOW_SPREAD,
+                blur_radius=UISettings.SHADOW_BLUR,
+                color=Color.SHADOW,
+            ),
             content=self.main_container
         )
 

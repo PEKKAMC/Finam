@@ -45,6 +45,11 @@ class SettingsHeader(ft.Container):
             bgcolor=Color.PRIMARY,
             border_radius=24,
             padding=16,
+            shadow=ft.BoxShadow(
+                spread_radius=UISettings.SHADOW_SPREAD,
+                blur_radius=UISettings.SHADOW_BLUR,
+                color=Color.SHADOW,
+            ),
             content=self.main_container
         )
 
@@ -150,6 +155,11 @@ class SettingCard(ft.Container):
             border_radius=UISettings.CARD_BORDER_RADIUS,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             padding=16,
+            shadow=ft.BoxShadow(
+                spread_radius=UISettings.SHADOW_SPREAD,
+                blur_radius=UISettings.SHADOW_BLUR,
+                color=Color.SHADOW,
+            ),
             content=self.main_container
         )
 
