@@ -188,14 +188,14 @@ class SpendingView(ft.View):
         self._on_page_resize()
         self._update_google_access()
         if db.app_settings.has_google_account_session():
-            self._page.run_thread(self._load_weekly_usage)
+            self._page.run_thread(self._load_monthly_usage)
 
     def _refresh_view(self) -> int:
         try:
             self._on_page_resize()
             self._update_google_access()
             if db.app_settings.has_google_account_session():
-                self._page.run_thread(self._load_weekly_usage)
+                self._page.run_thread(self._load_monthly_usage)
             self.current_chart_type = self.financial_chart.chart_type
 
             if self.financial_chart.chart_type == self.current_chart_type:
@@ -264,17 +264,17 @@ class SpendingView(ft.View):
         self.google_required_message.value = self.lang["spending_ai.google_required"]
         self._page.update()
 
-    def _load_weekly_usage(self) -> None:
+    def _load_monthly_usage(self) -> None:
         refresh_token = db.app_settings.get_google_refresh_token()
         try:
-            usage = self.controller.get_weekly_analysis_usage(refresh_token or "")
+            usage = self.controller.get_monthly_analysis_usage(refresh_token or "")
             reset_at = datetime.fromisoformat(usage["reset_at"])
             if reset_at.tzinfo is None:
                 reset_at = reset_at.replace(tzinfo=timezone.utc)
             reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
             remaining = usage["remaining"]
             if not isinstance(remaining, int) or remaining not in (0, 1):
-                raise ValueError("Invalid weekly usage remaining count")
+                raise ValueError("Invalid monthly usage remaining count")
             self.usage_card.set_usage(remaining, reset_label)
             self.toolbar.scan_button.disabled = remaining == 0
         except SpendingAnalysisApiError as ex:
@@ -287,14 +287,28 @@ class SpendingView(ft.View):
                 self.google_required_card.visible = True
                 self.usage_card.visible = False
                 self.toolbar.scan_button.disabled = True
+            elif ex.status_code == 404:
+                self.toolbar.scan_button.disabled = True
+            else:
+                self.toolbar.scan_button.disabled = not (
+                    db.app_settings.has_google_account_session()
+                )
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid spending analysis usage response: {ex}")
             self.usage_card.set_unavailable()
+            self.toolbar.scan_button.disabled = not (
+                db.app_settings.has_google_account_session()
+            )
         self._page.update()
 
     def handle_spending_scan(self, e=None) -> None:
-        if not db.app_settings.has_google_account_session():
+        if (
+            self.toolbar.scan_button.disabled
+            or not db.app_settings.has_google_account_session()
+        ):
             return
+        self.toolbar.scan_button.disabled = True
+        self._page.update()
         self.spending_report_dialog.show_loading()
 
         def worker():
@@ -315,7 +329,9 @@ class SpendingView(ft.View):
             except SpendingAnalysisApiError as ex:
                 Logger.warning(f"Spending analysis request rejected: {ex}")
                 if ex.status_code == 429:
-                    message = self.lang["spending_ai.weekly_limit"]
+                    message = self.lang["spending_ai.monthly_limit"]
+                    self.toolbar.scan_button.disabled = True
+                    self._page.update()
                 elif ex.status_code in (401, 403):
                     message = self.lang["purchase_scanner.sign_in_required"]
                     self.google_required_message.value = self.lang[
@@ -337,7 +353,7 @@ class SpendingView(ft.View):
                 )
             finally:
                 if db.app_settings.get_google_refresh_token():
-                    self._load_weekly_usage()
+                    self._load_monthly_usage()
 
         self._page.run_thread(worker)
 

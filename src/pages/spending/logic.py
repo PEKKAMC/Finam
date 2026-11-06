@@ -144,7 +144,7 @@ class LogicController:
             compact(db.spending.get_user_expenses(self.current_user)),
         )
 
-    def get_weekly_analysis_usage(self, refresh_token: str) -> dict:
+    def get_monthly_analysis_usage(self, refresh_token: str) -> dict:
         firebase_id_token = self._refresh_firebase_id_token(refresh_token)
         return self._request_json(
             "GET",
