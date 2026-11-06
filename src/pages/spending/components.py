@@ -150,7 +150,7 @@ class MetricCards(ft.ResponsiveRow):
 
 class TransactionToolbar(ft.Container):
     """Filter, Search, and Action Toolbar"""
-    def __init__(self, page: Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_sort_change: Callable, on_add_click: Callable, search_query: str = "", sort_by: str = "newest"):
+    def __init__(self, page: Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_sort_change: Callable, on_add_click: Callable, on_scan_click: Callable | None = None, search_query: str = "", sort_by: str = "newest"):
         self._page = page
         self.lang = lang
         self.on_filter = on_filter_change
@@ -193,6 +193,22 @@ class TransactionToolbar(ft.Container):
                 shape=ft.RoundedRectangleBorder(radius=16),
                 padding=12
             )
+        )
+        self.scan_button = ft.Button(
+            content=ft.Row(
+                spacing=8,
+                controls=[
+                    ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.WHITE, size=18),
+                    Text.MEDIUM(self.lang["spending_ai.scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                ],
+                tight=True,
+            ),
+            bgcolor=Color.PRIMARY,
+            on_click=on_scan_click,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=16),
+                padding=12,
+            ),
         )
 
         sort_options = [
@@ -241,7 +257,8 @@ class TransactionToolbar(ft.Container):
         self.action_buttons_row = ft.Row(
             spacing=6,
             controls=[
-                self.add_button
+                self.add_button,
+                self.scan_button,
             ]
         )
 
@@ -602,3 +619,369 @@ class DeleteTransactionDialog(Dialog):
         self.main_container.content.width = content_width
         self.title_text.width = max(content_width - 48, 0)
         self.desc_text.width = content_width
+
+
+class SpendingUsageCard(ft.Container):
+    def __init__(self, lang: dict):
+        self.lang = lang
+        self.usage_label = Text.MEDIUM(
+            self.lang["spending_ai.usage_loading"],
+            color=Color.PRIMARY_TEXT,
+        )
+        self.usage_progress = ft.ProgressBar(
+            value=1,
+            color=Color.PROGRESS_ACTIVE,
+            bgcolor=Color.DARK_BUTTON,
+            height=8,
+        )
+        super().__init__(
+            bgcolor=Color.CARD_BACKGROUND,
+            border_radius=18,
+            padding=18,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            content=ft.Column(
+                spacing=10,
+                controls=[self.usage_label, self.usage_progress],
+            ),
+        )
+
+    def set_usage(self, remaining: int, reset_at: str) -> None:
+        self.usage_label.value = self.lang["spending_ai.usage_remaining"].format(
+            remaining=remaining,
+            reset=reset_at,
+        )
+        self.usage_progress.value = remaining
+        self.usage_progress.color = (
+            Color.PROGRESS_ACTIVE if remaining else Color.WARNING_COLOR
+        )
+        self.update()
+
+    def set_unavailable(self, message: str | None = None) -> None:
+        self.usage_label.value = message or self.lang["spending_ai.usage_unavailable"]
+        self.update()
+
+
+class SpendingReportDialog(Dialog):
+    SECTION_KEYS = (
+        "monthly_overview",
+        "spending_trends",
+        "top_income_source",
+        "largest_expense",
+        "savings_advice",
+        "spending_actions",
+    )
+
+    def __init__(self, page: Page, lang: dict):
+        self._page = page
+        self.lang = lang
+        self.title_text = Text.H4(
+            self.lang["spending_ai.title"],
+            color=Color.PRIMARY_TEXT,
+            weight=ft.FontWeight.BOLD,
+        )
+        self.updated_text = Text.SMALL("", color=Color.SECONDARY_TEXT)
+        self.error_text = Text.MEDIUM(
+            "",
+            color=Color.NEGATIVE_ACTION,
+            text_align=ft.TextAlign.CENTER,
+        )
+        self.loading_content = ft.Column(
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=14,
+            controls=[
+                ft.ProgressRing(color=Color.PRIMARY, width=42, height=42),
+                Text.MEDIUM(
+                    self.lang["spending_ai.waiting"],
+                    color=Color.SECONDARY_TEXT,
+                    text_align=ft.TextAlign.CENTER,
+                ),
+            ],
+        )
+        self.report_content = ft.Column(
+            spacing=12,
+            scroll=ft.ScrollMode.AUTO,
+            expand=True,
+        )
+        self.body = ft.Container(
+            height=600,
+            content=self.loading_content,
+            alignment=ft.Alignment.CENTER
+        )
+        close_button = ft.IconButton(
+            ft.Icons.CLOSE,
+            on_click=lambda e: self.dismiss(),
+            icon_color=Color.PRIMARY_TEXT,
+            tooltip=self.lang["generic.close"],
+        )
+        self.main_container = ft.Container(
+            width=720,
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                spacing=12,
+                controls=[
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        controls=[self.title_text, close_button],
+                    ),
+                    self.updated_text,
+                    self.body,
+                ],
+            ),
+        )
+        super().__init__(
+            dialog_content=self.main_container,
+            color=Color.DIALOG_BACKGROUND,
+            padding=0,
+        )
+        self.inset_padding = ft.Padding.symmetric(horizontal=12, vertical=20)
+
+    def show_loading(self) -> None:
+        self.updated_text.value = ""
+        self.body.content = self.loading_content
+        self.show()
+        self.update()
+
+    def show_error(self, message: str) -> None:
+        self.body.content = ft.Container(
+            height=300,
+            alignment=ft.Alignment.CENTER,
+            content=self.error_text,
+        )
+        self.error_text.value = message
+        self.update()
+
+    def show_report(self, report: dict, created_at: str) -> None:
+        self.updated_text.value = self.lang["spending_ai.updated"].format(
+            date=created_at
+        )
+        self.report_content.controls = [
+            self._make_section(index, key, report.get(key))
+            for index, key in enumerate(self.SECTION_KEYS, start=1)
+        ]
+        self.body.content = self.report_content
+        self.show()
+        self.update()
+
+    def _make_section(self, index: int, key: str, data) -> ft.Control:
+        title = self.lang[f"spending_ai.section_{index}"]
+        card_content: list[ft.Control] = [
+            ft.Row(
+                spacing=8,
+                controls=[
+                    ft.Container(
+                        width=28,
+                        height=28,
+                        alignment=ft.Alignment.CENTER,
+                        border_radius=9,
+                        bgcolor=Color.DARK_SURFACE,
+                        content=Text.SMALL(
+                            str(index),
+                            color=Color.WHITE,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                    ),
+                    Text.MEDIUM(
+                        title,
+                        color=Color.PRIMARY_TEXT,
+                        weight=ft.FontWeight.BOLD,
+                    ),
+                ],
+            ),
+        ]
+        if key in ("savings_advice", "spending_actions"):
+            for advice in data or []:
+                card_content.append(
+                    ft.Container(
+                        padding=12,
+                        border_radius=12,
+                        bgcolor=Color.GOAL_ITEM_BACKGROUND,
+                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                        content=ft.Column(
+                            spacing=6,
+                            controls=[
+                                Text.MEDIUM(
+                                    str(advice.get("title", "")),
+                                    color=Color.PRIMARY_TEXT,
+                                    weight=ft.FontWeight.BOLD,
+                                ),
+                                Text.SMALL(
+                                    str(advice.get("description", "")),
+                                    color=Color.SECONDARY_TEXT,
+                                ),
+                                Text.MEDIUM(
+                                    str(advice.get("outcome", "")),
+                                    color=Color.PRIMARY,
+                                    weight=ft.FontWeight.BOLD,
+                                ),
+                            ],
+                        ),
+                    )
+                )
+        else:
+            section = data or {}
+            card_content.append(
+                Text.MEDIUM(
+                    str(section.get("headline", "")),
+                    color=Color.PRIMARY_TEXT,
+                    weight=ft.FontWeight.BOLD,
+                )
+            )
+            card_content.append(
+                Text.SMALL(
+                    str(section.get("summary", "")),
+                    color=Color.SECONDARY_TEXT,
+                )
+            )
+            card_content.append(
+                Text.SMALL(
+                    str(section.get("details", "")),
+                    color=Color.SECONDARY_TEXT,
+                )
+            )
+            metric = section.get("metric")
+            if metric:
+                card_content.append(
+                    ft.Container(
+                        padding=ft.Padding(10, 8, 10, 8),
+                        border_radius=12,
+                        bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND,
+                        content=Text.MEDIUM(
+                            str(metric),
+                            color=Color.PRIMARY,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                    )
+                )
+        return ft.Container(
+            width=self.main_container.width - 40,
+            padding=14,
+            border_radius=16,
+            bgcolor=Color.CARD_BACKGROUND,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            content=ft.Column(spacing=10, controls=card_content),
+        )
+
+    def resize(self, width: int, height: int) -> None:
+        dialog_width = max(min(width - 24, 760), 280)
+        self.main_container.width = dialog_width
+        self.body.height = max(min(height - 200, 720), 240)
+        for card in self.report_content.controls:
+            card.width = dialog_width - 40
+
+
+class SpendingReportHistoryCard(ft.Container):
+    def __init__(self, lang: dict, on_open: Callable[[dict], None]):
+        self.lang = lang
+        self.on_open = on_open
+        self.reports: list[dict] = []
+        self.is_expanded = True
+        self.history_title = Text.H4(
+            self.lang["spending_ai.history"].format(len=0),
+            color=Color.PRIMARY_TEXT,
+            weight=ft.FontWeight.BOLD,
+        )
+        self.toggle_button = ft.IconButton(
+            ft.Icons.EXPAND_LESS,
+            tooltip=self.lang["generic.collapse"],
+            on_click=self._toggle_expanded,
+        )
+        self.history_content = ft.Column(spacing=10)
+        self.history_column = ft.Column(
+            spacing=12,
+            controls=[
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[self.history_title, self.toggle_button],
+                ),
+                self.history_content,
+            ],
+        )
+        super().__init__(
+            bgcolor=Color.CARD_BACKGROUND,
+            border_radius=UISettings.CARD_BORDER_RADIUS,
+            padding=20,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
+            content=self.history_column,
+        )
+
+    def set_history(self, reports: list[dict]) -> None:
+        self.reports = reports
+        self.history_title.value = self.lang["spending_ai.history"].format(
+            len=len(reports)
+        )
+        if not reports:
+            self.history_content.controls = [
+                Text.SMALL(
+                    self.lang["spending_ai.no_history"],
+                    color=Color.SECONDARY_TEXT,
+                )
+            ]
+        else:
+            self.history_content.controls = [
+                self._make_history_item(item) for item in reports
+            ]
+        self.history_content.visible = self.is_expanded
+        if self.parent:
+            self.update()
+
+    def _make_history_item(self, item: dict) -> ft.Control:
+        report = item.get("report", {})
+        summary = report.get("monthly_overview", {}).get("headline", "")
+        created_at = str(item.get("created_at", ""))
+        return ft.Container(
+            bgcolor=Color.GOAL_ITEM_BACKGROUND,
+            border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+            border_radius=14,
+            padding=14,
+            ink=True,
+            on_click=lambda e, saved=item: self.on_open(saved),
+            content=ft.Row(
+                spacing=12,
+                controls=[
+                    ft.Container(
+                        width=40,
+                        height=40,
+                        border_radius=14,
+                        bgcolor=Color.DARK_SURFACE,
+                        alignment=ft.Alignment.CENTER,
+                        content=ft.Icon(
+                            ft.Icons.AUTO_AWESOME,
+                            color=Color.LIGHT_ACCENT,
+                            size=20,
+                        ),
+                    ),
+                    ft.Column(
+                        expand=True,
+                        spacing=4,
+                        controls=[
+                            Text.MEDIUM(
+                                self.lang["spending_ai.history_item_title"],
+                                color=Color.PRIMARY_TEXT,
+                                weight=ft.FontWeight.BOLD,
+                            ),
+                            Text.SMALL(created_at, color=Color.SECONDARY_TEXT),
+                            Text.SMALL(summary, color=Color.SECONDARY_TEXT),
+                        ],
+                    ),
+                    ft.Icon(
+                        ft.Icons.CHEVRON_RIGHT,
+                        color=Color.SECONDARY_TEXT,
+                    ),
+                ],
+            ),
+        )
+
+    def _toggle_expanded(self, e=None) -> None:
+        self.is_expanded = not self.is_expanded
+        self.history_content.visible = self.is_expanded
+        self.toggle_button.icon = (
+            ft.Icons.EXPAND_LESS if self.is_expanded else ft.Icons.EXPAND_MORE
+        )
+        self.toggle_button.tooltip = (
+            self.lang["generic.collapse"]
+            if self.is_expanded
+            else self.lang["generic.expand"]
+        )
+        self.update()

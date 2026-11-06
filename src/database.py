@@ -360,6 +360,15 @@ class DatabaseConnection:
                     FOREIGN KEY (user_id) REFERENCES users (id)
                 )
             ''')
+            self.execute('''
+                CREATE TABLE IF NOT EXISTS spending_analysis_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    report_json TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users (id)
+                )
+            ''')
 
             self._migrate_money_columns_to_real()
 
@@ -424,6 +433,10 @@ class UserDatabase:
 
         self.db.execute("DELETE FROM user_settings WHERE user_id = ?", (user_id,))
         self.db.execute("DELETE FROM purchase_scan_history WHERE user_id = ?", (user_id,))
+        self.db.execute(
+            "DELETE FROM spending_analysis_history WHERE user_id = ?",
+            (user_id,),
+        )
         self.db.execute("DELETE FROM expenses WHERE user_id = ?", (user_id,))
         self.db.execute("DELETE FROM incomes WHERE user_id = ?", (user_id,))
         self.db.execute("DELETE FROM savings WHERE user_id = ?", (user_id,))
@@ -1352,6 +1365,55 @@ class PurchaseScannerDatabase:
         self.db.execute("DELETE FROM purchase_scan_history WHERE user_id = ?", (user_id,))
         return True
 
+
+class SpendingAnalysisDatabase:
+    """Stores generated spending reports so users can reopen prior scans."""
+
+    def __init__(self, connection: DatabaseConnection, user_db: UserDatabase):
+        self.db = connection
+        self.user_db = user_db
+
+    def add_report(self, username: str, report: dict) -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return False
+        self.db.execute(
+            """
+            INSERT INTO spending_analysis_history (user_id, report_json, created_at)
+            VALUES (?, ?, ?)
+            """,
+            (
+                user_id,
+                json.dumps(report, ensure_ascii=False),
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            ),
+        )
+        return True
+
+    def get_user_reports(self, username: str) -> list[dict]:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return []
+        rows = self.db.execute(
+            """
+            SELECT id, report_json, created_at
+            FROM spending_analysis_history
+            WHERE user_id = ?
+            ORDER BY id DESC
+            """,
+            (user_id,),
+            fetch_all=True,
+        )
+        return [
+            {
+                "id": row[0],
+                "report": json.loads(row[1]),
+                "created_at": row[2],
+            }
+            for row in rows
+        ]
+
+
 # ==========================================
 # MAIN DATABASE MANAGER
 # ==========================================
@@ -1369,6 +1431,9 @@ class DatabaseManager:
         self.spending = SpendingDatabase(self.connection, self.users)
         self.categories = CategoryDatabase(self.connection, self.users)
         self.scanner_history = PurchaseScannerDatabase(self.connection, self.users)
+        self.spending_analysis_history = SpendingAnalysisDatabase(
+            self.connection, self.users
+        )
 
     def initialize_database(self) -> None:
         """Route the initialization call to the core connection."""

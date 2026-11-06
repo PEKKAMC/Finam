@@ -2,13 +2,16 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from datetime import datetime, timezone
+
 import flet as ft
 
 from src.logger import Logger
+from src.database import db
 from src.pages.global_components import FinancialChart, Menu
-from src.pages.spending.components import DeleteTransactionDialog, MetricCards, TransactionHistoryCard, TransactionToolbar
-from src.pages.spending.logic import LogicController
-from src.utils import Color, Page, get_safe_page_size, UISettings
+from src.pages.spending.components import DeleteTransactionDialog, MetricCards, SpendingReportDialog, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
+from src.pages.spending.logic import LogicController, SpendingAnalysisApiError
+from src.utils import Color, Page, Text, get_safe_page_size, UISettings
 
 Logger.info("Initializing Spending page...")
 
@@ -28,6 +31,7 @@ class SpendingView(ft.View):
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(user_info["username"])
+        self.spending_report_history = self.controller.get_spending_report_history()
 
         # FETCH INITIAL DATA
         balance_data, self.raw_transactions = self.controller.get_transaction_data()
@@ -65,9 +69,60 @@ class SpendingView(ft.View):
             on_search_change=self.on_search_change,
             on_sort_change=self.on_sort_change,
             on_add_click=self._page.navigate_to("/category_selection"),
+            on_scan_click=self.handle_spending_scan,
             search_query=self.search_query,
             sort_by=self.sort_by
         )
+
+        self.spending_report_dialog = SpendingReportDialog(
+            page=self._page,
+            lang=self.lang,
+        )
+        self.spending_report_history_card = SpendingReportHistoryCard(
+            lang=self.lang,
+            on_open=self._open_saved_report,
+        )
+        self.spending_report_history_card.set_history(self.spending_report_history)
+        self.usage_card = SpendingUsageCard(self.lang)
+        self.google_required_message = ft.Text(
+            self.lang["spending_ai.google_required"],
+            color=Color.SECONDARY_TEXT,
+            size=13,
+        )
+        self.google_required_card = ft.Container(
+            visible=not db.app_settings.has_google_account_session(),
+            bgcolor=Color.CARD_BACKGROUND,
+            border_radius=18,
+            padding=18,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            content=ft.Row(
+                spacing=12,
+                controls=[
+                    ft.Icon(
+                        ft.Icons.ACCOUNT_CIRCLE_OUTLINED,
+                        color=Color.PRIMARY_ACTION,
+                        size=24,
+                    ),
+                    ft.Column(
+                        expand=True,
+                        spacing=4,
+                        controls=[
+                            Text.MEDIUM(
+                                self.lang["spending_ai.google_required_title"],
+                                color=Color.PRIMARY_TEXT,
+                                weight=ft.FontWeight.BOLD,
+                            ),
+                            self.google_required_message,
+                        ],
+                    ),
+                    ft.TextButton(
+                        content=self.lang["purchase_scanner.google_login_action"],
+                        on_click=self._open_google_settings,
+                    ),
+                ],
+            ),
+        )
+        self.usage_card.visible = db.app_settings.has_google_account_session()
 
         self.delete_dialog = DeleteTransactionDialog(
             page=self._page,
@@ -97,8 +152,11 @@ class SpendingView(ft.View):
                             controls=[
                                 self.metric_cards,
                                 self.financial_chart,
+                                self.google_required_card,
+                                self.usage_card,
                                 self.toolbar,
-                                self.history_card
+                                self.history_card,
+                                self.spending_report_history_card,
                             ]
                         )
                     )
@@ -128,10 +186,16 @@ class SpendingView(ft.View):
 
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
+        self._update_google_access()
+        if db.app_settings.has_google_account_session():
+            self._page.run_thread(self._load_weekly_usage)
 
     def _refresh_view(self) -> int:
         try:
             self._on_page_resize()
+            self._update_google_access()
+            if db.app_settings.has_google_account_session():
+                self._page.run_thread(self._load_weekly_usage)
             self.current_chart_type = self.financial_chart.chart_type
 
             if self.financial_chart.chart_type == self.current_chart_type:
@@ -167,6 +231,12 @@ class SpendingView(ft.View):
             )
 
             self.history_card.update_data(filtered_txs, self.category_icons)
+            self.spending_report_history = (
+                self.controller.get_spending_report_history()
+            )
+            self.spending_report_history_card.set_history(
+                self.spending_report_history
+            )
 
             self.financial_chart.update_data()
             self._page.update()
@@ -182,6 +252,100 @@ class SpendingView(ft.View):
             self._refresh_view()
         else:
             Logger.warn(f"Failed to delete transaction {transaction_id}")
+
+    def _open_google_settings(self, e=None):
+        self._page.navigate_to("/user_management")()
+
+    def _update_google_access(self) -> None:
+        signed_in = db.app_settings.has_google_account_session()
+        self.google_required_card.visible = not signed_in
+        self.usage_card.visible = signed_in
+        self.toolbar.scan_button.disabled = not signed_in
+        self.google_required_message.value = self.lang["spending_ai.google_required"]
+        self._page.update()
+
+    def _load_weekly_usage(self) -> None:
+        refresh_token = db.app_settings.get_google_refresh_token()
+        try:
+            usage = self.controller.get_weekly_analysis_usage(refresh_token or "")
+            reset_at = datetime.fromisoformat(usage["reset_at"])
+            if reset_at.tzinfo is None:
+                reset_at = reset_at.replace(tzinfo=timezone.utc)
+            reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
+            remaining = usage["remaining"]
+            if not isinstance(remaining, int) or remaining not in (0, 1):
+                raise ValueError("Invalid weekly usage remaining count")
+            self.usage_card.set_usage(remaining, reset_label)
+            self.toolbar.scan_button.disabled = remaining == 0
+        except SpendingAnalysisApiError as ex:
+            Logger.warning(f"Could not load spending analysis usage: {ex}")
+            self.usage_card.set_unavailable()
+            if ex.status_code in (401, 403):
+                self.google_required_message.value = self.lang[
+                    "purchase_scanner.google_session_expired"
+                ]
+                self.google_required_card.visible = True
+                self.usage_card.visible = False
+                self.toolbar.scan_button.disabled = True
+        except (KeyError, TypeError, ValueError) as ex:
+            Logger.warning(f"Invalid spending analysis usage response: {ex}")
+            self.usage_card.set_unavailable()
+        self._page.update()
+
+    def handle_spending_scan(self, e=None) -> None:
+        if not db.app_settings.has_google_account_session():
+            return
+        self.spending_report_dialog.show_loading()
+
+        def worker():
+            try:
+                report = self.controller.analyze_spending(
+                    db.app_settings.get_google_refresh_token() or ""
+                )
+                if not self.controller.save_spending_report(report):
+                    raise RuntimeError("Could not save generated spending report.")
+                self.spending_report_history = (
+                    self.controller.get_spending_report_history()
+                )
+                self.spending_report_history_card.set_history(
+                    self.spending_report_history
+                )
+                created_at = self.spending_report_history[0]["created_at"]
+                self.spending_report_dialog.show_report(report, created_at)
+            except SpendingAnalysisApiError as ex:
+                Logger.warning(f"Spending analysis request rejected: {ex}")
+                if ex.status_code == 429:
+                    message = self.lang["spending_ai.weekly_limit"]
+                elif ex.status_code in (401, 403):
+                    message = self.lang["purchase_scanner.sign_in_required"]
+                    self.google_required_message.value = self.lang[
+                        "purchase_scanner.google_session_expired"
+                    ]
+                    self.google_required_card.visible = True
+                    self.usage_card.visible = False
+                    self.toolbar.scan_button.disabled = True
+                    self._page.update()
+                elif ex.status_code == 0:
+                    message = self.lang["purchase_scanner.connection_error"]
+                else:
+                    message = self.lang["spending_ai.service_error"]
+                self.spending_report_dialog.show_error(message)
+            except Exception as ex:
+                Logger.error(f"Error during spending analysis: {ex}")
+                self.spending_report_dialog.show_error(
+                    self.lang["spending_ai.service_error"]
+                )
+            finally:
+                if db.app_settings.get_google_refresh_token():
+                    self._load_weekly_usage()
+
+        self._page.run_thread(worker)
+
+    def _open_saved_report(self, entry: dict) -> None:
+        self.spending_report_dialog.show_report(
+            entry["report"],
+            entry["created_at"],
+        )
 
     def on_filter_change(self, f_type: str):
         self.filter_type = f_type
@@ -241,6 +405,10 @@ class SpendingView(ft.View):
 
             self.delete_dialog.resize(
                 width=page_width // 7 * 6
+            )
+            self.spending_report_dialog.resize(
+                width=page_width,
+                height=page_height,
             )
 
             return 0
