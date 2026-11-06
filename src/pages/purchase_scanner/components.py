@@ -186,11 +186,20 @@ class ScannerForm(ft.Container):
 
         self.thinking_time = ThinkingTimeUnitContainer(lang=self.lang, default_val="0", default_unit="hour")
 
+        self.submit_icon = ft.Icon(
+            ft.Icons.AUTO_AWESOME,
+            color=Color.LIGHT_ACCENT,
+            size=18,
+        )
+        self.submit_label = Text.BUTTON(
+            self.lang["purchase_scanner.scan_assess"],
+            color=Color.WHITE,
+        )
         self.submit_btn = ft.Container(
             content=ft.Row(
                 controls=[
-                    ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.LIGHT_ACCENT, size=18),
-                    Text.BUTTON(self.lang["purchase_scanner.scan_assess"], color=Color.WHITE)
+                    self.submit_icon,
+                    self.submit_label,
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=8
@@ -201,6 +210,7 @@ class ScannerForm(ft.Container):
             on_click=self._handle_scan_click
         )
         self._scan_enabled = True
+        self._scan_busy = False
 
         self.main_container = ft.Column(
             spacing=16,
@@ -286,9 +296,21 @@ class ScannerForm(ft.Container):
         self.item_reason.disabled = not enabled
         self.thinking_time.value_field.disabled = not enabled
         self.thinking_time.unit_dropdown.disabled = not enabled
-        self.submit_btn.on_click = self._handle_scan_click if enabled else None
         self.trigger.set_enabled(enabled)
+        self._update_submit_button()
         self.update()
+
+    def set_scanning(self, scanning: bool) -> None:
+        self._scan_busy = scanning
+        self._update_submit_button()
+        self.update()
+
+    def _update_submit_button(self) -> None:
+        enabled = self._scan_enabled and not self._scan_busy
+        self.submit_btn.on_click = self._handle_scan_click if enabled else None
+        self.submit_btn.bgcolor = Color.PRIMARY if enabled else Color.DARK_BUTTON
+        self.submit_icon.color = Color.LIGHT_ACCENT if enabled else Color.SECONDARY_TEXT
+        self.submit_label.color = Color.WHITE if enabled else Color.SECONDARY_TEXT
 
     def resize(self, page_width: int):
         self.main_container.width = max(page_width, 0)

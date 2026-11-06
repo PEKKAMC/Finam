@@ -243,6 +243,8 @@ class PurchaseScannerView(ft.View):
                 reset_at = reset_at.replace(tzinfo=timezone.utc)
             reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
             remaining = usage["remaining"]
+            if not isinstance(remaining, int) or remaining not in (0, 1):
+                raise ValueError("Invalid daily usage remaining count")
             self.usage_label.value = self.lang[
                 "purchase_scanner.usage_remaining"
             ].format(remaining=remaining, reset=reset_label)
@@ -275,6 +277,10 @@ class PurchaseScannerView(ft.View):
             pass
 
     def handle_scan_click(self, name, price, reason, trigger, time):
+        if not db.app_settings.has_google_account_session():
+            return
+        self.form_card.set_scanning(True)
+        self._page.update()
         request_generation = self.result_card.set_loading_state()
         item_name = name if name else self.lang["purchase_scanner.item"]
 
@@ -316,6 +322,7 @@ class PurchaseScannerView(ft.View):
                 Logger.warning(f"Purchase scanner request rejected: {ex}")
                 if ex.status_code == 429:
                     error_message = self.lang["purchase_scanner.daily_limit"]
+                    self.form_card.set_enabled(False)
                 elif ex.status_code in (401, 403):
                     error_message = self.lang["purchase_scanner.sign_in_required"]
                     self.google_required_card.visible = True
@@ -335,6 +342,8 @@ class PurchaseScannerView(ft.View):
             finally:
                 if db.app_settings.get_google_refresh_token():
                     self._load_daily_usage()
+                self.form_card.set_scanning(False)
+                self._page.update()
 
         self._page.run_thread(worker)
 
