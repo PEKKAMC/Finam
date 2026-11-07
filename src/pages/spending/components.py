@@ -709,32 +709,22 @@ class SpendingMonthDialog(Dialog):
         now = datetime.now()
         self.year = now.year
         self.month = now.month
-        self.month_dropdown = ft.Column(
-            controls=[
-                ft.Dropdown(
-                    label=self.lang["spending.ai_month_label"],
-                    value=str(self.month),
-                    options=[],
-                    on_select=self._on_month_changed,
-                    menu_height=300,
-                    expand=True
-                )
-            ]
+        self.month_dropdown = ft.Dropdown(
+            label=self.lang["spending.ai_month_label"],
+            value=str(self.month),
+            options=[],
+            on_select=self._on_month_changed,
+            menu_height=300,
         )
-        self.year_dropdown = ft.Column(
-            controls=[
-                ft.Dropdown(
-                    label=self.lang["spending.ai_year_label"],
-                    value=str(self.year),
-                    options=[
-                        ft.dropdown.Option(str(year), str(year))
-                        for year in range(now.year, now.year - 51, -1)
-                    ],
-                    on_select=self._on_year_changed,
-                    menu_height=300,
-                    expand=True
-                )
-            ]
+        self.year_dropdown = ft.Dropdown(
+            label=self.lang["spending.ai_year_label"],
+            value=str(self.year),
+            options=[
+                ft.dropdown.Option(str(year), str(year))
+                for year in range(now.year, now.year - 51, -1)
+            ],
+            on_select=self._on_year_changed,
+            menu_height=300,
         )
         self._update_month_options()
         self.main_container = ft.Container(
