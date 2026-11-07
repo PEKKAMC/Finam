@@ -911,6 +911,7 @@ class SpendingReportDialog(Dialog):
             self.lang["spending_ai.title"],
             color=Color.PRIMARY_TEXT,
             weight=ft.FontWeight.BOLD,
+            expand=True,
         )
         self.updated_text = Text.SMALL("", color=Color.SECONDARY_TEXT)
         self.error_text = Text.MEDIUM(
@@ -958,11 +959,13 @@ class SpendingReportDialog(Dialog):
             padding=UISettings.CARD_PADDING,
             content=ft.Column(
                 spacing=12,
+                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
                 controls=[
                     ft.Row(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         controls=[
                             ft.Row(
+                                expand=True,
                                 spacing=8,
                                 controls=[
                                     ft.Container(
@@ -1062,30 +1065,25 @@ class SpendingReportDialog(Dialog):
         section = data if isinstance(data, dict) else {}
 
         top_header_row = ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                ft.Row(
-                    spacing=8,
-                    controls=[
-                        ft.Container(
-                            width=28,
-                            height=28,
-                            alignment=ft.Alignment.CENTER,
-                            border_radius=9,
-                            bgcolor=Color.DARK_SURFACE,
-                            content=Text.SMALL(
-                                str(index),
-                                color=Color.WHITE,
-                                weight=ft.FontWeight.BOLD,
-                            ),
-                        ),
-                        Text.MEDIUM(
-                            title,
-                            color=Color.PRIMARY_TEXT,
-                            weight=ft.FontWeight.BOLD,
-                        ),
-                    ],
-                )
+                ft.Container(
+                    width=28,
+                    height=28,
+                    alignment=ft.Alignment.CENTER,
+                    border_radius=9,
+                    bgcolor=Color.DARK_SURFACE,
+                    content=Text.SMALL(
+                        str(index),
+                        color=Color.WHITE,
+                        weight=ft.FontWeight.BOLD,
+                    ),
+                ),
+                Text.MEDIUM(
+                    title,
+                    color=Color.PRIMARY_TEXT,
+                    weight=ft.FontWeight.BOLD,
+                    expand=True,
+                ),
             ]
         )
 
@@ -1122,6 +1120,7 @@ class SpendingReportDialog(Dialog):
                                             str(advice.get("title", "")),
                                             color=Color.PRIMARY_TEXT,
                                             weight=ft.FontWeight.BOLD,
+                                            expand=True,
                                         ),
                                     ],
                                 ),
@@ -1141,6 +1140,7 @@ class SpendingReportDialog(Dialog):
                                             str(advice.get("outcome", "")),
                                             color=Color.WARNING_COLOR if key == "spending_actions" else Color.PRIMARY,
                                             weight=ft.FontWeight.BOLD,
+                                            expand=True,
                                         ),
                                     ],
                                 ),
@@ -1212,8 +1212,17 @@ class SpendingReportDialog(Dialog):
                                 size=18,
                                 visible=expenses > income,
                             ),
-                            Text.MEDIUM(self.lang["spending.net_balance"], color=Color.SECONDARY_TEXT),
-                            Text.MEDIUM(f"{net_bal} {currency}".strip(), color=Color.EXPENSE_COLOR, weight=ft.FontWeight.BOLD),
+                            Text.MEDIUM(
+                                self.lang["spending.net_balance"],
+                                color=Color.SECONDARY_TEXT,
+                                expand=True,
+                            ),
+                            Text.MEDIUM(
+                                f"{net_bal} {currency}".strip(),
+                                color=Color.EXPENSE_COLOR,
+                                weight=ft.FontWeight.BOLD,
+                                expand=True,
+                            ),
                         ],
                     ),
                 )
@@ -1326,7 +1335,11 @@ class SpendingReportDialog(Dialog):
             border_radius=16,
             bgcolor=Color.CARD_BACKGROUND,
             border=ft.Border.all(1, Color.INPUT_BORDER),
-            content=ft.Column(spacing=10, controls=card_content_items),
+            content=ft.Column(
+                spacing=10,
+                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
+                controls=card_content_items,
+            ),
         )
 
     def resize(self, dialog_width: int, body_height: int, report_card_width: int) -> None:

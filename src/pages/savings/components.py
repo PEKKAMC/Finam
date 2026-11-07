@@ -981,13 +981,31 @@ class CongratulationsDialog(Dialog):
                 padding=12,
                 bgcolor=Color.ERROR_TEXT,
                 border_radius=16,
-                content=ft.Row([
-                    ft.Icon(ft.Icons.ADD, color=Color.NEGATIVE_ACTION),
-                    ft.Column([
-                        Text.SMALL(self.lang["savings.surplus_exceeded"].format(amount=format_number(surplus_amount, decimals=0), currency=self.currency), color=Color.NEGATIVE_ACTION),
-                        Text.SMALL(self.lang["savings.surplus_transfer_desc"], color=Color.SECONDARY_TEXT)
-                    ], spacing=2)
-                ])
+                content=ft.Row(
+                    expand=True,
+                    controls=[
+                        ft.Icon(ft.Icons.ADD, color=Color.NEGATIVE_ACTION),
+                        ft.Column(
+                            expand=True,
+                            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
+                            spacing=2,
+                            controls=[
+                                Text.SMALL(
+                                    self.lang["savings.surplus_exceeded"].format(
+                                        amount=format_number(surplus_amount, decimals=0),
+                                        currency=self.currency,
+                                    ),
+                                    color=Color.NEGATIVE_ACTION,
+                                ),
+                                Text.SMALL(
+                                    self.lang["savings.surplus_transfer_desc"],
+                                    color=Color.SECONDARY_TEXT,
+                                    expand=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                )
             )
 
             if self.available_goals:
@@ -1011,7 +1029,7 @@ class CongratulationsDialog(Dialog):
                 self.goals_dropdown_column.controls = goal_cards
                 self.goals_dropdown_column.visible = True
                 self.action_button.visible = True
-                self.action_button.content = self.lang["savings.transfer_surplus_selected"]
+                self.action_button.content = self.lang["savings.transfer_surplus"]
             else:
                 self.goals_dropdown_column.visible = False
                 self.action_button.visible = True
