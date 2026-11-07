@@ -122,6 +122,8 @@ class CategoryEditorDialog(Dialog):
                 for name in self.icon_names
             ],
             on_select=self._on_icon_changed,
+            enable_filter=True,
+            editable=True,
             menu_height=320,
             expand=True,
         )
