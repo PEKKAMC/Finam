@@ -60,11 +60,19 @@ class SettingsHeader(ft.Container):
 
 
 class SettingDropdown(ft.Container):
-    def __init__(self, options: list[str], active_index: int = 0, menu_height: int | None = None):
+    def __init__(
+        self,
+        options: list[str],
+        active_index: int = 0,
+        menu_height: int | None = None,
+        searchable: bool = False,
+    ):
         self.dropdown_control = ft.Dropdown(
             options=[ft.dropdown.Option(opt) for opt in options],
             value=options[active_index],
             menu_height=menu_height,
+            enable_filter=searchable,
+            editable=searchable,
             border=ft.InputBorder.NONE,
             bgcolor=Color.CARD_BACKGROUND,
             text_style=ft.TextStyle(size=12, color=Color.PRIMARY_TEXT ,weight=ft.FontWeight.W_600),

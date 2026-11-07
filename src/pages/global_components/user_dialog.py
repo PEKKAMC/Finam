@@ -266,6 +266,8 @@ class AddUserField(ft.Container):
         self.currency_dropdown = ft.Dropdown(
             value=self.default_currency,
             options=[ft.dropdown.Option(currency) for currency in self.currencies],
+            enable_filter=True,
+            editable=True,
             color=Color.DEFAULT_TEXT,
             bgcolor=Color.DIALOG_BACKGROUND,
             border_color=Color.INPUT_BORDER,
