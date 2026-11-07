@@ -22,8 +22,6 @@
     "category_selection.error.missing_amount_category": "Vui lòng nhập đủ số tiền và danh mục.",
     "category_selection.error.save_expense_failed": "Đã xảy ra lỗi khi lưu chi tiêu.",
     "category_selection.error.save_income_failed": "Đã xảy ra lỗi khi lưu thu nhập.",
-    "category_selection.expense_added_success": "Đã thêm khoản chi thành công!",
-    "category_selection.income_added_success": "Đã thêm khoản thu thành công!",
     "category_selection.note_hint": "Ghi chú (Không bắt buộc)",
     "fallback.default": "Đã xảy ra lỗi không xác định.",
     "fallback.page_not_found": "Không tìm thấy trang.",

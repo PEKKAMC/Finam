@@ -356,10 +356,6 @@ class CategorySelectionView(ft.View):
             message = self.lang["category_selection.error.missing_amount_category"]
         elif code == "AMOUNT_LESS_THAN_ZERO":
             message = self.lang["category_selection.error.amount_less_than_zero"]
-        elif code == "INCOME_ADDED_SUCCESS":
-            message = self.lang["category_selection.income_added_success"]
-        elif code == "EXPENSE_ADDED_SUCCESS":
-            message = self.lang["category_selection.expense_added_success"]
         elif code == "SAVE_INCOME_FAILED":
             message = self.lang["category_selection.error.save_income_failed"]
         elif code == "SAVE_EXPENSE_FAILED":
@@ -368,10 +364,10 @@ class CategorySelectionView(ft.View):
             message = ""
 
         if success:
-            self.keyboard_container.reset_inputs()
-            self.keyboard_container.show_status_message(message, is_success=True)
-        else:
-            self.keyboard_container.show_status_message(message)
+            self.switch_type("expense")
+            self._page.navigate_to(self._get_return_route())()
+            return
+        self.keyboard_container.show_status_message(message)
 
         self.update()
 

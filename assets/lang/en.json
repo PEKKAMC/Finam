@@ -22,8 +22,6 @@
     "category_selection.error.missing_amount_category": "Please enter both the amount and the category.",
     "category_selection.error.save_expense_failed": "An error occurred while saving the expense.",
     "category_selection.error.save_income_failed": "An error occurred while saving the income.",
-    "category_selection.expense_added_success": "Expense added successfully!",
-    "category_selection.income_added_success": "Income added successfully!",
     "category_selection.note_hint": "Note (Optional)",
     "fallback.default": "An unexpected error occurred.",
     "fallback.page_not_found": "Page not found.",
