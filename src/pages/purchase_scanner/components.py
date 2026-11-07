@@ -702,7 +702,7 @@ class ScannerResult(ft.Container):
         try:
             await asyncio.wait_for(self._troll_audio_loaded.wait(), timeout=3.0)
         except TimeoutError:
-            Logger.warning("Purchase scanner troll audio did not load within 3 seconds")
+            Logger.warning("Purchase scanner audio did not load within 3 seconds")
         if request_generation != self._request_generation:
             await self._stop_troll_audio(audio)
             return
@@ -713,7 +713,7 @@ class ScannerResult(ft.Container):
         try:
             await asyncio.wait_for(self._troll_audio_finished.wait(), timeout=3.0)
         except TimeoutError:
-            Logger.warning("Purchase scanner troll audio did not finish within 3 seconds")
+            Logger.warning("Purchase scanner audio did not finish within 3 seconds")
         finally:
             await self._stop_troll_audio(audio)
         if request_generation != self._request_generation:
@@ -730,7 +730,7 @@ class ScannerResult(ft.Container):
         try:
             await audio.play()
         except Exception as ex:
-            Logger.warning(f"Could not play purchase scanner troll audio: {ex}")
+            Logger.warning(f"Could not play purchase scanner audio: {ex}")
 
     def _on_troll_audio_state_change(self, e: fta.AudioStateChangeEvent) -> None:
         if (
