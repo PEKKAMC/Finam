@@ -96,7 +96,7 @@ class SpendingView(ft.View):
         self.spending_report_history_card.set_history(self.spending_report_history)
         self.usage_card = SpendingUsageCard(self.lang)
         self.google_required_message = ft.Text(
-            self.lang["spending_ai.google_required"],
+            self.lang["spending.ai_google_required"],
             color=Color.SECONDARY_TEXT,
             size=13,
             no_wrap=False,
@@ -120,7 +120,7 @@ class SpendingView(ft.View):
                         spacing=4,
                         controls=[
                             Text.MEDIUM(
-                                self.lang["spending_ai.google_required_title"],
+                                self.lang["spending.ai_google_required_title"],
                                 color=Color.PRIMARY_TEXT,
                                 weight=ft.FontWeight.BOLD,
                             ),
@@ -276,7 +276,7 @@ class SpendingView(ft.View):
             self.toolbar.set_scan_enabled(True)
         else:
             self.toolbar.set_scan_enabled(False)
-        self.google_required_message.value = self.lang["spending_ai.google_required"]
+        self.google_required_message.value = self.lang["spending.ai_google_required"]
         self._page.update()
 
     @staticmethod
@@ -289,7 +289,7 @@ class SpendingView(ft.View):
         )
 
     def _show_unlimited_usage(self) -> None:
-        self.usage_card.usage_label.value = self.lang["spending_ai.usage_unlimited"]
+        self.usage_card.usage_label.value = self.lang["spending.ai_usage_unlimited"]
         self.usage_card.usage_progress.value = 1
         self.usage_card.usage_progress.color = Color.PROGRESS_ACTIVE
 
@@ -383,7 +383,7 @@ class SpendingView(ft.View):
             except SpendingAnalysisApiError as ex:
                 Logger.warning(f"Spending analysis request rejected: {ex}")
                 if ex.status_code == 429:
-                    message = self.lang["spending_ai.monthly_limit"]
+                    message = self.lang["spending.ai_monthly_limit"]
                     self.toolbar.set_scan_enabled(False)
                     self._page.update()
                 elif ex.status_code in (401, 403):
@@ -398,12 +398,12 @@ class SpendingView(ft.View):
                 elif ex.status_code == 0:
                     message = self.lang["purchase_scanner.connection_error"]
                 else:
-                    message = self.lang["spending_ai.service_error"]
+                    message = self.lang["spending.ai_service_error"]
                 self.spending_report_dialog.show_error(message)
             except Exception as ex:
                 Logger.error(f"Error during spending analysis: {ex}")
                 self.spending_report_dialog.show_error(
-                    self.lang["spending_ai.service_error"]
+                    self.lang["spending.ai_service_error"]
                 )
             finally:
                 if db.app_settings.get_google_refresh_token():
