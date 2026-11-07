@@ -54,7 +54,6 @@ class LessonItemCard(ft.Container):
                     src=self.cover_image.strip() if self.cover_image else "",
                     fit=ft.BoxFit.COVER,
                     width=float("inf"),
-                    height=176
                 ),
                 ft.Container(
                     gradient=ft.LinearGradient(
@@ -78,7 +77,6 @@ class LessonItemCard(ft.Container):
         )
 
         self.cover_container = ft.Container(
-            height=176,
             bgcolor=Color.DARK_SURFACE,
             content=self.cover_stack,
             clip_behavior=ft.ClipBehavior.HARD_EDGE
@@ -129,8 +127,17 @@ class LessonItemCard(ft.Container):
             shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW)
         )
 
-    def resize(self, width: int) -> None:
+    def resize(self, width: int, cover_height: int) -> None:
+        self.width = width
         self.main_container.width = width
+        self.cover_container.width = width
+        self.cover_container.height = cover_height
+        self.cover_stack.width = width
+        self.content_panel.width = width
+        for control in self.cover_stack.controls:
+            if isinstance(control, ft.Image):
+                control.width = width
+                control.height = cover_height
 
 
 class LessonSummaryBanner(ft.Container):
@@ -222,13 +229,18 @@ class LessonSummaryBanner(ft.Container):
             )
         )
 
+    def resize(self, width: int, content_width: int) -> None:
+        self.width = width
+        self.summary_banner_row.width = content_width
+        self.progress_bar.width = content_width
+
 
 class LessonGrid(ft.Stack):
     def __init__(self, page: Page, lang: dict, lessons: list):
         self._page = page
         self.lang = lang
 
-        lesson_cards = [
+        self.lesson_cards = [
             LessonItemCard(
                 page=self._page,
                 lang=self.lang,
@@ -240,17 +252,21 @@ class LessonGrid(ft.Stack):
             )
             for lesson in lessons
         ]
+        self.responsive_row = ft.ResponsiveRow(
+            spacing=20,
+            run_spacing=20,
+            controls=[
+                ft.Container(
+                    content=card,
+                    col={"xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12},
+                )
+                for card in self.lesson_cards
+            ],
+        )
 
         super().__init__(
             controls=[
-                ft.ResponsiveRow(
-                    spacing=20,
-                    run_spacing=20,
-                    controls=[
-                        ft.Container(content=card, col={"xs": 12, "sm": 6, "lg": 4})
-                        for card in lesson_cards
-                    ]
-                ),
+                self.responsive_row,
                 ft.Container(
                     left=0,
                     top=0,
@@ -263,3 +279,9 @@ class LessonGrid(ft.Stack):
                 )
             ]
         )
+
+    def resize(self, width: int, card_width: int, cover_height: int) -> None:
+        self.width = width
+        self.responsive_row.width = width
+        for card in self.lesson_cards:
+            card.resize(card_width, cover_height)

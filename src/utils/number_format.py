@@ -2,6 +2,7 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import math
 import re
 
 
@@ -37,6 +38,32 @@ def format_number(value: float, decimals: int = 2, signed: bool = False) -> str:
     else:
         integer = integer.replace(",", "")
     return integer + (_decimal_separator + fraction if decimal else "")
+
+
+def format_compact_number(value: float, decimals: int = 1) -> str:
+    """Format large values with a compact magnitude suffix."""
+    magnitude_suffixes = ("", "K", "M", "B", "T")
+    absolute_value = abs(value)
+    if not math.isfinite(value) or absolute_value < 1_000:
+        return format_number(value)
+
+    magnitude = min(
+        len(magnitude_suffixes) - 1,
+        int(math.log10(absolute_value) // 3),
+    )
+    scaled_value = value / (1_000 ** magnitude)
+
+    while (
+        magnitude < len(magnitude_suffixes) - 1
+        and round(abs(scaled_value), decimals) >= 1_000
+    ):
+        magnitude += 1
+        scaled_value /= 1_000
+
+    formatted = format_number(scaled_value, decimals=decimals)
+    if _decimal_separator in formatted:
+        formatted = formatted.rstrip("0").rstrip(_decimal_separator)
+    return f"{formatted}{magnitude_suffixes[magnitude]}"
 
 
 def format_expression(expression: str) -> str:

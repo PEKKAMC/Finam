@@ -55,5 +55,6 @@ TEXT_STYLES = {
 
 def create_text(value: str, size: int, **kwargs) -> ft.Text:
     """Create a flet.Text with metadata."""
+    kwargs["no_wrap"] = False
     text = ft.Text(value, size=size, **kwargs)
     return text

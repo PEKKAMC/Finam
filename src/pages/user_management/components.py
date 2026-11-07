@@ -143,10 +143,10 @@ class ProfileCard(ft.Container):
         except RuntimeError:
             pass
 
-    def resize(self, width: int):
+    def resize(self, width: int, content_width: int):
         self.width = width
-        self.main_container.width = width
-        self.main_container.content.width = width
+        self.main_container.width = content_width
+        self.main_container.content.width = content_width
 
 
 class GoogleAccountCard(ft.Container):
@@ -240,9 +240,9 @@ class GoogleAccountCard(ft.Container):
         else:
             self.update()
 
-    def resize(self, width: int) -> None:
+    def resize(self, width: int, content_width: int) -> None:
         self.width = width
-        self.main_container.width = width
+        self.main_container.width = content_width
 
 
 class MenuItem(ft.Container):
@@ -311,6 +311,11 @@ class MenuItem(ft.Container):
             content=self.main_row
         )
 
+    def resize(self, width: int) -> None:
+        self.width = width
+        self.main_row.width = width
+        self.text_column.width = width
+
 
 class MenuSectionCard(ft.Container):
     def __init__(self, items: list[ft.Control]):
@@ -345,6 +350,10 @@ class MenuSectionCard(ft.Container):
         self.width = width
         self.main_container.width = width
         self.main_container.content.width = width
+        for item in self.items:
+            resize = getattr(item, "resize", None)
+            if resize is not None:
+                resize(width)
 
 
 class DeleteAllDataDialog(Dialog):

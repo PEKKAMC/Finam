@@ -33,6 +33,9 @@ class FaqItem(ft.Container):
             ),
         )
 
+    def resize(self, width: int) -> None:
+        self.width = width
+
 
 class HelpForm(ft.Container):
     _EMAIL_PATTERN = re.compile(
@@ -173,9 +176,9 @@ class HelpForm(ft.Container):
         self.status_text.visible = True
         self._page.update()
 
-    def resize(self, width: int) -> None:
+    def resize(self, width: int, content_width: int) -> None:
         self.width = width
-        self.form_column.width = width - (UISettings.CARD_PADDING * 2)
+        self.form_column.width = content_width
 
 
 class FaqSection(ft.Column):
@@ -190,3 +193,9 @@ class FaqSection(ft.Column):
                 )
             ],
         )
+
+    def resize(self, width: int) -> None:
+        self.width = width
+        for control in self.controls:
+            if isinstance(control, FaqItem):
+                control.resize(width)

@@ -7,7 +7,7 @@ from collections.abc import Callable
 import flet as ft
 import flet_charts as fc
 
-from src.utils import Color, Text, UISettings, format_number
+from src.utils import Color, Text, UISettings, format_compact_number
 
 
 class BalanceCard(ft.Container):
@@ -26,8 +26,16 @@ class BalanceCard(ft.Container):
         # Static texts
         self.balance_label_text = Text.LABEL(self.lang["home.available_balance"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.currency_label = Text.P(self.currency, color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.add_transaction_button_label = Text.BUTTON(self.lang["home.add_transaction"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
-        self.purchase_scanner_button_label = Text.BUTTON(self.lang["home.ai_scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.add_transaction_button_label = Text.BUTTON(
+            self.lang["home.add_transaction"],
+            color=Color.PRIMARY,
+            weight=ft.FontWeight.BOLD,
+        )
+        self.purchase_scanner_button_label = Text.BUTTON(
+            self.lang["home.ai_scan"],
+            color=Color.WHITE,
+            weight=ft.FontWeight.BOLD,
+        )
         self.income_title = Text.H6(self.lang["home.total_income"], color=Color.LIGHT_ACCENT)
         self.expense_title = Text.H6(self.lang["home.total_expense"], color=Color.EXPENSE_LABEL_TEXT)
         self.saving_title = Text.H6(self.lang["home.total_savings"], color=Color.SAVINGS_LABEL_TEXT)
@@ -39,10 +47,10 @@ class BalanceCard(ft.Container):
         self.ai_icon = ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=16)
 
         # Dynamic texts
-        self.balance_amount_text = Text.H1(format_number(self.net_balance), color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.income_text = Text.MEDIUM(f"{format_number(self.income)} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.expense_text = Text.MEDIUM(f"{format_number(self.expense)} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
-        self.savings_text = Text.MEDIUM(f"{format_number(self.savings)} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.balance_amount_text = Text.H1(format_compact_number(self.net_balance), color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.income_text = Text.MEDIUM(f"{format_compact_number(self.income)} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.expense_text = Text.MEDIUM(f"{format_compact_number(self.expense)} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.savings_text = Text.MEDIUM(f"{format_compact_number(self.savings)} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
         self.advice_text = Text.SMALL(self.advice, color=Color.WHITE)
 
         # CONTAINER COMPONENTS
@@ -80,7 +88,6 @@ class BalanceCard(ft.Container):
                     self.add_transaction_button_icon,
                     self.add_transaction_button_label
                 ],
-                tight=True
             ),
             bgcolor=Color.LIGHT_ACCENT,
             on_click=self.on_add_click,
@@ -99,7 +106,6 @@ class BalanceCard(ft.Container):
                     self.purchase_scanner_icon,
                     self.purchase_scanner_button_label
                 ],
-                tight=True
             ),
             on_click=self.on_scan_click,
             style=ft.ButtonStyle(
@@ -245,20 +251,20 @@ class BalanceCard(ft.Container):
         self.advice = ai_advice
         self.currency = currency
 
-        self.balance_amount_text.value = format_number(self.net_balance)
+        self.balance_amount_text.value = format_compact_number(self.net_balance)
         self.currency_label.value = self.currency
-        self.income_text.value = f"{format_number(self.income)} {self.currency}"
-        self.expense_text.value = f"{format_number(self.expense)} {self.currency}"
-        self.savings_text.value = f"{format_number(self.savings)} {self.currency}"
+        self.income_text.value = f"{format_compact_number(self.income)} {self.currency}"
+        self.expense_text.value = f"{format_compact_number(self.expense)} {self.currency}"
+        self.savings_text.value = f"{format_compact_number(self.savings)} {self.currency}"
         self.advice_text.value = self.advice
 
         self.update()
 
-    def resize(self, width: int, inner_width: int):
+    def resize(self, width: int):
         self.main_container.width = width
-        self.balance_top_row.width = inner_width
-        self.metrics_row.width = inner_width
-        self.ai_banner_container.width = inner_width
+        self.balance_top_row.width = width
+        self.metrics_row.width = width
+        self.ai_banner_container.width = width
 
 
 class SavingsGoalItem(ft.Container):
@@ -268,10 +274,24 @@ class SavingsGoalItem(ft.Container):
 
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
-        self.title_text = Text.MEDIUM(item["title"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+        self.title_text = Text.MEDIUM(
+            item["title"],
+            color=Color.DEFAULT_TEXT,
+            weight=ft.FontWeight.BOLD,
+            expand=True,
+        )
         self.progress_text = Text.SMALL(item["progress_text"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.contributed_label = Text.SMALL(item["contributed_label"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
-        self.target_label = Text.SMALL(item["target_label"], color=Color.BLAND_TEXT)
+        self.contributed_label = Text.SMALL(
+            item["contributed_label"],
+            color=Color.PRIMARY,
+            weight=ft.FontWeight.BOLD,
+            expand=True,
+        )
+        self.target_label = Text.SMALL(
+            item["target_label"],
+            color=Color.BLAND_TEXT,
+            expand=True,
+        )
 
         # CONTAINER COMPONENTS
         self.progress_bar = ft.ProgressBar(
@@ -290,6 +310,7 @@ class SavingsGoalItem(ft.Container):
 
         self.header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.START,
             controls=[
                 self.title_text,
                 self.progress_badge_container
@@ -338,11 +359,12 @@ class SavingsGoalItem(ft.Container):
 
         self.update()
 
-    def resize(self, width: int):
+    def resize(self, width: int, content_width: int):
+        self.width = width
         self.main_container.width = width
-        self.header_row.width = width
-        self.progress_bar.width = width
-        self.footer_row.width = width
+        self.header_row.width = content_width
+        self.progress_bar.width = content_width
+        self.footer_row.width = content_width
 
 
 class SavingsProgressCard(ft.Container):
@@ -350,6 +372,8 @@ class SavingsProgressCard(ft.Container):
         self.lang = lang
         self.objective_items, self.objective_count = objective_items
         self.on_view_all_click = on_view_all_click
+        self._inner_width: int | None = None
+        self._goal_item_content_width: int | None = None
 
         # TEXT AND ICON COMPONENTS
         # Static texts
@@ -463,18 +487,31 @@ class SavingsProgressCard(ft.Container):
                     self.goal_items[i].update_data(item)
                 else:
                     self.goal_items.append(SavingsGoalItem(item))
+                    if self._inner_width is not None:
+                        self.goal_items[-1].resize(
+                            self._inner_width,
+                            self._goal_item_content_width or 0,
+                        )
 
             self.goal_items_column.controls = list(self.goal_items)
 
         self.update()
 
-    def resize(self, width: int, inner_width: int):
-        self.main_container.width = width
+    def resize(
+        self,
+        width: int,
+        inner_width: int,
+        goal_item_content_width: int,
+    ):
+        self.width = width
+        self._inner_width = inner_width
+        self._goal_item_content_width = goal_item_content_width
+        self.main_container.width = inner_width
         self.goal_header_row.width = inner_width
         self.goal_items_column.width = inner_width
 
         for item in self.goal_items:
-            item.resize(inner_width)
+            item.resize(inner_width, goal_item_content_width)
 
 
 class ExpenseCategoryItem(ft.Row):
@@ -487,7 +524,7 @@ class ExpenseCategoryItem(ft.Row):
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
         self.expense_name_text = Text.SMALL(self.name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
-        self.expense_value_text = Text.SMALL(f"{format_number(self.value)} {self.currency}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+        self.expense_value_text = Text.SMALL(f"{format_compact_number(self.value)} {self.currency}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
 
         # CONTAINER COMPONENTS
         self.color_box = ft.Container(
@@ -516,7 +553,7 @@ class ExpenseCategoryItem(ft.Row):
     def update_data(self, name: str, value: float, currency: str, color: str):
         self.color_box.bgcolor = color
         self.expense_name_text.value = name
-        self.expense_value_text.value = f"{format_number(value)} {currency}"
+        self.expense_value_text.value = f"{format_compact_number(value)} {currency}"
 
         self.update()
 
@@ -532,6 +569,7 @@ class ExpensePieChart(ft.Container):
         self.on_details_click = on_details_click
         self.chart_radius = 45
         self.center_radius = 40
+        self._inner_width: int | None = None
 
         self.pie_colors = [
             Color.PIE_CHART_RED,
@@ -575,7 +613,6 @@ class ExpensePieChart(ft.Container):
 
         self.legend_list = ft.Column(
             scroll=ft.ScrollMode.AUTO,
-            height=120,
             spacing=8,
             controls=self.legend_items
         )
@@ -702,10 +739,15 @@ class ExpensePieChart(ft.Container):
             self.pie_chart.sections = sections
             self.legend_list.controls = list(self.legend_items)
 
+        if self._inner_width is not None:
+            for item in self.legend_items:
+                item.resize(self._inner_width)
         self.update()
 
     def resize(self, width: int, inner_width: int, chart_radius: int, center_radius: int, legend_height: int):
-        self.main_container.width = width
+        self.width = width
+        self._inner_width = inner_width
+        self.main_container.width = inner_width
         self.chart_header_row.width = inner_width
         self.chart_content_area.width = inner_width
 
@@ -731,7 +773,6 @@ class FeaturedLessonCard(ft.Container):
         # Static texts
         self.card_title = Text.H4(self.lang["home.financial_learning"], color=Color.DEFAULT_TEXT)
         self.card_subtitle = Text.SMALL(self.lang["home.financial_learning_subtitle"], color=Color.BLAND_TEXT)
-        self.view_list_title = Text.SMALL(self.lang["home.view_list"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
         self.featured_badge_title = Text.SMALL(self.lang["home.featured_content"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.featured_lesson_title = Text.P(self.lang["home.featured_lesson_title"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.featured_lesson_desc = Text.SMALL(self.lang["home.featured_lesson_desc"], color=Color.BLAND_TEXT)
@@ -760,11 +801,6 @@ class FeaturedLessonCard(ft.Container):
             ]
         )
 
-        self.view_list_button = ft.TextButton(
-            content=self.view_list_title,
-            on_click=self.on_learn_click
-        )
-
         self.lesson_header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
@@ -774,8 +810,7 @@ class FeaturedLessonCard(ft.Container):
                         self.lesson_icon_container,
                         self.lesson_title_column
                     ]
-                ),
-                self.view_list_button
+                )
             ]
         )
 
@@ -853,7 +888,8 @@ class FeaturedLessonCard(ft.Container):
         )
 
     def resize(self, width: int, inner_width: int):
-        self.main_container.width = width
+        self.width = width
+        self.main_container.width = inner_width
         self.lesson_header_row.width = inner_width
         self.lesson_banner_container.width = inner_width
         self.footer_row.width = inner_width

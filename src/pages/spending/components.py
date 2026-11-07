@@ -348,9 +348,9 @@ class TransactionToolbar(ft.Container):
 
         self.update()
 
-    def resize(self, width: int):
+    def resize(self, width: int, content_width: int):
         self.width = width
-        self.main_container.width = width
+        self.main_container.width = content_width
 
 
 class TransactionHistoryCard(ft.Container):
@@ -362,6 +362,8 @@ class TransactionHistoryCard(ft.Container):
         self.on_delete = on_delete
         self.category_icons = category_icons or {}
         self.is_expanded = True
+        self._item_width: int | None = None
+        self._item_content_width: int | None = None
 
         self.history_column = ft.Column(spacing=12, controls=[])
         self._render_controls()
@@ -428,6 +430,10 @@ class TransactionHistoryCard(ft.Container):
             visible=self.is_expanded,
         )
         self.history_column.controls = [history_header, self.history_content]
+        if self._item_width is not None and self._item_content_width is not None:
+            for item in tx_list_controls:
+                if isinstance(item, TransactionItemCard):
+                    item.resize(self._item_width, self._item_content_width)
 
     def _toggle_expanded(self, e):
         self.is_expanded = not self.is_expanded
@@ -445,9 +451,22 @@ class TransactionHistoryCard(ft.Container):
         if self.page:
             self.update()
 
-    def resize(self, width: int):
-        self.width = max(width, 0)
-        self.history_column.width = max(width, 0)
+    def resize(
+        self,
+        width: int,
+        content_width: int,
+        item_width: int,
+        item_content_width: int,
+    ):
+        self.width = width
+        self.history_column.width = content_width
+        self._item_width = item_width
+        self._item_content_width = item_content_width
+        for item in self.history_content.controls:
+            if isinstance(item, TransactionItemCard):
+                item.resize(item_width, item_content_width)
+            else:
+                item.width = content_width
 
 
 class TransactionItemCard(ft.Container):
@@ -563,9 +582,9 @@ class TransactionItemCard(ft.Container):
             content=self.main_row
         )
 
-    def resize(self, width: int) -> None:
+    def resize(self, width: int, content_width: int) -> None:
         self.width = width
-        self.main_row.width = width
+        self.main_row.width = content_width
 
 
 class DeleteTransactionDialog(Dialog):
@@ -631,12 +650,15 @@ class DeleteTransactionDialog(Dialog):
         self.dismiss()
         self.on_confirm(self.transaction_id)
 
-    def resize(self, width: int) -> None:
-        outer_width = max(width, 0)
-        content_width = max(outer_width - 48, 0)
+    def resize(
+        self,
+        outer_width: int,
+        content_width: int,
+        title_width: int,
+    ) -> None:
         self.main_container.width = outer_width
         self.main_container.content.width = content_width
-        self.title_text.width = max(content_width - 48, 0)
+        self.title_text.width = title_width
         self.desc_text.width = content_width
 
 
@@ -653,15 +675,16 @@ class SpendingUsageCard(ft.Container):
             bgcolor=Color.DARK_BUTTON,
             height=8,
         )
+        self.main_container = ft.Column(
+            spacing=10,
+            controls=[self.usage_label, self.usage_progress],
+        )
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=18,
             padding=18,
             border=ft.Border.all(1, Color.INPUT_BORDER),
-            content=ft.Column(
-                spacing=10,
-                controls=[self.usage_label, self.usage_progress],
-            ),
+            content=self.main_container,
         )
 
     def set_usage(
@@ -692,6 +715,12 @@ class SpendingUsageCard(ft.Container):
     def set_unavailable(self, message: str | None = None) -> None:
         self.usage_label.value = message or self.lang["spending_ai.usage_unavailable"]
         self.update()
+
+    def resize(self, width: int, content_width: int) -> None:
+        self.width = width
+        self.main_container.width = content_width
+        self.usage_label.width = content_width
+        self.usage_progress.width = content_width
 
 
 class SpendingMonthDialog(Dialog):
@@ -731,7 +760,6 @@ class SpendingMonthDialog(Dialog):
         )
         self._update_month_options()
         self.main_container = ft.Container(
-            width=420,
             padding=UISettings.CARD_PADDING,
             content=ft.Column(
                 tight=True,
@@ -762,6 +790,11 @@ class SpendingMonthDialog(Dialog):
             options=[self.cancel_button, self.confirm_button],
             padding=0,
         )
+
+    def resize(self, width: int, content_width: int) -> None:
+        self.main_container.width = width
+        self.month_dropdown.width = content_width
+        self.year_dropdown.width = content_width
 
     def _on_month_changed(self, e=None) -> None:
         self.month = int(self.month_dropdown.value)
@@ -840,6 +873,10 @@ class DeleteSpendingReportDialog(Dialog):
             padding=0,
         )
 
+    def resize(self, width: int, content_width: int) -> None:
+        self.main_container.width = width
+        self.main_container.content.width = content_width
+
     def trigger(self, report_id: int | None) -> None:
         if report_id is None:
             return
@@ -899,8 +936,8 @@ class SpendingReportDialog(Dialog):
             scroll=ft.ScrollMode.AUTO,
             expand=True,
         )
+        self.report_card_width = 0
         self.body = ft.Container(
-            height=600,
             content=self.loading_content,
             alignment=ft.Alignment.CENTER
         )
@@ -918,7 +955,6 @@ class SpendingReportDialog(Dialog):
             tooltip=self.lang["generic.close"],
         )
         self.main_container = ft.Container(
-            width=720,
             padding=UISettings.CARD_PADDING,
             content=ft.Column(
                 spacing=12,
@@ -1125,7 +1161,7 @@ class SpendingReportDialog(Dialog):
                     )
                 )
         return ft.Container(
-            width=self.main_container.width - 40,
+            width=self.report_card_width,
             padding=14,
             border_radius=16,
             bgcolor=Color.CARD_BACKGROUND,
@@ -1133,12 +1169,17 @@ class SpendingReportDialog(Dialog):
             content=ft.Column(spacing=10, controls=card_content),
         )
 
-    def resize(self, width: int, height: int) -> None:
-        dialog_width = max(min(width - 24, 760), 280)
+    def resize(
+        self,
+        dialog_width: int,
+        body_height: int,
+        report_card_width: int,
+    ) -> None:
         self.main_container.width = dialog_width
-        self.body.height = max(min(height - 200, 720), 240)
+        self.body.height = body_height
+        self.report_card_width = report_card_width
         for card in self.report_content.controls:
-            card.width = dialog_width - 40
+            card.width = report_card_width
 
 
 class SpendingReportHistoryCard(ft.Container):
@@ -1147,6 +1188,7 @@ class SpendingReportHistoryCard(ft.Container):
         self.on_open = on_open
         self.reports: list[dict] = []
         self.is_expanded = True
+        self._content_width: int | None = None
         self.history_title = Text.H4(
             self.lang["spending_ai.history"].format(len=0),
             color=Color.PRIMARY_TEXT,
@@ -1193,6 +1235,9 @@ class SpendingReportHistoryCard(ft.Container):
             self.history_content.controls = [
                 self._make_history_item(item) for item in reports
             ]
+        if self._content_width is not None:
+            for item in self.history_content.controls:
+                item.width = self._content_width
         self.history_content.visible = self.is_expanded
         if self.parent:
             self.update()
@@ -1257,3 +1302,11 @@ class SpendingReportHistoryCard(ft.Container):
             else self.lang["generic.expand"]
         )
         self.update()
+
+    def resize(self, width: int, content_width: int) -> None:
+        self.width = width
+        self._content_width = content_width
+        self.history_column.width = content_width
+        self.history_content.width = content_width
+        for item in self.history_content.controls:
+            item.width = width

@@ -145,23 +145,39 @@ class Menu(ft.Container):
             case _:
                 return ""
 
-    def resize(self, width: int, item_size: int, inside_size: int) -> None:
+    def resize(
+        self,
+        width: int,
+        item_size: int,
+        item_height: int,
+        inside_size: int,
+        inside_height: int,
+        banner_height: int,
+        total_height: int,
+        label_size: int,
+        icon_size: int,
+        label_spacing: int,
+        label_visible: bool,
+    ) -> None:
         self.width = width
         if self.ad_banner is not None:
-            banner_fits = width >= self.BANNER_WIDTH
-            self.ad_banner.visible = banner_fits
-            self.ad_banner_height = self.BANNER_HEIGHT if banner_fits else 0
+            self.ad_banner.visible = banner_height > 0
+            self.ad_banner_height = banner_height
             self.ad_container.height = self.ad_banner_height
-        self.height = item_size + self.ad_banner_height
-        self.reserved_height = self.height
+        self.height = total_height
+        self.reserved_height = total_height
         self.content_column.width = width
         self.main_container.width = width
-        self.main_container.height = item_size
+        self.main_container.height = item_height
         if self.ad_container is not None:
             self.ad_container.width = width
 
         for item in self.navigation_items:
             item.width = item_size
-            item.height = item_size
+            item.height = item_height
             item.content.width = inside_size
-            item.content.height = inside_size
+            item.content.height = inside_height
+            item.content.content.spacing = label_spacing
+            item.content.content.controls[0].size = icon_size
+            item.content.content.controls[1].size = label_size
+            item.content.content.controls[1].visible = label_visible

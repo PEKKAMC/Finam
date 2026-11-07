@@ -41,8 +41,14 @@ class SelectableOptionGroup(ft.Container):
             row_controls = [self.button_controls[k] for k in chunk_keys]
             rows.append(ft.Row(controls=row_controls, spacing=8))
 
+        self.option_rows = rows
         super().__init__(content=ft.Column(controls=rows, spacing=8))
         self.update_styles()
+
+    def resize(self, width: int) -> None:
+        self.width = width
+        for row in self.option_rows:
+            row.width = width
 
     def _select(self, val_id: str):
         self.value = val_id
@@ -91,8 +97,8 @@ class ThinkingTimeUnitContainer(ft.Container):
             border_radius=16,
             filled=True,
             bgcolor=Color.PAGE_BACKGROUND,
-            height=48,
             text_size=13,
+            height=48,
             keyboard_type=ft.KeyboardType.NUMBER,
             content_padding=ft.Padding(16, 12, 16, 12),
             expand=True
@@ -111,9 +117,8 @@ class ThinkingTimeUnitContainer(ft.Container):
             border_radius=16,
             filled=True,
             bgcolor=Color.PAGE_BACKGROUND,
-            height=48,
-            width=150,
             text_size=13,
+            height=48,
             content_padding=ft.Padding(16, 12, 16, 12)
         )
         row = ft.Row(
@@ -127,6 +132,10 @@ class ThinkingTimeUnitContainer(ft.Container):
         val = self.value_field.value.strip() if self.value_field.value else "1"
         unit = self.unit_dropdown.value or "hour"
         return f"{val} {unit}"
+
+    def resize(self, value_width: int, unit_width: int) -> None:
+        self.value_field.width = value_width
+        self.unit_dropdown.width = unit_width
 
 
 class ScannerForm(ft.Container):
@@ -313,8 +322,22 @@ class ScannerForm(ft.Container):
         self.submit_icon.color = Color.LIGHT_ACCENT if enabled else Color.SECONDARY_TEXT
         self.submit_label.color = Color.WHITE if enabled else Color.SECONDARY_TEXT
 
-    def resize(self, page_width: int):
-        self.main_container.width = max(page_width, 0)
+    def resize(
+        self,
+        width: int,
+        content_width: int,
+        thinking_value_width: int,
+        thinking_unit_width: int,
+    ) -> None:
+        self.width = width
+        self.main_container.width = content_width
+        self.item_name.width = content_width
+        self.item_price.width = content_width
+        self.item_reason.width = content_width
+        self.trigger.resize(content_width)
+        self.thinking_time.width = content_width
+        self.thinking_time.resize(thinking_value_width, thinking_unit_width)
+        self.submit_btn.width = content_width
 
 
 class InterventionItem(ft.Container):
@@ -352,8 +375,10 @@ class ScannerHistoryCard(ft.Container):
         self.currency = currency
         self.on_delete_entry = on_delete_entry or (lambda *_: None)
         self.on_clear_all = on_clear_all or (lambda: None)
+        self._content_width: int | None = None
 
         self.history_collapsed = False
+        self.history_items: list[ft.Container] = []
         self.history_expander = ft.IconButton(
             icon=ft.Icons.KEYBOARD_ARROW_UP,
             on_click=lambda e: self.toggle_history_panel(),
@@ -407,6 +432,7 @@ class ScannerHistoryCard(ft.Container):
 
     def set_history(self, history_entries: list[dict]):
         self.history_list.controls.clear()
+        self.history_items.clear()
         self.history_content.visible = not self.history_collapsed
         self.clear_all_button.visible = bool(history_entries)
 
@@ -487,11 +513,21 @@ class ScannerHistoryCard(ft.Container):
                 return e
 
             expander.on_click = toggle_entry
+            if self._content_width is not None:
+                item_card.width = self._content_width
             self.history_list.controls.append(item_card)
+            self.history_items.append(item_card)
 
         self.history_content.visible = not self.history_collapsed
         if self.parent:
             self.update()
+
+    def resize(self, width: int, content_width: int) -> None:
+        self.width = width
+        self._content_width = content_width
+        self.history_list.width = content_width
+        for item in self.history_items:
+            item.width = content_width
 
     def toggle_history_panel(self):
         self.history_collapsed = not self.history_collapsed
@@ -509,6 +545,8 @@ class ScannerResult(ft.Container):
         self._troll_audio: fta.Audio | None = None
         self._troll_audio_loaded: asyncio.Event | None = None
         self._troll_audio_finished: asyncio.Event | None = None
+        self._content_width: int | None = None
+        self._intervention_width: int | None = None
         self.empty_message = Text.SMALL(
             self.lang["purchase_scanner.fill_info"],
             color=Color.SECONDARY_TEXT,
@@ -559,8 +597,6 @@ class ScannerResult(ft.Container):
 
         self.troll_animation = ft.Image(
             src="gif/the_rock.gif",
-            width=240,
-            height=240,
             fit=ft.BoxFit.CONTAIN,
             visible=False,
         )
@@ -814,8 +850,27 @@ class ScannerResult(ft.Container):
         ]
 
         self.interventions_col.controls.clear()
+        if self._intervention_width is not None:
+            for item in interventions:
+                item.resize(self._intervention_width)
         self.interventions_col.controls.extend(interventions)
         self.update()
 
-    def resize(self, width: int):
-        self.main_container.width = width
+    def resize(
+        self,
+        width: int,
+        content_width: int,
+        intervention_width: int,
+        illustration_size: int,
+    ) -> None:
+        self.width = width
+        self._content_width = content_width
+        self._intervention_width = intervention_width
+        self.main_container.width = content_width
+        self.result_container.width = content_width
+        self.interventions_col.width = content_width
+        self.troll_animation.width = illustration_size
+        self.troll_animation.height = illustration_size
+        for item in self.interventions_col.controls:
+            if isinstance(item, InterventionItem):
+                item.resize(intervention_width)

@@ -55,17 +55,29 @@ class LessonEditorView(ft.View):
         self.toolbar = EditorToolbar(self._page, self.lang, self.add_element_handler, self.add_element_handler, self.add_element_handler, self.add_element_handler)
         self.slide_sidebar = SlideSidebarLayout(self._page, self.lang, self.sidebar_column, self.add_slide_handler, self.move_slide_up_handler, self.move_slide_down_handler, self.delete_slide_handler)
 
-        center_editor = ft.Column([
+        self.center_editor = ft.Column([
             ft.Row([self.slide_number_title, self.toolbar], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             ft.Row([self.canvas_container], alignment=ft.MainAxisAlignment.CENTER)
         ], expand=True)
+        self.center_panel = ft.Container(
+            content=self.center_editor,
+            padding=20,
+            expand=True,
+        )
+        self.properties_panel = ft.Container(
+            content=self.properties_tabs,
+            width=320,
+            padding=10,
+            border=ft.Border(left=ft.BorderSide(1, Color.INPUT_BORDER)),
+            bgcolor=Color.CARD_BACKGROUND,
+        )
 
         self.editor_layout = ft.Container(
-            content=ft.Row([
+            content=ft.Column([
                 self.slide_sidebar,
-                ft.Container(content=center_editor, padding=20, expand=True),
-                ft.Container(content=self.properties_tabs, width=320, padding=10, border=ft.Border(left=ft.BorderSide(1, Color.INPUT_BORDER)), bgcolor=Color.CARD_BACKGROUND)
-            ], expand=True),
+                self.center_panel,
+                self.properties_panel,
+            ], expand=True, scroll=ft.ScrollMode.AUTO),
             height=850, border=ft.Border.all(1, Color.INPUT_BORDER), border_radius=10, bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND
         )
 
@@ -378,18 +390,51 @@ class LessonEditorView(ft.View):
             page_width, page_height = self.get_safe_page_size(page=self._page)
 
             menu_item_size = page_width // self.menu.items_count
+            menu_item_height = max(48, menu_item_size)
             menu_inside_size = menu_item_size // 6 * 5
+            menu_inside_height = menu_item_height // 6 * 5
+            menu_label_size = 8 if menu_item_size < 48 else 10
+            menu_icon_size = 18 if menu_item_size < 48 else 20
+            menu_label_spacing = 2 if menu_item_size < 48 else 4
+            menu_label_visible = menu_item_size >= 48
+            banner_height = (
+                self.menu.BANNER_HEIGHT
+                if self.menu.ad_banner is not None
+                and page_width >= self.menu.BANNER_WIDTH
+                else 0
+            )
+            menu_total_height = menu_item_height + banner_height
             self.menu.resize(
                 width=page_width,
                 item_size=menu_item_size,
+                item_height=menu_item_height,
                 inside_size=menu_inside_size,
+                inside_height=menu_inside_height,
+                banner_height=banner_height,
+                total_height=menu_total_height,
+                label_size=menu_label_size,
+                icon_size=menu_icon_size,
+                label_spacing=menu_label_spacing,
+                label_visible=menu_label_visible,
             )
             self.main_container.margin.bottom = self.menu.reserved_height
 
             available_height = max(500, page_height - self.menu.reserved_height)
+            content_width = max(0, page_width - 40)
+            canvas_height = int(available_height * 0.55)
             self.editor_layout.height = available_height
-            self.canvas_container.width = min(550, int(page_width * 0.35))
-            self.canvas_container.height = int(available_height * 0.75)
+            self.editor_layout.width = page_width
+            self.slide_sidebar.resize(
+                content_width,
+                max(0, content_width - 20),
+            )
+            self.center_panel.width = content_width
+            self.center_editor.width = content_width - 40
+            self.toolbar.resize(content_width - 40)
+            self.properties_panel.width = content_width
+            self.properties_tabs.resize(content_width - 20)
+            self.canvas_container.width = content_width - 40
+            self.canvas_container.height = canvas_height
 
             return 0
 

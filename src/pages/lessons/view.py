@@ -62,17 +62,16 @@ class LessonsView(ft.View):
         )
 
         # INITIALIZE MAIN CONTAINER
+        self.content_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=UISettings.CARD_PADDING,
+            content=self.content_column,
+        )
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
                 spacing=20,
-                controls=[
-                    ft.Container(
-                        width=UISettings.MAX_APP_WIDTH,
-                        padding=UISettings.CARD_PADDING,
-                        content=self.content_column
-                    )
-                ]
+                controls=[self.content_container]
             ),
             expand=True,
             padding=0,
@@ -122,6 +121,7 @@ class LessonsView(ft.View):
                 lessons=self.available_lessons
             )
             self.content_column.controls = [self.summary_banner, self.lesson_grid]
+            self._on_page_resize()
             self.update()
             return 0
         except Exception as ex:
@@ -133,18 +133,52 @@ class LessonsView(ft.View):
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
             menu_item_size = page_width // self.menu.items_count
+            menu_item_height = max(48, menu_item_size)
             menu_inside_size = menu_item_size // 6 * 5
+            menu_inside_height = menu_item_height // 6 * 5
+            menu_label_size = 8 if menu_item_size < 48 else 10
+            menu_icon_size = 18 if menu_item_size < 48 else 20
+            menu_label_spacing = 2 if menu_item_size < 48 else 4
+            menu_label_visible = menu_item_size >= 48
+            banner_height = (
+                self.menu.BANNER_HEIGHT
+                if self.menu.ad_banner is not None
+                and page_width >= self.menu.BANNER_WIDTH
+                else 0
+            )
+            menu_total_height = menu_item_height + banner_height
 
             # Resizing main container
             self.main_container.width = page_width
+            self.content_container.width = page_width
 
             # Resizing other components
             self.menu.resize(
                 width=page_width,
                 item_size=menu_item_size,
+                item_height=menu_item_height,
                 inside_size=menu_inside_size,
+                inside_height=menu_inside_height,
+                banner_height=banner_height,
+                total_height=menu_total_height,
+                label_size=menu_label_size,
+                icon_size=menu_icon_size,
+                label_spacing=menu_label_spacing,
+                label_visible=menu_label_visible,
             )
             self.main_container.margin.bottom = self.menu.reserved_height
+            content_width = max(0, page_width - UISettings.CARD_PADDING * 2)
+            lesson_card_width = content_width
+            lesson_cover_height = min(176, lesson_card_width * 3 // 4)
+            self.summary_banner.resize(
+                width=content_width,
+                content_width=max(0, content_width - 48),
+            )
+            self.lesson_grid.resize(
+                width=content_width,
+                card_width=lesson_card_width,
+                cover_height=lesson_cover_height,
+            )
 
             return 0
 

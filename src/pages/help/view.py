@@ -36,35 +36,34 @@ class HelpView(ft.View):
         )
 
         # INITIALIZE MAIN CONTAINER
+        self.content_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                spacing=20,
+                controls=[
+                    ft.Column(
+                        spacing=6,
+                        controls=[
+                            Text.H1(
+                                self.lang["help.title"],
+                                color=Color.PRIMARY_TEXT,
+                            ),
+                            Text.P(
+                                self.lang["help.description"],
+                                color=Color.SECONDARY_TEXT,
+                            ),
+                        ],
+                    ),
+                    self.faq_section,
+                    self.help_form,
+                ],
+            ),
+        )
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                controls=[
-                    ft.Container(
-                        width=UISettings.MAX_APP_WIDTH,
-                        padding=UISettings.CARD_PADDING,
-                        content=ft.Column(
-                            spacing=20,
-                            controls=[
-                                ft.Column(
-                                    spacing=6,
-                                    controls=[
-                                        Text.H1(
-                                            self.lang["help.title"],
-                                            color=Color.PRIMARY_TEXT,
-                                        ),
-                                        Text.P(
-                                            self.lang["help.description"],
-                                            color=Color.SECONDARY_TEXT,
-                                        ),
-                                    ],
-                                ),
-                                self.faq_section,
-                                self.help_form,
-                            ],
-                        ),
-                    ),
-                ],
+                controls=[self.content_container],
             ),
             expand=True,
             padding=0,
@@ -98,22 +97,52 @@ class HelpView(ft.View):
 
             # Get component size values
             menu_item_size = page_width // self.menu.items_count
+            menu_item_height = max(48, menu_item_size)
             menu_inside_size = menu_item_size // 6 * 5
+            menu_inside_height = menu_item_height // 6 * 5
+            menu_label_size = 8 if menu_item_size < 48 else 10
+            menu_icon_size = 18 if menu_item_size < 48 else 20
+            menu_label_spacing = 2 if menu_item_size < 48 else 4
+            menu_label_visible = menu_item_size >= 48
+            banner_height = (
+                self.menu.BANNER_HEIGHT
+                if self.menu.ad_banner is not None
+                and page_width >= self.menu.BANNER_WIDTH
+                else 0
+            )
+            menu_total_height = menu_item_height + banner_height
 
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            self.content_container.width = page_width
+            content_width = max(
+                0, page_width - UISettings.CARD_PADDING * 2
+            )
+            form_content_width = max(
+                0, content_width - UISettings.CARD_PADDING * 2
+            )
+            self.faq_section.resize(content_width)
 
             # Resizing other components
             self.menu.resize(
                 width=page_width,
                 item_size=menu_item_size,
+                item_height=menu_item_height,
                 inside_size=menu_inside_size,
+                inside_height=menu_inside_height,
+                banner_height=banner_height,
+                total_height=menu_total_height,
+                label_size=menu_label_size,
+                icon_size=menu_icon_size,
+                label_spacing=menu_label_spacing,
+                label_visible=menu_label_visible,
             )
             self.main_container.margin.bottom = self.menu.reserved_height
 
             self.help_form.resize(
-                width=page_width - (UISettings.CARD_PADDING * 2),
+                width=content_width,
+                content_width=form_content_width,
             )
 
             return 0

@@ -45,8 +45,6 @@ class SlideCanvas(ft.Container):
 
         super().__init__(
             content=self.main_container,
-            width=550,
-            height=750,
             bgcolor=Color.CARD_BACKGROUND,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             clip_behavior=ft.ClipBehavior.HARD_EDGE
@@ -62,9 +60,9 @@ class SlideCanvas(ft.Container):
     def add_visual_control(self, control_to_add):
         self.canvas_stack.controls.append(control_to_add)
 
-    def resize(self, width: int, height: int):
-        self.width = max(width, 0)
-        self.height = max(height, 0)
+    def resize(self, width: int, height: int) -> None:
+        self.width = width
+        self.height = height
 
 class LessonHeader(ft.Row):
     def __init__(self, page: Page, lang: dict, default_title: str):
@@ -127,10 +125,17 @@ class PresentationBoard(ft.Container):
         super().__init__(
             content=self.main_container,
             padding=25, bgcolor=Color.CARD_BACKGROUND, border_radius=15,
-            shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK)),
-            height=850
+            shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK))
         )
 
-    def resize(self, width: int, height: int):
-        self.width = max(width, 0)
-        self.height = max(height, 0)
+    def resize(
+        self,
+        width: int,
+        height: int,
+        padding: int,
+        content_width: int,
+    ) -> None:
+        self.width = width
+        self.height = height
+        self.padding = padding
+        self.main_container.width = content_width

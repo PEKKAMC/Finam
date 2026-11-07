@@ -69,6 +69,7 @@ class PurchaseScannerView(ft.View):
             border=ft.Border.all(1, Color.INPUT_BORDER),
             content=ft.Row(
                 spacing=12,
+                wrap=True,
                 controls=[
                     ft.Icon(
                         ft.Icons.ACCOUNT_CIRCLE_OUTLINED,
@@ -126,7 +127,7 @@ class PurchaseScannerView(ft.View):
             alignment=ft.Alignment.CENTER
         )
 
-        header_banner = ft.Container(
+        self.header_banner = ft.Container(
             bgcolor=Color.PRIMARY,
             border_radius=24,
             padding=28,
@@ -161,42 +162,40 @@ class PurchaseScannerView(ft.View):
             )
         )
 
+        self.scan_cards_row = ft.Column(
+            spacing=20,
+            controls=[
+                self.form_card,
+                self.result_card,
+            ],
+        )
+        self.scan_cards_stack = ft.Stack(
+            expand=True,
+            controls=[self.scan_cards_row, self.scanner_locked_overlay],
+        )
+
+        self.content_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                spacing=20,
+                expand=True,
+                controls=[
+                    self.header_banner,
+                    self.google_required_card,
+                    self.usage_card,
+                    self.scan_cards_stack,
+                    ft.Container(
+                        self.history_card,
+                        margin=ft.Margin.only(top=4)
+                    )
+                ]
+            )
+        )
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                controls=[
-                    ft.Container(
-                        width=UISettings.MAX_APP_WIDTH,
-                        padding=UISettings.CARD_PADDING,
-                        content=ft.Column(
-                            spacing=20,
-                            expand=True,
-                            controls=[
-                                header_banner,
-                                self.google_required_card,
-                                self.usage_card,
-                                ft.Stack(
-                                    expand=True,
-                                    controls=[
-                                        ft.ResponsiveRow(
-                                            spacing=20,
-                                            run_spacing=20,
-                                            controls=[
-                                                ft.Container(self.form_card, col={"sm": 12, "md": 6}),
-                                                ft.Container(self.result_card, col={"sm": 12, "md": 6}),
-                                            ],
-                                        ),
-                                        self.scanner_locked_overlay,
-                                    ],
-                                ),
-                                ft.Container(
-                                    self.history_card,
-                                    margin=ft.Margin.only(top=4)
-                                )
-                            ]
-                        )
-                    )
-                ]
+                controls=[self.content_container]
             ),
             expand=True,
             padding=0,
@@ -417,17 +416,71 @@ class PurchaseScannerView(ft.View):
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
             menu_item_size = page_width // self.menu.items_count
+            menu_item_height = max(48, menu_item_size)
             menu_inside_size = menu_item_size // 6 * 5
+            menu_inside_height = menu_item_height // 6 * 5
+            menu_label_size = 8 if menu_item_size < 48 else 10
+            menu_icon_size = 18 if menu_item_size < 48 else 20
+            menu_label_spacing = 2 if menu_item_size < 48 else 4
+            menu_label_visible = menu_item_size >= 48
+            banner_height = (
+                self.menu.BANNER_HEIGHT
+                if self.menu.ad_banner is not None
+                and page_width >= self.menu.BANNER_WIDTH
+                else 0
+            )
+            menu_total_height = menu_item_height + banner_height
+            content_width = max(0, page_width - UISettings.CARD_PADDING * 2)
+            component_content_width = max(0, content_width - 48)
+            intervention_width = max(0, component_content_width - 28)
+            illustration_size = min(240, component_content_width)
+            thinking_unit_width = min(150, component_content_width // 2)
+            thinking_value_width = max(
+                0, component_content_width - thinking_unit_width - 10
+            )
+            history_content_width = max(0, content_width - 24)
 
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            self.content_container.width = page_width
+            self.header_banner.width = content_width
+            self.google_required_card.width = content_width
+            self.usage_card.width = content_width
+            self.scan_cards_stack.width = content_width
+            self.scan_cards_row.width = content_width
+            self.scanner_locked_overlay.width = content_width
+            self.scanner_locked_overlay.height = page_height
+            self.form_card.resize(
+                width=content_width,
+                content_width=component_content_width,
+                thinking_value_width=thinking_value_width,
+                thinking_unit_width=thinking_unit_width,
+            )
+            self.result_card.resize(
+                width=content_width,
+                content_width=component_content_width,
+                intervention_width=intervention_width,
+                illustration_size=illustration_size,
+            )
+            self.history_card.resize(
+                width=content_width,
+                content_width=history_content_width,
+            )
 
             # Resizing other components
             self.menu.resize(
                 width=page_width,
                 item_size=menu_item_size,
+                item_height=menu_item_height,
                 inside_size=menu_inside_size,
+                inside_height=menu_inside_height,
+                banner_height=banner_height,
+                total_height=menu_total_height,
+                label_size=menu_label_size,
+                icon_size=menu_icon_size,
+                label_spacing=menu_label_spacing,
+                label_visible=menu_label_visible,
             )
             self.main_container.margin.bottom = self.menu.reserved_height
 

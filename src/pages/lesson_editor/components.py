@@ -24,6 +24,7 @@ class TopNavigationBar(ft.Row):
         super().__init__(controls=[self.main_container], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
 
     def resize(self, width: int) -> None:
+        self.width = width
         self.main_container.width = width
 
 
@@ -38,11 +39,13 @@ class EditorToolbar(ft.Row):
                 ft.Button(self.lang["lesson_editor.add_image"], icon=ft.Icons.IMAGE, on_click=lambda _: on_add_image("image") if on_add_image else None),
                 ft.Button(self.lang["lesson_editor.add_audio"], icon=ft.Icons.AUDIO_FILE, on_click=lambda _: on_add_audio("audio") if on_add_audio else None)
             ],
-            spacing=10
+            spacing=10,
+            wrap=True,
         )
         super().__init__(controls=[self.main_container], spacing=10)
 
     def resize(self, width: int) -> None:
+        self.width = width
         self.main_container.width = width
 
 
@@ -71,6 +74,7 @@ class PropertiesTabs(ft.Tabs):
         )
 
     def resize(self, width: int) -> None:
+        self.width = width
         self.main_container.width = width
 
 
@@ -90,7 +94,8 @@ class SlideSidebarLayout(ft.Container):
             ft.Divider(),
             sidebar_column or ft.Column()
         ])
-        super().__init__(content=self.main_container, width=170, padding=10, border=ft.Border(right=ft.BorderSide(1, Color.INPUT_BORDER)), bgcolor=Color.CARD_BACKGROUND)
+        super().__init__(content=self.main_container, padding=10, border=ft.Border(right=ft.BorderSide(1, Color.INPUT_BORDER)), bgcolor=Color.CARD_BACKGROUND)
 
-    def resize(self, width: int) -> None:
-        self.main_container.width = width
+    def resize(self, width: int, content_width: int) -> None:
+        self.width = width
+        self.main_container.width = content_width

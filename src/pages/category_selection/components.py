@@ -18,19 +18,17 @@ class CategoryItem(ft.Container):
         self._on_click = on_click
         self.is_selected = is_selected
         self.selected_background_color = selected_background_color
+        self.icon_control = ft.Icon(
+            icon=self.icon,
+            color=icon_color,
+        )
         self.icon_circle = ft.Container(
-            width=52,
-            height=52,
             border_radius=UISettings.CARD_BORDER_RADIUS,
             bgcolor=(
                 self.selected_background_color if self.is_selected else None
             ),
             alignment=ft.Alignment.CENTER,
-            content=ft.Icon(
-                icon=self.icon,
-                color=icon_color,
-                size=30,
-            )
+            content=self.icon_control
         )
 
         self.icon_label = Text.LABEL(
@@ -40,8 +38,6 @@ class CategoryItem(ft.Container):
         )
 
         self.main_container = ft.Container(
-            width=75,
-            height=76,
             content=ft.Column(
                 alignment=ft.MainAxisAlignment.START,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -69,6 +65,20 @@ class CategoryItem(ft.Container):
             expand=True,
             alignment=ft.Alignment.CENTER
         )
+
+    def resize(
+        self,
+        width: int,
+        height: int,
+        icon_size: int,
+        glyph_size: int,
+    ) -> None:
+        self.main_container.width = width
+        self.main_container.height = height
+        self.icon_circle.width = icon_size
+        self.icon_circle.height = icon_size
+        self.icon_control.size = glyph_size
+        self.icon_label.width = width
 
     def update_selection(self, selected: bool):
         self.is_selected = selected
@@ -139,7 +149,7 @@ class CategoryEditorDialog(Dialog):
             self.lang["category_selection.add_category"],
             color=Color.PRIMARY_TEXT,
         )
-        content = ft.Column(
+        self.content_container = ft.Column(
             tight=True,
             spacing=14,
             controls=[
@@ -153,11 +163,15 @@ class CategoryEditorDialog(Dialog):
             ],
         )
         super().__init__(
-            dialog_content=content,
+            dialog_content=self.content_container,
             color=Color.DIALOG_BACKGROUND,
             options=[self.delete_button, self.cancel_button, self.save_button],
         )
         self._dialog_page = page
+
+    def resize(self, width: int) -> None:
+        self.content_container.width = width
+        self.name_field.width = width
 
     def show_editor(self, category: dict | None = None) -> None:
         self.category = category
@@ -219,7 +233,7 @@ class DeleteCategoryDialog(Dialog):
             content=self.lang["generic.cancel"],
             on_click=lambda e: self.dismiss(),
         )
-        content = ft.Column(
+        self.content_container = ft.Column(
             tight=True,
             spacing=12,
             controls=[
@@ -232,11 +246,16 @@ class DeleteCategoryDialog(Dialog):
             ],
         )
         super().__init__(
-            dialog_content=content,
+            dialog_content=self.content_container,
             color=Color.DIALOG_BACKGROUND,
             options=[self.cancel_button, self.delete_button],
         )
         self._dialog_page = page
+
+    def resize(self, width: int) -> None:
+        self.content_container.width = width
+        self.description.width = width
+        self.error_text.width = width
 
     def show_confirmation(self, category: dict, transaction_count: int) -> None:
         self.category = category

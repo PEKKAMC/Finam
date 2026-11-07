@@ -119,7 +119,6 @@
     "home.total_income": "Total Income",
     "home.total_savings": "Saved",
     "home.view_details": "View details",
-    "home.view_list": "View list",
     "lesson_player.error_loading_file": "Error loading file",
     "lesson_player.failed_to_load": "Unable to load: {error}",
     "lesson_player.lesson_empty": "Lesson is empty!",

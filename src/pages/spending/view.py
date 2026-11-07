@@ -99,6 +99,7 @@ class SpendingView(ft.View):
             self.lang["spending_ai.google_required"],
             color=Color.SECONDARY_TEXT,
             size=13,
+            no_wrap=False,
         )
         self.google_required_card = ft.Container(
             visible=not db.app_settings.has_google_account_session(),
@@ -150,28 +151,27 @@ class SpendingView(ft.View):
         )
 
         # INITIALIZE MAIN CONTAINER
+        self.content_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                spacing=20,
+                expand=True,
+                controls=[
+                    self.metric_cards,
+                    self.financial_chart,
+                    self.google_required_card,
+                    self.usage_card,
+                    self.toolbar,
+                    self.history_card,
+                    self.spending_report_history_card,
+                ]
+            )
+        )
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                controls=[
-                    ft.Container(
-                        width=UISettings.MAX_APP_WIDTH,
-                        padding=UISettings.CARD_PADDING,
-                        content=ft.Column(
-                            spacing=20,
-                            expand=True,
-                            controls=[
-                                self.metric_cards,
-                                self.financial_chart,
-                                self.google_required_card,
-                                self.usage_card,
-                                self.toolbar,
-                                self.history_card,
-                                self.spending_report_history_card,
-                            ]
-                        )
-                    )
-                ]
+                controls=[self.content_container]
             ),
             expand=True,
             padding=0,
@@ -462,38 +462,98 @@ class SpendingView(ft.View):
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
             menu_item_size = page_width // self.menu.items_count
+            menu_item_height = max(48, menu_item_size)
             menu_inside_size = menu_item_size // 6 * 5
+            menu_inside_height = menu_item_height // 6 * 5
+            menu_label_size = 8 if menu_item_size < 48 else 10
+            menu_icon_size = 18 if menu_item_size < 48 else 20
+            menu_label_spacing = 2 if menu_item_size < 48 else 4
+            menu_label_visible = menu_item_size >= 48
+            banner_height = (
+                self.menu.BANNER_HEIGHT
+                if self.menu.ad_banner is not None
+                and page_width >= self.menu.BANNER_WIDTH
+                else 0
+            )
+            menu_total_height = menu_item_height + banner_height
+            content_width = max(0, page_width - UISettings.CARD_PADDING * 2)
+            card_content_width = max(
+                0, content_width - UISettings.CARD_PADDING * 2
+            )
+            usage_content_width = max(0, content_width - 36)
+            transaction_item_content_width = max(0, card_content_width - 28)
+            transaction_dialog_width = page_width * 6 // 7
+            transaction_dialog_content = max(0, transaction_dialog_width - 48)
+            transaction_title_width = max(
+                0, transaction_dialog_content - 48
+            )
+            report_dialog_width = max(0, min(page_width - 24, 760))
+            report_body_height = max(0, min(page_height - 200, 720))
+            report_card_width = max(0, report_dialog_width - 40)
+            secondary_dialog_width = page_width * 6 // 7
+            secondary_dialog_content = max(0, secondary_dialog_width - 40)
 
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            self.content_container.width = page_width
+            self.google_required_card.width = content_width
+            self.usage_card.resize(content_width, usage_content_width)
+            self.spending_report_history_card.resize(
+                content_width,
+                card_content_width,
+            )
 
             # Resizing other components
             self.menu.resize(
                 width=page_width,
                 item_size=menu_item_size,
+                item_height=menu_item_height,
                 inside_size=menu_inside_size,
+                inside_height=menu_inside_height,
+                banner_height=banner_height,
+                total_height=menu_total_height,
+                label_size=menu_label_size,
+                icon_size=menu_icon_size,
+                label_spacing=menu_label_spacing,
+                label_visible=menu_label_visible,
             )
             self.main_container.margin.bottom = self.menu.reserved_height
 
             self.metric_cards.resize(
-                width=page_width
+                width=content_width
             )
 
             self.toolbar.resize(
-                width=page_width
+                width=content_width,
+                content_width=card_content_width,
             )
 
             self.history_card.resize(
-                width=page_width
+                width=content_width,
+                content_width=card_content_width,
+                item_width=card_content_width,
+                item_content_width=transaction_item_content_width,
             )
+            self.financial_chart.resize(card_content_width)
 
             self.delete_dialog.resize(
-                width=page_width // 7 * 6
+                outer_width=transaction_dialog_width,
+                content_width=transaction_dialog_content,
+                title_width=transaction_title_width,
             )
             self.spending_report_dialog.resize(
-                width=page_width,
-                height=page_height,
+                dialog_width=report_dialog_width,
+                body_height=report_body_height,
+                report_card_width=report_card_width,
+            )
+            self.spending_month_dialog.resize(
+                width=secondary_dialog_width,
+                content_width=secondary_dialog_content,
+            )
+            self.delete_spending_report_dialog.resize(
+                width=secondary_dialog_width,
+                content_width=secondary_dialog_content,
             )
 
             return 0

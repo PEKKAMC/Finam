@@ -25,13 +25,18 @@ class KeyboardContainer(ft.Container):
         self.selected_time = datetime.now().strftime("%H:%M")
 
         self.amount_display = ft.Text(
-            value="0", size=32, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD
+            value="0",
+            size=32,
+            color=Color.DEFAULT_TEXT,
+            weight=ft.FontWeight.BOLD,
+            no_wrap=False,
         )
         self.status_message = ft.Text(
             value="",
             size=12,
             color=Color.ERROR_TEXT,
             visible=False,
+            no_wrap=False,
         )
 
         self.note_input = ft.TextField(
@@ -52,6 +57,7 @@ class KeyboardContainer(ft.Container):
             color=Color.DEFAULT_TEXT,
             size=11,
             weight=ft.FontWeight.BOLD,
+            no_wrap=False,
         )
 
         self.time_display = ft.Text(
@@ -59,6 +65,7 @@ class KeyboardContainer(ft.Container):
             color=Color.DEFAULT_TEXT,
             size=11,
             weight=ft.FontWeight.BOLD,
+            no_wrap=False,
         )
 
         self.date_picker = ft.DatePicker(
@@ -160,7 +167,13 @@ class KeyboardContainer(ft.Container):
             content = (
                 ft.Icon(icon, color=txt_color, size=20)
                 if icon
-                else ft.Text(text, size=18, color=txt_color, weight=ft.FontWeight.BOLD)
+                else ft.Text(
+                    text,
+                    size=18,
+                    color=txt_color,
+                    weight=ft.FontWeight.BOLD,
+                    no_wrap=False,
+                )
             )
             return ft.Container(
                 content=content,
@@ -385,4 +398,5 @@ class KeyboardContainer(ft.Container):
         self.update()
 
     def resize(self, width: int):
+        self.width = width
         self.main_container.width = width

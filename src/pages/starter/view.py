@@ -72,6 +72,7 @@ class StarterView(ft.View):
             self._on_unlock_click,
         )
         self.main_container.content.controls = [self.lock_screen]
+        self._on_page_resize()
 
     def _on_unlock_click(self, pin: str) -> None:
         if not db.app_security.verify_app_lock_pin(pin):
@@ -104,14 +105,24 @@ class StarterView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
+            dialog_width = page_width // 3 * 2
+            user_list_height = max(120, min(300, page_height // 3))
+            lock_card_width = min(360, max(0, page_width - 40))
+            pin_field_width = max(0, (lock_card_width - 78) // 4)
 
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            if hasattr(self, "lock_screen"):
+                self.lock_screen.resize(
+                    width=lock_card_width,
+                    pin_field_width=pin_field_width,
+                )
 
             # Resizing other components
             self.dialogs.user_dialog.resize(
-                width=page_width // 3 * 2,
+                width=dialog_width,
+                list_height=user_list_height,
             )
 
             return 0

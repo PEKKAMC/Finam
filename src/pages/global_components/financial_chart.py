@@ -10,7 +10,14 @@ import flet_charts as fc
 
 from src.database import db
 from src.logger import Logger
-from src.utils import Color, Text, UISettings, format_number
+from src.utils import (
+    Color,
+    Text,
+    UISettings,
+    format_compact_number,
+    format_number,
+    get_decimal_separator,
+)
 
 Logger.info("Building financial chart...")
 
@@ -427,8 +434,8 @@ class FinancialChart(ft.Container):
                         )
                     ]
                 ),
-                ft.Row(
-                    spacing=12,
+                ft.Column(
+                    spacing=4,
                     controls=[
                         ft.Row(
                             spacing=4,
@@ -452,21 +459,20 @@ class FinancialChart(ft.Container):
     def _generate_y_axis_labels(self):
         max_val = max(1, self.max_value)
         step = max_val / 4.0
-        if max_val >= 1_000_000_000:
-            divisor, suffix = 1_000_000_000, "B"
-        elif max_val >= 1_000_000:
-            divisor, suffix = 1_000_000, "M"
-        elif max_val >= 1_000:
-            divisor, suffix = 1_000, "K"
-        else:
-            divisor, suffix = 1, ""
+        decimal_separator = get_decimal_separator()
         labels = []
         for i in range(5):
             value = i * step
+            label_text = format_compact_number(value)
+            if value < 1_000 and decimal_separator in label_text:
+                label_text = label_text.rstrip("0").rstrip(decimal_separator)
             labels.append(
                 fc.ChartAxisLabel(
                     value=float(value),
-                    label=Text.LABEL(f"{value / divisor:g}{suffix}", color=Color.SECONDARY_TEXT)
+                    label=Text.LABEL(
+                        label_text,
+                        color=Color.SECONDARY_TEXT,
+                    )
                 )
             )
         return labels

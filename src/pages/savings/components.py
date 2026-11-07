@@ -13,7 +13,7 @@ import flet.canvas as flet_canvas
 
 from src.logger import Logger
 from src.pages.global_components.keyboard_container import KeyboardContainer
-from src.utils import Color, Dialog, Page, Text, UISettings, format_number
+from src.utils import Color, Dialog, Page, Text, UISettings, format_compact_number, format_number
 
 
 class GoalCard(ft.Container):
@@ -157,9 +157,9 @@ class GoalCard(ft.Container):
             content=self.main_container,
         )
 
-    def resize(self, width: int) -> None:
-        self.width = max(width, 0)
-        self.main_container.width = max(width, 0)
+    def resize(self, width: int, content_width: int) -> None:
+        self.width = width
+        self.main_container.width = content_width
 
 
 class GoalGrid(ft.Column):
@@ -171,6 +171,8 @@ class GoalGrid(ft.Column):
         self.on_withdraw = on_withdraw
         self.on_delete = on_delete
         self.is_expanded = True
+        self._card_width: int | None = None
+        self._card_content_width: int | None = None
         self.title_text = Text.H3("", color=Color.PRIMARY_TEXT)
         self.toggle_button = ft.IconButton(
             icon=ft.Icons.EXPAND_LESS,
@@ -201,6 +203,9 @@ class GoalGrid(ft.Column):
                 on_delete=self.on_delete,
             ))
         self.title_text.value = self.lang["savings.objectives"].format(len=len(objectives_data))
+        if self._card_width is not None and self._card_content_width is not None:
+            for card in cards:
+                card.resize(self._card_width, self._card_content_width)
         self.objectives_column.controls = cards
         self.objectives_column.visible = self.is_expanded
 
@@ -241,9 +246,14 @@ class GoalGrid(ft.Column):
         if self._page is not None:
             self._page.update()
 
-    def resize(self, width: int) -> None:
-        self.width = max(width, 0)
-        self.objectives_column.width = max(width, 0)
+    def resize(self, width: int, card_content_width: int) -> None:
+        self.width = width
+        self._card_width = width
+        self._card_content_width = card_content_width
+        self.objectives_column.width = width
+        for card in self.objectives_column.controls:
+            if isinstance(card, GoalCard):
+                card.resize(width, card_content_width)
 
 
 class AggregateCard(ft.Container):
@@ -254,8 +264,8 @@ class AggregateCard(ft.Container):
 
         self.title_text = Text.MEDIUM(self.lang["savings.fund_management"].upper(), color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.progress_label = Text.MEDIUM(self.lang["savings.progress"], color=Color.WHITE)
-        self.savings_text = Text.H1(format_number(total_savings), color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.target_text = Text.H5(f" / {format_number(total_target)} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.savings_text = Text.H1(format_compact_number(total_savings), color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.target_text = Text.H5(f" / {format_compact_number(total_target)} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.percentage_text = Text.MEDIUM(f"{percentage}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
 
         self.add_icon = ft.Icon(ft.Icons.ADD, color=Color.PRIMARY, size=16)
@@ -324,15 +334,15 @@ class AggregateCard(ft.Container):
         )
 
     def update_data(self, total_savings: float, total_target: float, percentage: str, progress_value: float, currency: str):
-        self.savings_text.value = format_number(total_savings)
+        self.savings_text.value = format_compact_number(total_savings)
         self.currency = currency
-        self.target_text.value = f" / {format_number(total_target)} {self.currency}"
+        self.target_text.value = f" / {format_compact_number(total_target)} {self.currency}"
         self.percentage_text.value = percentage
         self.progress_bar.value = progress_value
 
-    def resize(self, width: int) -> None:
-        self.width = max(width, 0)
-        self.main_container.width = max(width, 0)
+    def resize(self, width: int, content_width: int) -> None:
+        self.width = width
+        self.main_container.width = content_width
 
 
 class ActivityHistory(ft.Container):
@@ -423,9 +433,9 @@ class ActivityHistory(ft.Container):
         if self._page is not None:
             self._page.update()
 
-    def resize(self, width: int) -> None:
+    def resize(self, width: int, content_width: int) -> None:
         self.width = width
-        self.main_container.width = width
+        self.main_container.width = content_width
 
 
 class CreateGoalDialog(Dialog):
@@ -585,9 +595,7 @@ class CreateGoalDialog(Dialog):
             self.dismiss()
             self.on_success()
 
-    def resize(self, width: int) -> None:
-        outer_width = max(width, 0)
-        content_width = max(outer_width - 48, 0)
+    def resize(self, outer_width: int, content_width: int) -> None:
         self.main_container.width = outer_width
         self.main_container.content.width = content_width
         self.goal_title_input.width = content_width
@@ -854,11 +862,12 @@ class DepositWithdrawDialog(ft.Container):
     def _schedule_action_message(self, message: str, is_success: bool) -> None:
         self._page.run_task(self.on_action_message, int(self.goal["objective_id"]), message, is_success)
 
-    def resize(self, width: int) -> None:
-        page_width = max(width, 0)
-        outer_width = page_width // 7 * 6
-        content_width = max(outer_width - 48, 0)
-
+    def resize(
+        self,
+        page_width: int,
+        outer_width: int,
+        content_width: int,
+    ) -> None:
         self.main_container.width = outer_width
         self.dialog_panel.width = page_width
         self.main_container.content.width = content_width
@@ -912,7 +921,7 @@ class CongratulationsDialog(Dialog):
 
         self.surplus_banner = ft.Container(visible=False)
         self.goals_dropdown_column = ft.Column(spacing=8)
-        self.action_button = ft.Button(self.lang["savings.transfer_surplus"], on_click=self._process_transfer, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE, width=380, height=50)
+        self.action_button = ft.Button(self.lang["savings.transfer_surplus"], on_click=self._process_transfer, bgcolor=Color.PRIMARY_ACTION, color=Color.WHITE, height=50)
 
         self.content_column = ft.Column(
             tight=True,
@@ -1131,9 +1140,7 @@ class CongratulationsDialog(Dialog):
             self.dismiss()
             self.on_success()
 
-    def resize(self, width: int) -> None:
-        outer_width = max(width, 0)
-        content_width = max(outer_width - 56, 0)
+    def resize(self, outer_width: int, content_width: int) -> None:
         self.main_container.width = outer_width
         self.main_container.content.width = content_width
         self.achievement_card.width = content_width
@@ -1198,12 +1205,15 @@ class DeleteConfirmDialog(Dialog):
         self.dismiss()
         self.on_success()
 
-    def resize(self, width: int) -> None:
-        outer_width = max(width, 0)
-        content_width = max(outer_width - 48, 0)
+    def resize(
+        self,
+        outer_width: int,
+        content_width: int,
+        title_width: int,
+    ) -> None:
         self.main_container.width = outer_width
         self.main_container.content.width = content_width
-        self.title_text.width = max(content_width - 48, 0)
+        self.title_text.width = title_width
         self.desc_text.width = content_width
 
 
@@ -1257,10 +1267,13 @@ class ClearHistoryDialog(Dialog):
         self.dismiss()
         self.on_success()
 
-    def resize(self, width: int) -> None:
-        outer_width = max(width, 0)
-        content_width = max(outer_width - 48, 0)
+    def resize(
+        self,
+        outer_width: int,
+        content_width: int,
+        title_width: int,
+    ) -> None:
         self.main_container.width = outer_width
         self.main_container.content.width = content_width
-        self.title_text.width = max(content_width - 48, 0)
+        self.title_text.width = title_width
         self.desc_text.width = content_width

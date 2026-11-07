@@ -9,7 +9,7 @@ import requests
 from src.database import db
 from src.logger import Logger
 from src.pages.global_components.financial_chart import get_financial_chart_data
-from src.utils import Data, format_number
+from src.utils import Data, format_compact_number
 
 BACKEND_URL = (
     os.getenv("FINAM_BACKEND_URL", "").strip()
@@ -53,9 +53,9 @@ class LogicController:
         currency = db.users.get_currency(self.current_user)
 
         balance_data = {
-            "incomes": f"+{format_number(total_income)} {currency}",
-            "expenses": f"-{format_number(total_expense)} {currency}",
-            "current": f"{format_number(net_balance)} {currency}",
+            "incomes": f"+{format_compact_number(total_income)} {currency}",
+            "expenses": f"-{format_compact_number(total_expense)} {currency}",
+            "current": f"{format_compact_number(net_balance)} {currency}",
         }
 
         transactions: dict[str, list[dict]] = {}

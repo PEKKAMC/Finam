@@ -109,7 +109,6 @@ class AppLockCard(ft.Container):
                 password=True,
                 keyboard_type=ft.KeyboardType.NUMBER,
                 text_align=ft.TextAlign.CENTER,
-                width=56,
                 height=64,
                 bgcolor=Color.CARD_BACKGROUND,
                 border_color=Color.INPUT_BORDER,
@@ -128,10 +127,10 @@ class AppLockCard(ft.Container):
         self.error_text = ft.Text(
             color=Color.NEGATIVE_ACTION,
             text_align=ft.TextAlign.CENTER,
+            no_wrap=False,
         )
 
         super().__init__(
-            width=min(UISettings.MAX_APP_WIDTH - 40, 360),
             padding=24,
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=UISettings.CARD_BORDER_RADIUS,
@@ -151,6 +150,12 @@ class AppLockCard(ft.Container):
                 ],
             ),
         )
+
+    def resize(self, width: int, pin_field_width: int) -> None:
+        self.width = width
+        self.error_text.width = width
+        for field in self.pin_fields:
+            field.width = pin_field_width
 
     def _on_field_focus(self, index: int) -> None:
         if index != self._active_index:

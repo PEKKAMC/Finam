@@ -24,6 +24,13 @@ class CategorySelectionView(ft.View):
         self.current_type = "expense"
         self.selected_category = ""
         self.category_items: list[CategoryItem] = []
+        self.category_columns = 4
+        self.category_content_width = 300
+        self.category_cell_width = 75
+        self.category_item_width = 75
+        self.category_item_height = 76
+        self.category_icon_size = 52
+        self.category_glyph_size = 30
 
         self.cancel_button = ft.TextButton(
             content=ft.Icon(ft.Icons.ARROW_BACK, color=Color.DEFAULT_BUTTON),
@@ -70,7 +77,7 @@ class CategorySelectionView(ft.View):
                 spacing=0,
                 alignment=ft.MainAxisAlignment.CENTER
             ),
-            width=400
+            width=UISettings.MAX_APP_WIDTH - UISettings.CARD_PADDING * 2
         )
 
         self.category_list = ft.Column(
@@ -101,10 +108,14 @@ class CategorySelectionView(ft.View):
         )
         self.load_categories("expense")
 
+        horizontal_padding = UISettings.CARD_PADDING // 2
         self.main_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
             expand=True,
-            padding=UISettings.CARD_PADDING,
+            padding=ft.Padding.symmetric(
+                horizontal=horizontal_padding,
+                vertical=UISettings.CARD_PADDING,
+            ),
             content=ft.Column(
                 spacing=15,
                 expand=True,
@@ -199,9 +210,15 @@ class CategorySelectionView(ft.View):
                 True,
             )
         )
-        for start in range(0, len(grid_items), 4):
-            category_row = ft.Row(vertical_alignment=ft.CrossAxisAlignment.CENTER)
-            for category, is_custom, is_add_action in grid_items[start : start + 4]:
+        for start in range(0, len(grid_items), self.category_columns):
+            category_row = ft.Row(
+                width=self.category_content_width,
+                spacing=0,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            )
+            for category, is_custom, is_add_action in grid_items[
+                start : start + self.category_columns
+            ]:
                 icon_name = category["icon"]
                 item = CategoryItem(
                     page=self._page,
@@ -235,11 +252,17 @@ class CategorySelectionView(ft.View):
                     if is_custom
                     else None,
                 )
+                item.resize(
+                    self.category_item_width,
+                    self.category_item_height,
+                    self.category_icon_size,
+                    self.category_glyph_size,
+                )
                 if not is_add_action:
                     self.category_items.append(item)
                 category_row.controls.append(item)
 
-            while len(category_row.controls) < 4:
+            while len(category_row.controls) < self.category_columns:
                 category_row.controls.append(ft.Container(expand=True))
 
             self.category_list.controls.append(category_row)
@@ -361,6 +384,36 @@ class CategorySelectionView(ft.View):
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = None
+            horizontal_padding = UISettings.CARD_PADDING // 2
+            content_width = max(0, page_width - horizontal_padding * 2)
+            self.category_content_width = content_width
+            category_columns = max(1, min(4, content_width // 80))
+            self.category_cell_width = content_width // category_columns
+            self.category_item_width = min(75, self.category_cell_width)
+            self.category_item_height = 75
+            self.category_icon_size = max(
+                24, min(52, self.category_cell_width - 12)
+            )
+            self.category_glyph_size = min(
+                30, self.category_icon_size * 3 // 5
+            )
+            self.segment_control.width = content_width
+            dialog_width = min(page_width * 6 // 7, 400)
+            self.category_editor.resize(dialog_width)
+            self.delete_category_dialog.resize(dialog_width)
+            if category_columns != self.category_columns:
+                self.category_columns = category_columns
+                self.load_categories(self.current_type)
+            else:
+                for item in self.category_items:
+                    item.resize(
+                        self.category_item_width,
+                        self.category_item_height,
+                        self.category_icon_size,
+                        self.category_glyph_size,
+                    )
+            for row in self.category_list.controls:
+                row.width = content_width
 
             # Resizing other components
             self.keyboard_container.resize(

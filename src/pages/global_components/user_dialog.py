@@ -13,8 +13,25 @@ class UserManagementDialog(Dialog):
     def __init__(self, page: Page, lang: dict, user_list: UserList, add_form, on_close_callback: Callable, has_cancel_button: bool = True):
         self._page = page
         self.lang = lang
+        self.user_list = user_list
         self.add_form = add_form
         self._close_dialog = on_close_callback
+        self.selection_section = ft.Column(
+            tight=True,
+            spacing=10,
+            controls=[
+                Text.SMALL(self.lang["user_management.select_account"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                user_list
+            ],
+        )
+        self.add_user_section = ft.Column(
+            tight=True,
+            spacing=10,
+            controls=[
+                Text.SMALL(self.lang["user_management.add_new_user"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                add_form
+            ],
+        )
 
         header_controls = []
         if has_cancel_button:
@@ -56,22 +73,8 @@ class UserManagementDialog(Dialog):
                             )
                         ]
                     ),
-                    ft.Column(
-                        tight=True,
-                        spacing=10,
-                        controls=[
-                            Text.SMALL(self.lang["user_management.select_account"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                            user_list
-                        ]
-                    ),
-                    ft.Column(
-                        tight=True,
-                        spacing=10,
-                        controls=[
-                            Text.SMALL(self.lang["user_management.add_new_user"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                            add_form
-                        ]
-                    )
+                    self.selection_section,
+                    self.add_user_section,
                 ]
             )
         )
@@ -81,9 +84,12 @@ class UserManagementDialog(Dialog):
             color=Color.DIALOG_BACKGROUND
         )
 
-    def resize(self, width: int):
+    def resize(self, width: int, list_height: int) -> None:
         self.main_container.width = width
+        self.selection_section.width = width
+        self.add_user_section.width = width
         self.add_form.resize(width)
+        self.user_list.resize(width, list_height)
 
 class UserList(ft.Container):
     def __init__(self, page: Page, lang: dict, current_user: str, on_select_callback, on_delete_callback):
@@ -93,11 +99,12 @@ class UserList(ft.Container):
         self.on_select = on_select_callback
         self.on_delete = on_delete_callback
         self.user_created_at = {}
+        self._list_width: int | None = None
+        self.user_boxes: list[ft.Container] = []
 
         self.list_column = ft.Column(
             spacing=12,
             scroll=ft.ScrollMode.AUTO,
-            height=160
         )
         self.main_container = ft.Container(
             content=self.list_column,
@@ -115,7 +122,59 @@ class UserList(ft.Container):
         def handle_select(e, name=username) -> None:
             self.on_select(name)
 
-        return ft.Container(
+        avatar = ft.Container(
+            content=Text.MEDIUM(initial, color=Color.WHITE, weight=ft.FontWeight.BOLD),
+            bgcolor=Color.PRIMARY,
+            width=40,
+            height=40,
+            border_radius=14,
+            alignment=ft.Alignment.CENTER,
+        )
+        user_info = ft.Column(
+            spacing=2,
+            expand=True,
+            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
+            controls=[
+                Text.MEDIUM(
+                    username,
+                    color=Color.PRIMARY_TEXT,
+                    weight=ft.FontWeight.BOLD,
+                ),
+                Text.SMALL(
+                    f"{created_prefix} {created_at}" if created_at else f"{created_prefix} --",
+                    color=Color.SECONDARY_TEXT,
+                ),
+            ],
+        )
+        user_actions = ft.Column(
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            width=40,
+            controls=[
+                *(
+                    [
+                        ft.Icon(
+                            ft.Icons.PERSON_PIN,
+                            color=Color.PRIMARY,
+                            size=20,
+                        )
+                    ] if is_active else []
+                ),
+                *(
+                    [
+                        ft.IconButton(
+                            icon=ft.Icons.DELETE_OUTLINE,
+                            icon_color=Color.DELETE_ACTION,
+                            icon_size=18,
+                            on_click=lambda e, u=username: self.on_delete(u),
+                            tooltip=self.lang["user_management.delete_user_tooltip"],
+                        )
+                    ] if not is_active else []
+                ),
+            ],
+        )
+
+        user_box = ft.Container(
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=20,
             padding=14,
@@ -123,62 +182,22 @@ class UserList(ft.Container):
             ink=True,
             on_click=handle_select,
             content=ft.Row(
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                spacing=12,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
-                    ft.Row(
-                        spacing=14,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        controls=[
-                            ft.Container(
-                                content=Text.MEDIUM(initial, color=Color.WHITE, weight=ft.FontWeight.BOLD),
-                                bgcolor=Color.PRIMARY,
-                                width=40,
-                                height=40,
-                                border_radius=14,
-                                alignment=ft.Alignment.CENTER
-                            ),
-                            ft.Column(
-                                spacing=2,
-                                controls=[
-                                    Text.MEDIUM(username, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD),
-                                    Text.SMALL(f"{created_prefix} {created_at}" if created_at else f"{created_prefix} --", color=Color.SECONDARY_TEXT)
-                                ]
-                            ),
-                        ]
-                    ),
-                    ft.Row(
-                        spacing=4,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        controls=[
-                            *(
-                                [
-                                    ft.Container(
-                                        content=ft.Icon(ft.Icons.PERSON_PIN, color=Color.PRIMARY, size=20),
-                                        padding=4
-                                    )
-                                ] if is_active else []
-                            ),
-                            *(
-                                [
-                                    ft.IconButton(
-                                        icon=ft.Icons.DELETE_OUTLINE,
-                                        icon_color=Color.DELETE_ACTION,
-                                        icon_size=18,
-                                        on_click=lambda e, u=username: self.on_delete(u),
-                                        tooltip=self.lang["user_management.delete_user_tooltip"]
-                                    )
-                                ] if not is_active else []
-                            )
-                        ]
-                    )
+                    avatar,
+                    user_info,
+                    user_actions,
                 ]
-            )
+            ),
         )
+        user_box.content.width = max(0, (self._list_width or 0) - 28) if self._list_width is not None else None
+        return user_box
 
     def update_data(self, current_users: list, current_user: str = "", user_created_at: dict | None = None):
         self.current_user = current_user
         self.list_column.controls.clear()
+        self.user_boxes.clear()
         if user_created_at is not None:
             self.user_created_at = user_created_at
         else:
@@ -194,11 +213,15 @@ class UserList(ft.Container):
                     username_name = username["name"]
                     if username_name:
                         self.user_created_at.setdefault(username_name, username["created_at"])
-                        self.list_column.controls.append(self.create_user_box(username_name))
+                        user_box = self.create_user_box(username_name)
+                        self.user_boxes.append(user_box)
+                        self.list_column.controls.append(user_box)
                 else:
                     username_name = str(username)
                     self.user_created_at.setdefault(username_name, self.user_created_at.get(username_name, ""))
-                    self.list_column.controls.append(self.create_user_box(username_name))
+                    user_box = self.create_user_box(username_name)
+                    self.user_boxes.append(user_box)
+                    self.list_column.controls.append(user_box)
 
         try:
             self.main_container.update()
@@ -208,8 +231,15 @@ class UserList(ft.Container):
         except RuntimeError:
             pass
 
-    def resize(self, height: int):
-        pass
+    def resize(self, width: int, height: int) -> None:
+        self.width = width
+        self._list_width = width
+        self.main_container.width = width
+        self.list_column.width = width
+        self.list_column.height = height
+        for user_box in self.user_boxes:
+            user_box.width = width
+            user_box.content.width = max(0, width - 28)
 
 
 class AddUserField(ft.Container):
@@ -249,10 +279,12 @@ class AddUserField(ft.Container):
 
         self.error_message = Text.SMALL("", color=Color.ERROR_TEXT)
         self.submit_button = ft.Container(
-            content=Text.H4(
+            content=Text.BUTTON(
                 self.lang["user_management.create_btn"],
                 color=Color.WHITE,
+                weight=ft.FontWeight.BOLD,
                 text_align=ft.TextAlign.CENTER,
+                no_wrap=False,
             ),
             alignment=ft.Alignment.CENTER,
             bgcolor=Color.PRIMARY_ACTION,
@@ -260,23 +292,25 @@ class AddUserField(ft.Container):
             border_radius=25,
             margin=ft.Margin.only(top=10),
             on_click=self._handle_submit,
+            expand=True,
         )
         self.create_button_row = ft.Row(
+            expand=True,
             controls=[self.submit_button],
+        )
+        self.input_row = ft.Row(
+            spacing=12,
+            controls=[self.input_field],
+        )
+        self.currency_row = ft.Row(
+            controls=[self.currency_dropdown],
         )
         self.main_container = ft.Column(
             tight=True,
             spacing=6,
             controls=[
-                ft.Row(
-                    spacing=12,
-                    controls=[
-                        self.input_field
-                    ]
-                ),
-                ft.Row(
-                    controls=[self.currency_dropdown],
-                ),
+                self.input_row,
+                self.currency_row,
                 self.create_button_row,
                 self.error_message
             ]
@@ -308,8 +342,12 @@ class AddUserField(ft.Container):
             Logger.debug(f"Render skipped: {ex}")
 
     def resize(self, width: int):
-        self.width = width
         self.main_container.width = width
+        self.input_row.width = width
+        self.currency_row.width = width
+        self.input_row.controls[0].width = width
+        self.currency_row.controls[0].width = width
+        self.input_field.width = width
         self.currency_dropdown.width = width
         self.submit_button.width = width
         self.create_button_row.width = width

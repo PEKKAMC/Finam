@@ -252,31 +252,30 @@ class SettingsView(ft.View):
         self.theme_label_to_name = theme_label_to_name
 
         # INITIALIZE MAIN CONTAINER
+        self.content_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                spacing=18,
+                expand=True,
+                controls=[
+                    self.settings_header,
+                    self.header_divider,
+                    self.language_card,
+                    self.theme_card,
+                    self.currency_card,
+                    self.digit_separator_card,
+                    self.decimal_separator_card,
+                    self.system_prefs_card,
+                    self.cache_card,
+                    ft.Container(height=UISettings.CARD_PADDING * 2 + 56)
+                ]
+            )
+        )
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                controls=[
-                    ft.Container(
-                        width=UISettings.MAX_APP_WIDTH,
-                        padding=UISettings.CARD_PADDING,
-                        content=ft.Column(
-                            spacing=18,
-                            expand=True,
-                            controls=[
-                                self.settings_header,
-                                self.header_divider,
-                                self.language_card,
-                                self.theme_card,
-                                self.currency_card,
-                                self.digit_separator_card,
-                                self.decimal_separator_card,
-                                self.system_prefs_card,
-                                self.cache_card,
-                                ft.Container(height=UISettings.CARD_PADDING * 2 + 56)
-                            ]
-                        )
-                    )
-                ]
+                controls=[self.content_container]
             ),
             expand=True,
             padding=0,
@@ -371,7 +370,7 @@ class SettingsView(ft.View):
             color=Color.PRIMARY_TEXT,
             label_style=ft.TextStyle(color=Color.SECONDARY_TEXT)
         )
-        error_text = ft.Text(color=Color.NEGATIVE_ACTION)
+        error_text = ft.Text(color=Color.NEGATIVE_ACTION, no_wrap=False)
 
         def close_dialog(e=None) -> None:
             self._pin_setup_dialog.dismiss()
@@ -492,43 +491,71 @@ class SettingsView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
+            content_width = max(0, page_width - UISettings.CARD_PADDING * 2)
+            card_content_width = max(0, content_width - 32)
+            action_width = min(130, int(card_content_width * 0.45))
+            text_width = max(0, card_content_width - action_width)
 
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            self.content_container.width = page_width
             self.done_btn_wrapper.width = min(page_width, UISettings.MAX_APP_WIDTH)
+            self.done_btn.width = content_width
 
             # Resizing other components
             self.settings_header.resize(
-                width=page_width
+                width=content_width,
+                content_width=max(0, content_width - 32),
             )
 
             self.language_card.resize(
-                width=page_width
+                width=content_width,
+                content_width=card_content_width,
+                text_width=text_width,
+                action_width=action_width,
             )
 
             self.theme_card.resize(
-                width=page_width
+                width=content_width,
+                content_width=card_content_width,
+                text_width=text_width,
+                action_width=action_width,
             )
 
             self.currency_card.resize(
-                width=page_width
+                width=content_width,
+                content_width=card_content_width,
+                text_width=text_width,
+                action_width=action_width,
             )
 
             self.digit_separator_card.resize(
-                width=page_width
+                width=content_width,
+                content_width=card_content_width,
+                text_width=text_width,
+                action_width=action_width,
             )
 
             self.decimal_separator_card.resize(
-                width=page_width
+                width=content_width,
+                content_width=card_content_width,
+                text_width=text_width,
+                action_width=action_width,
             )
 
             self.system_prefs_card.resize(
-                width=page_width
+                width=content_width,
+                content_width=card_content_width,
+                text_width=text_width,
+                action_width=action_width,
             )
 
             self.cache_card.resize(
-                width=page_width
+                width=content_width,
+                content_width=card_content_width,
+                text_width=text_width,
+                action_width=action_width,
             )
 
             return 0

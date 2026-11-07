@@ -76,26 +76,26 @@ class HomeView(ft.View):
         )
 
         # INITIALIZE MAIN CONTAINER
+        self.content_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                spacing=20,
+                expand=True,
+                controls=[
+                    self.balance_card,
+                    self.financial_chart,
+                    self.expense_pie_chart,
+                    self.savings_progress_card,
+                    self.featured_lesson_card
+                ]
+            )
+        )
+
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                controls=[
-                    ft.Container(
-                        width=UISettings.MAX_APP_WIDTH,
-                        padding=UISettings.CARD_PADDING,
-                        content=ft.Column(
-                            spacing=20,
-                            expand=True,
-                            controls=[
-                                self.balance_card,
-                                self.financial_chart,
-                                self.expense_pie_chart,
-                                self.savings_progress_card,
-                                self.featured_lesson_card
-                            ]
-                        )
-                    )
-                ]
+                controls=[self.content_container]
             ),
             expand=True,
             padding=0,
@@ -166,10 +166,27 @@ class HomeView(ft.View):
             page_width, page_height = self.get_safe_page_size(page=self._page)
 
             # Get component size values
-            inner_width = page_width - (UISettings.CARD_PADDING * 2)
-            savings_inner_width = max(0, inner_width)
+            content_width = max(0, page_width - UISettings.CARD_PADDING * 2)
+            inner_width = max(
+                0, content_width - UISettings.CARD_PADDING * 2
+            )
+            savings_inner_width = inner_width
+            goal_item_content_width = max(0, savings_inner_width - 24)
             menu_item_size = page_width // self.menu.items_count
+            menu_item_height = max(48, menu_item_size)
             menu_inside_size = menu_item_size // 6 * 5
+            menu_inside_height = menu_item_height // 6 * 5
+            menu_label_size = 8 if menu_item_size < 48 else 10
+            menu_icon_size = 18 if menu_item_size < 48 else 20
+            menu_label_spacing = 2 if menu_item_size < 48 else 4
+            menu_label_visible = menu_item_size >= 48
+            banner_height = (
+                self.menu.BANNER_HEIGHT
+                if self.menu.ad_banner is not None
+                and page_width >= self.menu.BANNER_WIDTH
+                else 0
+            )
+            menu_total_height = menu_item_height + banner_height
             chart_radius = int(page_height * 0.06)
             center_radius = int(page_height * 0.045)
             legend_height = int(page_height * 0.15)
@@ -177,36 +194,43 @@ class HomeView(ft.View):
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            self.content_container.width = page_width
+            self.main_container.margin.bottom = self.menu.reserved_height
 
             # Resizing other components
             self.menu.resize(
                 width=page_width,
                 item_size=menu_item_size,
+                item_height=menu_item_height,
                 inside_size=menu_inside_size,
+                inside_height=menu_inside_height,
+                banner_height=banner_height,
+                total_height=menu_total_height,
+                label_size=menu_label_size,
+                icon_size=menu_icon_size,
+                label_spacing=menu_label_spacing,
+                label_visible=menu_label_visible,
             )
-            self.main_container.margin.bottom = self.menu.reserved_height
 
-            self.balance_card.resize(
-                width=page_width,
-                inner_width=inner_width
-            )
+            self.balance_card.resize(width=inner_width)
 
             self.featured_lesson_card.resize(
-                width=page_width,
+                width=content_width,
                 inner_width=inner_width
             )
 
             self.financial_chart.resize(
-                width=page_width
+                width=inner_width
             )
 
             self.savings_progress_card.resize(
-                width=page_width,
-                inner_width=savings_inner_width
+                width=content_width,
+                inner_width=savings_inner_width,
+                goal_item_content_width=goal_item_content_width,
             )
 
             self.expense_pie_chart.resize(
-                width=page_width,
+                width=content_width,
                 inner_width=inner_width,
                 chart_radius=chart_radius,
                 center_radius=center_radius,

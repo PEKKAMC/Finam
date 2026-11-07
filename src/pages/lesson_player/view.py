@@ -272,15 +272,28 @@ class LessonPlayerView(ft.View):
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
 
-            # Keep legacy safe caps for content sizing
-            safe_width_value = min(page_width, 650)
-            safe_height_value = max(600, page_height - 100)
+            center_padding = min(20, page_width // 20)
+            center_width = max(0, page_width - center_padding * 2)
+            board_padding = min(25, center_width // 10)
+            board_content_width = max(0, center_width - board_padding * 2)
+            board_height = max(0, page_height - 100)
+            canvas_height = int(board_height * 0.6)
 
-            self.center_alignment_container.width = safe_width_value
-            self.slide_canvas.width = max(400, safe_width_value * 0.9)
-            self.slide_canvas.height = max(500, safe_height_value * 0.6)
-            self.presentation_board.width = safe_width_value * 0.95
-            self.presentation_board.height = safe_height_value
+            self.center_alignment_container.width = page_width
+            self.center_alignment_container.padding = center_padding
+            self.top_navigation_menu.resize(width=center_width)
+            self.presentation_board.resize(
+                width=center_width,
+                height=board_height,
+                padding=board_padding,
+                content_width=board_content_width,
+            )
+            self.lesson_header.resize(width=board_content_width)
+            self.lesson_controls.resize(width=board_content_width)
+            self.slide_canvas.resize(
+                width=board_content_width,
+                height=canvas_height,
+            )
 
             return 0
 

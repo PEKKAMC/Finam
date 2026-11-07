@@ -172,24 +172,23 @@ class SavingsView(ft.View):
         )
 
         # INITIALIZE MAIN CONTAINER
+        self.content_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                spacing=25,
+                controls=[
+                    self.summary_banner,
+                    self.search_bar,
+                    self.goal_grid,
+                    self.activity_history,
+                ]
+            )
+        )
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                controls=[
-                    ft.Container(
-                        width=UISettings.MAX_APP_WIDTH,
-                        padding=UISettings.CARD_PADDING,
-                        content=ft.Column(
-                            spacing=25,
-                            controls=[
-                                self.summary_banner,
-                                self.search_bar,
-                                self.goal_grid,
-                                self.activity_history,
-                            ]
-                        )
-                    )
-                ]
+                controls=[self.content_container]
             ),
             expand=True,
             padding=0,
@@ -285,53 +284,99 @@ class SavingsView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
+            content_width = max(
+                0, page_width - UISettings.CARD_PADDING * 2
+            )
             menu_item_size = page_width // self.menu.items_count
+            menu_item_height = max(48, menu_item_size)
             menu_inside_size = menu_item_size // 6 * 5
+            menu_inside_height = menu_item_height // 6 * 5
+            menu_label_size = 8 if menu_item_size < 48 else 10
+            menu_icon_size = 18 if menu_item_size < 48 else 20
+            menu_label_spacing = 2 if menu_item_size < 48 else 4
+            menu_label_visible = menu_item_size >= 48
+            banner_height = (
+                self.menu.BANNER_HEIGHT
+                if self.menu.ad_banner is not None
+                and page_width >= self.menu.BANNER_WIDTH
+                else 0
+            )
+            menu_total_height = menu_item_height + banner_height
+            dialog_width = page_width * 6 // 7
+            card_content_width = max(
+                0, content_width - UISettings.CARD_PADDING * 2
+            )
+            summary_content_width = max(0, content_width - 60)
+            activity_content_width = card_content_width
+            create_content_width = max(0, dialog_width - 48)
+            achievement_content_width = max(0, dialog_width - 56)
+            delete_content_width = max(0, dialog_width - 48)
+            delete_title_width = max(0, delete_content_width - 48)
 
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
+            self.content_container.width = page_width
 
             # Resizing other components
             self.menu.resize(
                 width=page_width,
                 item_size=menu_item_size,
+                item_height=menu_item_height,
                 inside_size=menu_inside_size,
+                inside_height=menu_inside_height,
+                banner_height=banner_height,
+                total_height=menu_total_height,
+                label_size=menu_label_size,
+                icon_size=menu_icon_size,
+                label_spacing=menu_label_spacing,
+                label_visible=menu_label_visible,
             )
             self.main_container.margin.bottom = self.menu.reserved_height
 
             self.summary_banner.resize(
-                width=page_width
+                width=content_width,
+                content_width=summary_content_width,
             )
 
-            self.search_bar.width = page_width
+            self.search_bar.width = content_width
 
             self.goal_grid.resize(
-                width=page_width
+                width=content_width,
+                card_content_width=card_content_width,
             )
 
             self.activity_history.resize(
-                width=page_width
+                width=content_width,
+                content_width=activity_content_width,
             )
 
             self.dialogs.create_goal_dialog.resize(
-                width=page_width // 7 * 6
+                outer_width=dialog_width,
+                content_width=create_content_width,
             )
 
             self.dialogs.congratulations_dialog.resize(
-                width=page_width // 7 * 6
+                outer_width=dialog_width,
+                content_width=achievement_content_width,
             )
 
             self.dialogs.deposit_withdraw_dialog.resize(
-                width=page_width
+                page_width=page_width,
+                outer_width=dialog_width,
+                content_width=create_content_width,
             )
 
             self.dialogs.delete_dialog.resize(
-                width=page_width // 7 * 6
+                outer_width=dialog_width,
+                content_width=delete_content_width,
+                title_width=delete_title_width,
             )
 
             self.dialogs.clear_history_dialog.resize(
-                width=page_width // 7 * 6
+                outer_width=dialog_width,
+                content_width=delete_content_width,
+                title_width=delete_title_width,
             )
 
             return 0
