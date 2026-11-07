@@ -2,12 +2,17 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import os
+
 import requests
 
 from src.database import db
 from src.logger import Logger
 
-BACKEND_URL = "https://finam-backend.vercel.app/"
+BACKEND_URL = (
+    os.getenv("FINAM_BACKEND_URL", "").strip()
+    or "https://finam-backend.vercel.app/"
+)
 class ScannerApiError(RuntimeError):
     def __init__(self, status_code: int, detail: str):
         super().__init__(detail)
@@ -81,7 +86,7 @@ class LogicController:
 
         return risk, trigger_display, price, ai_advice
 
-    def get_daily_usage(self, refresh_token: str) -> dict:
+    def get_monthly_usage(self, refresh_token: str) -> dict:
         if not refresh_token:
             raise ScannerApiError(401, "Google sign-in is required.")
         base_url = BACKEND_URL.rstrip("/")
@@ -89,6 +94,11 @@ class LogicController:
             base_url,
             refresh_token,
         )
+        if not isinstance(firebase_id_token, str) or not firebase_id_token.strip():
+            raise ScannerApiError(
+                502,
+                "Authentication service returned an empty Firebase ID token.",
+            )
         try:
             response = requests.get(
                 f"{base_url}/api/v1/purchase-advice/usage",
@@ -102,11 +112,53 @@ class LogicController:
                 "Could not connect to the purchase scanner service.",
             ) from ex
         data = self._parse_response(response)
-        if not isinstance(data.get("remaining"), int) or not isinstance(
-            data.get("reset_at"), str
+        if (
+            data.get("tier") not in {"free", "premium", "developer"}
+            or (
+                data.get("limit") is not None
+                and (
+                    not isinstance(data.get("limit"), int)
+                    or not isinstance(data.get("reset_at"), str)
+                )
+            )
+            or (
+                data.get("remaining") is not None
+                and not isinstance(data.get("remaining"), int)
+            )
         ):
             raise ScannerApiError(502, "Scanner service returned invalid usage data.")
         return data
+
+    def get_account_tier(self, refresh_token: str) -> str:
+        if not refresh_token:
+            raise ScannerApiError(401, "Google sign-in is required.")
+        base_url = BACKEND_URL.rstrip("/")
+        firebase_id_token = self._refresh_firebase_id_token(
+            base_url,
+            refresh_token,
+        )
+        if not isinstance(firebase_id_token, str) or not firebase_id_token.strip():
+            raise ScannerApiError(
+                502,
+                "Authentication service returned an empty Firebase ID token.",
+            )
+        try:
+            response = requests.get(
+                f"{base_url}/api/v1/account/tier",
+                headers={"Authorization": "Bearer " + firebase_id_token.strip()},
+                timeout=15,
+            )
+        except requests.RequestException as ex:
+            Logger.warn(f"Account tier request failed: {ex}")
+            raise ScannerApiError(
+                0,
+                "Could not connect to the account service.",
+            ) from ex
+        data = self._parse_response(response)
+        tier = data.get("tier")
+        if tier not in {"free", "premium", "developer"}:
+            raise ScannerApiError(502, "Account service returned an invalid tier.")
+        return tier
 
     @classmethod
     def _refresh_firebase_id_token(

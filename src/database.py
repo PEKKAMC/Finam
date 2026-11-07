@@ -127,6 +127,8 @@ class DatabaseConnection:
                     google_uid TEXT,
                     google_email TEXT,
                     google_refresh_token TEXT,
+                    google_tier_uid TEXT,
+                    google_tier TEXT,
                     mobile_google_oauth_pending TEXT
                 )
             ''')
@@ -135,6 +137,8 @@ class DatabaseConnection:
                 "google_uid",
                 "google_email",
                 "google_refresh_token",
+                "google_tier_uid",
+                "google_tier",
                 "mobile_google_oauth_pending",
             ):
                 try:
@@ -709,6 +713,32 @@ class AppSettingsDatabase:
             return True
         except sqlite3.Error as ex:
             Logger.error(f"Failed to update Google refresh token: {ex}")
+            return False
+
+    def get_google_account_tier(self, google_uid: str) -> Optional[str]:
+        if not google_uid:
+            return None
+        result = self.db.execute(
+            "SELECT google_tier FROM app_settings "
+            "WHERE id = 1 AND google_tier_uid = ?",
+            (google_uid,),
+            fetch_one=True,
+        )
+        tier = result[0] if result and result[0] else None
+        return tier if tier in {"free", "premium", "developer"} else None
+
+    def set_google_account_tier(self, google_uid: str, tier: str) -> bool:
+        if not google_uid or tier not in {"free", "premium", "developer"}:
+            return False
+        try:
+            self.db.execute(
+                "UPDATE app_settings SET google_tier_uid = ?, google_tier = ? "
+                "WHERE id = 1",
+                (google_uid, tier),
+            )
+            return True
+        except sqlite3.Error as ex:
+            Logger.error(f"Failed to cache Google account tier: {ex}")
             return False
 
     def clear_google_account(self) -> bool:

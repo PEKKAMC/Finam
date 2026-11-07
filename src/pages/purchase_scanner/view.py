@@ -232,31 +232,72 @@ class PurchaseScannerView(ft.View):
         self.google_required_card.visible = not signed_in
         self.usage_card.visible = signed_in
         self.scanner_locked_overlay.visible = not signed_in
-        self.form_card.set_enabled(False)
+        if signed_in and self._is_cached_developer():
+            self._show_unlimited_usage()
+            self.form_card.set_enabled(True)
+        else:
+            self.form_card.set_enabled(False)
 
-    def _load_daily_usage(self):
+    @staticmethod
+    def _is_cached_developer() -> bool:
+        account = db.app_settings.get_google_account()
+        return bool(
+            account
+            and db.app_settings.get_google_account_tier(account["uid"])
+            == "developer"
+        )
+
+    def _show_unlimited_usage(self) -> None:
+        self.usage_label.value = self.lang["purchase_scanner.usage_unlimited"]
+        self.usage_progress.value = 1
+        self.usage_progress.color = Color.PROGRESS_ACTIVE
+
+    def _load_monthly_usage(self):
+        if self._is_cached_developer():
+            self._show_unlimited_usage()
+            self.form_card.set_enabled(db.app_settings.has_google_account_session())
+            self._page.update()
+            return
         refresh_token = db.app_settings.get_google_refresh_token()
         try:
-            usage = self.controller.get_daily_usage(refresh_token or "")
-            reset_at = datetime.fromisoformat(usage["reset_at"])
-            if reset_at.tzinfo is None:
-                reset_at = reset_at.replace(tzinfo=timezone.utc)
-            reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
+            usage = self.controller.get_monthly_usage(refresh_token or "")
             remaining = usage["remaining"]
-            if not isinstance(remaining, int) or remaining not in (0, 1):
-                raise ValueError("Invalid daily usage remaining count")
-            self.usage_label.value = self.lang[
-                "purchase_scanner.usage_remaining"
-            ].format(remaining=remaining, reset=reset_label)
-            self.usage_progress.value = remaining
+            limit = usage["limit"]
+            if limit is None:
+                if remaining is not None:
+                    raise ValueError("Unlimited scanner usage must not have a remaining count")
+                self.usage_label.value = self.lang[
+                    "purchase_scanner.usage_unlimited"
+                ]
+                progress = 1.0
+            else:
+                if (
+                    not isinstance(remaining, int)
+                    or not isinstance(limit, int)
+                    or not 0 <= remaining <= limit
+                ):
+                    raise ValueError("Invalid monthly usage counts")
+                reset_at = datetime.fromisoformat(usage["reset_at"])
+                if reset_at.tzinfo is None:
+                    reset_at = reset_at.replace(tzinfo=timezone.utc)
+                reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
+                remaining_label = self.lang[
+                    "purchase_scanner.usage_remaining"
+                ].format(remaining=remaining, limit=limit, reset=reset_label)
+                progress = remaining / limit
+                self.usage_label.value = remaining_label
+            self.usage_progress.value = progress
             self.form_card.set_enabled(
-                remaining > 0 and db.app_settings.has_google_account_session()
+                (limit is None or remaining > 0)
+                and db.app_settings.has_google_account_session()
             )
             self.usage_progress.color = (
-                Color.PROGRESS_ACTIVE if remaining else Color.WARNING_COLOR
+                Color.PROGRESS_ACTIVE
+                if limit is None or remaining
+                else Color.WARNING_COLOR
             )
         except ScannerApiError as ex:
-            Logger.warning(f"Could not load purchase scanner usage: {ex}")
+            Logger.warning(f"Could not load purchase scanner monthly usage: {ex}")
             self.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
             self.form_card.set_enabled(False)
             if ex.status_code in (401, 403):
@@ -323,7 +364,7 @@ class PurchaseScannerView(ft.View):
             except ScannerApiError as ex:
                 Logger.warning(f"Purchase scanner request rejected: {ex}")
                 if ex.status_code == 429:
-                    error_message = self.lang["purchase_scanner.daily_limit"]
+                    error_message = self.lang["purchase_scanner.monthly_limit"]
                     self.form_card.set_enabled(False)
                 elif ex.status_code in (401, 403):
                     error_message = self.lang["purchase_scanner.sign_in_required"]
@@ -343,7 +384,7 @@ class PurchaseScannerView(ft.View):
                 )
             finally:
                 if db.app_settings.get_google_refresh_token():
-                    self._load_daily_usage()
+                    self._load_monthly_usage()
                 self.form_card.set_scanning(False)
                 self._page.update()
 
@@ -364,7 +405,7 @@ class PurchaseScannerView(ft.View):
             self.scan_history = self.controller.get_scan_history()
             self.history_card.set_history(self.scan_history)
             if db.app_settings.has_google_account_session():
-                self._page.run_thread(self._load_daily_usage)
+                self._page.run_thread(self._load_monthly_usage)
             return 0
 
         except Exception as ex:

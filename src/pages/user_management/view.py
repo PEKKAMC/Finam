@@ -26,6 +26,7 @@ from src.logger import Logger
 from src.pages.global_components import AddUserField, DeleteUserDialog, Menu, UserList, UserManagementDialog
 from src.pages.user_management.components import GoogleAccountCard, MenuItem, MenuSectionCard, ProfileCard, DeleteAllDataDialog
 from src.pages.user_management.logic import LogicController
+from src.pages.purchase_scanner.logic import LogicController as PurchaseScannerController, ScannerApiError
 from src.utils import Color, DefaultSettings, Page, Text, UISettings, get_asset_path, get_safe_page_size
 from src.version_manager import get_version
 
@@ -235,11 +236,7 @@ def take_google_web_auth_result() -> str | None:
     return result
 
 
-async def _save_google_account_globally(
-    firebase_id_token: str,
-    backend_url: str,
-    refresh_token: str,
-) -> bool:
+async def _save_google_account_globally(firebase_id_token: str, backend_url: str, refresh_token: str) -> bool:
     def fetch_profile() -> dict:
         response = requests.get(
             f"{backend_url}/api/v1/auth/me",
@@ -446,6 +443,8 @@ class UserManagementView(ft.View):
             ),
             on_disconnect=self._disconnect_google_account,
         )
+        self._tier_request_uid: str | None = None
+        self._tier_loaded_uid: str | None = None
         if self._page.web:
             self._prepare_web_google_authorization()
         self._refresh_google_account()
@@ -596,6 +595,61 @@ class UserManagementView(ft.View):
         self.google_account_card.set_account(
             account["email"] if account and signed_in else None
         )
+        if not signed_in:
+            self._tier_request_uid = None
+            self._tier_loaded_uid = None
+            self.profile_card.set_account_tier("guest")
+            return
+        cached_tier = (
+            db.app_settings.get_google_account_tier(account["uid"])
+            if account
+            else None
+        )
+        if cached_tier:
+            self.profile_card.set_account_tier(cached_tier)
+        if (
+            account
+            and account["uid"]
+            in (self._tier_request_uid, self._tier_loaded_uid)
+        ):
+            return
+        if not cached_tier:
+            self.profile_card.set_account_tier("loading")
+        self._tier_request_uid = account["uid"] if account else None
+        self._page.run_thread(self._load_account_tier)
+
+    def _load_account_tier(self) -> None:
+        account = db.app_settings.get_google_account()
+        if not account or not db.app_settings.has_google_account_session():
+            self.profile_card.set_account_tier("guest")
+            return
+        refresh_token = db.app_settings.get_google_refresh_token()
+        try:
+            tier = PurchaseScannerController(
+                self.user_info["username"]
+            ).get_account_tier(refresh_token or "")
+            current_account = db.app_settings.get_google_account()
+            if current_account and current_account["uid"] == account["uid"]:
+                if not db.app_settings.set_google_account_tier(
+                    account["uid"],
+                    tier,
+                ):
+                    Logger.warning("Could not cache Google account tier")
+                self.profile_card.set_account_tier(tier)
+                self._tier_loaded_uid = account["uid"]
+        except ScannerApiError as ex:
+            Logger.warning(f"Could not load Google account tier: {ex}")
+            current_account = db.app_settings.get_google_account()
+            if current_account and current_account["uid"] == account["uid"]:
+                self.profile_card.set_account_tier("unavailable")
+        except Exception as ex:
+            Logger.error(f"Could not display Google account tier: {ex}")
+            current_account = db.app_settings.get_google_account()
+            if current_account and current_account["uid"] == account["uid"]:
+                self.profile_card.set_account_tier("unavailable")
+        finally:
+            if self._tier_request_uid == account["uid"]:
+                self._tier_request_uid = None
 
     @staticmethod
     def _get_google_auth_config() -> dict:
@@ -933,8 +987,7 @@ class UserManagementView(ft.View):
             if not saved:
                 raise RuntimeError("Could not save app-wide Google account")
 
-            account = db.app_settings.get_google_account()
-            self.google_account_card.set_account(account["email"] if account else None)
+            self._refresh_google_account()
             self._page.delete_cached_view("/purchase_scanner")
             Logger.info("Google account signed in for the app")
         except (requests.RequestException, KeyError, RuntimeError, sqlite3.Error, ValueError) as ex:
@@ -952,7 +1005,7 @@ class UserManagementView(ft.View):
             )
             return
         self._page.delete_cached_view("/purchase_scanner")
-        self.google_account_card.set_account(None)
+        self._refresh_google_account()
 
     def _refresh_view(self) -> int:
         try:

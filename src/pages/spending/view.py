@@ -271,23 +271,57 @@ class SpendingView(ft.View):
         signed_in = db.app_settings.has_google_account_session()
         self.google_required_card.visible = not signed_in
         self.usage_card.visible = signed_in
-        self.toolbar.set_scan_enabled(False)
+        if signed_in and self._is_cached_developer():
+            self._show_unlimited_usage()
+            self.toolbar.set_scan_enabled(True)
+        else:
+            self.toolbar.set_scan_enabled(False)
         self.google_required_message.value = self.lang["spending_ai.google_required"]
         self._page.update()
 
+    @staticmethod
+    def _is_cached_developer() -> bool:
+        account = db.app_settings.get_google_account()
+        return bool(
+            account
+            and db.app_settings.get_google_account_tier(account["uid"])
+            == "developer"
+        )
+
+    def _show_unlimited_usage(self) -> None:
+        self.usage_card.usage_label.value = self.lang["spending_ai.usage_unlimited"]
+        self.usage_card.usage_progress.value = 1
+        self.usage_card.usage_progress.color = Color.PROGRESS_ACTIVE
+
     def _load_monthly_usage(self) -> None:
+        if self._is_cached_developer():
+            self._show_unlimited_usage()
+            self.toolbar.set_scan_enabled(db.app_settings.has_google_account_session())
+            self._page.update()
+            return
         refresh_token = db.app_settings.get_google_refresh_token()
         try:
             usage = self.controller.get_monthly_analysis_usage(refresh_token or "")
-            reset_at = datetime.fromisoformat(usage["reset_at"])
-            if reset_at.tzinfo is None:
-                reset_at = reset_at.replace(tzinfo=timezone.utc)
-            reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
             remaining = usage["remaining"]
-            if not isinstance(remaining, int) or remaining not in (0, 1):
-                raise ValueError("Invalid monthly usage remaining count")
-            self.usage_card.set_usage(remaining, reset_label)
-            self.toolbar.set_scan_enabled(remaining > 0)
+            limit = usage["limit"]
+            if limit is None:
+                if remaining is not None:
+                    raise ValueError("Unlimited spending usage must not have a remaining count")
+            elif (
+                not isinstance(remaining, int)
+                or not isinstance(limit, int)
+                or not 0 <= remaining <= limit
+            ):
+                raise ValueError("Invalid monthly usage counts")
+            else:
+                reset_at = datetime.fromisoformat(usage["reset_at"])
+                if reset_at.tzinfo is None:
+                    reset_at = reset_at.replace(tzinfo=timezone.utc)
+                reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
+            if limit is None:
+                reset_label = None
+            self.usage_card.set_usage(remaining, limit, reset_label)
+            self.toolbar.set_scan_enabled(limit is None or remaining > 0)
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load spending analysis usage: {ex}")
             self.usage_card.set_unavailable()

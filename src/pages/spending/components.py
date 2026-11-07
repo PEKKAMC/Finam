@@ -664,14 +664,28 @@ class SpendingUsageCard(ft.Container):
             ),
         )
 
-    def set_usage(self, remaining: int, reset_at: str) -> None:
-        self.usage_label.value = self.lang["spending_ai.usage_remaining"].format(
-            remaining=remaining,
-            reset=reset_at,
-        )
-        self.usage_progress.value = remaining
+    def set_usage(
+        self,
+        remaining: int | None,
+        limit: int | None,
+        reset_at: str | None,
+    ) -> None:
+        if limit is None:
+            self.usage_label.value = self.lang[
+                "spending_ai.usage_unlimited"
+            ]
+            self.usage_progress.value = 1
+        else:
+            self.usage_label.value = self.lang["spending_ai.usage_remaining"].format(
+                remaining=remaining,
+                limit=limit,
+                reset=reset_at,
+            )
+            self.usage_progress.value = remaining / limit if limit else 0
         self.usage_progress.color = (
-            Color.PROGRESS_ACTIVE if remaining else Color.WARNING_COLOR
+            Color.PROGRESS_ACTIVE
+            if limit is None or remaining
+            else Color.WARNING_COLOR
         )
         self.update()
 

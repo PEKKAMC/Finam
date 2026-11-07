@@ -18,7 +18,10 @@ class ProfileCard(ft.Container):
 
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.account_type_text = Text.SMALL(self.lang["user_management.personal_account"], color=Color.LIGHT_ACCENT)
+        self.account_type_text = Text.MEDIUM(
+            self.lang["user_management.tier_guest"],
+            color=Color.LIGHT_ACCENT,
+        )
         self.change_btn_text = Text.SMALL(self.lang["user_management.change"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
 
         # Static icons
@@ -118,6 +121,27 @@ class ProfileCard(ft.Container):
         self.user_name_text.value = username if username else ""
         self.active_user_text.value = username if username else self.lang["user_management.no_user_selected"]
         self.update()
+
+    def set_account_tier(self, tier: str) -> None:
+        tier_keys = {
+            "guest": "tier_guest",
+            "free": "tier_free",
+            "premium": "tier_premium",
+            "developer": "tier_developer",
+            "unavailable": "tier_unavailable",
+            "loading": "tier_loading",
+        }
+        key = tier_keys.get(tier, "tier_unavailable")
+        self.account_type_text.value = self.lang[
+            f"user_management.{key}"
+        ]
+        self.account_type_text.color = (
+            Color.NEGATIVE_ACTION if tier == "developer" else Color.LIGHT_ACCENT
+        )
+        try:
+            self.account_type_text.update()
+        except RuntimeError:
+            pass
 
     def resize(self, width: int):
         self.width = width
