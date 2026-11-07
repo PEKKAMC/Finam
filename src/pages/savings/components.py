@@ -923,7 +923,7 @@ class CongratulationsDialog(Dialog):
                     [self.title_text, self.close_button],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 ),
-                ft.Icon(ft.Icons.EMOJI_EVENTS, size=48, color=Color.PRIMARY),
+                ft.Icon(ft.Icons.EMOJI_EVENTS, size=48, color=Color.ERROR_TEXT),
                 self.desc_text,
                 self.achievement_card,
                 self.surplus_banner,
@@ -947,13 +947,7 @@ class CongratulationsDialog(Dialog):
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
         self.on_dismiss = self._handle_dismiss
 
-    def trigger(
-        self,
-        completed_goal: dict,
-        surplus_amount: float | int,
-        available_goals: list[dict],
-        confetti: bool = False,
-    ):
+    def trigger(self, completed_goal: dict, surplus_amount: float | int, available_goals: list[dict], confetti: bool = False):
         self._confetti_generation += 1
         generation = self._confetti_generation
         if not confetti:
