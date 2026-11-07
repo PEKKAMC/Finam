@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from collections.abc import Callable
+from datetime import datetime
 
 import flet as ft
 
@@ -679,6 +680,167 @@ class SpendingUsageCard(ft.Container):
         self.update()
 
 
+class SpendingMonthDialog(Dialog):
+    def __init__(self, page: Page, lang: dict, on_confirm: Callable[[str], None]):
+        self._page = page
+        self.lang = lang
+        self.on_confirm = on_confirm
+        now = datetime.now()
+        self.year = now.year
+        self.month = now.month
+        self.month_dropdown = ft.Column(
+            controls=[
+                ft.Dropdown(
+                    label=self.lang["spending_ai.month_label"],
+                    value=str(self.month),
+                    options=[],
+                    on_select=self._on_month_changed,
+                    menu_height=300,
+                    expand=True
+                )
+            ]
+        )
+        self.year_dropdown = ft.Column(
+            controls=[
+                ft.Dropdown(
+                    label=self.lang["spending_ai.year_label"],
+                    value=str(self.year),
+                    options=[
+                        ft.dropdown.Option(str(year), str(year))
+                        for year in range(now.year, now.year - 51, -1)
+                    ],
+                    on_select=self._on_year_changed,
+                    menu_height=300,
+                    expand=True
+                )
+            ]
+        )
+        self._update_month_options()
+        self.main_container = ft.Container(
+            width=420,
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                tight=True,
+                spacing=14,
+                controls=[
+                    Text.H4(
+                        self.lang["spending_ai.select_month_title"],
+                        color=Color.PRIMARY_TEXT,
+                    ),
+                    self.month_dropdown,
+                    self.year_dropdown,
+                ],
+            ),
+        )
+        self.cancel_button = ft.TextButton(
+            self.lang["generic.cancel"],
+            on_click=lambda e: self.dismiss(),
+        )
+        self.confirm_button = ft.Button(
+            self.lang["spending_ai.scan_month"],
+            on_click=self._confirm,
+            bgcolor=Color.PRIMARY,
+            color=Color.WHITE,
+        )
+        super().__init__(
+            dialog_content=self.main_container,
+            color=Color.DIALOG_BACKGROUND,
+            options=[self.cancel_button, self.confirm_button],
+            padding=0,
+        )
+
+    def _on_month_changed(self, e=None) -> None:
+        self.month = int(self.month_dropdown.value)
+        self.month_dropdown.update()
+
+    def _on_year_changed(self, e=None) -> None:
+        self.year = int(self.year_dropdown.value)
+        self._update_month_options()
+        self.month_dropdown.value = str(self.month)
+        self.month_dropdown.update()
+
+    def _update_month_options(self) -> None:
+        latest_month = datetime.now().month if self.year == datetime.now().year else 12
+        self.month_dropdown.options = [
+            ft.dropdown.Option(
+                str(month),
+                self.lang[f"spending_ai.month_{month:02d}"],
+            )
+            for month in range(1, latest_month + 1)
+        ]
+        if self.month > latest_month:
+            self.month = latest_month
+
+    def trigger(self, e=None) -> None:
+        now = datetime.now()
+        self.year = now.year
+        self.month = now.month
+        self.year_dropdown.value = str(self.year)
+        self._update_month_options()
+        self.month_dropdown.value = str(self.month)
+        self.show()
+
+    def _confirm(self, e=None) -> None:
+        month = f"{self.year:04d}-{self.month:02d}"
+        self.dismiss()
+        self.on_confirm(month)
+
+
+class DeleteSpendingReportDialog(Dialog):
+    def __init__(self, page: Page, lang: dict, on_confirm: Callable[[int], None]):
+        self._page = page
+        self.lang = lang
+        self.on_confirm = on_confirm
+        self.report_id: int | None = None
+        self.main_container = ft.Container(
+            padding=UISettings.CARD_PADDING,
+            content=ft.Column(
+                tight=True,
+                spacing=12,
+                controls=[
+                    Text.H3(
+                        self.lang["spending_ai.confirm_delete_title"],
+                        color=Color.PRIMARY_TEXT,
+                    ),
+                    Text.P(
+                        self.lang["spending_ai.confirm_delete_content"],
+                        color=Color.SECONDARY_TEXT,
+                    ),
+                ],
+            ),
+        )
+        self.cancel_button = ft.TextButton(
+            self.lang["generic.cancel"],
+            on_click=lambda e: self.dismiss(),
+        )
+        self.delete_button = ft.Button(
+            self.lang["generic.delete"],
+            on_click=self._confirm,
+            bgcolor=Color.DELETE_ACTION,
+            color=Color.WHITE,
+        )
+        super().__init__(
+            dialog_content=self.main_container,
+            color=Color.DIALOG_BACKGROUND,
+            options=[self.cancel_button, self.delete_button],
+            padding=0,
+        )
+
+    def trigger(self, report_id: int | None) -> None:
+        if report_id is None:
+            return
+        self.report_id = report_id
+        self.show()
+
+    def _confirm(self, e=None) -> None:
+        if self.report_id is None:
+            return
+        report_id = self.report_id
+        self.report_id = None
+        self.dismiss()
+        self.on_confirm(report_id)
+
+
 class SpendingReportDialog(Dialog):
     SECTION_KEYS = (
         "monthly_overview",
@@ -689,9 +851,11 @@ class SpendingReportDialog(Dialog):
         "spending_actions",
     )
 
-    def __init__(self, page: Page, lang: dict):
+    def __init__(self, page: Page, lang: dict, on_delete: Callable[[int], None]):
         self._page = page
         self.lang = lang
+        self.on_delete = on_delete
+        self.report_id: int | None = None
         self.title_text = Text.H4(
             self.lang["spending_ai.title"],
             color=Color.PRIMARY_TEXT,
@@ -726,6 +890,13 @@ class SpendingReportDialog(Dialog):
             content=self.loading_content,
             alignment=ft.Alignment.CENTER
         )
+        self.delete_button = ft.IconButton(
+            ft.Icons.DELETE_OUTLINE,
+            visible=False,
+            on_click=self._request_delete,
+            icon_color=Color.NEGATIVE_ACTION,
+            tooltip=self.lang["spending_ai.delete_report"],
+        )
         close_button = ft.IconButton(
             ft.Icons.CLOSE,
             on_click=lambda e: self.dismiss(),
@@ -740,7 +911,14 @@ class SpendingReportDialog(Dialog):
                 controls=[
                     ft.Row(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[self.title_text, close_button],
+                        controls=[
+                            self.title_text,
+                            ft.Row(
+                                tight=True,
+                                spacing=0,
+                                controls=[self.delete_button, close_button],
+                            ),
+                        ],
                     ),
                     self.updated_text,
                     self.body,
@@ -755,6 +933,8 @@ class SpendingReportDialog(Dialog):
         self.inset_padding = ft.Padding.symmetric(horizontal=12, vertical=20)
 
     def show_loading(self) -> None:
+        self.report_id = None
+        self.delete_button.visible = False
         self.updated_text.value = ""
         self.body.content = self.loading_content
         self.show()
@@ -769,7 +949,14 @@ class SpendingReportDialog(Dialog):
         self.error_text.value = message
         self.update()
 
-    def show_report(self, report: dict, created_at: str) -> None:
+    def show_report(
+        self,
+        report: dict,
+        created_at: str,
+        report_id: int | None = None,
+    ) -> None:
+        self.report_id = report_id
+        self.delete_button.visible = report_id is not None
         self.updated_text.value = self.lang["spending_ai.updated"].format(
             date=created_at
         )
@@ -781,8 +968,13 @@ class SpendingReportDialog(Dialog):
         self.show()
         self.update()
 
+    def _request_delete(self, e=None) -> None:
+        if self.report_id is not None:
+            self.on_delete(self.report_id)
+
     def _make_section(self, index: int, key: str, data) -> ft.Control:
         title = self.lang[f"spending_ai.section_{index}"]
+        section = data or {}
         card_content: list[ft.Control] = [
             ft.Row(
                 spacing=8,
@@ -836,8 +1028,55 @@ class SpendingReportDialog(Dialog):
                         ),
                     )
                 )
+        elif key == "monthly_overview" and "income" in section:
+            card_content.append(
+                Text.SMALL(
+                    str(section.get("month", "")),
+                    color=Color.SECONDARY_TEXT,
+                )
+            )
+            for label_key, amount_key, color in (
+                (
+                    "spending_ai.current_month_expenses",
+                    "expenses",
+                    Color.EXPENSE_COLOR,
+                ),
+                (
+                    "spending_ai.current_month_income",
+                    "income",
+                    Color.INCOME_COLOR,
+                ),
+                (
+                    "spending_ai.current_month_net_balance",
+                    "net_balance",
+                    Color.PRIMARY,
+                ),
+            ):
+                value = format_number(float(section.get(amount_key, 0)))
+                currency = str(section.get("currency", ""))
+                card_content.append(
+                    ft.Container(
+                        padding=12,
+                        border_radius=12,
+                        bgcolor=Color.GOAL_ITEM_BACKGROUND,
+                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                        content=ft.Row(
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            controls=[
+                                Text.MEDIUM(
+                                    self.lang[label_key],
+                                    color=Color.SECONDARY_TEXT,
+                                ),
+                                Text.MEDIUM(
+                                    f"{value} {currency}".strip(),
+                                    color=color,
+                                    weight=ft.FontWeight.BOLD,
+                                ),
+                            ],
+                        ),
+                    )
+                )
         else:
-            section = data or {}
             card_content.append(
                 Text.MEDIUM(
                     str(section.get("headline", "")),
@@ -946,7 +1185,8 @@ class SpendingReportHistoryCard(ft.Container):
 
     def _make_history_item(self, item: dict) -> ft.Control:
         report = item.get("report", {})
-        summary = report.get("monthly_overview", {}).get("headline", "")
+        overview = report.get("monthly_overview", {})
+        summary = overview.get("headline") or overview.get("month", "")
         created_at = str(item.get("created_at", ""))
         return ft.Container(
             bgcolor=Color.GOAL_ITEM_BACKGROUND,

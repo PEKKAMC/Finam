@@ -9,7 +9,7 @@ import flet as ft
 from src.logger import Logger
 from src.database import db
 from src.pages.global_components import FinancialChart, Menu
-from src.pages.spending.components import DeleteTransactionDialog, MetricCards, SpendingReportDialog, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
+from src.pages.spending.components import DeleteSpendingReportDialog, DeleteTransactionDialog, MetricCards, SpendingMonthDialog, SpendingReportDialog, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
 from src.pages.spending.logic import LogicController, SpendingAnalysisApiError
 from src.utils import Color, Page, Text, get_safe_page_size, UISettings
 
@@ -77,6 +77,17 @@ class SpendingView(ft.View):
         self.spending_report_dialog = SpendingReportDialog(
             page=self._page,
             lang=self.lang,
+            on_delete=self._confirm_delete_spending_report,
+        )
+        self.delete_spending_report_dialog = DeleteSpendingReportDialog(
+            page=self._page,
+            lang=self.lang,
+            on_confirm=self._delete_spending_report,
+        )
+        self.spending_month_dialog = SpendingMonthDialog(
+            page=self._page,
+            lang=self.lang,
+            on_confirm=self._run_spending_scan,
         )
         self.spending_report_history_card = SpendingReportHistoryCard(
             lang=self.lang,
@@ -303,6 +314,14 @@ class SpendingView(ft.View):
             or not db.app_settings.has_google_account_session()
         ):
             return
+        self.spending_month_dialog.trigger()
+
+    def _run_spending_scan(self, month: str) -> None:
+        if (
+            self.toolbar.scan_button.disabled
+            or not db.app_settings.has_google_account_session()
+        ):
+            return
         self.toolbar.set_scan_enabled(False)
         self._page.update()
         self.spending_report_dialog.show_loading()
@@ -310,7 +329,8 @@ class SpendingView(ft.View):
         def worker():
             try:
                 report = self.controller.analyze_spending(
-                    db.app_settings.get_google_refresh_token() or ""
+                    db.app_settings.get_google_refresh_token() or "",
+                    month,
                 )
                 if not self.controller.save_spending_report(report):
                     raise RuntimeError("Could not save generated spending report.")
@@ -320,8 +340,12 @@ class SpendingView(ft.View):
                 self.spending_report_history_card.set_history(
                     self.spending_report_history
                 )
-                created_at = self.spending_report_history[0]["created_at"]
-                self.spending_report_dialog.show_report(report, created_at)
+                saved_report = self.spending_report_history[0]
+                self.spending_report_dialog.show_report(
+                    report,
+                    saved_report["created_at"],
+                    saved_report["id"],
+                )
             except SpendingAnalysisApiError as ex:
                 Logger.warning(f"Spending analysis request rejected: {ex}")
                 if ex.status_code == 429:
@@ -357,7 +381,22 @@ class SpendingView(ft.View):
         self.spending_report_dialog.show_report(
             entry["report"],
             entry["created_at"],
+            entry["id"],
         )
+
+    def _confirm_delete_spending_report(self, report_id: int) -> None:
+        self.delete_spending_report_dialog.trigger(report_id)
+
+    def _delete_spending_report(self, report_id: int) -> None:
+        if not self.controller.delete_spending_report(report_id):
+            Logger.warning(f"Failed to delete spending report {report_id}")
+            return
+        self.spending_report_dialog.dismiss()
+        self.spending_report_history = self.controller.get_spending_report_history()
+        self.spending_report_history_card.set_history(
+            self.spending_report_history
+        )
+        self._page.update()
 
     def on_filter_change(self, f_type: str):
         self.filter_type = f_type

@@ -153,7 +153,7 @@ class LogicController:
             timeout=15,
         )
 
-    def analyze_spending(self, refresh_token: str) -> dict:
+    def analyze_spending(self, refresh_token: str, month: str) -> dict:
         firebase_id_token = self._refresh_firebase_id_token(refresh_token)
         incomes, expenses = self.get_spending_analysis_inputs()
         payload = {
@@ -161,6 +161,7 @@ class LogicController:
             "expenses": expenses,
             "currency": db.users.get_currency(self.current_user).split(" ", 1)[0],
             "language": db.users.get_language(self.current_user),
+            "current_month": month,
         }
         return self._request_json(
             "POST",
@@ -250,3 +251,13 @@ class LogicController:
 
     def get_spending_report_history(self) -> list[dict]:
         return db.spending_analysis_history.get_user_reports(self.current_user)
+
+    def delete_spending_report(self, report_id: int) -> bool:
+        try:
+            return db.spending_analysis_history.delete_report(
+                self.current_user,
+                int(report_id),
+            )
+        except (TypeError, ValueError):
+            Logger.warning(f"Invalid spending report id: {report_id}")
+            return False

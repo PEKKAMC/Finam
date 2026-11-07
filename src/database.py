@@ -1413,6 +1413,29 @@ class SpendingAnalysisDatabase:
             for row in rows
         ]
 
+    def delete_report(self, username: str, report_id: int) -> bool:
+        user_id = self.user_db.get_user_id(username)
+        if not user_id:
+            return False
+        existing_report = self.db.execute(
+            """
+            SELECT 1 FROM spending_analysis_history
+            WHERE id = ? AND user_id = ?
+            """,
+            (report_id, user_id),
+            fetch_one=True,
+        )
+        if not existing_report:
+            return False
+        self.db.execute(
+            """
+            DELETE FROM spending_analysis_history
+            WHERE id = ? AND user_id = ?
+            """,
+            (report_id, user_id),
+        )
+        return True
+
 
 # ==========================================
 # MAIN DATABASE MANAGER
