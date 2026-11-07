@@ -260,7 +260,7 @@ class SpendingView(ft.View):
         signed_in = db.app_settings.has_google_account_session()
         self.google_required_card.visible = not signed_in
         self.usage_card.visible = signed_in
-        self.toolbar.scan_button.disabled = not signed_in
+        self.toolbar.set_scan_enabled(False)
         self.google_required_message.value = self.lang["spending_ai.google_required"]
         self._page.update()
 
@@ -276,7 +276,7 @@ class SpendingView(ft.View):
             if not isinstance(remaining, int) or remaining not in (0, 1):
                 raise ValueError("Invalid monthly usage remaining count")
             self.usage_card.set_usage(remaining, reset_label)
-            self.toolbar.scan_button.disabled = remaining == 0
+            self.toolbar.set_scan_enabled(remaining > 0)
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load spending analysis usage: {ex}")
             self.usage_card.set_unavailable()
@@ -286,19 +286,15 @@ class SpendingView(ft.View):
                 ]
                 self.google_required_card.visible = True
                 self.usage_card.visible = False
-                self.toolbar.scan_button.disabled = True
+                self.toolbar.set_scan_enabled(False)
             elif ex.status_code == 404:
-                self.toolbar.scan_button.disabled = True
+                self.toolbar.set_scan_enabled(False)
             else:
-                self.toolbar.scan_button.disabled = not (
-                    db.app_settings.has_google_account_session()
-                )
+                self.toolbar.set_scan_enabled(False)
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid spending analysis usage response: {ex}")
             self.usage_card.set_unavailable()
-            self.toolbar.scan_button.disabled = not (
-                db.app_settings.has_google_account_session()
-            )
+            self.toolbar.set_scan_enabled(False)
         self._page.update()
 
     def handle_spending_scan(self, e=None) -> None:
@@ -307,7 +303,7 @@ class SpendingView(ft.View):
             or not db.app_settings.has_google_account_session()
         ):
             return
-        self.toolbar.scan_button.disabled = True
+        self.toolbar.set_scan_enabled(False)
         self._page.update()
         self.spending_report_dialog.show_loading()
 
@@ -330,7 +326,7 @@ class SpendingView(ft.View):
                 Logger.warning(f"Spending analysis request rejected: {ex}")
                 if ex.status_code == 429:
                     message = self.lang["spending_ai.monthly_limit"]
-                    self.toolbar.scan_button.disabled = True
+                    self.toolbar.set_scan_enabled(False)
                     self._page.update()
                 elif ex.status_code in (401, 403):
                     message = self.lang["purchase_scanner.sign_in_required"]
@@ -339,7 +335,7 @@ class SpendingView(ft.View):
                     ]
                     self.google_required_card.visible = True
                     self.usage_card.visible = False
-                    self.toolbar.scan_button.disabled = True
+                    self.toolbar.set_scan_enabled(False)
                     self._page.update()
                 elif ex.status_code == 0:
                     message = self.lang["purchase_scanner.connection_error"]

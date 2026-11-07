@@ -232,7 +232,7 @@ class PurchaseScannerView(ft.View):
         self.google_required_card.visible = not signed_in
         self.usage_card.visible = signed_in
         self.scanner_locked_overlay.visible = not signed_in
-        self.form_card.set_enabled(signed_in)
+        self.form_card.set_enabled(False)
 
     def _load_daily_usage(self):
         refresh_token = db.app_settings.get_google_refresh_token()
@@ -258,6 +258,7 @@ class PurchaseScannerView(ft.View):
         except ScannerApiError as ex:
             Logger.warning(f"Could not load purchase scanner usage: {ex}")
             self.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
+            self.form_card.set_enabled(False)
             if ex.status_code in (401, 403):
                 self.google_required_message.value = self.lang[
                     "purchase_scanner.google_session_expired"
@@ -269,6 +270,7 @@ class PurchaseScannerView(ft.View):
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid purchase scanner usage response: {ex}")
             self.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
+            self.form_card.set_enabled(False)
         try:
             self.usage_card.update()
             self.google_required_card.update()

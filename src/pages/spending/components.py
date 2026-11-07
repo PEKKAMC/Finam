@@ -194,16 +194,27 @@ class TransactionToolbar(ft.Container):
                 padding=12
             )
         )
+        self.scan_icon = ft.Icon(
+            ft.Icons.AUTO_AWESOME,
+            color=Color.SECONDARY_TEXT,
+            size=18,
+        )
+        self.scan_label = Text.MEDIUM(
+            self.lang["spending_ai.scan"],
+            color=Color.SECONDARY_TEXT,
+            weight=ft.FontWeight.BOLD,
+        )
         self.scan_button = ft.Button(
             content=ft.Row(
                 spacing=8,
                 controls=[
-                    ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.WHITE, size=18),
-                    Text.MEDIUM(self.lang["spending_ai.scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD),
+                    self.scan_icon,
+                    self.scan_label,
                 ],
                 tight=True,
             ),
-            bgcolor=Color.PRIMARY,
+            bgcolor=Color.DARK_BUTTON,
+            disabled=True,
             on_click=on_scan_click,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=16),
@@ -306,6 +317,13 @@ class TransactionToolbar(ft.Container):
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
             content=self.main_container
         )
+
+    def set_scan_enabled(self, enabled: bool) -> None:
+        self.scan_button.disabled = not enabled
+        self.scan_button.bgcolor = Color.PRIMARY if enabled else Color.DARK_BUTTON
+        self.scan_icon.color = Color.WHITE if enabled else Color.SECONDARY_TEXT
+        self.scan_label.color = Color.WHITE if enabled else Color.SECONDARY_TEXT
+        self.scan_button.update()
 
     def update_data(self, filter_type: str, search_query: str, sort_by: str):
         self.filter_type = filter_type

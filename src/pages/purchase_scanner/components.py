@@ -207,10 +207,11 @@ class ScannerForm(ft.Container):
             bgcolor=Color.PRIMARY,
             border_radius=16,
             padding=ft.Padding(0, 14, 0, 14),
-            on_click=self._handle_scan_click
+            on_click=None
         )
-        self._scan_enabled = True
+        self._scan_enabled = False
         self._scan_busy = False
+        self._update_submit_button()
 
         self.main_container = ft.Column(
             spacing=16,
@@ -773,8 +774,8 @@ class ScannerResult(ft.Container):
         if risk is None:
             self.risk_score_text.value = "—"
             self.risk_score_text.color = Color.BLAND_TEXT
-            self.risk_status_text.value = "Nội dung troll / không hợp lệ"
-            self.risk_badge_text.value = "Bỏ qua"
+            self.risk_status_text.value = "—"
+            self.risk_badge_text.value = "—"
             self.progress_bar.value = 0.0
             self.progress_bar.color = Color.BLAND_TEXT
             self.advice_text.value = ai_advice
