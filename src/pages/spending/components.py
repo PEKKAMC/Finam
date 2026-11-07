@@ -451,13 +451,7 @@ class TransactionHistoryCard(ft.Container):
         if self.page:
             self.update()
 
-    def resize(
-        self,
-        width: int,
-        content_width: int,
-        item_width: int,
-        item_content_width: int,
-    ):
+    def resize(self, width: int, content_width: int, item_width: int, item_content_width: int):
         self.width = width
         self.history_column.width = content_width
         self._item_width = item_width
@@ -488,7 +482,6 @@ class TransactionItemCard(ft.Container):
         )
 
         # TEXT AND ICON COMPONENTS
-        self.type_badge_text = Text.SMALL(self.lang["spending.income"] if is_income else self.lang["spending.expense"], color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
         self.title_text = Text.MEDIUM(self.tx["title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
         self.subtitle_text = Text.SMALL(self.tx.get("subtitle", ""), color=Color.SECONDARY_TEXT)
         self.date_text = Text.SMALL(self.tx.get("date", ""), color=Color.SECONDARY_TEXT)
@@ -507,21 +500,6 @@ class TransactionItemCard(ft.Container):
             alignment=ft.Alignment.CENTER
         )
 
-        self.badge_box = ft.Container(
-            content=self.type_badge_text,
-            bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND,
-            padding=ft.Padding(8, 2, 8, 2),
-            border_radius=10
-        )
-
-        self.title_row = ft.Row(
-            spacing=8,
-            controls=[
-                self.title_text,
-                self.badge_box
-            ]
-        )
-
         self.date_row = ft.Row(
             spacing=4,
             controls=[
@@ -534,7 +512,7 @@ class TransactionItemCard(ft.Container):
         self.info_column = ft.Column(
             spacing=2,
             controls=[
-                self.title_row,
+                self.title_text,
                 self.subtitle_text,
                 self.date_row
             ]
@@ -934,8 +912,6 @@ class SpendingReportDialog(Dialog):
         )
         self.report_content = ft.Column(
             spacing=12,
-            scroll=ft.ScrollMode.AUTO,
-            expand=True,
         )
         self.report_card_width = 0
         self.body = ft.Container(
@@ -996,6 +972,7 @@ class SpendingReportDialog(Dialog):
             color=Color.DIALOG_BACKGROUND,
             padding=0,
         )
+        self.scrollable = True
         self.inset_padding = ft.Padding.symmetric(horizontal=12, vertical=20)
 
     def show_loading(self) -> None:
@@ -1008,7 +985,6 @@ class SpendingReportDialog(Dialog):
 
     def show_error(self, message: str) -> None:
         self.body.content = ft.Container(
-            height=300,
             alignment=ft.Alignment.CENTER,
             content=self.error_text,
         )
@@ -1342,9 +1318,8 @@ class SpendingReportDialog(Dialog):
             ),
         )
 
-    def resize(self, dialog_width: int, body_height: int, report_card_width: int) -> None:
+    def resize(self, dialog_width: int, report_card_width: int) -> None:
         self.main_container.width = dialog_width
-        self.body.height = body_height
         self.report_card_width = report_card_width
         for card in self.report_content.controls:
             if isinstance(card, ft.Container):

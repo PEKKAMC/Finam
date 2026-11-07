@@ -11,7 +11,7 @@ from src.database import db
 from src.pages.global_components import FinancialChart, Menu
 from src.pages.spending.components import DeleteSpendingReportDialog, DeleteTransactionDialog, MetricCards, SpendingMonthDialog, SpendingReportDialog, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
 from src.pages.spending.logic import LogicController, SpendingAnalysisApiError
-from src.utils import Color, Page, Text, get_safe_page_size, UISettings
+from src.utils import Color, Page, Text, get_menu_resize_values, get_safe_page_size, scale_width, UISettings
 
 Logger.info("Initializing Spending page...")
 
@@ -461,37 +461,18 @@ class SpendingView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
-            menu_item_size = page_width // self.menu.items_count
-            menu_item_height = max(48, menu_item_size)
-            menu_inside_size = menu_item_size // 6 * 5
-            menu_inside_height = menu_item_height // 6 * 5
-            menu_label_size = 8 if menu_item_size < 48 else 10
-            menu_icon_size = 18 if menu_item_size < 48 else 20
-            menu_label_spacing = 2 if menu_item_size < 48 else 4
-            menu_label_visible = menu_item_size >= 48
-            banner_height = (
-                self.menu.BANNER_HEIGHT
-                if self.menu.ad_banner is not None
-                and page_width >= self.menu.BANNER_WIDTH
-                else 0
-            )
-            menu_total_height = menu_item_height + banner_height
-            content_width = max(0, page_width - UISettings.CARD_PADDING * 2)
-            card_content_width = max(
-                0, content_width - UISettings.CARD_PADDING * 2
-            )
-            usage_content_width = max(0, content_width - 36)
-            transaction_item_content_width = max(0, card_content_width - 28)
+            menu_resize_values = get_menu_resize_values(page_width, self.menu)
+            content_width = scale_width(page_width, 392)
+            card_content_width = scale_width(page_width, 352)
+            usage_content_width = scale_width(page_width, 356)
+            transaction_item_content_width = scale_width(page_width, 324)
             transaction_dialog_width = page_width * 6 // 7
-            transaction_dialog_content = max(0, transaction_dialog_width - 48)
-            transaction_title_width = max(
-                0, transaction_dialog_content - 48
-            )
-            report_dialog_width = max(0, min(page_width - 24, 760))
-            report_body_height = max(0, min(page_height - 200, 720))
-            report_card_width = max(0, report_dialog_width - 40)
+            transaction_dialog_content = scale_width(page_width, 322)
+            transaction_title_width = scale_width(page_width, 274)
+            report_dialog_width = scale_width(page_width, 408)
+            report_card_width = scale_width(page_width, 368)
             secondary_dialog_width = page_width * 6 // 7
-            secondary_dialog_content = max(0, secondary_dialog_width - 40)
+            secondary_dialog_content = scale_width(page_width, 330)
 
             # Resizing main container
             self.main_container.width = page_width
@@ -507,16 +488,7 @@ class SpendingView(ft.View):
             # Resizing other components
             self.menu.resize(
                 width=page_width,
-                item_size=menu_item_size,
-                item_height=menu_item_height,
-                inside_size=menu_inside_size,
-                inside_height=menu_inside_height,
-                banner_height=banner_height,
-                total_height=menu_total_height,
-                label_size=menu_label_size,
-                icon_size=menu_icon_size,
-                label_spacing=menu_label_spacing,
-                label_visible=menu_label_visible,
+                **menu_resize_values,
             )
             self.main_container.margin.bottom = self.menu.reserved_height
 
@@ -544,7 +516,6 @@ class SpendingView(ft.View):
             )
             self.spending_report_dialog.resize(
                 dialog_width=report_dialog_width,
-                body_height=report_body_height,
                 report_card_width=report_card_width,
             )
             self.spending_month_dialog.resize(

@@ -14,6 +14,7 @@ class Page(ft.Page):
         self.delete_cached_view: Callable
         self.delete_all_cached_views: Callable
         self.previous_route: str
+        self.fallback_reason: str
 
     def navigate_to(self, route: str):
         def handler(e: ft.ControlEvent | None = None) -> None:

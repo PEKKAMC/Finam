@@ -7,7 +7,7 @@ from collections.abc import Callable
 import flet as ft
 
 from src.logger import Logger
-from src.utils import Color, DefaultSettings, Dialog, Page, Text
+from src.utils import Color, DefaultSettings, Dialog, Page, Text, scale_width
 
 class UserManagementDialog(Dialog):
     def __init__(self, page: Page, lang: dict, user_list: UserList, add_form, on_close_callback: Callable, has_cancel_button: bool = True):
@@ -191,7 +191,7 @@ class UserList(ft.Container):
                 ]
             ),
         )
-        user_box.content.width = max(0, (self._list_width or 0) - 28) if self._list_width is not None else None
+        user_box.content.width = scale_width(self._list_width, 404) if self._list_width is not None else None
         return user_box
 
     def update_data(self, current_users: list, current_user: str = "", user_created_at: dict | None = None):
@@ -239,7 +239,7 @@ class UserList(ft.Container):
         self.list_column.height = height
         for user_box in self.user_boxes:
             user_box.width = width
-            user_box.content.width = max(0, width - 28)
+            user_box.content.width = scale_width(width, 404)
 
 
 class AddUserField(ft.Container):

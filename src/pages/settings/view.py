@@ -10,7 +10,7 @@ import flet as ft
 from src.logger import Logger
 from src.pages.settings.components import SettingCard, SettingDropdown, SettingRow, SettingsHeader
 from src.pages.settings.logic import LogicController
-from src.utils import Color, DefaultSettings, Dialog, Page, ThemeManager, ThemeRegistry, get_asset_path, get_safe_page_size, Text, UISettings
+from src.utils import Color, DefaultSettings, Dialog, Page, ThemeManager, ThemeRegistry, get_asset_path, get_safe_page_size, scale_width, Text, UISettings
 from src.database import db
 
 Logger.info("Initializing Settings page...")
@@ -496,22 +496,22 @@ class SettingsView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
-            content_width = max(0, page_width - UISettings.CARD_PADDING * 2)
-            card_content_width = max(0, content_width - 32)
-            action_width = min(130, int(card_content_width * 0.45))
-            text_width = max(0, card_content_width - action_width)
+            content_width = scale_width(page_width, 392)
+            card_content_width = scale_width(page_width, 360)
+            action_width = scale_width(page_width, 130)
+            text_width = scale_width(page_width, 230)
 
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
             self.content_container.width = page_width
-            self.done_btn_wrapper.width = min(page_width, UISettings.MAX_APP_WIDTH)
+            self.done_btn_wrapper.width = page_width
             self.done_btn.width = content_width
 
             # Resizing other components
             self.settings_header.resize(
                 width=content_width,
-                content_width=max(0, content_width - 32),
+                content_width=scale_width(page_width, 360),
             )
 
             self.language_card.resize(

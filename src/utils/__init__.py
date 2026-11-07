@@ -10,7 +10,13 @@ from src.utils.data import Data
 from src.utils.number_format import format_compact_number, format_expression, format_number, get_decimal_separator, set_decimal_separator, set_digit_separator
 from src.utils.page import Page
 from src.utils.dialog import Dialog
-from src.utils.resizing import get_safe_page_size
+from src.utils.resizing import (
+    get_menu_resize_values,
+    get_safe_page_size,
+    is_supported_page_size,
+    scale_height,
+    scale_width,
+)
 from src.utils.settings import DefaultSettings, UISettings, currency_for_region, language_for_device_locale
 from src.utils.text import Text, TEXT_STYLES, create_text
 
@@ -42,6 +48,10 @@ __all__ = [
     "Page",
     # Resizing
     "get_safe_page_size",
+    "get_menu_resize_values",
+    "is_supported_page_size",
+    "scale_width",
+    "scale_height",
     # Settings
     "DefaultSettings",
     "UISettings",

@@ -96,7 +96,7 @@ class FallbackView(ft.View):
 
             # Resizing other components
             self.message_box.resize(
-                size=int(min(page_width, page_height) * 0.7)
+                size=int(page_width * 0.7)
             )
 
             return 0

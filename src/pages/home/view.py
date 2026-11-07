@@ -8,7 +8,7 @@ from src.logger import Logger
 from src.pages.global_components import FinancialChart, Menu
 from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChart, FeaturedLessonCard
 from src.pages.home.logic import LogicController
-from src.utils import Color, Page, get_safe_page_size, UISettings
+from src.utils import Color, Page, get_menu_resize_values, get_safe_page_size, scale_width, UISettings
 
 Logger.info("Initializing Home page...")
 
@@ -166,27 +166,11 @@ class HomeView(ft.View):
             page_width, page_height = self.get_safe_page_size(page=self._page)
 
             # Get component size values
-            content_width = max(0, page_width - UISettings.CARD_PADDING * 2)
-            inner_width = max(
-                0, content_width - UISettings.CARD_PADDING * 2
-            )
+            content_width = scale_width(page_width, 392)
+            inner_width = scale_width(page_width, 352)
             savings_inner_width = inner_width
-            goal_item_content_width = max(0, savings_inner_width - 24)
-            menu_item_size = page_width // self.menu.items_count
-            menu_item_height = max(48, menu_item_size)
-            menu_inside_size = menu_item_size // 6 * 5
-            menu_inside_height = menu_item_height // 6 * 5
-            menu_label_size = 8 if menu_item_size < 48 else 10
-            menu_icon_size = 18 if menu_item_size < 48 else 20
-            menu_label_spacing = 2 if menu_item_size < 48 else 4
-            menu_label_visible = menu_item_size >= 48
-            banner_height = (
-                self.menu.BANNER_HEIGHT
-                if self.menu.ad_banner is not None
-                and page_width >= self.menu.BANNER_WIDTH
-                else 0
-            )
-            menu_total_height = menu_item_height + banner_height
+            goal_item_content_width = scale_width(page_width, 328)
+            menu_resize_values = get_menu_resize_values(page_width, self.menu)
             chart_radius = int(page_height * 0.06)
             center_radius = int(page_height * 0.045)
             legend_height = int(page_height * 0.15)
@@ -200,16 +184,7 @@ class HomeView(ft.View):
             # Resizing other components
             self.menu.resize(
                 width=page_width,
-                item_size=menu_item_size,
-                item_height=menu_item_height,
-                inside_size=menu_inside_size,
-                inside_height=menu_inside_height,
-                banner_height=banner_height,
-                total_height=menu_total_height,
-                label_size=menu_label_size,
-                icon_size=menu_icon_size,
-                label_spacing=menu_label_spacing,
-                label_visible=menu_label_visible,
+                **menu_resize_values,
             )
 
             self.balance_card.resize(width=inner_width)

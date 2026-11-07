@@ -27,7 +27,7 @@ from src.pages.global_components import AddUserField, DeleteUserDialog, Menu, Us
 from src.pages.user_management.components import GoogleAccountCard, MenuItem, MenuSectionCard, ProfileCard, DeleteAllDataDialog
 from src.pages.user_management.logic import LogicController
 from src.pages.purchase_scanner.logic import LogicController as PurchaseScannerController, ScannerApiError
-from src.utils import Color, DefaultSettings, Page, Text, UISettings, get_asset_path, get_safe_page_size
+from src.utils import Color, DefaultSettings, Page, Text, UISettings, get_asset_path, get_menu_resize_values, get_safe_page_size, scale_width, scale_height
 from src.version_manager import get_version
 
 Logger.info("Initializing User Management page...")
@@ -1024,29 +1024,11 @@ class UserManagementView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
-            content_width = max(
-                0, page_width - UISettings.CARD_PADDING * 2
-            )
-            card_content_width = max(
-                0, content_width - UISettings.CARD_PADDING * 2
-            )
-            menu_item_size = page_width // self.menu.items_count
-            menu_item_height = max(48, menu_item_size)
-            menu_inside_size = menu_item_size // 6 * 5
-            menu_inside_height = menu_item_height // 6 * 5
-            menu_label_size = 8 if menu_item_size < 48 else 10
-            menu_icon_size = 18 if menu_item_size < 48 else 20
-            menu_label_spacing = 2 if menu_item_size < 48 else 4
-            menu_label_visible = menu_item_size >= 48
-            banner_height = (
-                self.menu.BANNER_HEIGHT
-                if self.menu.ad_banner is not None
-                and page_width >= self.menu.BANNER_WIDTH
-                else 0
-            )
-            menu_total_height = menu_item_height + banner_height
+            content_width = scale_width(page_width, 392)
+            card_content_width = scale_width(page_width, 352)
+            menu_resize_values = get_menu_resize_values(page_width, self.menu)
             dialog_width = page_width // 3 * 2
-            user_list_height = max(120, min(300, page_height // 3))
+            user_list_height = scale_height(page_height, 300)
 
             # Resizing main container
             self.main_container.width = page_width
@@ -1060,16 +1042,7 @@ class UserManagementView(ft.View):
             # Resizing other components
             self.menu.resize(
                 width=page_width,
-                item_size=menu_item_size,
-                item_height=menu_item_height,
-                inside_size=menu_inside_size,
-                inside_height=menu_inside_height,
-                banner_height=banner_height,
-                total_height=menu_total_height,
-                label_size=menu_label_size,
-                icon_size=menu_icon_size,
-                label_spacing=menu_label_spacing,
-                label_visible=menu_label_visible,
+                **menu_resize_values,
             )
             self.main_container.margin.bottom = self.menu.reserved_height
             self.profile_card.resize(

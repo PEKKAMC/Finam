@@ -11,7 +11,7 @@ from src.database import db
 from src.pages.global_components import Menu
 from src.pages.purchase_scanner.logic import LogicController, ScannerApiError
 from src.pages.purchase_scanner.components import ScannerForm, ScannerResult, ScannerHistoryCard
-from src.utils import Color, Page, get_safe_page_size, Text, UISettings
+from src.utils import Color, Page, get_menu_resize_values, get_safe_page_size, scale_width, Text, UISettings
 
 Logger.info("Initializing Purchase Scanner page...")
 
@@ -415,30 +415,14 @@ class PurchaseScannerView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
-            menu_item_size = page_width // self.menu.items_count
-            menu_item_height = max(48, menu_item_size)
-            menu_inside_size = menu_item_size // 6 * 5
-            menu_inside_height = menu_item_height // 6 * 5
-            menu_label_size = 8 if menu_item_size < 48 else 10
-            menu_icon_size = 18 if menu_item_size < 48 else 20
-            menu_label_spacing = 2 if menu_item_size < 48 else 4
-            menu_label_visible = menu_item_size >= 48
-            banner_height = (
-                self.menu.BANNER_HEIGHT
-                if self.menu.ad_banner is not None
-                and page_width >= self.menu.BANNER_WIDTH
-                else 0
-            )
-            menu_total_height = menu_item_height + banner_height
-            content_width = max(0, page_width - UISettings.CARD_PADDING * 2)
-            component_content_width = max(0, content_width - 48)
-            intervention_width = max(0, component_content_width - 28)
-            illustration_size = min(240, component_content_width)
-            thinking_unit_width = min(150, component_content_width // 2)
-            thinking_value_width = max(
-                0, component_content_width - thinking_unit_width - 10
-            )
-            history_content_width = max(0, content_width - 24)
+            menu_resize_values = get_menu_resize_values(page_width, self.menu)
+            content_width = scale_width(page_width, 392)
+            component_content_width = scale_width(page_width, 344)
+            intervention_width = scale_width(page_width, 316)
+            illustration_size = scale_width(page_width, 240)
+            thinking_unit_width = scale_width(page_width, 150)
+            thinking_value_width = scale_width(page_width, 184)
+            history_content_width = scale_width(page_width, 368)
 
             # Resizing main container
             self.main_container.width = page_width
@@ -471,16 +455,7 @@ class PurchaseScannerView(ft.View):
             # Resizing other components
             self.menu.resize(
                 width=page_width,
-                item_size=menu_item_size,
-                item_height=menu_item_height,
-                inside_size=menu_inside_size,
-                inside_height=menu_inside_height,
-                banner_height=banner_height,
-                total_height=menu_total_height,
-                label_size=menu_label_size,
-                icon_size=menu_icon_size,
-                label_spacing=menu_label_spacing,
-                label_visible=menu_label_visible,
+                **menu_resize_values,
             )
             self.main_container.margin.bottom = self.menu.reserved_height
 

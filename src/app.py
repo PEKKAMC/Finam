@@ -8,7 +8,18 @@ from urllib.parse import urlencode, urlparse
 import flet as ft
 
 from src.database import db
-from src.utils import DefaultSettings, Page, ThemeManager, UISettings, currency_for_region, get_language, language_for_device_locale, set_decimal_separator, set_digit_separator
+from src.utils import (
+    DefaultSettings,
+    Page,
+    ThemeManager,
+    UISettings,
+    currency_for_region,
+    get_language,
+    is_supported_page_size,
+    language_for_device_locale,
+    set_decimal_separator,
+    set_digit_separator,
+)
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
@@ -60,14 +71,8 @@ def initial_setup() -> None:
 
 async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> None:
     Logger.info("Redirecting to fallback page...")
+    page.fallback_reason = fallback_reason
     await page.push_route("/fallback")
-    view = get_fallback_view(page, lang, fallback_reason)
-    page.views.append(view)
-    page.update()
-    refresh_handler = getattr(view, "_refresh_view", None)
-    if callable(refresh_handler):
-        # noinspection PyCallingNonCallable
-        refresh_handler()
 
 
 async def main(page: Page) -> None:
@@ -152,6 +157,13 @@ async def main(page: Page) -> None:
 
         if troute.match("/starter"):
             return get_starter_view(page, lang, user_info)
+
+        if troute.match("/fallback"):
+            return get_fallback_view(
+                page,
+                lang,
+                getattr(page, "fallback_reason", "page_not_found"),
+            )
 
         return None
 
@@ -258,6 +270,10 @@ async def main(page: Page) -> None:
             lang = get_language(current_language_code)
 
             route_name = page.route or "/"
+            if route_name != "/fallback" and not is_supported_page_size(page):
+                await redirect_to_fallback(page, lang, "unsupported_screen")
+                return
+
             cache_key = get_view_cache_key(
                 route_name,
                 current_language_code,
@@ -268,7 +284,7 @@ async def main(page: Page) -> None:
                 current_username,
             )
 
-            if route_name == "/starter":
+            if route_name in ("/starter", "/fallback"):
                 view = build_view_for_route(route_name, lang, info)
             else:
                 cached_entry = views_cache.get(route_name)
@@ -287,7 +303,13 @@ async def main(page: Page) -> None:
             page.views.append(view)
             resize_handler = getattr(view, "_on_page_resize", None)
             if callable(resize_handler):
-                page.on_resize = resize_handler
+                async def on_page_resize(e: ft.PageResizeEvent) -> None:
+                    if page.route != "/fallback" and not is_supported_page_size(page):
+                        await redirect_to_fallback(page, lang, "unsupported_screen")
+                        return
+                    resize_handler(e)
+
+                page.on_resize = on_page_resize
             page.update()
             refresh_handler = getattr(view, "_refresh_view", None)
             if callable(refresh_handler):

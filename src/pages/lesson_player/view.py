@@ -11,7 +11,7 @@ import flet as ft
 from src.logger import Logger
 from src.pages.lesson_player.logic import LogicController, AudioController, AnimationController, ENTRANCE_EFFECTS
 from src.pages.lesson_player.components import TopNavigationMenu, SlideCanvas, LessonHeader, LessonControls, PresentationBoard
-from src.utils import Color, Page, create_text, get_safe_page_size, Text
+from src.utils import Color, Page, create_text, get_safe_page_size, scale_height, scale_width, Text
 
 Logger.info("Initializing Lesson Player page...")
 
@@ -272,11 +272,11 @@ class LessonPlayerView(ft.View):
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
 
-            center_padding = min(20, page_width // 20)
-            center_width = max(0, page_width - center_padding * 2)
-            board_padding = min(25, center_width // 10)
-            board_content_width = max(0, center_width - board_padding * 2)
-            board_height = max(0, page_height - 100)
+            center_padding = scale_width(page_width, 20)
+            center_width = scale_width(page_width, 392)
+            board_padding = scale_width(page_width, 25)
+            board_content_width = scale_width(page_width, 342)
+            board_height = scale_height(page_height, 860)
             canvas_height = int(board_height * 0.6)
 
             self.center_alignment_container.width = page_width

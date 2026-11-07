@@ -8,7 +8,7 @@ from src.logger import Logger
 from src.pages.category_selection.components import CategoryEditorDialog, CategoryItem, DeleteCategoryDialog
 from src.pages.category_selection.logic import LogicController
 from src.pages.global_components import KeyboardContainer
-from src.utils import Color, Page, Text, UISettings, get_safe_page_size
+from src.utils import Color, Page, Text, UISettings, get_safe_page_size, scale_width
 
 Logger.info("Initializing Category Selection page...")
 
@@ -77,7 +77,7 @@ class CategorySelectionView(ft.View):
                 spacing=0,
                 alignment=ft.MainAxisAlignment.CENTER
             ),
-            width=UISettings.MAX_APP_WIDTH - UISettings.CARD_PADDING * 2
+            width=None
         )
 
         self.category_list = ft.Column(
@@ -384,21 +384,21 @@ class CategorySelectionView(ft.View):
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = None
-            horizontal_padding = UISettings.CARD_PADDING // 2
-            content_width = max(0, page_width - horizontal_padding * 2)
+            content_width = scale_width(page_width, 412)
             self.category_content_width = content_width
-            category_columns = max(1, min(4, content_width // 80))
+            category_columns = (
+                1 if content_width < 160 else
+                2 if content_width < 240 else
+                3 if content_width < 320 else
+                4
+            )
             self.category_cell_width = content_width // category_columns
-            self.category_item_width = min(75, self.category_cell_width)
+            self.category_item_width = 75
             self.category_item_height = 75
-            self.category_icon_size = max(
-                24, min(52, self.category_cell_width - 12)
-            )
-            self.category_glyph_size = min(
-                30, self.category_icon_size * 3 // 5
-            )
+            self.category_icon_size = 52
+            self.category_glyph_size = 30
             self.segment_control.width = content_width
-            dialog_width = min(page_width * 6 // 7, 400)
+            dialog_width = page_width * 6 // 7
             self.category_editor.resize(dialog_width)
             self.delete_category_dialog.resize(dialog_width)
             if category_columns != self.category_columns:

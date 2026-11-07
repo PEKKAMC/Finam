@@ -8,7 +8,7 @@ from src.database import db
 from src.logger import Logger
 from src.pages.starter.components import AppLockCard, DialogManager
 from src.pages.starter.logic import LogicController
-from src.utils import Color, Page, get_safe_page_size
+from src.utils import Color, Page, get_safe_page_size, scale_height, scale_width
 
 Logger.info("Initializing Starter page...")
 
@@ -106,9 +106,9 @@ class StarterView(ft.View):
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
             dialog_width = page_width // 3 * 2
-            user_list_height = max(120, min(300, page_height // 3))
-            lock_card_width = min(360, max(0, page_width - 40))
-            pin_field_width = max(0, (lock_card_width - 78) // 4)
+            user_list_height = scale_height(page_height, 300)
+            lock_card_width = scale_width(page_width, 360)
+            pin_field_width = scale_width(page_width, 70)
 
             # Resizing main container
             self.main_container.width = page_width

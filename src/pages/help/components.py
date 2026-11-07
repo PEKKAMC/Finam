@@ -48,14 +48,14 @@ class HelpForm(ft.Container):
         self._page = page
         self.lang = lang
         self.name_input = ft.TextField(
-            label=self.lang["help.form.name"],
+            label=self.lang["help.form_name"],
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
             border_radius=12,
         )
         self.name_error_row = self._build_error_row()
         self.email_input = ft.TextField(
-            label=self.lang["help.form.email"],
+            label=self.lang["help.form_email"],
             keyboard_type=ft.KeyboardType.EMAIL,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
@@ -63,14 +63,14 @@ class HelpForm(ft.Container):
         )
         self.email_error_row = self._build_error_row()
         self.subject_input = ft.TextField(
-            label=self.lang["help.form.subject"],
+            label=self.lang["help.form_subject"],
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
             border_radius=12,
         )
         self.subject_error_row = self._build_error_row()
         self.message_input = ft.TextField(
-            label=self.lang["help.form.message"],
+            label=self.lang["help.form_message"],
             multiline=True,
             min_lines=4,
             max_lines=6,
@@ -80,12 +80,12 @@ class HelpForm(ft.Container):
         )
         self.message_error_row = self._build_error_row()
         self.status_text = Text.SMALL(
-            self.lang["help.form.sent"],
+            self.lang["help.form_sent"],
             color=Color.SECONDARY_TEXT,
             visible=False,
         )
         self.submit_button = ft.Button(
-            content=self.lang["help.form.send"],
+            content=self.lang["help.form_send"],
             icon=ft.Icons.SEND_OUTLINED,
             on_click=self._on_submit,
             bgcolor=Color.PRIMARY_ACTION,
@@ -95,11 +95,11 @@ class HelpForm(ft.Container):
             spacing=14,
             controls=[
                 Text.H3(
-                    self.lang["help.form.title"],
+                    self.lang["help.form_title"],
                     color=Color.PRIMARY_TEXT,
                 ),
                 Text.P(
-                    self.lang["help.form.description"],
+                    self.lang["help.form_description"],
                     color=Color.SECONDARY_TEXT,
                 ),
                 self.name_input,
@@ -140,7 +140,7 @@ class HelpForm(ft.Container):
                     size=16,
                 ),
                 Text.SMALL(
-                    self.lang["help.form.required"],
+                    self.lang["help.form_required"],
                     color=Color.NEGATIVE_ACTION,
                 ),
             ],
@@ -159,9 +159,9 @@ class HelpForm(ft.Container):
         self.subject_error_row.visible = is_subject_empty
         self.message_error_row.visible = is_message_empty
         self.email_error_row.controls[1].value = (
-            self.lang["help.form.required"]
+            self.lang["help.form_required"]
             if is_email_empty
-            else self.lang["help.form.invalid_email"]
+            else self.lang["help.form_invalid_email"]
         )
 
         if any((is_name_empty, is_email_empty, is_email_invalid, is_subject_empty, is_message_empty)):
@@ -186,7 +186,7 @@ class FaqSection(ft.Column):
         super().__init__(
             spacing=12,
             controls=[
-                Text.H3(lang["help.faq.title"], color=Color.PRIMARY_TEXT),
+                Text.H3(lang["help.faq_title"], color=Color.PRIMARY_TEXT),
                 FaqItem(
                     "Does the form below work?",
                     "Yes"
