@@ -962,7 +962,20 @@ class SpendingReportDialog(Dialog):
                     ft.Row(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         controls=[
-                            self.title_text,
+                            ft.Row(
+                                spacing=8,
+                                controls=[
+                                    ft.Container(
+                                        content=ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.WHITE, size=16),
+                                        bgcolor=Color.DARK_SURFACE,
+                                        width=30,
+                                        height=30,
+                                        border_radius=10,
+                                        alignment=ft.Alignment.CENTER,
+                                    ),
+                                    self.title_text
+                                ],
+                            ),
                             ft.Row(
                                 tight=True,
                                 spacing=0,
@@ -999,21 +1012,43 @@ class SpendingReportDialog(Dialog):
         self.error_text.value = message
         self.update()
 
-    def show_report(
-        self,
-        report: dict,
-        created_at: str,
-        report_id: int | None = None,
-    ) -> None:
+    def show_report(self, report: dict, created_at: str, report_id: int | None = None) -> None:
         self.report_id = report_id
         self.delete_button.visible = report_id is not None
         self.updated_text.value = self.lang["spending_ai.updated"].format(
             date=created_at
         )
-        self.report_content.controls = [
-            self._make_section(index, key, report.get(key))
-            for index, key in enumerate(self.SECTION_KEYS, start=1)
-        ]
+
+        controls = []
+        i = 0
+        while i < len(self.SECTION_KEYS):
+            key = self.SECTION_KEYS[i]
+            if key == "top_income_source":
+                sec3 = report.get("top_income_source", {})
+                sec4 = report.get("largest_expense", {})
+                row_control = ft.ResponsiveRow(
+                    spacing=12,
+                    run_spacing=12,
+                    controls=[
+                        ft.Container(
+                            col={"xs": 12, "sm": 6},
+                            content=self._make_section_card(3, "top_income_source", sec3)
+                        ),
+                        ft.Container(
+                            col={"xs": 12, "sm": 6},
+                            content=self._make_section_card(4, "largest_expense", sec4)
+                        ),
+                    ]
+                )
+                controls.append(row_control)
+                i += 2
+            else:
+                index = i + 1
+                section_data = report.get(key, {})
+                controls.append(self._make_section_card(index, key, section_data))
+                i += 1
+
+        self.report_content.controls = controls
         self.body.content = self.report_content
         self.show()
         self.update()
@@ -1022,125 +1057,249 @@ class SpendingReportDialog(Dialog):
         if self.report_id is not None:
             self.on_delete(self.report_id)
 
-    def _make_section(self, index: int, key: str, data) -> ft.Control:
+    def _make_section_card(self, index: int, key: str, data) -> ft.Container:
         title = self.lang[f"spending_ai.section_{index}"]
-        section = data or {}
-        card_content: list[ft.Control] = [
-            ft.Row(
-                spacing=8,
-                controls=[
-                    ft.Container(
-                        width=28,
-                        height=28,
-                        alignment=ft.Alignment.CENTER,
-                        border_radius=9,
-                        bgcolor=Color.DARK_SURFACE,
-                        content=Text.SMALL(
-                            str(index),
-                            color=Color.WHITE,
+        section = data if isinstance(data, dict) else {}
+
+        top_header_row = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            controls=[
+                ft.Row(
+                    spacing=8,
+                    controls=[
+                        ft.Container(
+                            width=28,
+                            height=28,
+                            alignment=ft.Alignment.CENTER,
+                            border_radius=9,
+                            bgcolor=Color.DARK_SURFACE,
+                            content=Text.SMALL(
+                                str(index),
+                                color=Color.WHITE,
+                                weight=ft.FontWeight.BOLD,
+                            ),
+                        ),
+                        Text.MEDIUM(
+                            title,
+                            color=Color.PRIMARY_TEXT,
                             weight=ft.FontWeight.BOLD,
                         ),
-                    ),
-                    Text.MEDIUM(
-                        title,
-                        color=Color.PRIMARY_TEXT,
-                        weight=ft.FontWeight.BOLD,
-                    ),
-                ],
-            ),
-        ]
+                    ],
+                )
+            ]
+        )
+
+        card_content_items = [top_header_row]
+
         if key in ("savings_advice", "spending_actions"):
-            for advice in data or []:
-                card_content.append(
+            items = data if isinstance(data, list) else (data.get("items", []) if isinstance(data, dict) else [])
+            for idx, advice in enumerate(items, start=1):
+                card_content_items.append(
                     ft.Container(
-                        padding=12,
-                        border_radius=12,
-                        bgcolor=Color.GOAL_ITEM_BACKGROUND,
-                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                        padding=14,
+                        border_radius=14,
+                        bgcolor=Color.GOAL_ITEM_BACKGROUND if key == "savings_advice" else Color.CARD_BACKGROUND,
+                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER if key == "savings_advice" else Color.WARNING_COLOR),
                         content=ft.Column(
-                            spacing=6,
+                            spacing=8,
                             controls=[
-                                Text.MEDIUM(
-                                    str(advice.get("title", "")),
-                                    color=Color.PRIMARY_TEXT,
-                                    weight=ft.FontWeight.BOLD,
+                                ft.Row(
+                                    spacing=8,
+                                    controls=[
+                                        ft.Container(
+                                            width=24,
+                                            height=24,
+                                            border_radius=12,
+                                            bgcolor=Color.DARK_SURFACE if key == "savings_advice" else Color.WARNING_BACKGROUND,
+                                            alignment=ft.Alignment.CENTER,
+                                            content=Text.SMALL(
+                                                str(idx),
+                                                color=Color.WHITE if key == "savings_advice" else Color.WARNING_COLOR,
+                                                weight=ft.FontWeight.BOLD,
+                                            ),
+                                        ),
+                                        Text.MEDIUM(
+                                            str(advice.get("title", "")),
+                                            color=Color.PRIMARY_TEXT,
+                                            weight=ft.FontWeight.BOLD,
+                                        ),
+                                    ],
                                 ),
                                 Text.SMALL(
                                     str(advice.get("description", "")),
                                     color=Color.SECONDARY_TEXT,
                                 ),
-                                Text.MEDIUM(
-                                    str(advice.get("outcome", "")),
-                                    color=Color.PRIMARY,
-                                    weight=ft.FontWeight.BOLD,
+                                ft.Row(
+                                    spacing=6,
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.BOLT if key == "spending_actions" else ft.Icons.VERIFIED_OUTLINED,
+                                            color=Color.WARNING_COLOR if key == "spending_actions" else Color.PRIMARY,
+                                            size=16,
+                                        ),
+                                        Text.MEDIUM(
+                                            str(advice.get("outcome", "")),
+                                            color=Color.WARNING_COLOR if key == "spending_actions" else Color.PRIMARY,
+                                            weight=ft.FontWeight.BOLD,
+                                        ),
+                                    ],
                                 ),
                             ],
                         ),
                     )
                 )
         elif key == "monthly_overview" and "income" in section:
-            card_content.append(
+            card_content_items.append(
                 Text.SMALL(
                     str(section.get("month", "")),
                     color=Color.SECONDARY_TEXT,
                 )
             )
-            for label_key, amount_key, color in (
-                (
-                    "spending_ai.current_month_expenses",
-                    "expenses",
-                    Color.EXPENSE_COLOR,
-                ),
-                (
-                    "spending_ai.current_month_income",
-                    "income",
-                    Color.INCOME_COLOR,
-                ),
-                (
-                    "spending_ai.current_month_net_balance",
-                    "net_balance",
-                    Color.PRIMARY,
-                ),
-            ):
-                value = format_number(float(section.get(amount_key, 0)))
-                currency = str(section.get("currency", ""))
-                card_content.append(
+            expenses = float(section.get("expenses", 0))
+            income = float(section.get("income", 0))
+            expenses_val = format_number(expenses)
+            income_val = format_number(income)
+            currency = str(section.get("currency", "đ"))
+
+            overview_row = ft.ResponsiveRow(
+                spacing=10,
+                controls=[
                     ft.Container(
-                        padding=12,
-                        border_radius=12,
-                        bgcolor=Color.GOAL_ITEM_BACKGROUND,
-                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
-                        content=ft.Row(
-                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        col={"xs": 12, "sm": 6},
+                        padding=14,
+                        border_radius=14,
+                        bgcolor=Color.CARD_BACKGROUND,
+                        border=ft.Border.all(1, Color.INPUT_BORDER),
+                        content=ft.Column(
+                            spacing=4,
                             controls=[
-                                Text.MEDIUM(
-                                    self.lang[label_key],
-                                    color=Color.SECONDARY_TEXT,
-                                ),
-                                Text.MEDIUM(
-                                    f"{value} {currency}".strip(),
-                                    color=color,
-                                    weight=ft.FontWeight.BOLD,
-                                ),
-                            ],
-                        ),
-                    )
+                                Text.SMALL(self.lang["spending_ai.month_total_expenses"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                                Text.H3(f"-{expenses_val} {currency}".strip(), color=Color.EXPENSE_COLOR, weight=ft.FontWeight.BOLD),
+                            ]
+                        )
+                    ),
+                    ft.Container(
+                        col={"xs": 12, "sm": 6},
+                        padding=14,
+                        border_radius=14,
+                        bgcolor=Color.CARD_BACKGROUND,
+                        border=ft.Border.all(1, Color.INPUT_BORDER),
+                        content=ft.Column(
+                            spacing=4,
+                            controls=[
+                                Text.SMALL(self.lang["spending_ai.month_total_income"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                                Text.H3(f"+{income_val} {currency}".strip(), color=Color.INCOME_COLOR, weight=ft.FontWeight.BOLD),
+                            ]
+                        )
+                    ),
+                ]
+            )
+            card_content_items.append(overview_row)
+
+            net_bal = format_number(float(section.get("net_balance", 0)))
+            card_content_items.append(
+                ft.Container(
+                    padding=12,
+                    border_radius=12,
+                    bgcolor=Color.GOAL_ITEM_BACKGROUND,
+                    border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                    content=ft.Row(
+                        spacing=8,
+                        controls=[
+                            ft.Icon(
+                                ft.Icons.WARNING_AMBER_ROUNDED,
+                                color=Color.EXPENSE_COLOR,
+                                size=18,
+                                visible=expenses > income,
+                            ),
+                            Text.MEDIUM(self.lang["spending.net_balance"], color=Color.SECONDARY_TEXT),
+                            Text.MEDIUM(f"{net_bal} {currency}".strip(), color=Color.EXPENSE_COLOR, weight=ft.FontWeight.BOLD),
+                        ],
+                    ),
                 )
-        else:
-            card_content.append(
+            )
+        elif key in ("top_income_source", "largest_expense"):
+            is_income = (key == "top_income_source")
+            amount_color = Color.INCOME_COLOR if is_income else Color.EXPENSE_COLOR
+            badge_bg = Color.INCOME_BACKGROUND if is_income else Color.EXPENSE_BACKGROUND
+            badge_color = Color.INCOME_COLOR if is_income else Color.EXPENSE_COLOR
+
+            card_content_items.append(
                 Text.MEDIUM(
                     str(section.get("headline", "")),
                     color=Color.PRIMARY_TEXT,
                     weight=ft.FontWeight.BOLD,
                 )
             )
-            card_content.append(
+            metric_str = str(section.get("metric", ""))
+            card_content_items.append(
+                Text.H3(
+                    metric_str,
+                    color=amount_color,
+                    weight=ft.FontWeight.BOLD,
+                )
+            )
+            summary_str = str(section.get("summary", ""))
+            if summary_str:
+                card_content_items.append(
+                    ft.Container(
+                        content=Text.SMALL(summary_str, color=badge_color, weight=ft.FontWeight.BOLD),
+                        bgcolor=badge_bg,
+                        padding=ft.Padding(8, 4, 8, 4),
+                        border_radius=8,
+                        alignment=ft.Alignment.CENTER,
+                    )
+                )
+            card_content_items.append(
+                Text.SMALL(
+                    str(section.get("details", "")),
+                    color=Color.SECONDARY_TEXT,
+                )
+            )
+        elif key == "spending_trends":
+            card_content_items.append(
+                Text.MEDIUM(
+                    str(section.get("headline", "")),
+                    color=Color.PRIMARY_TEXT,
+                    weight=ft.FontWeight.BOLD,
+                )
+            )
+            card_content_items.append(
                 Text.SMALL(
                     str(section.get("summary", "")),
                     color=Color.SECONDARY_TEXT,
                 )
             )
-            card_content.append(
+            details_str = str(section.get("details", ""))
+            if details_str:
+                card_content_items.append(
+                    ft.Container(
+                        padding=12,
+                        border_radius=12,
+                        bgcolor=Color.GOAL_ITEM_BACKGROUND,
+                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                        content=Text.MEDIUM(
+                            details_str,
+                            color=Color.PRIMARY_TEXT,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                    )
+                )
+        else:
+            card_content_items.append(
+                Text.MEDIUM(
+                    str(section.get("headline", "")),
+                    color=Color.PRIMARY_TEXT,
+                    weight=ft.FontWeight.BOLD,
+                )
+            )
+            card_content_items.append(
+                Text.SMALL(
+                    str(section.get("summary", "")),
+                    color=Color.SECONDARY_TEXT,
+                )
+            )
+            card_content_items.append(
                 Text.SMALL(
                     str(section.get("details", "")),
                     color=Color.SECONDARY_TEXT,
@@ -1148,7 +1307,7 @@ class SpendingReportDialog(Dialog):
             )
             metric = section.get("metric")
             if metric:
-                card_content.append(
+                card_content_items.append(
                     ft.Container(
                         padding=ft.Padding(10, 8, 10, 8),
                         border_radius=12,
@@ -1160,26 +1319,25 @@ class SpendingReportDialog(Dialog):
                         ),
                     )
                 )
+
         return ft.Container(
-            width=self.report_card_width,
+            width=self.report_card_width if self.report_card_width > 0 else None,
             padding=14,
             border_radius=16,
             bgcolor=Color.CARD_BACKGROUND,
             border=ft.Border.all(1, Color.INPUT_BORDER),
-            content=ft.Column(spacing=10, controls=card_content),
+            content=ft.Column(spacing=10, controls=card_content_items),
         )
 
-    def resize(
-        self,
-        dialog_width: int,
-        body_height: int,
-        report_card_width: int,
-    ) -> None:
+    def resize(self, dialog_width: int, body_height: int, report_card_width: int) -> None:
         self.main_container.width = dialog_width
         self.body.height = body_height
         self.report_card_width = report_card_width
         for card in self.report_content.controls:
-            card.width = report_card_width
+            if isinstance(card, ft.Container):
+                card.width = report_card_width
+            elif isinstance(card, ft.ResponsiveRow):
+                card.width = report_card_width
 
 
 class SpendingReportHistoryCard(ft.Container):
