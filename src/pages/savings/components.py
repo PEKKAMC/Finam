@@ -149,11 +149,11 @@ class GoalCard(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.GOAL_ITEM_BACKGROUND if self.completed else Color.CARD_BACKGROUND,
+            bgcolor=Color.CARD_BACKGROUND,
             border_radius=24,
             padding=20,
-            border=ft.Border.all(2, Color.PROGRESS_BACKGROUND) if self.completed else None,
-            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW) if not self.completed else None,
+            border=None,
+            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
             content=self.main_container,
         )
 

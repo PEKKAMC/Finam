@@ -337,8 +337,8 @@ class SavingsGoalItem(ft.Container):
         )
 
         super().__init__(
-            bgcolor=Color.GOAL_ITEM_BACKGROUND if self.completed else Color.CARD_BACKGROUND,
-            border=ft.Border.all(1, Color.GOAL_ITEM_BORDER) if self.completed else ft.Border.all(1, Color.INPUT_BORDER),
+            bgcolor=Color.CARD_BACKGROUND,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
             border_radius=16,
             padding=12,
             ink=True,
@@ -354,9 +354,6 @@ class SavingsGoalItem(ft.Container):
         self.progress_bar.value = item["progress_ratio"]
         self.contributed_label.value = item["contributed_label"]
         self.target_label.value = item["target_label"]
-        self.bgcolor = Color.GOAL_ITEM_BACKGROUND if self.completed else Color.CARD_BACKGROUND
-        self.border = ft.Border.all(1, Color.GOAL_ITEM_BORDER) if self.completed else ft.Border.all(1, Color.INPUT_BORDER)
-
         self.update()
 
     def resize(self, width: int, content_width: int):
