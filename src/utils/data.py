@@ -295,6 +295,13 @@ class Data:
             ]
         }
 
+        self.regex_strings = {
+            "username": r"^[a-zA-Z0-9_]{3,20}$",
+            "integer": r"^[0-9]*$",
+            "single_integer": r"^[0-9]$",
+            "float": r"^[0-9.]*$"
+        }
+
     def get_default_expense_categories(self) -> list[dict[str, str]]:
         return self.default_expense_categories
 
@@ -309,3 +316,9 @@ class Data:
 
     def get_advice(self, language: str):
         return random.choice(self.advices[language])
+
+    def get_regex_string(self, mode) -> str:
+        if mode not in self.regex_strings:
+            return ""
+
+        return self.regex_strings[mode]
