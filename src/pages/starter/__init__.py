@@ -9,9 +9,9 @@ from src.pages.starter.logic import LogicController
 from src.pages.starter.view import StarterView, get_starter_view
 
 __all__ = [
-    "LogicController",
     "AppLockCard",
     "DialogManager",
+    "LogicController",
     "StarterView",
-    "get_starter_view"
+    "get_starter_view",
 ]

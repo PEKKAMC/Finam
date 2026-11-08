@@ -14,25 +14,30 @@ Logger.info("Initializing Starter page...")
 
 
 class StarterView(ft.View):
-    def __init__(self, page: Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict[str, str], user_info: dict[str, str]) -> None:
         self._page = page
         self.lang = lang
         self.user_info = user_info
-        skip_app_lock = getattr(self._page, "skip_app_lock_once", False)
-        if skip_app_lock:
-            self._page.skip_app_lock_once = False
-        self.is_unlocked = (
-            skip_app_lock or not db.app_security.is_app_lock_enabled()
-        )
+
+        self._page.skip_app_lock_once = False
+        self.is_unlocked = not db.app_security.is_app_lock_enabled()
+
+        # IMPORTED FUNCTIONS
         self.get_safe_page_size = get_safe_page_size
+
+        # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info)
+
+        # INITIALIZE DIALOG MANAGER
         self.dialogs = DialogManager(
             page=self._page,
             lang=self.lang,
             user_info=self.user_info,
             controller=self.controller,
-            refresh_callback=self._refresh_view
+            refresh_callback=self._refresh_view,
         )
+
+        # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
             content=ft.Column(
                 alignment=ft.MainAxisAlignment.CENTER,
@@ -40,7 +45,7 @@ class StarterView(ft.View):
                 scroll=ft.ScrollMode.AUTO,
             ),
             expand=True,
-            padding=0
+            padding=0,
         )
 
         super().__init__(
@@ -52,13 +57,15 @@ class StarterView(ft.View):
                 expand=True,
                 content=ft.Stack(
                     expand=True,
-                    controls=[self.main_container]
-                )
-            )
+                    controls=[
+                        self.main_container
+                    ]
+                ),
+            ),
         )
 
-        self._page.on_resize = self._on_page_resize
-        self._on_page_resize()
+        self._page.on_resize = self._resize_page
+        self._resize_page()
         if not self.is_unlocked:
             self._show_lock_screen()
 
@@ -67,12 +74,12 @@ class StarterView(ft.View):
 
     def _show_lock_screen(self) -> None:
         self.lock_screen = AppLockCard(
-            self._page,
-            self.lang,
-            self._on_unlock_click,
+            page=self._page,
+            lang=self.lang,
+            on_unlock=self._on_unlock_click,
         )
         self.main_container.content.controls = [self.lock_screen]
-        self._on_page_resize()
+        self._resize_page()
 
     def _on_unlock_click(self, pin: str) -> None:
         if not db.app_security.verify_app_lock_pin(pin):
@@ -81,27 +88,22 @@ class StarterView(ft.View):
 
         self.is_unlocked = True
         self.lock_screen.clear()
-        self.main_container.content.controls.clear()
+        self.main_container.content.controls = []
         self._page.update()
         self.show_user_management_dialog()
 
     def _refresh_view(self) -> int:
-        try:
-            self._on_page_resize()
-            self.dialogs.user_list.update_data(
-                self.controller.get_all_users(),
-                self.user_info["username"]
-            )
-            self.dialogs.user_list.main_container.update()
-            self.dialogs.user_dialog.update()
-            self._page.update()
-            return 0
+        self._resize_page()
+        self.dialogs.user_list.update_data(
+            users=self.controller.get_all_users(),
+            username=self.user_info["username"]
+        )
+        self.dialogs.user_list.main_container.update()
+        self.dialogs.user_dialog.update()
+        self._page.update()
+        return 0
 
-        except Exception as ex:
-            Logger.warn(f"Failed to refresh view {ex}")
-            return -1
-
-    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+    def _resize_page(self, e: ft.PageResizeEvent | None = None) -> None:
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
@@ -125,21 +127,15 @@ class StarterView(ft.View):
                 list_height=user_list_height,
             )
 
-            return 0
-
         except AttributeError as ex:
             Logger.error(f"Failed to get width/height of the page: {ex}")
-            return 1
 
         except (TypeError, ValueError) as ex:
             Logger.error(f"Value of width/height of the page is invalid: {ex}")
-            return 2
 
         except Exception as ex:
             Logger.error(f"Error during page resize: {ex}, event: {e}")
-            return -1
 
-
-def get_starter_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+def get_starter_view(page: Page, lang: dict[str, str], user_info: dict[str, str]) -> ft.View:
     Logger.info("Loading Starter page...")
     return StarterView(page, lang, user_info)
