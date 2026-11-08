@@ -37,10 +37,7 @@ def _detect_default_region() -> str | None:
     system_locale = locale.getlocale()[0] or os.getenv("LANG", "")
     locale_name = system_locale.split(".", maxsplit=1)[0].split("@", maxsplit=1)[0]
     parts = locale_name.replace("-", "_").split("_")
-    return next(
-        (part.upper() for part in parts[1:] if len(part) == 2 and part.isalpha()),
-        None,
-    )
+    return next((part.upper() for part in parts[1:] if len(part) == 2 and part.isalpha()), None)
 
 
 def currency_for_region(region_code: str | None, supported_currencies: list[str] | None = None) -> str:
@@ -62,13 +59,12 @@ def currency_for_region(region_code: str | None, supported_currencies: list[str]
         if supported_currencies is not None
         else Data().get_currencies()
     )
+
     for code in currency_codes:
-        match = next(
-            (currency for currency in currencies if currency.startswith(f"{code} (")),
-            None,
-        )
+        match = next((currency for currency in currencies if currency.startswith(f"{code} (")), None)
         if match:
             return match
+
     return fallback
 
 
