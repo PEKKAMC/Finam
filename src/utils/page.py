@@ -10,14 +10,15 @@ from src.logger import Logger
 
 
 class Page(ft.Page):
-    def __init__(self):
+    def __init__(self) -> None:
         self.delete_cached_view: Callable
         self.delete_all_cached_views: Callable
         self.previous_route: str
         self.fallback_reason: str
-        self.open_spending_month_dialog: bool
+        self.skip_app_lock_once: bool
+        self._spending_month_dialog_requested: bool
 
-    def navigate_to(self, route: str):
+    def navigate_to(self, route: str) -> Callable[[ft.ControlEvent | None], None]:
         def handler(e: ft.ControlEvent | None = None) -> None:
             try:
                 normalized_route = str(route or "")
@@ -32,5 +33,16 @@ class Page(ft.Page):
 
         return handler
 
+    def request_spending_month_dialog(self) -> None:
+        self._spending_month_dialog_requested = True
+
+    def consume_spending_month_dialog_request(self) -> bool:
+        # The request must be consumed once because route views may be cached and revisited.
+        requested = getattr(self, "_spending_month_dialog_requested", False)
+        self._spending_month_dialog_requested = False
+        return requested
+
 
 setattr(ft.Page, "navigate_to", Page.navigate_to)
+setattr(ft.Page, "request_spending_month_dialog", Page.request_spending_month_dialog)
+setattr(ft.Page, "consume_spending_month_dialog_request", Page.consume_spending_month_dialog_request)
