@@ -271,6 +271,8 @@ class SpendingView(ft.View):
         signed_in = db.app_settings.has_google_account_session()
         self.google_required_card.visible = not signed_in
         self.usage_card.visible = signed_in
+        if not signed_in:
+            self._page.open_spending_month_dialog = False
         if signed_in and self._is_cached_developer():
             self._show_unlimited_usage()
             self.toolbar.set_scan_enabled(True)
@@ -293,11 +295,23 @@ class SpendingView(ft.View):
         self.usage_card.usage_progress.value = 1
         self.usage_card.usage_progress.color = Color.PROGRESS_ACTIVE
 
+    def _open_pending_month_dialog(self) -> None:
+        if not getattr(self._page, "open_spending_month_dialog", False):
+            return
+        self._page.open_spending_month_dialog = False
+        if (
+            self.toolbar.scan_button.disabled
+            or not db.app_settings.has_google_account_session()
+        ):
+            return
+        self.spending_month_dialog.trigger()
+
     def _load_monthly_usage(self) -> None:
         if self._is_cached_developer():
             self._show_unlimited_usage()
             self.toolbar.set_scan_enabled(db.app_settings.has_google_account_session())
             self._page.update()
+            self._open_pending_month_dialog()
             return
         refresh_token = db.app_settings.get_google_refresh_token()
         try:
@@ -322,6 +336,7 @@ class SpendingView(ft.View):
                 reset_label = None
             self.usage_card.set_usage(remaining, limit, reset_label)
             self.toolbar.set_scan_enabled(limit is None or remaining > 0)
+            self._open_pending_month_dialog()
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load spending analysis usage: {ex}")
             self.usage_card.set_unavailable()
@@ -336,10 +351,12 @@ class SpendingView(ft.View):
                 self.toolbar.set_scan_enabled(False)
             else:
                 self.toolbar.set_scan_enabled(False)
+            self._page.open_spending_month_dialog = False
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid spending analysis usage response: {ex}")
             self.usage_card.set_unavailable()
             self.toolbar.set_scan_enabled(False)
+            self._page.open_spending_month_dialog = False
         self._page.update()
 
     def handle_spending_scan(self, e=None) -> None:

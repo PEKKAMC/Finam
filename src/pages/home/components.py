@@ -100,6 +100,7 @@ class BalanceCard(ft.Container):
 
         self.purchase_scanner_button = ft.OutlinedButton(
             expand=True,
+            disabled=True,
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.CENTER,
                 controls=[
