@@ -153,7 +153,7 @@ class SpendingView(ft.View):
         # INITIALIZE MAIN CONTAINER
         self.content_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
-            padding=UISettings.CARD_PADDING,
+            padding=20,
             content=ft.Column(
                 spacing=20,
                 expand=True,

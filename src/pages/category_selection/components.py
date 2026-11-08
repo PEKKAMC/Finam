@@ -23,7 +23,7 @@ class CategoryItem(ft.Container):
             color=icon_color,
         )
         self.icon_circle = ft.Container(
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             bgcolor=(
                 self.selected_background_color if self.is_selected else None
             ),
@@ -47,7 +47,7 @@ class CategoryItem(ft.Container):
                     self.icon_label,
                 ],
             ),
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             bgcolor=(
                 self.selected_background_color
                 if self.is_selected

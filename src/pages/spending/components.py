@@ -39,7 +39,7 @@ class MetricCards(ft.ResponsiveRow):
         self.income_card = ft.Container(
             col={"xs": 12, "sm": 4},
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             padding=20,
             border=ft.Border.only(left=ft.BorderSide(4, Color.INCOME_BACKGROUND)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
@@ -66,7 +66,7 @@ class MetricCards(ft.ResponsiveRow):
         self.expense_card = ft.Container(
             col={"xs": 12, "sm": 4},
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             padding=20,
             border=ft.Border.only(left=ft.BorderSide(4, Color.EXPENSE_BACKGROUND)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
@@ -93,7 +93,7 @@ class MetricCards(ft.ResponsiveRow):
         self.balance_card = ft.Container(
             col={"xs": 12, "sm": 4},
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             padding=20,
             border=ft.Border.only(left=ft.BorderSide(4, Color.PRIMARY_ACTION)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
@@ -312,7 +312,7 @@ class TransactionToolbar(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
@@ -370,7 +370,7 @@ class TransactionHistoryCard(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
@@ -600,7 +600,7 @@ class DeleteTransactionDialog(Dialog):
         )
 
         self.main_container = ft.Container(
-            padding=UISettings.CARD_PADDING,
+            padding=20,
             content=ft.Column(
                 tight=True,
                 spacing=12,
@@ -734,7 +734,7 @@ class SpendingMonthDialog(Dialog):
         )
         self._update_month_options()
         self.main_container = ft.Container(
-            padding=UISettings.CARD_PADDING,
+            padding=20,
             content=ft.Column(
                 tight=True,
                 spacing=14,
@@ -814,7 +814,7 @@ class DeleteSpendingReportDialog(Dialog):
         self.on_confirm = on_confirm
         self.report_id: int | None = None
         self.main_container = ft.Container(
-            padding=UISettings.CARD_PADDING,
+            padding=20,
             content=ft.Column(
                 tight=True,
                 spacing=12,
@@ -928,7 +928,7 @@ class SpendingReportDialog(Dialog):
             tooltip=self.lang["generic.close"],
         )
         self.main_container = ft.Container(
-            padding=UISettings.CARD_PADDING,
+            padding=20,
             content=ft.Column(
                 spacing=12,
                 horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
@@ -1354,7 +1354,7 @@ class SpendingReportHistoryCard(ft.Container):
         )
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),

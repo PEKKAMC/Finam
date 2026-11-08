@@ -108,13 +108,13 @@ class CategorySelectionView(ft.View):
         )
         self.load_categories("expense")
 
-        horizontal_padding = UISettings.CARD_PADDING // 2
+        horizontal_padding = 20 // 2
         self.main_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
             expand=True,
             padding=ft.Padding.symmetric(
                 horizontal=horizontal_padding,
-                vertical=UISettings.CARD_PADDING,
+                vertical=20,
             ),
             content=ft.Column(
                 spacing=15,

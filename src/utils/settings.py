@@ -87,10 +87,5 @@ class UISettings:
     MAX_APP_HEIGHT: int = 960
     MIN_SUPPORTED_WIDTH: int = 300
     MIN_SUPPORTED_HEIGHT: int = 500
-    CARD_BORDER_RADIUS: int = 28
-    CARD_PADDING: int = 20
-    METRIC_PILL_BORDER_RADIUS: int = 16
-    METRIC_PILL_PADDING: int = 8
-    TOP_NAVIGATION_HEIGHT: int = 50
     SHADOW_BLUR: int = 10
     SHADOW_SPREAD: int = 1

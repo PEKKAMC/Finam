@@ -175,7 +175,7 @@ class SettingCard(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             padding=16,
             shadow=ft.BoxShadow(

@@ -13,8 +13,8 @@ class FaqItem(ft.Container):
     def __init__(self, question: str, answer: str):
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
-            padding=UISettings.CARD_PADDING,
+            border_radius=28,
+            padding=20,
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
                 blur_radius=UISettings.SHADOW_BLUR,
@@ -119,8 +119,8 @@ class HelpForm(ft.Container):
         )
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
-            padding=UISettings.CARD_PADDING,
+            border_radius=28,
+            padding=20,
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
                 blur_radius=UISettings.SHADOW_BLUR,

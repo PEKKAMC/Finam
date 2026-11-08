@@ -9,10 +9,7 @@ from src.database import db
 from src.pages.global_components import FinancialChart, Menu
 from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChart, FeaturedLessonCard
 from src.pages.home.logic import LogicController
-from src.pages.spending.logic import (
-    LogicController as SpendingController,
-    SpendingAnalysisApiError,
-)
+from src.pages.spending.logic import LogicController, SpendingAnalysisApiError
 from src.utils import Color, Page, get_menu_resize_values, get_safe_page_size, scale_width, UISettings
 
 Logger.info("Initializing Home page...")
@@ -29,7 +26,6 @@ class HomeView(ft.View):
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info["username"])
-        self.spending_controller = SpendingController(self.user_info["username"])
 
         # FETCH DASHBOARD DATA & CURRENCY
         self.currency = self.controller.get_currency()
@@ -84,7 +80,7 @@ class HomeView(ft.View):
         # INITIALIZE MAIN CONTAINER
         self.content_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
-            padding=UISettings.CARD_PADDING,
+            padding=20,
             content=ft.Column(
                 spacing=20,
                 expand=True,
@@ -166,7 +162,7 @@ class HomeView(ft.View):
 
         refresh_token = db.app_settings.get_google_refresh_token()
         try:
-            usage = self.spending_controller.get_monthly_analysis_usage(
+            usage = self.controller.get_monthly_analysis_usage(
                 refresh_token or ""
             )
             limit = usage["limit"]

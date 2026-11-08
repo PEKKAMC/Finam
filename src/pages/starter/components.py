@@ -133,7 +133,7 @@ class AppLockCard(ft.Container):
         super().__init__(
             padding=24,
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,

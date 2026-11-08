@@ -144,7 +144,7 @@ class SavingsView(ft.View):
         )
         self.search_bar = ft.Container(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=UISettings.CARD_BORDER_RADIUS,
+            border_radius=28,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
@@ -174,7 +174,7 @@ class SavingsView(ft.View):
         # INITIALIZE MAIN CONTAINER
         self.content_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
-            padding=UISettings.CARD_PADDING,
+            padding=20,
             content=ft.Column(
                 spacing=25,
                 controls=[

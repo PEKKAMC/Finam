@@ -1221,7 +1221,7 @@ class DeleteConfirmDialog(Dialog):
                 ],
                 spacing=12,
             ),
-            padding=UISettings.CARD_PADDING
+            padding=20
         )
 
         super().__init__(
@@ -1287,7 +1287,7 @@ class ClearHistoryDialog(Dialog):
                 ],
                 spacing=12,
             ),
-            padding=UISettings.CARD_PADDING
+            padding=20
         )
 
         super().__init__(

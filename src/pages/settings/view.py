@@ -246,7 +246,7 @@ class SettingsView(ft.View):
         self.done_btn_wrapper = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
             padding=ft.Padding.symmetric(
-                horizontal=UISettings.CARD_PADDING,
+                horizontal=20,
                 vertical=12,
             ),
             content=self.done_btn,
@@ -259,7 +259,7 @@ class SettingsView(ft.View):
         # INITIALIZE MAIN CONTAINER
         self.content_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
-            padding=UISettings.CARD_PADDING,
+            padding=20,
             content=ft.Column(
                 spacing=18,
                 expand=True,
@@ -273,7 +273,7 @@ class SettingsView(ft.View):
                     self.decimal_separator_card,
                     self.system_prefs_card,
                     self.cache_card,
-                    ft.Container(height=UISettings.CARD_PADDING * 2 + 56)
+                    ft.Container(height=20 * 2 + 56)
                 ]
             )
         )
