@@ -7,11 +7,25 @@ from collections.abc import Callable
 import flet as ft
 import flet_charts as fc
 
+from src.pages.home.logic import SavingsProgressItem
 from src.utils import Color, Text, UISettings, format_compact_number
 
 
+DEFAULT_CHART_RADIUS = 45
+DEFAULT_CHART_CENTER_RADIUS = 40
+PIE_CHART_SECTION_SPACING = 2
+PIE_CHART_COLORS = (
+    Color.PIE_CHART_RED,
+    Color.PIE_CHART_BLUE,
+    Color.PIE_CHART_GREEN,
+    Color.PIE_CHART_YELLOW,
+    Color.PIE_CHART_TURQUOISE,
+    Color.PIE_CHART_PURPLE,
+)
+
+
 class BalanceCard(ft.Container):
-    def __init__(self, lang: dict, currency: str, net_balance: float, income: float, expense: float, savings: float, advice: str, on_add_click: Callable, on_scan_click: Callable | None):
+    def __init__(self, lang: dict[str, str], currency: str, net_balance: float, income: float, expense: float, savings: float, advice: str, on_add_click: Callable[..., None], on_scan_click: Callable[..., None] | None) -> None:
         self.lang = lang
         self.currency = currency
         self.net_balance = net_balance
@@ -244,7 +258,7 @@ class BalanceCard(ft.Container):
             content=self.main_container
         )
 
-    def update_data(self, net_balance: float, income: float, expense: float, savings: float, ai_advice: str, currency: str):
+    def update_data(self, net_balance: float, income: float, expense: float, savings: float, ai_advice: str, currency: str) -> None:
         self.net_balance = net_balance
         self.income = income
         self.expense = expense
@@ -261,7 +275,7 @@ class BalanceCard(ft.Container):
 
         self.update()
 
-    def resize(self, width: int):
+    def resize(self, width: int) -> None:
         self.main_container.width = width
         self.balance_top_row.width = width
         self.metrics_row.width = width
@@ -269,7 +283,7 @@ class BalanceCard(ft.Container):
 
 
 class SavingsGoalItem(ft.Container):
-    def __init__(self, item: dict):
+    def __init__(self, item: SavingsProgressItem) -> None:
         self.item = item
         self.completed = item.get("completed", False)
 
@@ -346,7 +360,7 @@ class SavingsGoalItem(ft.Container):
             content=self.main_container
         )
 
-    def update_data(self, item: dict):
+    def update_data(self, item: SavingsProgressItem) -> None:
         self.item = item
         self.completed = item.get("completed", False)
 
@@ -357,8 +371,7 @@ class SavingsGoalItem(ft.Container):
         self.target_label.value = item["target_label"]
         self.update()
 
-    def resize(self, width: int, content_width: int):
-        self.width = width
+    def resize(self, width: int, content_width: int) -> None:
         self.main_container.width = width
         self.header_row.width = content_width
         self.progress_bar.width = content_width
@@ -366,7 +379,7 @@ class SavingsGoalItem(ft.Container):
 
 
 class SavingsProgressCard(ft.Container):
-    def __init__(self, lang: dict, objective_items: tuple[list, int], on_view_all_click: Callable | None):
+    def __init__(self, lang: dict[str, str], objective_items: tuple[list[SavingsProgressItem], int], on_view_all_click: Callable[..., None] | None) -> None:
         self.lang = lang
         self.objective_items, self.objective_count = objective_items
         self.on_view_all_click = on_view_all_click
@@ -469,9 +482,16 @@ class SavingsProgressCard(ft.Container):
             content=self.main_container
         )
 
-    def update_data(self, objective_items: list):
+    def update_data(self, objective_items: list[SavingsProgressItem], objective_count: int | None = None) -> None:
         self.objective_items = objective_items or []
-        self.view_all_count.value = f"{self.lang['generic.all']} ({len(self.objective_items)})"
+        total_objective_count = (
+            len(self.objective_items)
+            if objective_count is None
+            else objective_count
+        )
+        self.view_all_count.value = (
+            f"{self.lang['generic.all']} ({total_objective_count})"
+        )
 
         if not self.objective_items:
             self.goal_items.clear()
@@ -495,12 +515,7 @@ class SavingsProgressCard(ft.Container):
 
         self.update()
 
-    def resize(
-        self,
-        width: int,
-        inner_width: int,
-        goal_item_content_width: int,
-    ):
+    def resize(self, width: int, inner_width: int, goal_item_content_width: int) -> None:
         self.width = width
         self._inner_width = inner_width
         self._goal_item_content_width = goal_item_content_width
@@ -513,7 +528,7 @@ class SavingsProgressCard(ft.Container):
 
 
 class ExpenseCategoryItem(ft.Row):
-    def __init__(self, name: str, value: float, currency: str, color: str):
+    def __init__(self, name: str, value: float, currency: str, color: str) -> None:
         self.name = name
         self.value = value
         self.currency = currency
@@ -548,35 +563,28 @@ class ExpenseCategoryItem(ft.Row):
             ]
         )
 
-    def update_data(self, name: str, value: float, currency: str, color: str):
+    def update_data(self, name: str, value: float, currency: str, color: str) -> None:
         self.color_box.bgcolor = color
         self.expense_name_text.value = name
         self.expense_value_text.value = f"{format_compact_number(value)} {currency}"
 
         self.update()
 
-    def resize(self, width: int):
+    def resize(self, width: int) -> None:
         self.width = width
 
 
 class ExpensePieChart(ft.Container):
-    def __init__(self, lang: dict, currency: str, category_data: dict, on_details_click: Callable | None):
+    def __init__(self, lang: dict[str, str], currency: str, category_data: dict[str, float], on_details_click: Callable[..., None] | None) -> None:
         self.lang = lang
         self.currency = currency
         self.category_data = category_data or {}
         self.on_details_click = on_details_click
-        self.chart_radius = 45
-        self.center_radius = 40
+        self.chart_radius = DEFAULT_CHART_RADIUS
+        self.center_radius = DEFAULT_CHART_CENTER_RADIUS
         self._inner_width: int | None = None
 
-        self.pie_colors = [
-            Color.PIE_CHART_RED,
-            Color.PIE_CHART_BLUE,
-            Color.PIE_CHART_GREEN,
-            Color.PIE_CHART_YELLOW,
-            Color.PIE_CHART_TURQUOISE,
-            Color.PIE_CHART_PURPLE
-        ]
+        self.pie_colors = PIE_CHART_COLORS
 
         # TEXT AND ICON COMPONENTS
         # Static texts
@@ -599,7 +607,7 @@ class ExpensePieChart(ft.Container):
                 )
                 for idx, val in enumerate(self.category_data.values())
             ] if self.category_data else [fc.PieChartSection(1, color=Color.TRANSPARENT, radius=self.chart_radius)],
-            sections_space=2,
+            sections_space=PIE_CHART_SECTION_SPACING,
             center_space_radius=self.center_radius,
             expand=True
         )
@@ -697,14 +705,14 @@ class ExpensePieChart(ft.Container):
 
     def _get_section_color(self, index: int, section_count: int) -> str:
         if (
-                section_count > 1
-                and section_count % len(self.pie_colors) == 1
-                and index == section_count - 1
+            section_count > 1
+            and section_count % len(self.pie_colors) == 1
+            and index == section_count - 1
         ):
             return self.pie_colors[1]
         return self.pie_colors[index % len(self.pie_colors)]
 
-    def update_data(self, category_data: dict, currency: str):
+    def update_data(self, category_data: dict[str, float], currency: str) -> None:
         self.category_data = category_data or {}
         self.currency = currency
 
@@ -742,7 +750,7 @@ class ExpensePieChart(ft.Container):
                 item.resize(self._inner_width)
         self.update()
 
-    def resize(self, width: int, inner_width: int, chart_radius: int, center_radius: int, legend_height: int):
+    def resize(self, width: int, inner_width: int, chart_radius: int, center_radius: int, legend_height: int) -> None:
         self.width = width
         self._inner_width = inner_width
         self.main_container.width = inner_width
@@ -763,7 +771,7 @@ class ExpensePieChart(ft.Container):
 
 
 class FeaturedLessonCard(ft.Container):
-    def __init__(self, lang: dict, on_learn_click: Callable | None):
+    def __init__(self, lang: dict[str, str], on_learn_click: Callable[..., None] | None) -> None:
         self.lang = lang
         self.on_learn_click = on_learn_click
 
@@ -885,7 +893,7 @@ class FeaturedLessonCard(ft.Container):
             content=self.main_container
         )
 
-    def resize(self, width: int, inner_width: int):
+    def resize(self, width: int, inner_width: int) -> None:
         self.width = width
         self.main_container.width = inner_width
         self.lesson_header_row.width = inner_width

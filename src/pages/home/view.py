@@ -7,31 +7,31 @@ import flet as ft
 from src.logger import Logger
 from src.database import db
 from src.pages.global_components import FinancialChart, Menu
-from src.pages.home.components import BalanceCard, SavingsProgressCard, ExpensePieChart, FeaturedLessonCard
-from src.pages.home.logic import LogicController
-from src.pages.spending.logic import LogicController, SpendingAnalysisApiError
-from src.utils import Color, Page, get_menu_resize_values, get_safe_page_size, scale_width, UISettings
+from src.pages.home.components import BalanceCard, ExpensePieChart, FeaturedLessonCard, SavingsProgressCard
+from src.pages.home.logic import DashboardData, LogicController as HomeLogicController
+from src.pages.spending.logic import LogicController as SpendingLogicController
+from src.pages.spending.logic import SpendingAnalysisApiError
+from src.utils import Color, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Home page...")
 
 
 class HomeView(ft.View):
-    def __init__(self, page: Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict[str, str], user_info: dict[str, str]) -> None:
         self._page = page
         self.lang = lang
         self.user_info = user_info
 
-        # IMPORTED FUNCTIONS
-        self.get_safe_page_size = get_safe_page_size
-
         # INITIALIZE PAGE CONTROLLER
-        self.controller = LogicController(self.user_info["username"])
+        self.dashboard_controller = HomeLogicController(
+            self.user_info["username"]
+        )
+        self.spending_controller = SpendingLogicController(
+            self.user_info["username"]
+        )
 
         # FETCH DASHBOARD DATA & CURRENCY
-        self.currency = self.controller.get_currency()
-        self.objectives = self.controller.get_user_objectives()
-        self.metrics = self.controller.get_dashboard_data()
-        self.advice = self.controller.get_advice()
+        self._load_dashboard_data()
 
         # INITIALIZE PAGE COMPONENTS
         self.menu = Menu(
@@ -43,10 +43,10 @@ class HomeView(ft.View):
         self.balance_card = BalanceCard(
             lang=self.lang,
             currency=self.currency,
-            net_balance=self.metrics["net_balance"],
-            income=self.metrics["total_income"],
-            expense=self.metrics["total_expense"],
-            savings=self.metrics["total_savings"],
+            net_balance=self.dashboard_metrics["net_balance"],
+            income=self.dashboard_metrics["total_income"],
+            expense=self.dashboard_metrics["total_expense"],
+            savings=self.dashboard_metrics["total_savings"],
             advice=self.advice,
             on_add_click=self._page.navigate_to("/category_selection"),
             on_scan_click=self._open_spending_report,
@@ -61,14 +61,18 @@ class HomeView(ft.View):
 
         self.savings_progress_card = SavingsProgressCard(
             lang=self.lang,
-            objective_items=self.controller.get_saving_progress_items(self.objectives, self.lang, self.currency),
+            objective_items=self.dashboard_controller.get_saving_progress_items(
+                self.objectives,
+                self.lang,
+                self.currency,
+            ),
             on_view_all_click=self._page.navigate_to("/savings")
         )
 
         self.expense_pie_chart = ExpensePieChart(
             lang=self.lang,
             currency=self.currency,
-            category_data=self.metrics["category_expenses"],
+            category_data=self.dashboard_metrics["category_expenses"],
             on_details_click=self._page.navigate_to("/spending")
         )
 
@@ -121,63 +125,85 @@ class HomeView(ft.View):
             )
         )
 
-        self._page.on_resize = self._on_page_resize
-        self._on_page_resize()
+        self._page.on_resize = self._resize_page
+        self._resize_page()
         self._update_spending_scan_access()
         if db.app_settings.has_google_account_session():
             self._page.run_thread(self._load_spending_usage)
 
-    def _open_spending_report(self, e=None) -> None:
+    def _open_spending_report(self, e: ft.ControlEvent | None = None) -> None:
         if (
             self.balance_card.purchase_scanner_button.disabled
             or not db.app_settings.has_google_account_session()
         ):
             return
-        self._page.open_spending_month_dialog = True
+        # Spending checks usage asynchronously, so carry a one-shot intent across navigation.
+        self._page.request_spending_month_dialog()
         self._page.navigate_to("/spending")(e)
 
-    @staticmethod
-    def _is_cached_developer() -> bool:
-        account = db.app_settings.get_google_account()
-        return bool(
-            account
-            and db.app_settings.get_google_account_tier(account["uid"])
-            == "developer"
-        )
-
     def _update_spending_scan_access(self) -> None:
-        if self._is_cached_developer() and db.app_settings.has_google_account_session():
+        if (
+            db.app_settings.is_cached_developer()
+            and db.app_settings.has_google_account_session()
+        ):
             self.balance_card.purchase_scanner_button.disabled = False
         else:
             self.balance_card.purchase_scanner_button.disabled = True
+
+    def _load_dashboard_data(self) -> None:
+        self.currency = self.dashboard_controller.get_currency()
+        self.objectives = self.dashboard_controller.get_user_objectives()
+        self.dashboard_metrics: DashboardData = (
+            self.dashboard_controller.get_dashboard_data()
+        )
+        self.advice = self.dashboard_controller.get_advice()
+
+    def _update_dashboard_components(self) -> None:
+        self.balance_card.update_data(
+            net_balance=self.dashboard_metrics["net_balance"],
+            income=self.dashboard_metrics["total_income"],
+            expense=self.dashboard_metrics["total_expense"],
+            savings=self.dashboard_metrics["total_savings"],
+            ai_advice=self.advice,
+            currency=self.currency,
+        )
+        self.financial_chart.update_data()
+        goal_items, objective_count = (
+            self.dashboard_controller.get_saving_progress_items(
+                objectives=self.objectives,
+                lang=self.lang,
+                currency=self.currency,
+            )
+        )
+        self.savings_progress_card.update_data(
+            objective_items=goal_items,
+            objective_count=objective_count,
+        )
+        self.expense_pie_chart.update_data(
+            category_data=self.dashboard_metrics["category_expenses"],
+            currency=self.currency,
+        )
 
     def _load_spending_usage(self) -> None:
         if not db.app_settings.has_google_account_session():
             self.balance_card.purchase_scanner_button.disabled = True
             return
-        if self._is_cached_developer():
+        if db.app_settings.is_cached_developer():
             self.balance_card.purchase_scanner_button.disabled = False
             self._page.update()
             return
 
         refresh_token = db.app_settings.get_google_refresh_token()
         try:
-            usage = self.controller.get_monthly_analysis_usage(
+            usage = self.spending_controller.get_monthly_analysis_usage(
                 refresh_token or ""
             )
-            limit = usage["limit"]
-            remaining = usage["remaining"]
-            if limit is None:
-                available = remaining is None
-            else:
-                available = (
-                    isinstance(limit, int)
-                    and isinstance(remaining, int)
-                    and 0 <= remaining <= limit
-                    and remaining > 0
-                )
-                if not available:
-                    raise ValueError("Invalid monthly spending usage counts")
+            remaining, limit = (
+                self.spending_controller.get_monthly_usage_counts(usage)
+            )
+            available = limit is None or (
+                remaining is not None and remaining > 0
+            )
             self.balance_card.purchase_scanner_button.disabled = not available
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load home spending AI usage: {ex}")
@@ -189,38 +215,12 @@ class HomeView(ft.View):
 
     def _refresh_view(self) -> int:
         try:
-            self._on_page_resize()
+            self._resize_page()
             self._update_spending_scan_access()
             if db.app_settings.has_google_account_session():
                 self._page.run_thread(self._load_spending_usage)
-            self.currency = self.controller.get_currency()
-            self.objectives = self.controller.get_user_objectives()
-            self.metrics = self.controller.get_dashboard_data()
-            self.advice = self.controller.get_advice()
-
-            self.balance_card.update_data(
-                net_balance=self.metrics["net_balance"],
-                income=self.metrics["total_income"],
-                expense=self.metrics["total_expense"],
-                savings=self.metrics["total_savings"],
-                ai_advice=self.advice,
-                currency=self.currency
-            )
-
-            self.financial_chart.update_data()
-
-            self.savings_progress_card.update_data(
-                objective_items=self.controller.get_saving_progress_items(
-                    objectives=self.objectives,
-                    lang=self.lang,
-                    currency=self.currency
-                )[0]
-            )
-
-            self.expense_pie_chart.update_data(
-                category_data=self.metrics["category_expenses"],
-                currency=self.currency
-            )
+            self._load_dashboard_data()
+            self._update_dashboard_components()
 
             return 0
 
@@ -228,12 +228,10 @@ class HomeView(ft.View):
             Logger.warn(f"Failed to refresh view {ex}")
             return -1
 
-    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+    def _resize_page(self, e: ft.PageResizeEvent | None = None) -> int:
         try:
-            # Get page size
-            page_width, page_height = self.get_safe_page_size(page=self._page)
+            page_width, page_height = get_safe_page_size(page=self._page)
 
-            # Get component size values
             content_width = scale_width(page_width, 392)
             inner_width = scale_width(page_width, 352)
             savings_inner_width = inner_width
@@ -295,6 +293,6 @@ class HomeView(ft.View):
             return -1
 
 
-def get_home_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+def get_home_view(page: Page, lang: dict[str, str], user_info: dict[str, str]) -> ft.View:
     Logger.info("Loading Home page...")
     return HomeView(page, lang, user_info)
