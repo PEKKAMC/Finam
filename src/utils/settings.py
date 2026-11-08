@@ -85,7 +85,7 @@ class DefaultSettings:
 class UISettings:
     MAX_APP_WIDTH: int = 432
     MAX_APP_HEIGHT: int = 960
-    MIN_SUPPORTED_WIDTH: int = 300
+    MIN_SUPPORTED_WIDTH: int = 200
     MIN_SUPPORTED_HEIGHT: int = 500
     SHADOW_BLUR: int = 10
     SHADOW_SPREAD: int = 1
