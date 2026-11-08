@@ -411,17 +411,39 @@ class ActivityHistory(ft.Container):
             activity_type = item["type"]
             icon = ft.Icons.MONEY if activity_type == "saving" else ft.Icons.CHECK_CIRCLE if activity_type == "completed" else ft.Icons.HISTORY
             amount = item.get("amount")
-            trailing = (
-                Text.MEDIUM(f"{format_number(amount, signed=True)} {self.currency}", color=Color.PRIMARY_ACTION if amount > 0 else Color.NEGATIVE_ACTION)
-                if amount is not None else None
-            )
+            activity_controls = [
+                ft.Icon(icon, color=Color.PRIMARY_ACTION),
+                ft.Column(
+                    expand=True,
+                    spacing=2,
+                    controls=[
+                        Text.MEDIUM(
+                            item["desc"],
+                            color=Color.PRIMARY_TEXT,
+                        ),
+                        Text.SMALL(
+                            item["date"],
+                            color=Color.SECONDARY_TEXT,
+                        ),
+                    ],
+                ),
+            ]
+            if amount is not None:
+                activity_controls.append(
+                    Text.MEDIUM(
+                        f"{format_compact_number(amount, decimals=1, signed=True)} {self.currency}",
+                        color=Color.PRIMARY_ACTION if amount > 0 else Color.NEGATIVE_ACTION,
+                        text_align=ft.TextAlign.RIGHT,
+                    )
+                )
             self.activity_list.controls.append(
-                ft.ListTile(
-                    leading=ft.Icon(icon, color=Color.PRIMARY_ACTION),
-                    title=Text.MEDIUM(item["desc"], color=Color.PRIMARY_TEXT),
-                    subtitle=Text.SMALL(item["date"], color=Color.SECONDARY_TEXT),
-                    trailing=trailing,
-                    dense=True,
+                ft.Container(
+                    padding=ft.Padding.symmetric(vertical=8),
+                    content=ft.Row(
+                        spacing=18,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        controls=activity_controls,
+                    ),
                 )
             )
 

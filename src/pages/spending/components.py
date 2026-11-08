@@ -7,7 +7,7 @@ from datetime import datetime
 
 import flet as ft
 
-from src.utils import Color, Dialog, Page, Text, UISettings, format_number
+from src.utils import Color, Dialog, Page, Text, UISettings, format_compact_number, format_number
 
 
 class MetricCards(ft.ResponsiveRow):
@@ -483,9 +483,15 @@ class TransactionItemCard(ft.Container):
 
         # TEXT AND ICON COMPONENTS
         self.title_text = Text.MEDIUM(self.tx["title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
-        self.subtitle_text = Text.SMALL(self.tx.get("subtitle", ""), color=Color.SECONDARY_TEXT)
         self.date_text = Text.SMALL(self.tx.get("date", ""), color=Color.SECONDARY_TEXT)
-        self.amount_text = Text.MEDIUM(format_number(self.tx["amount"]), color=amount_color, weight=ft.FontWeight.BOLD)
+        amount = float(self.tx["amount"])
+        signed_amount = amount if is_income else -amount
+        self.amount_text = Text.MEDIUM(
+            format_compact_number(signed_amount, decimals=1, signed=True),
+            color=amount_color,
+            weight=ft.FontWeight.BOLD,
+            text_align=ft.TextAlign.RIGHT,
+        )
 
         self.item_icon = ft.Icon(icon, color=icon_color, size=18)
         self.calendar_icon = ft.Icon(ft.Icons.CALENDAR_MONTH, color=Color.SECONDARY_TEXT, size=12)
@@ -510,10 +516,10 @@ class TransactionItemCard(ft.Container):
         )
 
         self.info_column = ft.Column(
-            spacing=2,
+            expand=True,
+            spacing=4,
             controls=[
                 self.title_text,
-                self.subtitle_text,
                 self.date_row
             ]
         )

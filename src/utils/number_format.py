@@ -40,12 +40,12 @@ def format_number(value: float, decimals: int = 2, signed: bool = False) -> str:
     return integer + (_decimal_separator + fraction if decimal else "")
 
 
-def format_compact_number(value: float, decimals: int = 1) -> str:
+def format_compact_number(value: float, decimals: int = 1, signed: bool = False) -> str:
     """Format large values with a compact magnitude suffix."""
     magnitude_suffixes = ("", "K", "M", "B", "T")
     absolute_value = abs(value)
     if not math.isfinite(value) or absolute_value < 1_000:
-        return format_number(value)
+        return format_number(value, signed=signed)
 
     magnitude = min(
         len(magnitude_suffixes) - 1,
@@ -60,7 +60,7 @@ def format_compact_number(value: float, decimals: int = 1) -> str:
         magnitude += 1
         scaled_value /= 1_000
 
-    formatted = format_number(scaled_value, decimals=decimals)
+    formatted = format_number(scaled_value, decimals=decimals, signed=signed)
     if _decimal_separator in formatted:
         formatted = formatted.rstrip("0").rstrip(_decimal_separator)
     return f"{formatted}{magnitude_suffixes[magnitude]}"

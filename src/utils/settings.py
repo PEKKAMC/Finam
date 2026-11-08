@@ -85,8 +85,8 @@ class DefaultSettings:
 class UISettings:
     MAX_APP_WIDTH: int = 432
     MAX_APP_HEIGHT: int = 960
-    MIN_SUPPORTED_WIDTH: int = 250
-    MIN_SUPPORTED_HEIGHT: int = 650
+    MIN_SUPPORTED_WIDTH: int = 300
+    MIN_SUPPORTED_HEIGHT: int = 500
     CARD_BORDER_RADIUS: int = 28
     CARD_PADDING: int = 20
     METRIC_PILL_BORDER_RADIUS: int = 16
