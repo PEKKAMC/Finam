@@ -40,16 +40,8 @@ class BalanceCard(ft.Container):
         # Static texts
         self.balance_label_text = Text.LABEL(self.lang["home.available_balance"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.currency_label = Text.P(self.currency, color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.add_transaction_button_label = Text.BUTTON(
-            self.lang["home.add_transaction"],
-            color=Color.PRIMARY,
-            weight=ft.FontWeight.BOLD,
-        )
-        self.purchase_scanner_button_label = Text.BUTTON(
-            self.lang["home.ai_scan"],
-            color=Color.WHITE,
-            weight=ft.FontWeight.BOLD,
-        )
+        self.add_transaction_button_label = Text.BUTTON(self.lang["home.add_transaction"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
+        self.purchase_scanner_button_label = Text.BUTTON(self.lang["home.ai_scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.income_title = Text.H6(self.lang["home.total_income"], color=Color.LIGHT_ACCENT)
         self.expense_title = Text.H6(self.lang["home.total_expense"], color=Color.EXPENSE_LABEL_TEXT)
         self.saving_title = Text.H6(self.lang["home.total_savings"], color=Color.SAVINGS_LABEL_TEXT)
