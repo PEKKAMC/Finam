@@ -8,18 +8,7 @@ from urllib.parse import urlencode, urlparse
 import flet as ft
 
 from src.database import db
-from src.utils import (
-    DefaultSettings,
-    Page,
-    ThemeManager,
-    UISettings,
-    currency_for_region,
-    get_language,
-    is_supported_page_size,
-    language_for_device_locale,
-    set_decimal_separator,
-    set_digit_separator,
-)
+from src.utils import DefaultSettings, Page, ThemeManager, UISettings, currency_for_region, get_language, is_supported_page_size, language_for_device_locale, set_decimal_separator, set_digit_separator
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.fallback import get_fallback_view
@@ -32,12 +21,7 @@ from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.purchase_scanner import get_scanner_view
 from src.pages.starter.view import StarterView, get_starter_view
-from src.pages.user_management import (
-    complete_google_mobile_callback,
-    complete_google_web_callback,
-    get_user_management_view,
-    is_google_oauth_callback_route,
-)
+from src.pages.user_management import complete_google_mobile_callback, complete_google_web_callback, get_user_management_view, is_google_oauth_callback_route
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
@@ -69,7 +53,7 @@ def initial_setup() -> None:
 
     ft.Control.update = _safe_control_update
 
-async def redirect_to_fallback(page: Page, lang: dict, fallback_reason: str) -> None:
+async def redirect_to_fallback(page: Page, fallback_reason: str) -> None:
     Logger.info("Redirecting to fallback page...")
     page.fallback_reason = fallback_reason
     await page.push_route("/fallback")
@@ -231,6 +215,7 @@ async def main(page: Page) -> None:
                     page.views[-1], "_on_navigate_away", None
                 )
                 if callable(on_navigate_away):
+                    # noinspection PyCallingNonCallable
                     on_navigate_away()
 
             if not page.web and is_google_oauth_callback_route(page.route or ""):
@@ -278,7 +263,7 @@ async def main(page: Page) -> None:
 
             route_name = page.route or "/"
             if route_name != "/fallback" and not is_supported_page_size(page):
-                await redirect_to_fallback(page, lang, "unsupported_screen")
+                await redirect_to_fallback(page, "unsupported_screen")
                 return
 
             cache_key = get_view_cache_key(
@@ -304,17 +289,18 @@ async def main(page: Page) -> None:
                         views_cache[route_name] = (view, cache_key)
 
             if view is None:
-                await redirect_to_fallback(page, lang, "page_not_found")
+                await redirect_to_fallback(page, "page_not_found")
                 return
 
             page.views.append(view)
             resize_handler = getattr(view, "_on_page_resize", None)
             if callable(resize_handler):
-                async def on_page_resize(e: ft.PageResizeEvent) -> None:
+                async def on_page_resize(ev: ft.PageResizeEvent) -> None:
                     if page.route != "/fallback" and not is_supported_page_size(page):
-                        await redirect_to_fallback(page, lang, "unsupported_screen")
+                        await redirect_to_fallback(page, "unsupported_screen")
                         return
-                    resize_handler(e)
+                    # noinspection PyCallingNonCallable
+                    resize_handler(ev)
 
                 page.on_resize = on_page_resize
             page.update()
