@@ -6,6 +6,7 @@ from typing import NamedTuple, TypedDict
 
 from src.database import db
 from src.logger import Logger
+from src.pages.common.logic import get_user_currency
 from src.utils import Data, format_number
 
 
@@ -47,7 +48,7 @@ class LogicController:
         self.current_user = current_user
 
     def get_currency(self) -> str:
-        return db.users.get_currency(self.current_user)
+        return get_user_currency(self.current_user)
 
     def get_dashboard_data(self) -> DashboardData:
         Logger.info("Loading dashboard data...")

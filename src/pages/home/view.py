@@ -6,9 +6,9 @@ import flet as ft
 
 from src.logger import Logger
 from src.database import db
-from src.pages.global_components import FinancialChart, Menu
+from src.pages.common import FinancialChart, Menu
 from src.pages.home.components import BalanceCard, ExpensePieChart, FeaturedLessonCard, SavingsProgressCard
-from src.pages.home.logic import DashboardData, LogicController as HomeLogicController
+from src.pages.home.logic import DashboardData, LogicController
 from src.pages.spending.logic import LogicController as SpendingLogicController
 from src.pages.spending.logic import SpendingAnalysisApiError
 from src.utils import Color, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
@@ -22,15 +22,14 @@ class HomeView(ft.View):
         self.lang = lang
         self.user_info = user_info
 
-        # INITIALIZE PAGE CONTROLLER
-        self.dashboard_controller = HomeLogicController(
-            self.user_info["username"]
-        )
-        self.spending_controller = SpendingLogicController(
-            self.user_info["username"]
-        )
+        # IMPORTED FUNCTIONS
+        self.get_safe_page_size = get_safe_page_size
 
-        # FETCH DASHBOARD DATA & CURRENCY
+        # INITIALIZE PAGE CONTROLLER
+        self.controller = LogicController(self.user_info["username"])
+        self.spending_controller = SpendingLogicController(user_info["username"])
+
+        # FETCH DASHBOARD DATA
         self._load_dashboard_data()
 
         # INITIALIZE PAGE COMPONENTS
@@ -61,7 +60,7 @@ class HomeView(ft.View):
 
         self.savings_progress_card = SavingsProgressCard(
             lang=self.lang,
-            objective_items=self.dashboard_controller.get_saving_progress_items(
+            objective_items=self.controller.get_saving_progress_items(
                 self.objectives,
                 self.lang,
                 self.currency,
@@ -151,12 +150,10 @@ class HomeView(ft.View):
             self.balance_card.purchase_scanner_button.disabled = True
 
     def _load_dashboard_data(self) -> None:
-        self.currency = self.dashboard_controller.get_currency()
-        self.objectives = self.dashboard_controller.get_user_objectives()
-        self.dashboard_metrics: DashboardData = (
-            self.dashboard_controller.get_dashboard_data()
-        )
-        self.advice = self.dashboard_controller.get_advice()
+        self.currency = self.controller.get_currency()
+        self.objectives = self.controller.get_user_objectives()
+        self.dashboard_metrics: DashboardData = (self.controller.get_dashboard_data())
+        self.advice = self.controller.get_advice()
 
     def _update_dashboard_components(self) -> None:
         self.balance_card.update_data(
@@ -167,18 +164,22 @@ class HomeView(ft.View):
             ai_advice=self.advice,
             currency=self.currency,
         )
+
         self.financial_chart.update_data()
+
         goal_items, objective_count = (
-            self.dashboard_controller.get_saving_progress_items(
+            self.controller.get_saving_progress_items(
                 objectives=self.objectives,
                 lang=self.lang,
                 currency=self.currency,
             )
         )
+
         self.savings_progress_card.update_data(
             objective_items=goal_items,
             objective_count=objective_count,
         )
+
         self.expense_pie_chart.update_data(
             category_data=self.dashboard_metrics["category_expenses"],
             currency=self.currency,
@@ -188,29 +189,37 @@ class HomeView(ft.View):
         if not db.app_settings.has_google_account_session():
             self.balance_card.purchase_scanner_button.disabled = True
             return
+
         if db.app_settings.is_cached_developer():
             self.balance_card.purchase_scanner_button.disabled = False
             self._page.update()
             return
 
         refresh_token = db.app_settings.get_google_refresh_token()
+
         try:
             usage = self.spending_controller.get_monthly_analysis_usage(
                 refresh_token or ""
             )
+
             remaining, limit = (
                 self.spending_controller.get_monthly_usage_counts(usage)
             )
+
             available = limit is None or (
                 remaining is not None and remaining > 0
             )
+
             self.balance_card.purchase_scanner_button.disabled = not available
+
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load home spending AI usage: {ex}")
             self.balance_card.purchase_scanner_button.disabled = True
+
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid home spending AI usage response: {ex}")
             self.balance_card.purchase_scanner_button.disabled = True
+
         self._page.update()
 
     def _refresh_view(self) -> int:
@@ -228,10 +237,11 @@ class HomeView(ft.View):
             Logger.warn(f"Failed to refresh view {ex}")
             return -1
 
-    def _resize_page(self, e: ft.PageResizeEvent | None = None) -> int:
+    def _resize_page(self, e: ft.PageResizeEvent | None = None) -> None:
         try:
-            page_width, page_height = get_safe_page_size(page=self._page)
+            page_width, page_height = self.get_safe_page_size(page=self._page)
 
+            # Get page size
             content_width = scale_width(page_width, 392)
             inner_width = scale_width(page_width, 352)
             savings_inner_width = inner_width
@@ -253,7 +263,9 @@ class HomeView(ft.View):
                 **menu_resize_values,
             )
 
-            self.balance_card.resize(width=inner_width)
+            self.balance_card.resize(
+                width=inner_width
+            )
 
             self.featured_lesson_card.resize(
                 width=content_width,
@@ -278,19 +290,14 @@ class HomeView(ft.View):
                 legend_height=legend_height
             )
 
-            return 0
-
         except AttributeError as ex:
             Logger.error(f"Failed to get width/height of the page: {ex}")
-            return 1
 
         except (TypeError, ValueError) as ex:
             Logger.error(f"Value of width/height of the page is invalid: {ex}")
-            return 2
 
         except Exception as ex:
             Logger.error(f"Error during page resize: {ex}, event: {e}")
-            return -1
 
 
 def get_home_view(page: Page, lang: dict[str, str], user_info: dict[str, str]) -> ft.View:
