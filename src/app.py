@@ -226,6 +226,13 @@ async def main(page: Page) -> None:
 
     async def route_change(e: ft.RouteChangeEvent) -> None:
         try:
+            if page.views and page.views[-1].route != (page.route or ""):
+                on_navigate_away = getattr(
+                    page.views[-1], "_on_navigate_away", None
+                )
+                if callable(on_navigate_away):
+                    on_navigate_away()
+
             if not page.web and is_google_oauth_callback_route(page.route or ""):
                 Logger.info(
                     "Native route-change event reached Google OAuth callback "

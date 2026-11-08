@@ -456,6 +456,12 @@ class UserManagementView(ft.View):
 
         self.services_section_title = Text.SMALL(self.lang["user_management.services_and_features"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
 
+        self._disable_ads_generation = 0
+        self.disable_ads_switch = ft.Switch(
+            value=False,
+            active_color=Color.PRIMARY_ACTION,
+            on_change=self._on_disable_ads_change,
+        )
         self.services_card = MenuSectionCard(
             items=[
                 MenuItem(
@@ -464,7 +470,7 @@ class UserManagementView(ft.View):
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
                     title=self.lang["user_management.disable_ads"],
                     subtitle=self.lang["user_management.smooth_experience"],
-                    trailing=ft.Switch(value=True, active_color=Color.PRIMARY_ACTION)
+                    trailing=self.disable_ads_switch
                 ),
                 MenuItem(
                     icon=ft.Icons.SETTINGS_OUTLINED,
@@ -574,6 +580,26 @@ class UserManagementView(ft.View):
 
         self._page.on_resize = self._on_page_resize
         self._on_page_resize()
+
+    async def _on_disable_ads_change(self, _e: ft.ControlEvent) -> None:
+        self._disable_ads_generation += 1
+        generation = self._disable_ads_generation
+        if not self.disable_ads_switch.value:
+            return
+
+        await asyncio.sleep(3)
+        if (
+            generation == self._disable_ads_generation
+            and self.disable_ads_switch.value
+        ):
+            self.disable_ads_switch.value = False
+            self.disable_ads_switch.update()
+
+    def _on_navigate_away(self) -> None:
+        self._disable_ads_generation += 1
+        if self.disable_ads_switch.value:
+            self.disable_ads_switch.value = False
+            self.disable_ads_switch.update()
 
     async def logout(self, e=None) -> None:
         try:

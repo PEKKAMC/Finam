@@ -140,7 +140,8 @@ class HomeView(ft.View):
         self._page.open_spending_month_dialog = True
         self._page.navigate_to("/spending")(e)
 
-    def _is_cached_developer(self) -> bool:
+    @staticmethod
+    def _is_cached_developer() -> bool:
         account = db.app_settings.get_google_account()
         return bool(
             account
