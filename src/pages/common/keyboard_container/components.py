@@ -2,15 +2,14 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import ast
 from datetime import datetime, time
-import math
 from typing import Callable, Optional
 
 import flet as ft
 
 from src.logger import Logger
-from src.utils import Color, Page, format_expression, get_decimal_separator
+from src.pages.common.keyboard_container.logic import evaluate_expression
+from src.utils import Color, Page, Text, format_expression, get_decimal_separator
 
 
 class KeyboardContainer(ft.Container):
@@ -24,20 +23,14 @@ class KeyboardContainer(ft.Container):
         self.selected_date = datetime.now().strftime("%Y-%m-%d")
         self.selected_time = datetime.now().strftime("%H:%M")
 
-        self.amount_display = ft.Text(
-            value="0",
-            size=32,
-            color=Color.DEFAULT_TEXT,
-            weight=ft.FontWeight.BOLD,
-            no_wrap=False,
-        )
-        self.status_message = ft.Text(
-            value="",
-            size=12,
-            color=Color.ERROR_TEXT,
-            visible=False,
-            no_wrap=False,
-        )
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.amount_display = Text.H1("0", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+        self.status_message = Text.MEDIUM("", color=Color.ERROR_TEXT, visible=False)
+
+        # Dynamic texts
+        self.date_display = Text.MEDIUM(self.selected_date, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+        self.time_display = Text.MEDIUM(self.selected_time, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
 
         self.note_input = ft.TextField(
             hint_text=self.lang["category_selection.note_hint"],
@@ -52,26 +45,12 @@ class KeyboardContainer(ft.Container):
             content_padding=10,
         )
 
-        self.date_display = ft.Text(
-            value=self.selected_date,
-            color=Color.DEFAULT_TEXT,
-            size=11,
-            weight=ft.FontWeight.BOLD,
-            no_wrap=False,
-        )
-
-        self.time_display = ft.Text(
-            value=self.selected_time,
-            color=Color.DEFAULT_TEXT,
-            size=11,
-            weight=ft.FontWeight.BOLD,
-            no_wrap=False,
-        )
-
+        # CONTAINER COMPONENTS
         self.date_picker = ft.DatePicker(
             value=datetime.strptime(self.selected_date, "%Y-%m-%d").date(),
             on_change=self._on_date_changed,
         )
+
         if self._page.overlay is not None and self.date_picker not in self._page.overlay:
             self._page.overlay.append(self.date_picker)
 
@@ -160,24 +139,23 @@ class KeyboardContainer(ft.Container):
         )
 
     def _build_keypad(self) -> ft.Column:
-        btn_bg = Color.DEFAULT_CONTAINER_BACKGROUND
+        button_bg = Color.DEFAULT_CONTAINER_BACKGROUND
         txt_color = Color.PRIMARY_TEXT
 
-        def k_btn(text: str, on_click, icon=None, expand=1):
+        # Dynamic icons
+        def k_button(text: str, on_click, icon=None, expand=1):
             content = (
                 ft.Icon(icon, color=txt_color, size=20)
                 if icon
-                else ft.Text(
+                else Text.H3(
                     text,
-                    size=18,
                     color=txt_color,
                     weight=ft.FontWeight.BOLD,
-                    no_wrap=False,
                 )
             )
             return ft.Container(
                 content=content,
-                bgcolor=btn_bg,
+                bgcolor=button_bg,
                 alignment=ft.Alignment.CENTER,
                 border_radius=8,
                 expand=expand,
@@ -192,83 +170,48 @@ class KeyboardContainer(ft.Container):
                 ft.Row(
                     spacing=6,
                     controls=[
-                        k_btn("7", lambda e: self._on_key_press("7")),
-                        k_btn("8", lambda e: self._on_key_press("8")),
-                        k_btn("9", lambda e: self._on_key_press("9")),
+                        k_button("7", lambda e: self._on_key_press("7")),
+                        k_button("8", lambda e: self._on_key_press("8")),
+                        k_button("9", lambda e: self._on_key_press("9")),
                         self.datetime_container,
                     ],
                 ),
                 ft.Row(
                     spacing=6,
                     controls=[
-                        k_btn("4", lambda e: self._on_key_press("4")),
-                        k_btn("5", lambda e: self._on_key_press("5")),
-                        k_btn("6", lambda e: self._on_key_press("6")),
-                        k_btn("+", lambda e: self._on_key_press("+")),
-                        k_btn("-", lambda e: self._on_key_press("-")),
+                        k_button("4", lambda e: self._on_key_press("4")),
+                        k_button("5", lambda e: self._on_key_press("5")),
+                        k_button("6", lambda e: self._on_key_press("6")),
+                        k_button("+", lambda e: self._on_key_press("+")),
+                        k_button("-", lambda e: self._on_key_press("-")),
                     ],
                 ),
                 ft.Row(
                     spacing=6,
                     controls=[
-                        k_btn("1", lambda e: self._on_key_press("1")),
-                        k_btn("2", lambda e: self._on_key_press("2")),
-                        k_btn("3", lambda e: self._on_key_press("3")),
-                        k_btn("×", lambda e: self._on_key_press("*")),
-                        k_btn("÷", lambda e: self._on_key_press("/")),
+                        k_button("1", lambda e: self._on_key_press("1")),
+                        k_button("2", lambda e: self._on_key_press("2")),
+                        k_button("3", lambda e: self._on_key_press("3")),
+                        k_button("×", lambda e: self._on_key_press("*")),
+                        k_button("÷", lambda e: self._on_key_press("/")),
                     ],
                 ),
                 ft.Row(
                     spacing=6,
                     controls=[
-                        k_btn(get_decimal_separator(), lambda e: self._on_key_press(".")),
-                        k_btn("0", lambda e: self._on_key_press("0")),
-                        k_btn("", lambda e: self._on_backspace(), icon=ft.Icons.BACKSPACE),
-                        k_btn("=", lambda e: self._on_equal_pressed()),
-                        k_btn("", lambda e: self._handle_save_click(), icon=ft.Icons.CHECK),
+                        k_button(get_decimal_separator(), lambda e: self._on_key_press(".")),
+                        k_button("0", lambda e: self._on_key_press("0")),
+                        k_button("", lambda e: self._on_backspace(), icon=ft.Icons.BACKSPACE),
+                        k_button("=", lambda e: self._on_equal_pressed()),
+                        k_button("", lambda e: self._handle_save_click(), icon=ft.Icons.CHECK),
                     ],
                 ),
             ],
         )
 
     @staticmethod
-    def _eval_expression(expression: str):
-        try:
-            expression = expression.rstrip("+-*/.")
-            if not expression:
-                return None
-            cleaned = expression.replace("×", "*").replace("÷", "/")
-            parsed = ast.parse(cleaned, mode="eval")
-            for node in ast.walk(parsed):
-                if isinstance(node, ast.BinOp):
-                    if not isinstance(
-                            node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)
-                    ):
-                        raise ValueError
-                elif isinstance(node, ast.UnaryOp):
-                    if not isinstance(node.op, (ast.UAdd, ast.USub)):
-                        raise ValueError
-                elif isinstance(node, ast.Constant):
-                    if not isinstance(node.value, (int, float)):
-                        raise ValueError
-                elif isinstance(
-                        node, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod, ast.UAdd, ast.USub)
-                ):
-                    pass
-                elif isinstance(node, ast.Expression):
-                    pass
-                else:
-                    raise ValueError
-
-            value = eval(
-                compile(parsed, "<expr>", "eval"), {"__builtins__": {}}, {"math": math}
-            )
-            if isinstance(value, float) and value.is_integer():
-                return str(int(value))
-            return str(value)
-        except Exception as ex:
-            Logger.error(f"Failed to evaluate expression '{expression}': {ex}")
-            return None
+    def _eval_expression(expression: str) -> str | None:
+        return evaluate_expression(expression)
 
     def _on_key_press(self, val: str):
         operators = "+-*/."
