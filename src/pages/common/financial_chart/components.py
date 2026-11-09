@@ -8,8 +8,9 @@ import datetime
 import flet as ft
 import flet_charts as fc
 
-from src.database import db
 from src.logger import Logger
+from src.pages.common.financial_chart.logic import get_financial_chart_data
+from src.pages.common.logic.accounts import get_user_currency
 from src.utils import (
     Color,
     Text,
@@ -22,79 +23,16 @@ from src.utils import (
 Logger.info("Building financial chart...")
 
 
-def get_financial_chart_data(
-    username: str,
-    chart_type: str = "daily",
-    date_offset: int = 0,
-    target_year: int | None = None,
-) -> tuple[dict, list]:
-    """Fetches aggregated database totals and structures them for the requested chart period."""
-    now = datetime.datetime.now()
-
-    if chart_type == "daily":
-        target_date = now + datetime.timedelta(weeks=date_offset)
-    elif chart_type == "weekly":
-        total_months = (now.year * 12 + (now.month - 1)) + date_offset
-        year = total_months // 12
-        month = (total_months % 12) + 1
-        target_date = now.replace(year=year, month=month, day=1)
-    elif chart_type == "monthly":
-        tgt_year = target_year if target_year is not None else now.year
-        tgt_month = now.month if tgt_year == now.year else 1
-        target_date = now.replace(year=tgt_year, month=tgt_month, day=1)
-    else:
-        target_date = now
-
-    iso_year, iso_week, _ = target_date.isocalendar()
-    chart_date = {"month": target_date.month, "year": target_date.year, "week": iso_week}
-
-    if chart_type == "daily":
-        chart_data = [{"day": i + 1, "income": 0.0, "expense": 0.0} for i in range(7)]
-    elif chart_type == "weekly":
-        chart_data = [{"week": i + 1, "income": 0.0, "expense": 0.0} for i in range(4)]
-    elif chart_type == "monthly":
-        chart_data = [{"month": i + 1, "income": 0.0, "expense": 0.0} for i in range(12)]
-    else:
-        chart_data = []
-
-    if chart_type == "daily":
-        start_date = (target_date - datetime.timedelta(days=target_date.weekday())).replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0,
-        )
-        end_date = start_date + datetime.timedelta(days=7)
-    elif chart_type == "weekly":
-        start_date = target_date.replace(day=1)
-        end_date = (start_date.replace(day=28) + datetime.timedelta(days=4)).replace(day=1)
-    elif chart_type == "monthly":
-        start_date = target_date.replace(year=target_date.year, month=1, day=1)
-        end_date = start_date.replace(year=start_date.year + 1)
-    else:
-        raise ValueError(f"Unknown chart type: {chart_type}")
-
-    totals = db.spending.get_user_chart_totals(
-        username,
-        chart_type,
-        start_date.strftime("%Y-%m-%d %H:%M"),
-        end_date.strftime("%Y-%m-%d %H:%M"),
-    )
-    for bucket, kind, amount in totals:
-        if bucket is not None and 0 <= bucket < len(chart_data):
-            chart_data[bucket][kind] = float(amount or 0)
-
-    return chart_date, chart_data
-
-
 class FinancialChart(ft.Container):
     def __init__(self, lang: dict, username: str, chart_type: str, show_mode_buttons: bool):
         self.lang = lang
         self.username = username
-        self.currency = db.users.get_currency(username)
+        self.currency = get_user_currency(username)
         self.chart_type = chart_type
         self.show_mode_buttons = show_mode_buttons
 
+        # TEXT AND ICON COMPONENTS
+        # Chart builders create the text and icon controls for each chart state.
         now = datetime.datetime.now()
         self.real_current_year = now.year
         self.real_current_month = now.month
@@ -166,7 +104,7 @@ class FinancialChart(ft.Container):
     def _schedule_after_drag(self, callback, *args):
         """Schedule the async drag completion/cleanup on the active event loop."""
         if self.page:
-            self.page.run_task(callback, *args)
+            self.page.run_task(callback, *args) # type: ignore
             return
 
         try:
@@ -463,7 +401,7 @@ class FinancialChart(ft.Container):
         labels = []
         for i in range(5):
             value = i * step
-            label_text = format_compact_number(value)
+            label_text = format_compact_number(value, translations=self.lang)
             if value < 1_000 and decimal_separator in label_text:
                 label_text = label_text.rstrip("0").rstrip(decimal_separator)
             labels.append(
@@ -605,7 +543,7 @@ class FinancialChart(ft.Container):
         prev_enabled = self.can_go_prev
         next_enabled = self.can_go_next
 
-        prev_btn = ft.IconButton(
+        prev_button = ft.IconButton(
             width=40,
             height=56,
             padding=4,
@@ -616,7 +554,7 @@ class FinancialChart(ft.Container):
             on_click=lambda _: self._handle_prev(),
             tooltip="Previous"
         )
-        next_btn = ft.IconButton(
+        next_button = ft.IconButton(
             width=40,
             height=56,
             padding=4,
@@ -685,7 +623,7 @@ class FinancialChart(ft.Container):
                     width=48,
                     bgcolor=Color.CARD_BACKGROUND,
                     alignment=ft.Alignment.CENTER,
-                    content=prev_btn,
+                    content=prev_button,
                 ),
                 ft.Container(
                     right=0,
@@ -694,7 +632,7 @@ class FinancialChart(ft.Container):
                     width=48,
                     bgcolor=Color.CARD_BACKGROUND,
                     alignment=ft.Alignment.CENTER,
-                    content=next_btn,
+                    content=next_button,
                 ),
             ]
         )
