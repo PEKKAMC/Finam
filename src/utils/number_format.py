@@ -1,10 +1,9 @@
-# Copyright (c) 2026 PEKKAMC
+    # Copyright (c) 2026 PEKKAMC
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import math
 import re
-
 
 _digit_separator = ""
 _decimal_separator = "."
@@ -40,9 +39,27 @@ def format_number(value: float, decimals: int = 2, signed: bool = False) -> str:
     return integer + (_decimal_separator + fraction if decimal else "")
 
 
-def format_compact_number(value: float, decimals: int = 1, signed: bool = False) -> str:
+def format_compact_number(value: float, decimals: int = 1, signed: bool = False, translations: dict[str, str] | None = None) -> str:
     """Format large values with a compact magnitude suffix."""
-    magnitude_suffixes = ("", "K", "M", "B", "T")
+    suffixes = (
+        ("thousand", "K"),
+        ("million", "M"),
+        ("billion", "B"),
+        ("trillion", "T"),
+        ("quadrillion", "Qa"),
+        ("quintillion", "Qi"),
+        ("sextillion", "Sx"),
+        ("septillion", "Sp"),
+        ("octillion", "Oc"),
+        ("nonillion", "No"),
+        ("decillion", "Dc"),
+    )
+    magnitude_suffixes = ("",) + tuple(
+        translations.get(f"number_suffix.{key}", fallback)
+        if translations
+        else fallback
+        for key, fallback in suffixes
+    )
     absolute_value = abs(value)
     if not math.isfinite(value) or absolute_value < 1_000:
         return format_number(value, signed=signed)
@@ -64,6 +81,20 @@ def format_compact_number(value: float, decimals: int = 1, signed: bool = False)
     if _decimal_separator in formatted:
         formatted = formatted.rstrip("0").rstrip(_decimal_separator)
     return f"{formatted}{magnitude_suffixes[magnitude]}"
+
+
+def format_display_number(value: float, translations: dict[str, str], decimals: int = 1, signed: bool = False) -> str:
+    """Keep up to 12 integer digits unabridged and localize larger values."""
+    if not math.isfinite(value):
+        return format_number(value, signed=signed)
+    if len(str(int(abs(value)))) <= 12:
+        return format_number(value, signed=signed)
+    return format_compact_number(
+        value,
+        decimals=decimals,
+        signed=signed,
+        translations=translations,
+    )
 
 
 def format_expression(expression: str) -> str:
