@@ -2,12 +2,19 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from __future__ import annotations
+
 from collections.abc import Callable
 
 import flet as ft
 
 from src.logger import Logger
+from src.pages.common.user_dialog.logic import (
+    format_created_date_label,
+    get_user_initial,
+)
 from src.utils import Color, DefaultSettings, Dialog, Page, Text, scale_width
+
 
 class UserManagementDialog(Dialog):
     def __init__(self, page: Page, lang: dict, user_list: UserList, add_form, on_close_callback: Callable, has_cancel_button: bool = True):
@@ -16,21 +23,33 @@ class UserManagementDialog(Dialog):
         self.user_list = user_list
         self.add_form = add_form
         self._close_dialog = on_close_callback
+
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.selection_heading = Text.SMALL(self.lang["user_management.select_account"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.add_user_heading = Text.SMALL(self.lang["user_management.add_new_user"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.dialog_title = Text.H5(self.lang["user_management.header_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+
+        # Static icons
+        self.dialog_title_icon = ft.Icon(ft.Icons.PEOPLE_ALT, color=Color.PRIMARY, size=22)
+
+        # CONTAINER COMPONENTS
         self.selection_section = ft.Column(
             tight=True,
             spacing=10,
             controls=[
-                Text.SMALL(self.lang["user_management.select_account"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                self.selection_heading,
                 user_list
-            ],
+            ]
         )
+
         self.add_user_section = ft.Column(
             tight=True,
             spacing=10,
             controls=[
-                Text.SMALL(self.lang["user_management.add_new_user"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
+                self.add_user_heading,
                 add_form
-            ],
+            ]
         )
 
         header_controls = []
@@ -63,12 +82,12 @@ class UserManagementDialog(Dialog):
                                 spacing=12,
                                 controls=[
                                     ft.Container(
-                                        content=ft.Icon(ft.Icons.PEOPLE_ALT, color=Color.PRIMARY, size=22),
+                                        content=self.dialog_title_icon,
                                         bgcolor=Color.LIGHT_ACCENT,
                                         padding=10,
                                         border_radius=14
                                     ),
-                                    Text.H5(self.lang["user_management.header_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+                                    self.dialog_title
                                 ]
                             )
                         ]
@@ -98,6 +117,9 @@ class UserList(ft.Container):
         self.current_user = current_user
         self.on_select = on_select_callback
         self.on_delete = on_delete_callback
+
+        # TEXT AND ICON COMPONENTS
+        # Dynamic texts and icons are created for each user in create_user_box.
         self.user_created_at = {}
         self._list_width: int | None = None
         self.user_boxes: list[ft.Container] = []
@@ -113,17 +135,30 @@ class UserList(ft.Container):
 
         super().__init__(content=self.main_container)
 
-    def create_user_box(self, username: str):
+    def create_user_box(self, username: str) -> ft.Container:
         is_active = (username == self.current_user)
-        initial = username[0].upper() if username else ""
+        initial = get_user_initial(username)
         created_at = self.user_created_at[username]
         created_prefix = self.lang["user_management.created_date"]
 
-        def handle_select(e, name=username) -> None:
-            self.on_select(name)
+        def handle_select(e: ft.ControlEvent | None = None, name = username) -> ft.ControlEvent | None:
+            self.on_select(name=name)
+            return e
 
+        avatar_label = Text.MEDIUM(
+            initial, color=Color.WHITE, weight=ft.FontWeight.BOLD
+        )
+        username_label = Text.MEDIUM(
+            username,
+            color=Color.PRIMARY_TEXT,
+            weight=ft.FontWeight.BOLD,
+        )
+        created_at_label = Text.SMALL(
+            format_created_date_label(created_prefix, created_at),
+            color=Color.SECONDARY_TEXT,
+        )
         avatar = ft.Container(
-            content=Text.MEDIUM(initial, color=Color.WHITE, weight=ft.FontWeight.BOLD),
+            content=avatar_label,
             bgcolor=Color.PRIMARY,
             width=40,
             height=40,
@@ -134,17 +169,13 @@ class UserList(ft.Container):
             spacing=2,
             expand=True,
             horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
-            controls=[
-                Text.MEDIUM(
-                    username,
-                    color=Color.PRIMARY_TEXT,
-                    weight=ft.FontWeight.BOLD,
-                ),
-                Text.SMALL(
-                    f"{created_prefix} {created_at}" if created_at else f"{created_prefix} --",
-                    color=Color.SECONDARY_TEXT,
-                ),
-            ],
+            controls=[username_label, created_at_label],
+        )
+        # Dynamic icons
+        active_user_icon = ft.Icon(
+            ft.Icons.PERSON_PIN,
+            color=Color.PRIMARY,
+            size=20,
         )
         user_actions = ft.Column(
             alignment=ft.MainAxisAlignment.CENTER,
@@ -153,11 +184,7 @@ class UserList(ft.Container):
             controls=[
                 *(
                     [
-                        ft.Icon(
-                            ft.Icons.PERSON_PIN,
-                            color=Color.PRIMARY,
-                            size=20,
-                        )
+                        active_user_icon
                     ] if is_active else []
                 ),
                 *(
@@ -194,7 +221,7 @@ class UserList(ft.Container):
         user_box.content.width = scale_width(self._list_width, 404) if self._list_width is not None else None
         return user_box
 
-    def update_data(self, current_users: list, current_user: str = "", user_created_at: dict | None = None):
+    def update_data(self, users: list[dict[str, str] | str], current_user: str = "", user_created_at: dict[str, str] | None = None) -> None:
         self.current_user = current_user
         self.list_column.controls.clear()
         self.user_boxes.clear()
@@ -203,12 +230,12 @@ class UserList(ft.Container):
         else:
             self.user_created_at = {}
 
-        if not current_users:
+        if not users:
             self.list_column.controls.append(
                 Text.P(self.lang["user_management.no_user"], color=Color.SECONDARY_TEXT, text_align=ft.TextAlign.CENTER)
             )
         else:
-            for username in current_users:
+            for username in users:
                 if isinstance(username, dict):
                     username_name = username["name"]
                     if username_name:
@@ -250,6 +277,14 @@ class AddUserField(ft.Container):
         self.currencies = currencies
         self.default_currency = default_currency
 
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.submit_button_label = Text.BUTTON(self.lang["user_management.create_button"], color=Color.WHITE, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER, no_wrap=False)
+
+        # Dynamic texts
+        self.error_message = Text.SMALL("", color=Color.ERROR_TEXT)
+
+        # CONTAINER COMPONENTS
         self.input_field = ft.TextField(
             hint_text=self.lang["user_management.username_hint"],
             color=Color.DEFAULT_TEXT,
@@ -279,15 +314,8 @@ class AddUserField(ft.Container):
             menu_height=240
         )
 
-        self.error_message = Text.SMALL("", color=Color.ERROR_TEXT)
         self.submit_button = ft.Container(
-            content=Text.BUTTON(
-                self.lang["user_management.create_btn"],
-                color=Color.WHITE,
-                weight=ft.FontWeight.BOLD,
-                text_align=ft.TextAlign.CENTER,
-                no_wrap=False,
-            ),
+            content=self.submit_button_label,
             alignment=ft.Alignment.CENTER,
             bgcolor=Color.PRIMARY_ACTION,
             padding=16,
@@ -322,10 +350,11 @@ class AddUserField(ft.Container):
             content=self.main_container
         )
 
-    def _handle_submit(self, e=None) -> None:
+    def _handle_submit(self, e: ft.ControlEvent | None = None) -> ft.ControlEvent | None:
         input_username = self.input_field.value.strip()
         selected_currency = self.currency_dropdown.value or self.default_currency
         self.on_submit_callback(input_username, selected_currency)
+        return e
 
     def show_error(self, message: str):
         self.error_message.value = message
@@ -347,8 +376,6 @@ class AddUserField(ft.Container):
         self.main_container.width = width
         self.input_row.width = width
         self.currency_row.width = width
-        self.input_row.controls[0].width = width
-        self.currency_row.controls[0].width = width
         self.input_field.width = width
         self.currency_dropdown.width = width
         self.submit_button.width = width
@@ -363,6 +390,7 @@ class DeleteUserDialog(Dialog):
         self.selected_user: str = ""
 
         # TEXT AND ICON COMPONENTS
+        # Static texts
         self.title_text = Text.H3(self.lang["user_management.confirm_delete_user_title"], color=Color.PRIMARY_TEXT)
         self.content_text = Text.P(self.lang["user_management.confirm_delete_user_content"], color=Color.SECONDARY_TEXT)
         self.cancel_text = Text.BUTTON(self.lang["generic.cancel"], color=Color.SECONDARY_TEXT)
@@ -399,10 +427,12 @@ class DeleteUserDialog(Dialog):
             color=Color.DIALOG_BACKGROUND
         )
 
-    def confirm(self, e=None):
+    def confirm(self, e: ft.ControlEvent | None = None) -> ft.ControlEvent | None:
         if self.selected_user and self.on_confirm:
             self.on_confirm(self.selected_user)
         self.dismiss()
+
+        return e
 
     def resize(self, width: int) -> None:
         self.main_container.width = width
