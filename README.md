@@ -66,4 +66,4 @@ Use the deployed Vercel domain (not the Vercel dashboard URL) for `backend_url`.
 
 ## Mobile ads
 
-The navigation menu shows a 50-dp AdMob banner on Android and iOS when the screen can fit the standard banner width. The project currently uses Google's test app and banner IDs; replace the test IDs in `src/pages/global_components/menu.py` and `pyproject.toml` with your own AdMob app and platform-specific banner IDs before publishing.
+The navigation menu shows a 50-dp AdMob banner on Android and iOS when the screen can fit the standard banner width. The project currently uses Google's test app and banner IDs; replace the test IDs in `src/pages/common/menu/components.py` and `pyproject.toml` with your own AdMob app and platform-specific banner IDs before publishing.

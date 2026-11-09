@@ -1,3 +1,27 @@
+# Finam v1.0.0-rc1
+
+**Release Date:** November 10, 2026
+
+> **⚠️ RELEASE CANDIDATE**
+> 
+> Finam is currently undergoing final testing. It may still contain bugs or incomplete features, and behavior may change before the stable release.
+> 
+> *Report issues: If you find a bug or unexpected behavior, please report it on our GitHub page.*
+
+## Changes in this version
+
+*   Improved savings features.
+*   Added spending AI scanning.
+*   Improved AI features. However, this means older version of the app will no longer be able to use AI features.
+*   Cleaned up codebase and removed unused assets.
+*   Improved overall UI.
+*   Improved app stability and performance.
+
+## Bug fixes in this version
+
+*   Fixed elements and text resizing in most cases.
+*   Fixed many minor bugs and issues.
+
 # Finam v0.4.4-beta
 
 **Release Date:** November 5, 2026
