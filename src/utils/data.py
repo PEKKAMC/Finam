@@ -4,44 +4,45 @@
 
 import random
 
+
 class Data:
     """A class to hold data for the application."""
 
     def __init__(self):
         self.default_expense_categories: list[dict[str, str]] = [
-            {"name": "Mua sắm", "icon": "SHOPPING_CART"},
-            {"name": "Đồ ăn", "icon": "RESTAURANT"},
-            {"name": "Điện thoại", "icon": "SMARTPHONE"},
-            {"name": "Giải trí", "icon": "SPORTS_ESPORTS"},
-            {"name": "Giáo dục", "icon": "SCHOOL"},
-            {"name": "Làm đẹp", "icon": "CONTENT_CUT"},
-            {"name": "Thể thao", "icon": "DIRECTIONS_RUN"},
-            {"name": "Giao lưu", "icon": "PEOPLE"},
-            {"name": "Đi lại", "icon": "DIRECTIONS_BUS"},
-            {"name": "Quần áo", "icon": "CHECKROOM"},
-            {"name": "Ô tô", "icon": "DIRECTIONS_CAR"},
-            {"name": "Thiết bị điện tử", "icon": "COMPUTER"},
-            {"name": "Du lịch", "icon": "FLIGHT"},
-            {"name": "Sức khỏe", "icon": "FAVORITE"},
-            {"name": "Thú cưng", "icon": "PETS"},
-            {"name": "Sửa chữa", "icon": "BUILD"},
-            {"name": "Nhà ở", "icon": "HOME"},
-            {"name": "Nhà", "icon": "CHAIR"},
-            {"name": "Quà tặng", "icon": "CARD_GIFTCARD"},
-            {"name": "Quyên góp", "icon": "VOLUNTEER_ACTIVISM"},
-            {"name": "Vé số", "icon": "CASINO"},
-            {"name": "Ăn vặt", "icon": "BAKERY_DINING"},
-            {"name": "Trẻ em", "icon": "CHILD_CARE"},
-            {"name": "Rau quả", "icon": "LOCAL_FLORIST"},
-            {"name": "Hoa quả", "icon": "APPLE"},
+            {"name": "Mua sắm", "icon": "SHOPPING_CART", "translation_key": "category_selection.defaults.expense.shopping"},
+            {"name": "Đồ ăn", "icon": "RESTAURANT", "translation_key": "category_selection.defaults.expense.food"},
+            {"name": "Điện thoại", "icon": "SMARTPHONE", "translation_key": "category_selection.defaults.expense.phone"},
+            {"name": "Giải trí", "icon": "SPORTS_ESPORTS", "translation_key": "category_selection.defaults.expense.entertainment"},
+            {"name": "Giáo dục", "icon": "SCHOOL", "translation_key": "category_selection.defaults.expense.education"},
+            {"name": "Làm đẹp", "icon": "CONTENT_CUT", "translation_key": "category_selection.defaults.expense.beauty"},
+            {"name": "Thể thao", "icon": "DIRECTIONS_RUN", "translation_key": "category_selection.defaults.expense.sports"},
+            {"name": "Giao lưu", "icon": "PEOPLE", "translation_key": "category_selection.defaults.expense.social"},
+            {"name": "Đi lại", "icon": "DIRECTIONS_BUS", "translation_key": "category_selection.defaults.expense.transportation"},
+            {"name": "Quần áo", "icon": "CHECKROOM", "translation_key": "category_selection.defaults.expense.clothing"},
+            {"name": "Ô tô", "icon": "DIRECTIONS_CAR", "translation_key": "category_selection.defaults.expense.car"},
+            {"name": "Thiết bị điện tử", "icon": "COMPUTER", "translation_key": "category_selection.defaults.expense.electronics"},
+            {"name": "Du lịch", "icon": "FLIGHT", "translation_key": "category_selection.defaults.expense.travel"},
+            {"name": "Sức khỏe", "icon": "FAVORITE", "translation_key": "category_selection.defaults.expense.health"},
+            {"name": "Thú cưng", "icon": "PETS", "translation_key": "category_selection.defaults.expense.pets"},
+            {"name": "Sửa chữa", "icon": "BUILD", "translation_key": "category_selection.defaults.expense.repairs"},
+            {"name": "Nhà ở", "icon": "HOME", "translation_key": "category_selection.defaults.expense.housing"},
+            {"name": "Nhà", "icon": "CHAIR", "translation_key": "category_selection.defaults.expense.home"},
+            {"name": "Quà tặng", "icon": "CARD_GIFTCARD", "translation_key": "category_selection.defaults.expense.gifts"},
+            {"name": "Quyên góp", "icon": "VOLUNTEER_ACTIVISM", "translation_key": "category_selection.defaults.expense.donations"},
+            {"name": "Vé số", "icon": "CASINO", "translation_key": "category_selection.defaults.expense.lottery"},
+            {"name": "Ăn vặt", "icon": "BAKERY_DINING", "translation_key": "category_selection.defaults.expense.snacks"},
+            {"name": "Trẻ em", "icon": "CHILD_CARE", "translation_key": "category_selection.defaults.expense.children"},
+            {"name": "Rau quả", "icon": "LOCAL_FLORIST", "translation_key": "category_selection.defaults.expense.vegetables"},
+            {"name": "Hoa quả", "icon": "APPLE", "translation_key": "category_selection.defaults.expense.fruit"},
         ]
 
         self.default_income_categories: list[dict[str, str]] = [
-            {"name": "Lương", "icon": "WORK"},
-            {"name": "Khoản đầu tư", "icon": "TRENDING_UP"},
-            {"name": "Làm thêm", "icon": "MONEY"},
-            {"name": "Tiền thưởng", "icon": "EMOJI_EVENTS"},
-            {"name": "Khác", "icon": "MONETIZATION_ON"},
+            {"name": "Lương", "icon": "WORK", "translation_key": "category_selection.defaults.income.salary"},
+            {"name": "Khoản đầu tư", "icon": "TRENDING_UP", "translation_key": "category_selection.defaults.income.investments"},
+            {"name": "Làm thêm", "icon": "MONEY", "translation_key": "category_selection.defaults.income.side_job"},
+            {"name": "Tiền thưởng", "icon": "EMOJI_EVENTS", "translation_key": "category_selection.defaults.income.bonus"},
+            {"name": "Khác", "icon": "MONETIZATION_ON", "translation_key": "category_selection.defaults.income.other"},
         ]
 
         self.category_icons: list[str] = [
@@ -302,11 +303,38 @@ class Data:
             "float": r"^[0-9.]*$"
         }
 
-    def get_default_expense_categories(self) -> list[dict[str, str]]:
-        return self.default_expense_categories
+    @staticmethod
+    def _localize_categories(categories: list[dict[str, str]], translations: dict[str, str] | None) -> list[dict[str, str]]:
+        localized = []
+        for category in categories:
+            item = category.copy()
+            if translations:
+                item["name"] = translations.get(
+                    item["translation_key"], item["name"]
+                )
+            localized.append(item)
+        return localized
 
-    def get_default_income_categories(self) -> list[dict[str, str]]:
-        return self.default_income_categories
+    def get_default_expense_categories(self, translations: dict[str, str] | None = None) -> list[dict[str, str]]:
+        return self._localize_categories(self.default_expense_categories, translations)
+
+    def get_default_income_categories(self, translations: dict[str, str] | None = None) -> list[dict[str, str]]:
+        return self._localize_categories(self.default_income_categories, translations)
+
+    def get_default_category_aliases(self, translations: dict[str, str] | None = None) -> dict[str, dict[str, str]]:
+        aliases = {}
+        for category in (self.default_expense_categories + self.default_income_categories):
+            localized_name = (
+                translations.get(category["translation_key"], category["name"])
+                if translations
+                else category["name"]
+            )
+            for name in {category["name"], localized_name}:
+                aliases[name] = {
+                    "name": localized_name,
+                    "icon": category["icon"],
+                }
+        return aliases
 
     def get_category_icons(self) -> list[str]:
         return self.category_icons
