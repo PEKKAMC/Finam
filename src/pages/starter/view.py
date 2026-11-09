@@ -118,7 +118,7 @@ class StarterView(ft.View):
             self.main_container.height = page_height
 
             # Resizing other components
-            if self.lock_screen:
+            if hasattr(self, "lock_screen"):
                 self.lock_screen.resize(
                     width=lock_card_width,
                     pin_field_width=pin_field_width,
