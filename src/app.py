@@ -293,7 +293,7 @@ async def main(page: Page) -> None:
                 return
 
             page.views.append(view)
-            resize_handler = getattr(view, "_on_page_resize", None)
+            resize_handler = getattr(view, "_resize_page", None)
             if callable(resize_handler):
                 async def on_page_resize(ev: ft.PageResizeEvent) -> None:
                     if page.route == "/fallback":
@@ -305,11 +305,13 @@ async def main(page: Page) -> None:
                                 "/home" if info.get("username") else "/starter"
                             )
                         else:
+                            # noinspection PyCallingNonCallable
                             resize_handler(ev)
                         return
                     if not is_supported_page_size(page):
                         await redirect_to_fallback(page, "unsupported_screen")
                         return
+                    # noinspection PyCallingNonCallable
                     resize_handler(ev)
 
                 page.on_resize = on_page_resize
