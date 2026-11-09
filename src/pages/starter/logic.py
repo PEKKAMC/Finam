@@ -4,7 +4,7 @@
 
 from src.logger import Logger
 from src.pages.common.logic import add_user, change_user, delete_user, get_all_users
-from utils import Data
+from src.utils import Data
 
 class LogicController:
     def __init__(self, user_info: dict[str, str]) -> None:

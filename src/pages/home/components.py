@@ -8,8 +8,13 @@ import flet as ft
 import flet_charts as fc
 
 from src.pages.home.logic import SavingsProgressItem
-from src.utils import Color, Text, UISettings, format_compact_number
-
+from src.utils import (
+    Color,
+    Text,
+    UISettings,
+    format_compact_number,
+    format_display_number,
+)
 
 DEFAULT_CHART_RADIUS = 45
 DEFAULT_CHART_CENTER_RADIUS = 40
@@ -53,10 +58,10 @@ class BalanceCard(ft.Container):
         self.ai_icon = ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=16)
 
         # Dynamic texts
-        self.balance_amount_text = Text.H1(format_compact_number(self.net_balance), color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.income_text = Text.MEDIUM(f"{format_compact_number(self.income)} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-        self.expense_text = Text.MEDIUM(f"{format_compact_number(self.expense)} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
-        self.savings_text = Text.MEDIUM(f"{format_compact_number(self.savings)} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.balance_amount_text = Text.H2(format_display_number(self.net_balance, self.lang), color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.income_text = Text.SMALL(f"{format_display_number(self.income, self.lang)} {self.currency}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.expense_text = Text.SMALL(f"{format_display_number(self.expense, self.lang)} {self.currency}", color=Color.EXPENSE_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+        self.savings_text = Text.SMALL(f"{format_display_number(self.savings, self.lang)} {self.currency}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
         self.advice_text = Text.SMALL(self.advice, color=Color.WHITE)
 
         # CONTAINER COMPONENTS
@@ -258,11 +263,11 @@ class BalanceCard(ft.Container):
         self.advice = ai_advice
         self.currency = currency
 
-        self.balance_amount_text.value = format_compact_number(self.net_balance)
+        self.balance_amount_text.value = format_display_number(self.net_balance, self.lang)
         self.currency_label.value = self.currency
-        self.income_text.value = f"{format_compact_number(self.income)} {self.currency}"
-        self.expense_text.value = f"{format_compact_number(self.expense)} {self.currency}"
-        self.savings_text.value = f"{format_compact_number(self.savings)} {self.currency}"
+        self.income_text.value = f"{format_display_number(self.income, self.lang)} {self.currency}"
+        self.expense_text.value = f"{format_display_number(self.expense, self.lang)} {self.currency}"
+        self.savings_text.value = f"{format_display_number(self.savings, self.lang)} {self.currency}"
         self.advice_text.value = self.advice
 
         self.update()
@@ -520,7 +525,8 @@ class SavingsProgressCard(ft.Container):
 
 
 class ExpenseCategoryItem(ft.Row):
-    def __init__(self, name: str, value: float, currency: str, color: str) -> None:
+    def __init__(self, lang: dict[str, str], name: str, value: float, currency: str, color: str) -> None:
+        self.lang = lang
         self.name = name
         self.value = value
         self.currency = currency
@@ -529,7 +535,7 @@ class ExpenseCategoryItem(ft.Row):
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
         self.expense_name_text = Text.SMALL(self.name, color=Color.DEFAULT_TEXT, weight=ft.FontWeight.W_500)
-        self.expense_value_text = Text.SMALL(f"{format_compact_number(self.value)} {self.currency}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
+        self.expense_value_text = Text.SMALL(f"{format_compact_number(self.value, translations=self.lang)} {self.currency}", color=Color.DEFAULT_TEXT, weight=ft.FontWeight.BOLD)
 
         # CONTAINER COMPONENTS
         self.color_box = ft.Container(
@@ -558,7 +564,7 @@ class ExpenseCategoryItem(ft.Row):
     def update_data(self, name: str, value: float, currency: str, color: str) -> None:
         self.color_box.bgcolor = color
         self.expense_name_text.value = name
-        self.expense_value_text.value = f"{format_compact_number(value)} {currency}"
+        self.expense_value_text.value = f"{format_compact_number(value, translations=self.lang)} {currency}"
 
         self.update()
 
@@ -605,7 +611,7 @@ class ExpensePieChart(ft.Container):
         )
 
         self.legend_items: list[ExpenseCategoryItem] = [
-            ExpenseCategoryItem(name, val, self.currency, self.pie_colors[idx % len(self.pie_colors)])
+            ExpenseCategoryItem(self.lang, name, val, self.currency, self.pie_colors[idx % len(self.pie_colors)])
             for idx, (name, val) in enumerate(self.category_data.items())
         ] if self.category_data else []
 
@@ -731,7 +737,7 @@ class ExpensePieChart(ft.Container):
                     self.legend_items[idx].update_data(name, val, self.currency, color)
                 else:
                     self.legend_items.append(
-                        ExpenseCategoryItem(name, val, self.currency, color)
+                        ExpenseCategoryItem(self.lang, name, val, self.currency, color)
                     )
 
             self.pie_chart.sections = sections

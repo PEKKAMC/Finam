@@ -96,7 +96,7 @@ class StarterView(ft.View):
         self._resize_page()
         self.dialogs.user_list.update_data(
             users=self.controller.get_all_users(),
-            username=self.user_info["username"]
+            current_user=self.user_info["username"]
         )
         self.dialogs.user_list.main_container.update()
         self.dialogs.user_dialog.update()
@@ -107,6 +107,7 @@ class StarterView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
+
             dialog_width = page_width // 3 * 2
             user_list_height = scale_height(page_height, 300)
             lock_card_width = scale_width(page_width, 360)
@@ -115,13 +116,14 @@ class StarterView(ft.View):
             # Resizing main container
             self.main_container.width = page_width
             self.main_container.height = page_height
-            if hasattr(self, "lock_screen"):
+
+            # Resizing other components
+            if self.lock_screen:
                 self.lock_screen.resize(
                     width=lock_card_width,
                     pin_field_width=pin_field_width,
                 )
 
-            # Resizing other components
             self.dialogs.user_dialog.resize(
                 width=dialog_width,
                 list_height=user_list_height,

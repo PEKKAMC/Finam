@@ -24,6 +24,7 @@ class HomeView(ft.View):
 
         # IMPORTED FUNCTIONS
         self.get_safe_page_size = get_safe_page_size
+        self.get_menu_resize_values = get_menu_resize_values
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info["username"])
@@ -239,14 +240,14 @@ class HomeView(ft.View):
 
     def _resize_page(self, e: ft.PageResizeEvent | None = None) -> None:
         try:
-            page_width, page_height = self.get_safe_page_size(page=self._page)
-
             # Get page size
+            page_width, page_height = self.get_safe_page_size(page=self._page)
+            menu_resize_values = self.get_menu_resize_values(page_width, self.menu)
+
             content_width = scale_width(page_width, 392)
             inner_width = scale_width(page_width, 352)
             savings_inner_width = inner_width
             goal_item_content_width = scale_width(page_width, 328)
-            menu_resize_values = get_menu_resize_values(page_width, self.menu)
             chart_radius = int(page_height * 0.06)
             center_radius = int(page_height * 0.045)
             legend_height = int(page_height * 0.15)
