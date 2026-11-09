@@ -2,25 +2,29 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from __future__ import annotations
+
 import os
 from collections.abc import Callable
+from typing import Any, ClassVar
 
 import flet as ft
 import flet_ads as fta
 
 from src.logger import Logger
+from src.pages.common.menu.logic import get_active_menu_item
 from src.utils import Color, Page, Text
 
 
 class Menu(ft.Container):
     BANNER_WIDTH = 320
     BANNER_HEIGHT = 50
-    TEST_BANNER_IDS = {
-        ft.PagePlatform.ANDROID: "ca-app-pub-3940256099942544/9214589741",
-        ft.PagePlatform.IOS: "ca-app-pub-3940256099942544/2435281174",
+    BANNER_IDS: ClassVar[dict[ft.PagePlatform, str]] = {
+        ft.PagePlatform.ANDROID: "ca-app-pub-6347435898633316~7597886932",
+        ft.PagePlatform.IOS: "ca-app-pub-6347435898633316~7597886932",
     }
 
-    def __init__(self, page: Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict[str, str], user_info: dict[str, Any]) -> None:
         self._page = page
         self.lang = lang
         self.user_info = user_info
@@ -30,9 +34,11 @@ class Menu(ft.Container):
         self.ad_banner_height = 0
         self.reserved_height = 0
 
-        if not page.web and page.platform in self.TEST_BANNER_IDS:
+        # TEXT AND ICON COMPONENTS
+        # NavigationItem owns each navigation label and icon.
+        if not page.web and page.platform in self.BANNER_IDS:
             self.ad_banner = fta.BannerAd(
-                unit_id=self.TEST_BANNER_IDS[page.platform or ft.PagePlatform.ANDROID],
+                unit_id=self.BANNER_IDS[page.platform or ft.PagePlatform.ANDROID],
                 width=self.BANNER_WIDTH,
                 height=self.BANNER_HEIGHT,
                 request=fta.AdRequest(non_personalized_ads=True),
@@ -49,7 +55,7 @@ class Menu(ft.Container):
                 bgcolor=Color.PAGE_BACKGROUND,
             )
 
-        self.navigation_items = [
+        self.navigation_items: list[NavigationItem] = [
             self.build_nav_item(ft.Icons.HOME_ROUNDED, self.lang["generic.home"], self._page.navigate_to("/home"), is_active=self.active_icon == "home"),
             self.build_nav_item(ft.Icons.MENU_BOOK_ROUNDED, self.lang["generic.lesson"], self._page.navigate_to("/lessons"), is_active=self.active_icon == "lesson"),
             self.build_nav_item(ft.Icons.SAVINGS_ROUNDED, self.lang["generic.saving"], self._page.navigate_to("/savings"), is_active=self.active_icon == "saving"),
@@ -97,68 +103,13 @@ class Menu(ft.Container):
         )
 
     @staticmethod
-    def build_nav_item(icon: ft.IconData, title_text: str, on_click: Callable | None, is_active: bool) -> ft.Container:
-        active_bg = Color.NAVIGATION_ACTIVE_BACKGROUND if is_active else Color.TRANSPARENT
-        active_text = Color.NAVIGATION_ACTIVE_TEXT if is_active else Color.SECONDARY_TEXT
-        active_icon = Color.NAVIGATION_ACTIVE_ICON if is_active else Color.SECONDARY_TEXT
-        change_route = None if is_active else on_click
-
-        return ft.Container(
-            border_radius=16,
-            ink=True,
-            on_click=change_route,
-            alignment=ft.Alignment.CENTER,
-            content=ft.Container(
-                border_radius=16,
-                bgcolor=active_bg,
-                alignment=ft.Alignment.CENTER,
-                content=ft.Column(
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    spacing=4,
-                    controls=[
-                        ft.Icon(icon, size=20, color=active_icon),
-                        Text.SMALL(title_text, color=active_text),
-                    ],
-                ),
-            ),
-        )
+    def build_nav_item(icon: ft.IconData, title_text: str, on_click: Callable[..., Any] | None, is_active: bool) -> NavigationItem:
+        return NavigationItem(icon, title_text, on_click, is_active)
 
     def get_active_icon(self) -> str:
-        current_route = self._page.route
+        return get_active_menu_item(self._page.route)
 
-        match current_route:
-            case "/user_management":
-                return "user_management"
-            case "/home":
-                return "home"
-            case "/lessons" | "/lesson-player":
-                return "lesson"
-            case "/savings":
-                return "saving"
-            case "/spending":
-                return "spending"
-            case "/purchase_scanner":
-                return "scanner"
-            case "/lesson-editor":
-                return "editor"
-            case _:
-                return ""
-
-    def resize(
-        self,
-        width: int,
-        item_size: int,
-        item_height: int,
-        inside_size: int,
-        inside_height: int,
-        banner_height: int,
-        total_height: int,
-        label_size: int,
-        icon_size: int,
-        label_spacing: int,
-        label_visible: bool,
-    ) -> None:
+    def resize(self, width: int, item_size: int, item_height: int, inside_size: int, inside_height: int, banner_height: int, total_height: int, label_size: int, icon_size: int, label_spacing: int, label_visible: bool) -> None:
         self.width = width
         if self.ad_banner is not None:
             self.ad_banner.visible = banner_height > 0
@@ -175,9 +126,52 @@ class Menu(ft.Container):
         for item in self.navigation_items:
             item.width = item_size
             item.height = item_height
-            item.content.width = inside_size
-            item.content.height = inside_height
-            item.content.content.spacing = label_spacing
-            item.content.content.controls[0].size = icon_size
-            item.content.content.controls[1].size = label_size
-            item.content.content.controls[1].visible = label_visible
+            item.resize(
+                inside_size,
+                inside_height,
+                icon_size,
+                label_size,
+                label_spacing,
+                label_visible,
+            )
+
+
+class NavigationItem(ft.Container):
+    def __init__(self, icon: ft.IconData, title_text: str, on_click: Callable[..., Any] | None, is_active: bool) -> None:
+        active_text_color = Color.NAVIGATION_ACTIVE_TEXT if is_active else Color.SECONDARY_TEXT
+        active_icon_color = Color.NAVIGATION_ACTIVE_ICON if is_active else Color.SECONDARY_TEXT
+        active_background = Color.NAVIGATION_ACTIVE_BACKGROUND if is_active else Color.TRANSPARENT
+
+        # TEXT AND ICON COMPONENTS
+        # Static icons
+        self.icon = ft.Icon(icon, size=20, color=active_icon_color)
+
+        # Dynamic texts
+        self.label = Text.SMALL(title_text, color=active_text_color)
+        self.content_column = ft.Column(
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=4,
+            controls=[self.icon, self.label],
+        )
+
+        super().__init__(
+            border_radius=16,
+            ink=True,
+            on_click=None if is_active else on_click,
+            alignment=ft.Alignment.CENTER,
+            content=ft.Container(
+                border_radius=16,
+                bgcolor=active_background,
+                alignment=ft.Alignment.CENTER,
+                content=self.content_column,
+            ),
+        )
+
+    def resize(self, width: int, height: int, icon_size: int, label_size: int, spacing: int, label_visible: bool) -> None:
+        self.content.width = width
+        self.content.height = height
+        self.content_column.spacing = spacing
+        self.icon.size = icon_size
+        self.label.size = label_size
+        self.label.visible = label_visible
