@@ -4,22 +4,35 @@
 
 """Lesson Editor page - Edit and create financial lessons."""
 
-from src.pages.lesson_editor.components import TopNavigationBar, EditorToolbar, PropertiesTabs, SlideSidebarLayout
-from src.pages.lesson_editor.logic import ENTRANCE_EFFECTS, EXIT_EFFECTS, ENTRANCE_IDS, EXIT_IDS, LogicController, safe_float, calculate_pan_position
+from src.pages.lesson_editor.components import (
+    EditorToolbar,
+    PropertiesTabs,
+    SlideSidebarLayout,
+    TopNavigationBar,
+)
+from src.pages.lesson_editor.logic import (
+    ENTRANCE_EFFECTS,
+    ENTRANCE_IDS,
+    EXIT_EFFECTS,
+    EXIT_IDS,
+    LogicController,
+    calculate_pan_position,
+    safe_float,
+)
 from src.pages.lesson_editor.view import LessonEditorView, get_lesson_editor_view
 
 __all__ = [
-    "TopNavigationBar",
+    "ENTRANCE_EFFECTS",
+    "ENTRANCE_IDS",
+    "EXIT_EFFECTS",
+    "EXIT_IDS",
     "EditorToolbar",
+    "LessonEditorView",
+    "LogicController",
     "PropertiesTabs",
     "SlideSidebarLayout",
-    "ENTRANCE_EFFECTS",
-    "EXIT_EFFECTS",
-    "ENTRANCE_IDS",
-    "EXIT_IDS",
-    "LogicController",
-    "safe_float",
+    "TopNavigationBar",
     "calculate_pan_position",
-    "LessonEditorView",
-    "get_lesson_editor_view"
+    "get_lesson_editor_view",
+    "safe_float",
 ]

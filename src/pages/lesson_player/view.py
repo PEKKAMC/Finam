@@ -1,69 +1,125 @@
-﻿# Copyright (c) 2026 PEKKAMC
+# Copyright (c) 2026 PEKKAMC
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import os
 import asyncio
+import os
 import re
 
 import flet as ft
 
 from src.logger import Logger
-from src.pages.lesson_player.logic import LogicController, AudioController, AnimationController, ENTRANCE_EFFECTS
-from src.pages.lesson_player.components import TopNavigationMenu, SlideCanvas, LessonHeader, LessonControls, PresentationBoard
-from src.utils import Color, Page, create_text, get_safe_page_size, scale_height, scale_width, Text
+from src.pages.lesson_player.components import (
+    LessonControls,
+    LessonHeader,
+    PresentationBoard,
+    SlideCanvas,
+    TopNavigationMenu,
+)
+from src.pages.lesson_player.logic import (
+    ENTRANCE_EFFECTS,
+    AnimationController,
+    AudioController,
+    InterfaceItem,
+    LogicController,
+)
+from src.utils import (
+    Color,
+    Page,
+    create_text,
+    get_safe_page_size,
+    scale_height,
+    scale_width,
+)
 
 Logger.info("Initializing Lesson Player page...")
 
+PROJECT_ROOT_DIRECTORY = os.path.abspath(
+    os.path.join(os.path.dirname(str(__file__)), "..", "..", "..")
+)
+ASSETS_DIRECTORY = "assets"
+LESSONS_DIRECTORY = "lessons"
+IMAGES_DIRECTORY = "images"
+
 
 class LessonPlayerView(ft.View):
-    def __init__(self, page: Page, lang: dict, user_info: dict, target_lesson_filename: str | None):
+    def __init__(self, page: Page, lang: dict[str, str], user_info: dict[str, str], target_lesson_filename: str | None) -> None:
         self._page = page
         self.lang = lang
         self.user_info = user_info
         self.is_constructing_slide = False
 
-        self.get_safe_page_size = get_safe_page_size
+        # INITIALIZE PAGE CONTROLLER
         self.audio_controller = AudioController(self._page)
         self.lesson_logic = LogicController(target_lesson_filename or "")
-        self.animation_controller = AnimationController(self._page, self.audio_controller)
+        self.animation_controller = AnimationController(
+            self._page, self.audio_controller
+        )
 
-        self.top_navigation_menu = TopNavigationMenu(page=self._page, lang=self.lang, on_return_click=self.handle_return_click)
+        # INITIALIZE PAGE COMPONENTS
+        self.top_navigation_menu = TopNavigationMenu(
+            page=self._page, lang=self.lang, on_return_click=self.handle_return_click
+        )
         self.slide_canvas = SlideCanvas(page=self._page, lang=self.lang)
-        self.lesson_header = LessonHeader(page=self._page, lang=self.lang, default_title=self.lesson_logic.lesson_title)
+        self.lesson_header = LessonHeader(
+            page=self._page,
+            lang=self.lang,
+            default_title=self.lesson_logic.lesson_title,
+        )
         self.lesson_controls = LessonControls(
             page=self._page,
             lang=self.lang,
             on_previous_click=self.handle_previous_slide,
-            on_next_click=self.handle_next_slide
+            on_next_click=self.handle_next_slide,
         )
-        self.presentation_board = PresentationBoard(self._page, self.lang, self.lesson_header, self.lesson_controls, self.slide_canvas)
+        self.presentation_board = PresentationBoard(
+            self._page,
+            self.lang,
+            self.lesson_header,
+            self.lesson_controls,
+            self.slide_canvas,
+        )
 
         self.center_alignment_container = ft.Container(
-            content=ft.Column(spacing=25, controls=[self.top_navigation_menu, self.presentation_board]),
-            padding=20
+            content=ft.Column(
+                spacing=25, controls=[self.top_navigation_menu, self.presentation_board]
+            ),
+            padding=20,
         )
 
+        # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
-            content=ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[self.center_alignment_container]),
-            expand=True, padding=0
+            content=ft.Row(
+                alignment=ft.MainAxisAlignment.CENTER,
+                controls=[self.center_alignment_container],
+            ),
+            expand=True,
+            padding=0,
         )
 
-        routing_path = f"/lesson-player/{target_lesson_filename}" if target_lesson_filename else "/lesson-player"
+        routing_path = (
+            f"/lesson-player/{target_lesson_filename}"
+            if target_lesson_filename
+            else "/lesson-player"
+        )
 
         super().__init__(
             route=routing_path,
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
-            controls=[ft.Stack(controls=[self.main_container], expand=True)]
+            controls=[ft.Stack(controls=[self.main_container], expand=True)],
         )
 
-        self._page.on_resize = self._on_page_resize
-        self._on_page_resize(None)
+        self._page.on_resize = self._resize_page
+        self._resize_page(None)
 
         if target_lesson_filename:
-            project_root_directory = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), "..", "..", ".."))
-            full_target_path = os.path.join(project_root_directory, "assets", "lessons", target_lesson_filename)
+            full_target_path = os.path.join(
+                PROJECT_ROOT_DIRECTORY,
+                ASSETS_DIRECTORY,
+                LESSONS_DIRECTORY,
+                target_lesson_filename,
+            )
             self._page.run_task(self.initialize_lesson_from_path, full_target_path)
 
         self.original_route_change_event = self._page.on_route_change
@@ -71,121 +127,207 @@ class LessonPlayerView(ft.View):
         self._page.on_route_change = self.cleanup_audio_resources
         self._page.on_disconnect = self.cleanup_audio_resources
 
-    async def build_and_play_current_slide(self, sequence_identifier: int):
+    async def build_and_play_current_slide(self, sequence_identifier: int) -> None:
         self.slide_canvas.clear_canvas()
         current_elements = self.lesson_logic.get_current_slide_elements()
-        user_interface_elements = []
+        user_interface_elements: list[InterfaceItem] = []
 
         for element_data in current_elements:
             if element_data.get("type") == "audio":
-                user_interface_elements.append({
-                    "data": element_data, "container": None, "control": None,
-                    "target_width": 0, "is_text": False
-                })
+                user_interface_elements.append(
+                    {
+                        "data": element_data,
+                        "container": None,
+                        "control": None,
+                        "target_width": 0,
+                        "is_text": False,
+                    }
+                )
                 continue
 
-            entrance_effect = ENTRANCE_EFFECTS.get(element_data.get("entrance", 0), "None")
+            entrance_effect = ENTRANCE_EFFECTS.get(
+                element_data.get("entrance", 0), "None"
+            )
             is_text_element = element_data.get("type") == "text"
             is_divider_element = element_data.get("type") == "divider"
 
-            animation_duration_milliseconds = self.animation_controller.get_animation_duration(element_data, "duration_in", 0.6)
+            animation_duration_milliseconds = (
+                self.animation_controller.get_animation_duration(
+                    element_data, "duration_in", 0.6
+                )
+            )
 
             initial_opacity = 0 if entrance_effect not in ["None", "Wipe"] else 1
-            initial_offset = ft.Offset(0, 1.5) if entrance_effect == "Fly in" else ft.Offset(0, 0)
-            initial_scale = ft.Scale(1, 0.01) if entrance_effect == "Strips" else ft.Scale(1, 1)
+            initial_offset = (
+                ft.Offset(0, 1.5) if entrance_effect == "Fly in" else ft.Offset(0, 0)
+            )
+            initial_scale = (
+                ft.Scale(1, 0.01) if entrance_effect == "Strips" else ft.Scale(1, 1)
+            )
 
             initial_animation_object = ft.Animation(1, ft.AnimationCurve.LINEAR)
 
             if is_text_element:
-                target_width = self.animation_controller.safe_convert_to_float(element_data.get("width"), 300.0)
+                target_width = self.animation_controller.safe_convert_to_float(
+                    element_data.get("width"), 300.0
+                )
                 font_size = int(element_data.get("size")) or 16
                 raw_text_content = element_data.get("content", "")
-                clean_text_content = re.sub(r'\{pause:[\d.]+}', '', raw_text_content)
+                clean_text_content = re.sub(r"\{pause:[\d.]+}", "", raw_text_content)
 
                 if entrance_effect == "Wipe":
-                    visual_control = create_text("", size=font_size, color=Color.DEFAULT_TEXT, width=target_width)
+                    visual_control = create_text(
+                        "", size=font_size, color=Color.DEFAULT_TEXT, width=target_width
+                    )
                 else:
-                    visual_control = create_text(clean_text_content, size=font_size, color=Color.DEFAULT_TEXT, width=target_width)
+                    visual_control = create_text(
+                        clean_text_content,
+                        size=font_size,
+                        color=Color.DEFAULT_TEXT,
+                        width=target_width,
+                    )
 
             elif is_divider_element:
-                target_width = self.animation_controller.safe_convert_to_float(element_data.get("width"), 300.0)
+                target_width = self.animation_controller.safe_convert_to_float(
+                    element_data.get("width"), 300.0
+                )
                 divider_content = ft.Container(
                     content=ft.Divider(thickness=2, color=Color.DEFAULT_TEXT),
-                    width=target_width, height=20, alignment=ft.Alignment.CENTER
+                    width=target_width,
+                    height=20,
+                    alignment=ft.Alignment.CENTER,
                 )
 
                 if entrance_effect == "Wipe":
-                    decoupled_layer = ft.Stack(controls=[
-                        ft.Container(content=divider_content, width=target_width, alignment=ft.Alignment.TOP_LEFT)
-                    ])
+                    decoupled_layer = ft.Stack(
+                        controls=[
+                            ft.Container(
+                                content=divider_content,
+                                width=target_width,
+                                alignment=ft.Alignment.TOP_LEFT,
+                            )
+                        ]
+                    )
                     visual_control = ft.Container(
-                        content=decoupled_layer, width=0.1, clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                        alignment=ft.Alignment.TOP_LEFT, animate=ft.Animation(animation_duration_milliseconds, ft.AnimationCurve.LINEAR)
+                        content=decoupled_layer,
+                        width=0.1,
+                        clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                        alignment=ft.Alignment.TOP_LEFT,
+                        animate=ft.Animation(
+                            animation_duration_milliseconds, ft.AnimationCurve.LINEAR
+                        ),
                     )
                 else:
                     visual_control = divider_content
 
             else:
-                image_scale = self.animation_controller.safe_convert_to_float(element_data.get("scale"), 1.0)
+                image_scale = self.animation_controller.safe_convert_to_float(
+                    element_data.get("scale"), 1.0
+                )
                 target_width = 300.0 * image_scale
                 image_source_path = element_data.get("content", "").strip()
-                final_image_source = ""
-
-                if image_source_path:
-                    if image_source_path.startswith("http"):
-                        final_image_source = image_source_path
-                    else:
-                        project_root = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), "..", "..", ".."))
-                        resolved_path = os.path.join(project_root, "assets", "images", image_source_path)
-                        if os.path.isfile(resolved_path):
-                            final_image_source = resolved_path
+                final_image_source = self._resolve_image_source(image_source_path)
 
                 if final_image_source:
-                    image_content = ft.Image(src=final_image_source, fit=ft.BoxFit.CONTAIN, width=target_width)
+                    image_content = ft.Image(
+                        src=final_image_source,
+                        fit=ft.BoxFit.CONTAIN,
+                        width=target_width,
+                    )
                 else:
                     image_content = ft.Icon(ft.Icons.BROKEN_IMAGE, size=target_width)
 
                 if entrance_effect == "Wipe":
-                    decoupled_layer = ft.Stack(controls=[
-                        ft.Container(content=image_content, width=target_width, alignment=ft.Alignment.TOP_LEFT)
-                    ])
+                    decoupled_layer = ft.Stack(
+                        controls=[
+                            ft.Container(
+                                content=image_content,
+                                width=target_width,
+                                alignment=ft.Alignment.TOP_LEFT,
+                            )
+                        ]
+                    )
                     visual_control = ft.Container(
-                        content=decoupled_layer, width=0.1, clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                        alignment=ft.Alignment.TOP_LEFT, animate=ft.Animation(animation_duration_milliseconds, ft.AnimationCurve.LINEAR)
+                        content=decoupled_layer,
+                        width=0.1,
+                        clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                        alignment=ft.Alignment.TOP_LEFT,
+                        animate=ft.Animation(
+                            animation_duration_milliseconds, ft.AnimationCurve.LINEAR
+                        ),
                     )
                 else:
                     visual_control = image_content
 
-            position_x = self.animation_controller.safe_convert_to_float(element_data.get("x"), 50.0)
-            position_y = self.animation_controller.safe_convert_to_float(element_data.get("y"), 50.0)
-
-            animation_container = ft.Container(
-                content=visual_control, left=position_x, top=position_y,
-                opacity=initial_opacity, offset=initial_offset, scale=initial_scale,
-                animate_opacity=initial_animation_object, animate_offset=initial_animation_object, animate_scale=initial_animation_object,
-                alignment=ft.Alignment.CENTER
+            position_x = self.animation_controller.safe_convert_to_float(
+                element_data.get("x"), 50.0
+            )
+            position_y = self.animation_controller.safe_convert_to_float(
+                element_data.get("y"), 50.0
             )
 
-            user_interface_elements.append({
-                "data": element_data, "container": animation_container, "control": visual_control,
-                "target_width": target_width, "is_text": is_text_element,
-                "full_text": element_data.get("content", "") if is_text_element else ""
-            })
+            animation_container = ft.Container(
+                content=visual_control,
+                left=position_x,
+                top=position_y,
+                opacity=initial_opacity,
+                offset=initial_offset,
+                scale=initial_scale,
+                animate_opacity=initial_animation_object,
+                animate_offset=initial_animation_object,
+                animate_scale=initial_animation_object,
+                alignment=ft.Alignment.CENTER,
+            )
+
+            user_interface_elements.append(
+                {
+                    "data": element_data,
+                    "container": animation_container,
+                    "control": visual_control,
+                    "target_width": target_width,
+                    "is_text": is_text_element,
+                    "full_text": element_data.get("content", "")
+                    if is_text_element
+                    else "",
+                }
+            )
             self.slide_canvas.add_visual_control(animation_container)
 
         try:
             self._page.update()
-        except Exception as ex:
+        except RuntimeError as ex:
             Logger.error(f"Error updating page after adding visual controls: {ex}")
 
-        asyncio.create_task(self.animation_controller.execute_all_animations(user_interface_elements, sequence_identifier))
+        asyncio.create_task(
+            self.animation_controller.execute_all_animations(
+                user_interface_elements, sequence_identifier
+            )
+        )
 
-    async def change_slide_wrapper(self, direction_offset: int):
-        if self.is_constructing_slide: return
+    @staticmethod
+    def _resolve_image_source(image_source_path: str) -> str:
+        if not image_source_path:
+            return ""
+        if image_source_path.startswith("http"):
+            return image_source_path
+
+        resolved_path = os.path.join(
+            PROJECT_ROOT_DIRECTORY,
+            ASSETS_DIRECTORY,
+            IMAGES_DIRECTORY,
+            image_source_path,
+        )
+        return resolved_path if os.path.isfile(resolved_path) else ""
+
+    async def change_slide_wrapper(self, direction_offset: int) -> None:
+        if self.is_constructing_slide:
+            return
 
         await self.audio_controller.pause()
         try:
-            potential_new_index = self.lesson_logic.current_slide_index + direction_offset
+            potential_new_index = (
+                self.lesson_logic.current_slide_index + direction_offset
+            )
             if 0 <= potential_new_index < self.lesson_logic.get_total_slides():
                 self.is_constructing_slide = True
 
@@ -201,27 +343,27 @@ class LessonPlayerView(ft.View):
                     self.lesson_logic.lesson_title,
                     self.lesson_logic.current_slide_index,
                     self.lesson_logic.get_total_slides(),
-                    self.lang
+                    self.lang,
                 )
                 self.lesson_controls.update_button_states(
                     self.lesson_logic.has_previous_slide(),
-                    self.lesson_logic.has_next_slide()
+                    self.lesson_logic.has_next_slide(),
                 )
 
                 self._page.update()
                 await self.build_and_play_current_slide(new_sequence_identifier)
-        except Exception as exception_error:
+        except (AttributeError, IndexError, RuntimeError, ValueError) as exception_error:
             Logger.error(f"Navigation Error: {exception_error}")
         finally:
             self.is_constructing_slide = False
 
-    async def handle_next_slide(self, e) -> None:
+    async def handle_next_slide(self, e: ft.ControlEvent) -> None:
         await self.change_slide_wrapper(1)
 
-    async def handle_previous_slide(self, e) -> None:
+    async def handle_previous_slide(self, e: ft.ControlEvent) -> None:
         await self.change_slide_wrapper(-1)
 
-    async def initialize_lesson_from_path(self, filepath: str):
+    async def initialize_lesson_from_path(self, filepath: str) -> None:
         success = self.lesson_logic.load_lesson_data(filepath)
         if not success:
             self.lesson_header.title_display.value = "Error Loading File"
@@ -233,29 +375,31 @@ class LessonPlayerView(ft.View):
             self.lesson_logic.lesson_title,
             self.lesson_logic.current_slide_index,
             self.lesson_logic.get_total_slides(),
-            self.lang
+            self.lang,
         )
         self.lesson_controls.update_button_states(
-            self.lesson_logic.has_previous_slide(),
-            self.lesson_logic.has_next_slide()
+            self.lesson_logic.has_previous_slide(), self.lesson_logic.has_next_slide()
         )
 
         initial_sequence_identifier = self.animation_controller.start_new_sequence()
         await self.build_and_play_current_slide(initial_sequence_identifier)
 
-    async def handle_return_click(self, e) -> None:
+    async def handle_return_click(self, e: ft.ControlEvent) -> None:
         self.animation_controller.start_new_sequence()
         await self.audio_controller.pause()
         await self._page.push_route("/lessons")
 
-    async def cleanup_audio_resources(self, event):
+    async def cleanup_audio_resources(self, event: ft.RouteChangeEvent | ft.Event[ft.Page]) -> None:
         self.animation_controller.start_new_sequence()
         await self.audio_controller.pause()
 
-        if hasattr(self, 'audio_controller'):
+        if hasattr(self, "audio_controller"):
             await self.audio_controller.pause()
 
-            if self.audio_controller.active_audio and self.audio_controller.active_audio in self._page.services:
+            if (
+                self.audio_controller.active_audio
+                and self.audio_controller.active_audio in self._page.services
+            ):
                 self._page.services.remove(self.audio_controller.active_audio)
                 self._page.update()
 
@@ -264,13 +408,16 @@ class LessonPlayerView(ft.View):
         elif self.original_disconnect_event and event.name == "disconnect":
             self.original_disconnect_event(event)
 
-        if self.audio_controller.active_audio and self.audio_controller.active_audio in self._page.services:
+        if (
+            self.audio_controller.active_audio
+            and self.audio_controller.active_audio in self._page.services
+        ):
             self._page.services.remove(self.audio_controller.active_audio)
 
-    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+    def _resize_page(self, e: ft.PageResizeEvent | None = None) -> int:
         try:
             # Get page size
-            page_width, page_height = self.get_safe_page_size(page=self._page)
+            page_width, page_height = get_safe_page_size(page=self._page)
 
             center_padding = scale_width(page_width, 20)
             center_width = scale_width(page_width, 392)
@@ -304,12 +451,10 @@ class LessonPlayerView(ft.View):
         except (TypeError, ValueError) as ex:
             Logger.error(f"Value of width/height of the page is invalid: {ex}")
             return 2
-
-        except Exception as ex:
-            Logger.error(f"Error during page resize: {ex}, event: {e}")
-            return -1
+        else:
+            return 0
 
 
-def get_lesson_player_view(page: Page, lang: dict, user_info: dict, target_lesson_filename: str | None = None) -> ft.View:
+def get_lesson_player_view(page: Page, lang: dict[str, str], user_info: dict[str, str], target_lesson_filename: str | None = None) -> ft.View:
     Logger.info("Loading Lesson Player page...")
     return LessonPlayerView(page, lang, user_info, target_lesson_filename)
