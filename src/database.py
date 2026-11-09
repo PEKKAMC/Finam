@@ -417,7 +417,7 @@ class UserDatabase:
             for row in rows
         ]
 
-    def add_user(self, username: str, currency: str) -> bool:
+    def add_user(self, username: str, currency: str) -> int:
         try:
             created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
             self.db.execute(
@@ -426,14 +426,15 @@ class UserDatabase:
             )
             self.set_language(username, DefaultSettings.LANGUAGE)
             self.set_currency(username, currency)
-            return True
-        except sqlite3.IntegrityError:
-            return False
+            return 0
 
-    def delete_user(self, username: str) -> None:
+        except sqlite3.IntegrityError:
+            return 1
+
+    def delete_user(self, username: str) -> int:
         user_id = self.get_user_id(username)
         if not user_id:
-            return
+            return 1
 
         self.db.execute("DELETE FROM user_settings WHERE user_id = ?", (user_id,))
         self.db.execute("DELETE FROM purchase_scan_history WHERE user_id = ?", (user_id,))
@@ -446,6 +447,8 @@ class UserDatabase:
         self.db.execute("DELETE FROM savings WHERE user_id = ?", (user_id,))
         self.db.execute("DELETE FROM objectives WHERE user_id = ?", (user_id,))
         self.db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+
+        return 0
 
     def get_user_id(self, username: str) -> Optional[int]:
         result = self.db.execute(
@@ -565,15 +568,7 @@ class AppSettingsDatabase:
     def __init__(self, connection: DatabaseConnection):
         self.db = connection
 
-    def save_mobile_google_oauth(
-        self,
-        state: str,
-        verifier: str,
-        expires_at: float,
-        backend_url: str,
-        client_id: str,
-        redirect_url: str,
-    ) -> bool:
+    def save_mobile_google_oauth(self, state: str, verifier: str, expires_at: float, backend_url: str, client_id: str, redirect_url: str) -> bool:
         pending = json.dumps({
             "state": state,
             "verifier": verifier,
@@ -679,6 +674,13 @@ class AppSettingsDatabase:
         return (
             self.get_google_account() is not None
             and self.get_google_refresh_token() is not None
+        )
+
+    def is_cached_developer(self) -> bool:
+        account = self.get_google_account()
+        return bool(
+            account
+            and self.get_google_account_tier(account["uid"]) == "developer"
         )
 
     def set_google_account(self, google_uid: str, email: str, refresh_token: str) -> bool:
@@ -1142,13 +1144,7 @@ class SpendingDatabase:
         )
         return [{"id": row[0], "amount": float(row[1]), "category": row[2], "date": row[3], "note": row[4]} for row in rows]
 
-    def get_user_chart_totals(
-        self,
-        username: str,
-        chart_type: str,
-        start_date: str,
-        end_date: str,
-    ) -> list:
+    def get_user_chart_totals(self, username: str, chart_type: str, start_date: str, end_date: str) -> list:
         """Aggregate chart buckets in SQLite without loading transaction rows into Python."""
         bucket_expression = {
             "daily": "(CAST(strftime('%w', date) AS INTEGER) + 6) % 7",
