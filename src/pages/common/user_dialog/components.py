@@ -142,7 +142,7 @@ class UserList(ft.Container):
         created_prefix = self.lang["user_management.created_date"]
 
         def handle_select(e: ft.ControlEvent | None = None, name = username) -> ft.ControlEvent | None:
-            self.on_select(name=name)
+            self.on_select(name)
             return e
 
         avatar_label = Text.MEDIUM(
