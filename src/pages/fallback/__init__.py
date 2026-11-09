@@ -7,11 +7,9 @@
 from src.pages.fallback.components import NotSupportedMessageBox, ReturnButton
 from src.pages.fallback.view import FallbackView, get_fallback_view
 
-
 __all__ = [
+    "FallbackView",
     "NotSupportedMessageBox",
     "ReturnButton",
-    "FallbackView",
-    "get_fallback_view"
+    "get_fallback_view",
 ]
-

@@ -6,13 +6,13 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.fallback.components import NotSupportedMessageBox, ReturnButton
-from src.utils import Color, get_safe_page_size, Page
+from src.utils import Color, Page, UISettings, get_safe_page_size
 
 Logger.info("Initializing Fallback page...")
 
 
 class FallbackView(ft.View):
-    def __init__(self, page: Page, lang: dict, fallback_reason: str):
+    def __init__(self, page: Page, lang: dict[str, str], fallback_reason: str) -> None:
         self._page = page
         self.lang = lang
         self.fallback_reason = fallback_reason
@@ -21,46 +21,58 @@ class FallbackView(ft.View):
         self.get_safe_page_size = get_safe_page_size
 
         # INITIALIZE PAGE COMPONENTS
-        self.message = self.get_fallback_message(
-            reason=self.fallback_reason
-        )
+        self.message = self.get_fallback_message(reason=self.fallback_reason)
 
         self.message_box = NotSupportedMessageBox(
-            page=self._page,
-            lang=self.lang,
-            message=self.message
+            page=self._page, lang=self.lang, message=self.message
         )
 
         self.return_button = ReturnButton(
-            page=self._page,
-            lang=self.lang,
-            on_click=self._page.navigate_to("/home")
+            page=self._page, lang=self.lang, on_click=self._page.navigate_to("/home")
         )
 
         # INITIALIZE MAIN CONTAINER
-        self.main_container = ft.Container(
+        self.content_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=20,
             content=ft.Column(
+                spacing=20,
+                expand=True,
                 controls=[
                     self.return_button,
                     self.message_box
-                ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                alignment=ft.MainAxisAlignment.CENTER,
-                spacing=20
+                ]
             )
         )
 
-        super().__init__(
-            route="/fallback",
+        self.main_container = ft.Container(
+            content=ft.Column(
+                scroll=ft.ScrollMode.AUTO,
+                controls=[self.content_container]
+            ),
+            expand=True,
             padding=0,
-            bgcolor=Color.PAGE_BACKGROUND,
-            controls=[
-                self.main_container
-            ]
+            margin=ft.Margin(bottom=0)
         )
 
-        self._page.on_resize = self._on_page_resize
-        self._on_page_resize()
+        super().__init__(
+            route="/home",
+            padding=0,
+            bgcolor=Color.PAGE_BACKGROUND,
+            horizontal_alignment=ft.MainAxisAlignment.CENTER,
+            controls=ft.SafeArea(
+                expand=True,
+                content=ft.Stack(
+                    expand=True,
+                    controls=[
+                        self.main_container
+                    ]
+                )
+            )
+        )
+
+        self._page.on_resize = self._resize_page
+        self._resize_page()
 
     def get_fallback_message(self, reason: str) -> str:
         match reason:
@@ -74,46 +86,33 @@ class FallbackView(ft.View):
                 return self.lang["fallback.default"]
 
     def _refresh_view(self) -> int:
-        try:
-            self._on_page_resize()
-            self.message = self.get_fallback_message(self.fallback_reason)
-            self.message_box.message = self.message
-            message_text = self.message_box.message_box.content.controls[0]
-            message_text.value = f"{self.lang['fallback.something_went_wrong']}: {self.message}"
-            self.update()
-            return 0
-        except Exception as ex:
-            Logger.warn(f"Failed to refresh view {ex}")
-            return -1
+        self._resize_page()
+        self.message = self.get_fallback_message(self.fallback_reason)
+        self.message_box.update_message(self.message)
+        self.update()
+        return 0
 
-    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+    def _resize_page(self, e: ft.PageResizeEvent | None = None) -> None:
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
 
             # Resizing main container
             self.main_container.width = page_width
+            self.main_container.height = page_height
 
             # Resizing other components
-            self.message_box.resize(
-                size=int(page_width * 0.7)
-            )
-
-            return 0
+            self.message_box.resize(size=int(page_width * 0.7))
 
         except AttributeError as ex:
             Logger.error(f"Failed to get width/height of the page: {ex}")
-            return 1
 
         except (TypeError, ValueError) as ex:
             Logger.error(f"Value of width/height of the page is invalid: {ex}")
-            return 2
 
         except Exception as ex:
             Logger.error(f"Error during page resize: {ex}, event: {e}")
-            return -1
 
-
-def get_fallback_view(page: Page, lang: dict, fallback_reason: str) -> ft.View:
+def get_fallback_view(page: Page, lang: dict[str, str], fallback_reason: str) -> ft.View:
     Logger.info("Loading Fallback page...")
     return FallbackView(page, lang, fallback_reason)

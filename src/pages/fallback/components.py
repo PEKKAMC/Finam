@@ -10,48 +10,53 @@ from src.utils import Color, Page, Text
 
 
 class ReturnButton(ft.Row):
-    def __init__(self, page: Page, lang: dict, on_click: Callable):
+    def __init__(self, page: Page, lang: dict[str, str], on_click: Callable[..., None]) -> None:
         self._page = page
         self.lang = lang
+
+        # TEXT AND ICON COMPONENTS
+        # Static icons
         self.return_button = ft.IconButton(
             icon=ft.Icons.ARROW_BACK,
             icon_color=Color.BLACK,
             icon_size=30,
-            on_click=on_click
+            on_click=on_click,
         )
+
+        # CONTAINER COMPONENTS
         self.main_container = ft.Row(
             controls=[
-                ft.Container(
-                    content=self.return_button,
-                    alignment=ft.Alignment.CENTER
-                )
+                ft.Container(content=self.return_button, alignment=ft.Alignment.CENTER)
             ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
 
         super().__init__(
-            controls=[self.main_container],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+            controls=[self.main_container], alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
 
 class NotSupportedMessageBox(ft.Container):
-    def __init__(self, page: Page, lang: dict, message: str):
+    def __init__(self, page: Page, lang: dict[str, str], message: str) -> None:
         self._page = page
         self.lang = lang
         self.message = message
 
+        # TEXT AND ICON COMPONENTS
+        # Dynamic texts
+        self.message_text = Text.P(f"{self.lang['fallback.something_went_wrong']}: {self.message}", color=Color.PRIMARY_TEXT)
+
+        # CONTAINER COMPONENTS
         self.message_box: ft.Container = ft.Container(
             content=ft.Column(
-                controls=[
-                    Text.P(f"{self.lang["fallback.something_went_wrong"]}: {self.message}", color=Color.PRIMARY_TEXT)
-                ],
+                controls=[self.message_text],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                alignment=ft.MainAxisAlignment.CENTER
+                alignment=ft.MainAxisAlignment.CENTER,
             ),
             border=ft.Border.all(width=1, color=Color.DEFAULT_BORDER),
-            padding=30
+            padding=30,
         )
+
         self.main_container = ft.Container(
             content=self.message_box,
             alignment=ft.Alignment.CENTER,
@@ -62,6 +67,12 @@ class NotSupportedMessageBox(ft.Container):
             alignment=ft.Alignment.CENTER,
         )
 
-    def resize(self, size: int):
+    def update_message(self, message: str) -> None:
+        self.message = message
+        self.message_text.value = (
+            f"{self.lang['fallback.something_went_wrong']}: {message}"
+        )
+
+    def resize(self, size: int) -> None:
         self.width = size
         self.height = size
