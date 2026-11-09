@@ -47,10 +47,10 @@ scheme = "net.pekkamc.finam"
 host = "oauth_callback"
 
 [tool.flet.android.meta_data]
-"com.google.android.gms.ads.APPLICATION_ID" = "ca-app-pub-3940256099942544~3347511713"
+"com.google.android.gms.ads.APPLICATION_ID" = "ca-app-pub-6347435898633316~7597886932"
 
 [tool.flet.ios.info]
-GADApplicationIdentifier = "ca-app-pub-3940256099942544~3347511713"
+GADApplicationIdentifier = "ca-app-pub-6347435898633316~7597886932"
 
 [tool.flet.app]
 path = ""
