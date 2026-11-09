@@ -2,13 +2,15 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from typing import Any
+
 import flet as ft
 
 from src.utils import Color, Page, Text
 
 
 class LessonItemCard(ft.Container):
-    def __init__(self, page: Page, lang: dict, title: str, subtitle: str, cover_image: str, is_completed: bool, route: str, duration: int = 15):
+    def __init__(self, page: Page, lang: dict[str, str], title: str, subtitle: str, cover_image: str, is_completed: bool, route: str, duration: int = 15) -> None:
         self._page = page
         self.lang = lang
         self.title = title
@@ -18,34 +20,56 @@ class LessonItemCard(ft.Container):
         self.route = route
         self.duration = duration
 
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.completed_badge_text = Text.SMALL(self.lang["lessons.completed_badge"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+
+        # Dynamic texts
+        self.action_button_label = Text.MEDIUM(
+            self.lang["lessons.review_lesson"]
+            if self.is_completed
+            else self.lang["lessons.start_lesson"],
+            color=Color.WHITE,
+            weight=ft.FontWeight.BOLD,
+        )
+        self.title_text = Text.H4(self.title, color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.subtitle_text = Text.SMALL(self.subtitle, color=Color.SECONDARY_TEXT)
+
+        # Static icons
+        self.completed_badge_icon = ft.Icon(ft.Icons.CHECK_CIRCLE, color=Color.WHITE, size=14)
+        self.action_button_icon = ft.Icon(ft.Icons.PLAY_ARROW_ROUNDED,color=Color.LIGHT_ACCENT, size=18)
+
+        # CONTAINER COMPONENTS
         self.top_badges = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                #ft.Container(
+                # ft.Container(
                 #    content=Text.SMALL(f"{self.duration} {self.lang["generic.minute"]}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
                 #    bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
                 #    padding=ft.Padding(10, 4, 10, 4),
                 #    border_radius=12,
                 #    border=ft.Border.all(1, ft.Colors.with_opacity(0.3, Color.PRIMARY))
-                #),
+                # ),
                 *(
                     [
                         ft.Container(
                             content=ft.Row(
                                 spacing=4,
                                 controls=[
-                                    ft.Icon(ft.Icons.CHECK_CIRCLE, color=Color.WHITE, size=14),
-                                    Text.SMALL(self.lang["lessons.completed_badge"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                                    self.completed_badge_icon,
+                                    self.completed_badge_text,
                                 ],
-                                tight=True
+                                tight=True,
                             ),
                             bgcolor=Color.SUCCESS_BACKGROUND,
                             padding=ft.Padding(8, 4, 8, 4),
-                            border_radius=12
+                            border_radius=12,
                         )
-                    ] if self.is_completed else []
+                    ]
+                    if self.is_completed
+                    else []
                 )
-            ]
+            ],
         )
 
         self.cover_stack = ft.Stack(
@@ -61,25 +85,26 @@ class LessonItemCard(ft.Container):
                         end=ft.Alignment.BOTTOM_CENTER,
                         colors=[
                             ft.Colors.with_opacity(0.2, "#020617"),
-                            ft.Colors.with_opacity(0.9, "#020617")
-                        ]
+                            ft.Colors.with_opacity(0.9, "#020617"),
+                        ],
                     ),
                     padding=12,
                     content=ft.Column(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         controls=[
                             self.top_badges,
-                            Text.H4(self.title, color=Color.WHITE, weight=ft.FontWeight.BOLD)
-                        ]
-                    )
-                )
+                            # Dynamic texts
+                            self.title_text,
+                        ],
+                    ),
+                ),
             ]
         )
 
         self.cover_container = ft.Container(
             bgcolor=Color.DARK_SURFACE,
             content=self.cover_stack,
-            clip_behavior=ft.ClipBehavior.HARD_EDGE
+            clip_behavior=ft.ClipBehavior.HARD_EDGE,
         )
 
         self.content_panel = ft.Container(
@@ -87,44 +112,46 @@ class LessonItemCard(ft.Container):
             content=ft.Column(
                 spacing=12,
                 controls=[
-                    Text.SMALL(self.subtitle, color=Color.SECONDARY_TEXT),
+                    self.subtitle_text,
                     ft.Divider(height=1, color=Color.INPUT_BORDER),
                     ft.Button(
                         content=ft.Row(
                             alignment=ft.MainAxisAlignment.CENTER,
                             spacing=6,
                             controls=[
-                                ft.Icon(ft.Icons.PLAY_ARROW_ROUNDED, color=Color.LIGHT_ACCENT, size=18),
-                                Text.MEDIUM(self.lang["lessons.review_lesson"] if self.is_completed else self.lang["lessons.start_lesson"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+                                self.action_button_icon,
+                                self.action_button_label,
                             ],
-                            tight=True
+                            tight=True,
                         ),
                         bgcolor=Color.PRIMARY,
                         on_click=self._page.navigate_to(self.route),
                         style=ft.ButtonStyle(
-                            shape=ft.RoundedRectangleBorder(radius=16),
-                            padding=12
-                        )
-                    )
-                ]
-            )
+                            shape=ft.RoundedRectangleBorder(radius=16), padding=12
+                        ),
+                    ),
+                ],
+            ),
         )
 
         self.main_container = ft.Column(
             spacing=0,
-            controls=[self.cover_container, self.content_panel]
+            controls=[
+                self.cover_container,
+                self.content_panel
+            ]
         )
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
-            #ink=True,
-            #on_click=self._page.navigate_to(self.route),
+            # ink=True,
+            # on_click=self._page.navigate_to(self.route),
             content=self.main_container,
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
             padding=0,
-            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW)
+            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
         )
 
     def resize(self, width: int, cover_height: int) -> None:
@@ -141,10 +168,23 @@ class LessonItemCard(ft.Container):
 
 
 class LessonSummaryBanner(ft.Container):
-    def __init__(self, page: Page, lang: dict, total_lessons: int, completed_lessons: int, total_minutes: int, completion_pct: int):
+    def __init__(self, page: Page, lang: dict[str, str], total_lessons: int, completed_lessons: int, total_minutes: int, completion_pct: int) -> None:
         self._page = page
         self.lang = lang
 
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.academy_title_text = Text.SMALL(self.lang["lessons.academy_title"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.banner_title_text = Text.H2(self.lang["lessons.banner_title"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.banner_description_text = Text.SMALL(self.lang["lessons.banner_description"], color=Color.LIGHT_ACCENT)
+        self.completed_lessons_label = Text.SMALL(self.lang["lessons.completed_count"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.accumulated_time_label = Text.SMALL(self.lang["lessons.accumulated_time"], color=Color.SAVINGS_LABEL_TEXT, weight=ft.FontWeight.BOLD)
+
+        # Dynamic texts
+        self.completed_lessons_count = Text.H3(f"{completed_lessons}/{total_lessons}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.total_minutes_text = Text.H3(f"{total_minutes} {self.lang['generic.minute']}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD)
+
+        # CONTAINER COMPONENTS
         self.summary_banner_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -154,15 +194,17 @@ class LessonSummaryBanner(ft.Container):
                     spacing=6,
                     controls=[
                         ft.Container(
-                            content=Text.SMALL(self.lang["lessons.academy_title"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
+                            content=self.academy_title_text,
                             bgcolor=ft.Colors.with_opacity(0.8, Color.DARK_SURFACE),
                             padding=ft.Padding(12, 4, 12, 4),
                             border_radius=16,
-                            border=ft.Border.all(1, ft.Colors.with_opacity(0.3, Color.PRIMARY))
+                            border=ft.Border.all(
+                                1, ft.Colors.with_opacity(0.3, Color.PRIMARY)
+                            ),
                         ),
-                        Text.H2(self.lang["lessons.banner_title"], color=Color.WHITE, weight=ft.FontWeight.BOLD),
-                        Text.SMALL(self.lang["lessons.banner_description"], color=Color.LIGHT_ACCENT)
-                    ]
+                        self.banner_title_text,
+                        self.banner_description_text,
+                    ],
                 ),
                 ft.Row(
                     spacing=12,
@@ -171,35 +213,39 @@ class LessonSummaryBanner(ft.Container):
                             padding=12,
                             border_radius=16,
                             bgcolor=ft.Colors.with_opacity(0.1, Color.WHITE),
-                            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, Color.WHITE)),
+                            border=ft.Border.all(
+                                1, ft.Colors.with_opacity(0.2, Color.WHITE)
+                            ),
                             alignment=ft.Alignment.CENTER,
                             content=ft.Column(
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 spacing=2,
                                 controls=[
-                                    Text.H3(f"{completed_lessons}/{total_lessons}", color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD),
-                                    Text.SMALL(self.lang["lessons.completed_count"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
-                                ]
-                            )
+                                    self.completed_lessons_count,
+                                    self.completed_lessons_label,
+                                ],
+                            ),
                         ),
                         ft.Container(
                             padding=12,
                             border_radius=16,
                             bgcolor=ft.Colors.with_opacity(0.1, Color.WHITE),
-                            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, Color.WHITE)),
+                            border=ft.Border.all(
+                                1, ft.Colors.with_opacity(0.2, Color.WHITE)
+                            ),
                             alignment=ft.Alignment.CENTER,
                             content=ft.Column(
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 spacing=2,
                                 controls=[
-                                    Text.H3(f"{total_minutes} {self.lang['generic.minute']}", color=Color.SAVINGS_VALUE_TEXT, weight=ft.FontWeight.BOLD),
-                                    Text.SMALL(self.lang["lessons.accumulated_time"], color=Color.SAVINGS_LABEL_TEXT, weight=ft.FontWeight.BOLD)
-                                ]
-                            )
+                                    self.total_minutes_text,
+                                    self.accumulated_time_label,
+                                ],
+                            ),
                         ),
-                    ]
-                )
-            ]
+                    ],
+                ),
+            ],
         )
 
         self.progress_bar = ft.Container(
@@ -211,8 +257,8 @@ class LessonSummaryBanner(ft.Container):
                 value=completion_pct / 100.0 if total_lessons > 0 else 0.0,
                 color=Color.LIGHT_ACCENT,
                 bgcolor=Color.TRANSPARENT,
-                height=8
-            )
+                height=8,
+            ),
         )
 
         super().__init__(
@@ -221,12 +267,8 @@ class LessonSummaryBanner(ft.Container):
             padding=24,
             shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
             content=ft.Column(
-                spacing=20,
-                controls=[
-                    self.summary_banner_row,
-                    self.progress_bar
-                ]
-            )
+                spacing=20, controls=[self.summary_banner_row, self.progress_bar]
+            ),
         )
 
     def resize(self, width: int, content_width: int) -> None:
@@ -236,10 +278,11 @@ class LessonSummaryBanner(ft.Container):
 
 
 class LessonGrid(ft.Stack):
-    def __init__(self, page: Page, lang: dict, lessons: list):
+    def __init__(self, page: Page, lang: dict[str, str], lessons: list[dict[str, Any]]) -> None:
         self._page = page
         self.lang = lang
 
+        # CONTAINER COMPONENTS
         self.lesson_cards = [
             LessonItemCard(
                 page=self._page,
@@ -248,10 +291,11 @@ class LessonGrid(ft.Stack):
                 subtitle=lesson["subtitle"],
                 cover_image=lesson["cover_image"],
                 is_completed=lesson["is_completed"],
-                route=lesson["route"]
+                route=lesson["route"],
             )
             for lesson in lessons
         ]
+
         self.responsive_row = ft.ResponsiveRow(
             spacing=20,
             run_spacing=20,

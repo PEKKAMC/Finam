@@ -12,7 +12,7 @@ __all__ = [
     "LessonGrid",
     "LessonItemCard",
     "LessonSummaryBanner",
-    "LogicController",
     "LessonsView",
-    "get_lessons_view"
+    "LogicController",
+    "get_lessons_view",
 ]
