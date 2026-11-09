@@ -18,7 +18,7 @@ class Page(ft.Page):
         self.skip_app_lock_once: bool
         self._spending_month_dialog_requested: bool
 
-    def navigate_to(self, route: str) -> Callable[[ft.ControlEvent | None], None]:
+    def navigate_to(self, route: str) -> Callable[..., None]:
         def handler(e: ft.ControlEvent | None = None) -> None:
             try:
                 normalized_route = str(route or "")
