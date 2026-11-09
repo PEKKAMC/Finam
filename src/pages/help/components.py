@@ -2,106 +2,142 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import re
-
 import flet as ft
 
+from src.pages.help.logic import HelpFormLogic, HelpFormValidation
 from src.utils import Color, Page, Text, UISettings
+
+MINIMUM_MESSAGE_LINES = 4
+MAXIMUM_MESSAGE_LINES = 6
+FAQ_CARD_PADDING = 20
 
 
 class FaqItem(ft.Container):
-    def __init__(self, question: str, answer: str):
+    def __init__(self, question: str, answer: str) -> None:
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.question_text = Text.MEDIUM(question, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.answer_text = Text.P(answer, color=Color.SECONDARY_TEXT)
+
+        # CONTAINER COMPONENTS
+        self.content_column = ft.Column(
+            spacing=8,
+            controls=[self.question_text, self.answer_text],
+        )
+
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=28,
-            padding=20,
+            padding=FAQ_CARD_PADDING,
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
                 blur_radius=UISettings.SHADOW_BLUR,
                 color=Color.SHADOW,
             ),
-            content=ft.Column(
-                spacing=8,
-                controls=[
-                    Text.MEDIUM(
-                        question,
-                        color=Color.PRIMARY_TEXT,
-                        weight=ft.FontWeight.BOLD,
-                    ),
-                    Text.P(answer, color=Color.SECONDARY_TEXT),
-                ],
-            ),
+            content=self.content_column,
         )
 
     def resize(self, width: int) -> None:
         self.width = width
+        # Match the inner column to the card's usable area rather than its padded outer width.
+        self.content_column.width = max(0, width - 2 * FAQ_CARD_PADDING)
 
 
 class HelpForm(ft.Container):
-    _EMAIL_PATTERN = re.compile(
-        r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
-        r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
-        r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$"
-    )
-
-    def __init__(self, page: Page, lang: dict):
+    def __init__(self, page: Page, lang: dict[str, str]) -> None:
         self._page = page
         self.lang = lang
+        self.logic = HelpFormLogic()
+
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.name_input_label_text = Text.LABEL(self.lang["help.form_name"], color=Color.SECONDARY_TEXT)
+        self.email_input_label_text = Text.LABEL(self.lang["help.form_email"], color=Color.SECONDARY_TEXT)
+        self.subject_input_label_text = Text.LABEL(self.lang["help.form_subject"], color=Color.SECONDARY_TEXT)
+        self.message_input_label_text = Text.LABEL(self.lang["help.form_message"], color=Color.SECONDARY_TEXT)
+        self.form_title_text = Text.H3(self.lang["help.form_title"], color=Color.PRIMARY_TEXT)
+        self.form_description_text = Text.P(self.lang["help.form_description"], color=Color.SECONDARY_TEXT)
+        self.status_text = Text.SMALL(self.lang["help.form_sent"], color=Color.SECONDARY_TEXT, visible=False)
+        self.submit_button_label = Text.BUTTON(self.lang["help.form_send"], color=Color.WHITE)
+
+        # Static icons
+        self.submit_button_icon = ft.Icon(ft.Icons.SEND_OUTLINED, color=Color.WHITE)
+
+        # CONTAINER COMPONENTS
         self.name_input = ft.TextField(
-            label=self.lang["help.form_name"],
+            label=self.name_input_label_text,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
-            border_radius=12,
+            border_radius=12
         )
-        self.name_error_row = self._build_error_row()
+
         self.email_input = ft.TextField(
-            label=self.lang["help.form_email"],
+            label=self.email_input_label_text,
             keyboard_type=ft.KeyboardType.EMAIL,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
             border_radius=12,
         )
-        self.email_error_row = self._build_error_row()
+
         self.subject_input = ft.TextField(
-            label=self.lang["help.form_subject"],
+            label=self.subject_input_label_text,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
             border_radius=12,
         )
-        self.subject_error_row = self._build_error_row()
+
         self.message_input = ft.TextField(
-            label=self.lang["help.form_message"],
+            label=self.message_input_label_text,
             multiline=True,
-            min_lines=4,
-            max_lines=6,
+            min_lines=MINIMUM_MESSAGE_LINES,
+            max_lines=MAXIMUM_MESSAGE_LINES,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
             border_radius=12,
         )
-        self.message_error_row = self._build_error_row()
-        self.status_text = Text.SMALL(
-            self.lang["help.form_sent"],
-            color=Color.SECONDARY_TEXT,
-            visible=False,
-        )
+
+        self.name_error_row, self.name_error_text = self._build_error_row()
+        self.email_error_row, self.email_error_text = self._build_error_row()
+        self.subject_error_row, self.subject_error_text = self._build_error_row()
+        self.message_error_row, self.message_error_text = self._build_error_row()
+
         self.submit_button = ft.Button(
-            content=self.lang["help.form_send"],
-            icon=ft.Icons.SEND_OUTLINED,
+            content=ft.Row(
+                controls=[
+                    self.submit_button_icon,
+                    self.submit_button_label
+                ],
+                tight=True,
+                spacing=8,
+            ),
             on_click=self._on_submit,
             bgcolor=Color.PRIMARY_ACTION,
-            color=Color.WHITE,
         )
+
+        self.input_fields: dict[str, ft.TextField] = {
+            "name": self.name_input,
+            "email": self.email_input,
+            "subject": self.subject_input,
+            "message": self.message_input,
+        }
+
+        self.error_rows: dict[str, ft.Row] = {
+            "name": self.name_error_row,
+            "email": self.email_error_row,
+            "subject": self.subject_error_row,
+            "message": self.message_error_row,
+        }
+
+        self.submit_button_row = ft.Row(
+            alignment=ft.MainAxisAlignment.END,
+            controls=[self.submit_button],
+        )
+
         self.form_column = ft.Column(
             spacing=14,
             controls=[
-                Text.H3(
-                    self.lang["help.form_title"],
-                    color=Color.PRIMARY_TEXT,
-                ),
-                Text.P(
-                    self.lang["help.form_description"],
-                    color=Color.SECONDARY_TEXT,
-                ),
+                self.form_title_text,
+                self.form_description_text,
                 self.name_input,
                 self.name_error_row,
                 self.email_input,
@@ -110,10 +146,7 @@ class HelpForm(ft.Container):
                 self.subject_error_row,
                 self.message_input,
                 self.message_error_row,
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.END,
-                    controls=[self.submit_button],
-                ),
+                self.submit_button_row,
                 self.status_text,
             ],
         )
@@ -129,8 +162,12 @@ class HelpForm(ft.Container):
             content=self.form_column,
         )
 
-    def _build_error_row(self) -> ft.Row:
-        return ft.Row(
+    def _build_error_row(self) -> tuple[ft.Row, ft.Text]:
+        error_text = Text.SMALL(
+            self.lang["help.form_required"],
+            color=Color.NEGATIVE_ACTION,
+        )
+        error_row = ft.Row(
             spacing=6,
             visible=False,
             controls=[
@@ -139,40 +176,42 @@ class HelpForm(ft.Container):
                     color=Color.NEGATIVE_ACTION,
                     size=16,
                 ),
-                Text.SMALL(
-                    self.lang["help.form_required"],
-                    color=Color.NEGATIVE_ACTION,
-                ),
+                error_text,
             ],
         )
+        return error_row, error_text
 
-    def _on_submit(self, e: ft.ControlEvent) -> None:
-        email = (self.email_input.value or "").strip()
-        is_name_empty = not (self.name_input.value or "").strip()
-        is_email_empty = not email
-        is_subject_empty = not (self.subject_input.value or "").strip()
-        is_message_empty = not (self.message_input.value or "").strip()
-        is_email_invalid = bool(email) and not self._EMAIL_PATTERN.fullmatch(email)
-
-        self.name_error_row.visible = is_name_empty
-        self.email_error_row.visible = is_email_empty or is_email_invalid
-        self.subject_error_row.visible = is_subject_empty
-        self.message_error_row.visible = is_message_empty
-        self.email_error_row.controls[1].value = (
-            self.lang["help.form_required"]
-            if is_email_empty
-            else self.lang["help.form_invalid_email"]
+    def _validate_fields(self) -> HelpFormValidation:
+        return self.logic.validate_submission(
+            name=self.name_input.value or "",
+            email=self.email_input.value or "",
+            subject=self.subject_input.value or "",
+            message=self.message_input.value or "",
         )
 
-        if any((is_name_empty, is_email_empty, is_email_invalid, is_subject_empty, is_message_empty)):
+    def _show_validation_errors(self, validation: HelpFormValidation) -> None:
+        for field_name, error_row in self.error_rows.items():
+            error_row.visible = validation["field_errors"][field_name]
+        email_error = (
+            self.lang[validation["email_error_key"]]
+            if validation["field_errors"]["email"]
+            else self.lang["help.form_required"]
+        )
+        self.email_error_text.value = email_error
+
+    def _clear_fields(self) -> None:
+        for text_field in self.input_fields.values():
+            text_field.value = ""
+
+    def _on_submit(self) -> None:
+        validation = self._validate_fields()
+        self._show_validation_errors(validation)
+        if not validation["is_valid"]:
             self.status_text.visible = False
             self._page.update()
             return
 
-        self.name_input.value = ""
-        self.email_input.value = ""
-        self.subject_input.value = ""
-        self.message_input.value = ""
+        self._clear_fields()
         self.status_text.visible = True
         self._page.update()
 
@@ -182,20 +221,19 @@ class HelpForm(ft.Container):
 
 
 class FaqSection(ft.Column):
-    def __init__(self, lang: dict):
+    def __init__(self, lang: dict[str, str]) -> None:
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.section_title = Text.H3(lang["help.faq_title"], color=Color.PRIMARY_TEXT)
+        self.faq_items: list[FaqItem] = [FaqItem("Does the form below work?", "Yes")]
+
+        # CONTAINER COMPONENTS
         super().__init__(
             spacing=12,
-            controls=[
-                Text.H3(lang["help.faq_title"], color=Color.PRIMARY_TEXT),
-                FaqItem(
-                    "Does the form below work?",
-                    "Yes"
-                )
-            ],
+            controls=[self.section_title, *self.faq_items],
         )
 
     def resize(self, width: int) -> None:
         self.width = width
-        for control in self.controls:
-            if isinstance(control, FaqItem):
-                control.resize(width)
+        for faq_item in self.faq_items:
+            faq_item.resize(width)

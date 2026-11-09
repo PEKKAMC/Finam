@@ -5,12 +5,14 @@
 """Help page with frequently asked questions and a support request form."""
 
 from src.pages.help.components import FaqItem, FaqSection, HelpForm
+from src.pages.help.logic import HelpFormLogic
 from src.pages.help.view import HelpView, get_help_view
 
 __all__ = [
     "FaqItem",
     "FaqSection",
     "HelpForm",
+    "HelpFormLogic",
     "HelpView",
     "get_help_view",
 ]
