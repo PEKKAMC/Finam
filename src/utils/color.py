@@ -14,10 +14,13 @@ class ThemeName(StrEnum):
 
 
 class _ColorMeta(type):
-    def __getattr__(cls, name: str) -> str:
-        if cls is not Color or name.startswith("__"):
-            raise AttributeError(f"{cls.__name__} has no color {name!r}")
-        return ThemeManager.get_color(name)
+    def __getattribute__(cls, name: str) -> str:
+        try:
+            return super().__getattribute__(name)
+        except AttributeError:
+            if cls is not Color or name.startswith("__"):
+                raise
+            return ThemeManager.get_color(name)
 
     def __instancecheck__(cls, instance: object) -> bool:
         return isinstance(instance, str) and instance in ThemeManager.get_theme().colors.values()
@@ -195,7 +198,7 @@ class LightTheme(Color):
     LESSON_BANNER_BACKGROUND = "#0F172A"
     LESSON_ICON_BACKGROUND = "#DBEAFE"
     LESSON_ICON_COLOR = "#1E40AF"
-    GOAL_ITEM_BORDER = "#F3EFE0"
+    GOAL_ITEM_BORDER = "#4ADE80"
     PROGRESS_TRACK_BACKGROUND = "#E2E8F0"
     GOAL_HEADER_ICON_BACKGROUND = "#FEF3C7"
     GOAL_HEADER_ICON_COLOR = "#92400E"
@@ -268,7 +271,7 @@ class DarkTheme(Color):
     LESSON_BANNER_BACKGROUND = "#0F172A"
     LESSON_ICON_BACKGROUND = "#1E3A8A"
     LESSON_ICON_COLOR = "#BFDBFE"
-    GOAL_ITEM_BORDER = "#334E68"
+    GOAL_ITEM_BORDER = "#4ADE80"
     PROGRESS_TRACK_BACKGROUND = "#334155"
     GOAL_HEADER_ICON_BACKGROUND = "#1E3A5F"
     GOAL_HEADER_ICON_COLOR = "#93C5FD"
