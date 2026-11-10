@@ -8,7 +8,7 @@ from typing import Any
 
 import flet as ft
 
-from src.utils import Color, Dialog, Page, Text, UISettings, format_compact_number, format_number
+from src.utils import Color, Dialog, Page, Text, UISettings, format_compact_number, format_number, to_decimal
 
 
 class MetricCards(ft.ResponsiveRow):
@@ -546,7 +546,7 @@ class TransactionItemCard(ft.Container):
         self.date_text = Text.SMALL(self.tx.get("date", ""), color=Color.SECONDARY_TEXT)
         self.amount_text = Text.MEDIUM(
             format_compact_number(
-                float(self.tx["amount"]) if is_income else -float(self.tx["amount"]),
+                to_decimal(self.tx["amount"]) if is_income else -to_decimal(self.tx["amount"]),
                 decimals=1,
                 signed=True,
                 translations=self.lang,
@@ -1366,8 +1366,8 @@ class SpendingReportDialog(Dialog):
             card_content_items.append(
                 month_name_text
             )
-            expenses = float(section.get("expenses", 0))
-            income = float(section.get("income", 0))
+            expenses = to_decimal(section.get("expenses", 0))
+            income = to_decimal(section.get("income", 0))
             expenses_val = format_number(expenses)
             income_val = format_number(income)
             currency = str(section.get("currency", "đ"))
@@ -1421,7 +1421,7 @@ class SpendingReportDialog(Dialog):
             )
             card_content_items.append(overview_row)
 
-            net_bal = format_number(float(section.get("net_balance", 0)))
+            net_bal = format_number(to_decimal(section.get("net_balance", 0)))
             net_balance_label = Text.MEDIUM(
                 self.lang["spending.net_balance"],
                 color=Color.SECONDARY_TEXT,

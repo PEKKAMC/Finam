@@ -3,7 +3,8 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import ast
-import math
+import operator
+from decimal import Decimal
 
 from src.logger import Logger
 
@@ -17,42 +18,39 @@ def evaluate_expression(expression: str) -> str | None:
 
         cleaned_expression = expression.replace("×", "*").replace("÷", "/")
         parsed_expression = ast.parse(cleaned_expression, mode="eval")
-        allowed_binary_operators = (
-            ast.Add,
-            ast.Sub,
-            ast.Mult,
-            ast.Div,
-            ast.Pow,
-            ast.Mod,
-        )
-        allowed_unary_operators = (ast.UAdd, ast.USub)
+        binary_operations = {
+            ast.Add: operator.add,
+            ast.Sub: operator.sub,
+            ast.Mult: operator.mul,
+            ast.Div: operator.truediv,
+            ast.Pow: operator.pow,
+            ast.Mod: operator.mod,
+        }
+        unary_operations = {ast.UAdd: operator.pos, ast.USub: operator.neg}
 
-        for node in ast.walk(parsed_expression):
-            if isinstance(node, ast.BinOp):
-                if not isinstance(node.op, allowed_binary_operators):
-                    raise ValueError("Unsupported arithmetic operator")
-            elif isinstance(node, ast.UnaryOp):
-                if not isinstance(node.op, allowed_unary_operators):
-                    raise ValueError("Unsupported unary operator")
-            elif isinstance(node, ast.Constant):
-                if not isinstance(node.value, (int, float)):
-                    raise ValueError("Only numeric values are allowed")
-            elif isinstance(
-                node,
-                (*allowed_binary_operators, *allowed_unary_operators, ast.Expression),
-            ):
-                continue
-            else:
-                raise ValueError("Unsupported expression element")
+        def evaluate(node: ast.AST) -> Decimal:
+            if isinstance(node, ast.Expression):
+                return evaluate(node.body)
+            if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+                literal = ast.get_source_segment(cleaned_expression, node)
+                if literal is None:
+                    raise ValueError("Could not read numeric literal")
+                return Decimal(literal)
+            if isinstance(node, ast.BinOp) and type(node.op) in binary_operations:
+                left = evaluate(node.left)
+                right = evaluate(node.right)
+                if isinstance(node.op, ast.Pow) and right != right.to_integral_value():
+                    raise ValueError("Money expressions require an integer exponent")
+                return binary_operations[type(node.op)](left, right)
+            if isinstance(node, ast.UnaryOp) and type(node.op) in unary_operations:
+                return unary_operations[type(node.op)](evaluate(node.operand))
+            raise ValueError("Unsupported expression element")
 
-        result = eval(
-            compile(parsed_expression, "<amount-expression>", "eval"),
-            {"__builtins__": {}},
-            {"math": math},
-        )
-        if isinstance(result, float) and result.is_integer():
-            return str(int(result))
-        return str(result)
+        result = evaluate(parsed_expression)
+        if not result.is_finite():
+            raise ValueError("Money expressions must produce a finite result")
+        formatted = format(result, "f")
+        return formatted.rstrip("0").rstrip(".") if "." in formatted else formatted
     except Exception as error:
         Logger.error(f"Failed to evaluate expression '{expression}': {error}")
         return None

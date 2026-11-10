@@ -4,6 +4,7 @@
 
 import asyncio
 from collections.abc import Callable
+from decimal import Decimal
 from typing import Any
 
 import flet as ft
@@ -943,7 +944,7 @@ class ScannerResult(ft.Container):
         self.update()
         return self._request_generation
 
-    async def show_the_rock_result(self, request_generation: int, risk: int | None, trigger_display: str, price: float, ai_advice: str) -> None:
+    async def show_the_rock_result(self, request_generation: int, risk: int | None, trigger_display: str, price: Decimal, ai_advice: str) -> None:
         if request_generation != self._request_generation:
             return
         self.empty_state.visible = False
@@ -1027,7 +1028,7 @@ class ScannerResult(ft.Container):
         self.error_state.visible = True
         self.update()
 
-    def update_result(self, risk: int | None, trigger_display: str, price: float, ai_advice: str = "") -> None:
+    def update_result(self, risk: int | None, trigger_display: str, price: Decimal, ai_advice: str = "") -> None:
         self.empty_state.visible = False
         self.error_state.visible = False
         self.loading_container.visible = False

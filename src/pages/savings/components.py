@@ -3,10 +3,10 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import asyncio
-import math
 import random
 from collections.abc import Awaitable, Callable
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 import flet as ft
@@ -15,16 +15,7 @@ import flet.canvas as flet_canvas
 from src.logger import Logger
 from src.pages.common.keyboard_container.components import KeyboardContainer
 from src.pages.savings.logic import LogicController
-from src.utils import (
-    Color,
-    Data,
-    Dialog,
-    Page,
-    Text,
-    format_compact_number,
-    format_display_number,
-    format_number,
-)
+from src.utils import Color, Data, Dialog, Page, Text, format_compact_number, format_display_number, format_number, to_decimal
 
 FLOAT_REGEX = Data().get_regex_string("float")
 
@@ -297,7 +288,7 @@ class GoalGrid(ft.Column):
 
 
 class AggregateCard(ft.Container):
-    def __init__(self, page: Page, lang: dict[str, str], total_savings: float, total_target: float, percentage: str, progress_value: float, currency: str, on_create_click: Callable[..., None]) -> None:
+    def __init__(self, page: Page, lang: dict[str, str], total_savings: Decimal, total_target: Decimal, percentage: str, progress_value: float, currency: str, on_create_click: Callable[..., None]) -> None:
         self._page = page
         self.lang = lang
         self.currency = currency
@@ -384,7 +375,7 @@ class AggregateCard(ft.Container):
             content=self.main_container
         )
 
-    def update_data(self, total_savings: float, total_target: float, percentage: str, progress_value: float, currency: str) -> None:
+    def update_data(self, total_savings: Decimal, total_target: Decimal, percentage: str, progress_value: float, currency: str) -> None:
         self.savings_text.value = format_display_number(total_savings, self.lang)
         self.currency = currency
         self.target_text.value = (
@@ -521,9 +512,9 @@ class ActivityHistory(ft.Container):
                     controls=[description_text, date_text]
                 )
             ]
-            if isinstance(amount, (int, float)) and not isinstance(amount, bool):
+            if isinstance(amount, (int, Decimal)) and not isinstance(amount, bool):
                 amount_text = Text.MEDIUM(
-                    f"{format_compact_number(float(amount), decimals=1, signed=True, translations=self.lang)} {self.currency}",
+                    f"{format_compact_number(amount, decimals=1, signed=True, translations=self.lang)} {self.currency}",
                     color=Color.PRIMARY_ACTION
                     if amount > 0
                     else Color.NEGATIVE_ACTION,
@@ -569,7 +560,7 @@ class CreateGoalDialog(Dialog):
         self.controller = controller
         self.currency = currency
         self.on_success = on_success
-        self.initial_surplus = 0.0
+        self.initial_surplus = Decimal(0)
 
         # TEXT AND ICON COMPONENTS
         # Static texts
@@ -672,12 +663,12 @@ class CreateGoalDialog(Dialog):
 
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
-    def trigger(self, initial_surplus: float = 0.0) -> None:
+    def trigger(self, initial_surplus: Decimal = Decimal(0)) -> None:
         self.initial_surplus = initial_surplus
         if initial_surplus > 0:
             self.title_text.value = self.lang["savings.create_goal_from_surplus_title"]
             self.goal_title_input.value = self.lang["savings.next_objective"]
-            self.goal_amount_input.value = str(int(initial_surplus * 5))
+            self.goal_amount_input.value = format(initial_surplus * 5, "f")
             self.reason_input.value = self.lang["savings.surplus_reason"].format(
                 amount=format_number(initial_surplus, decimals=0),
                 currency=self.currency,
@@ -720,9 +711,9 @@ class CreateGoalDialog(Dialog):
             return
 
         try:
-            target = float(self.goal_amount_input.value or 0)
+            target = to_decimal(self.goal_amount_input.value or 0)
         except ValueError:
-            target = 0.0
+            target = Decimal(0)
 
         if target <= 0:
             self.error_text.value = self.lang["savings.error.target_must_be_positive"]
@@ -946,14 +937,14 @@ class DepositWithdrawDialog(ft.Container):
         current_saved, target_amount = self.controller.get_objective_amounts(
             int(goal["objective_id"])
         )
-        remaining_amount = max(0.0, target_amount - current_saved)
-        progress = min(current_saved / target_amount, 1.0) if target_amount > 0 else 0.0
+        remaining_amount = max(Decimal(0), target_amount - current_saved)
+        progress = min(current_saved / target_amount, Decimal(1)) if target_amount > 0 else Decimal(0)
         currency = self.controller.get_currency()
 
         self.goal_title.value = goal["title"]
         self.target_amount.value = f"{format_number(target_amount)} {currency}"
         self.progress_text.value = f"{int(progress * 100)}%"
-        self.progress_bar.value = progress
+        self.progress_bar.value = float(progress)
         self.saved_text.value = f"{format_number(current_saved)} {currency}"
         self.remaining_text.value = f"{format_number(remaining_amount)} {currency}"
 
@@ -973,11 +964,11 @@ class DepositWithdrawDialog(ft.Container):
 
     def _process_keyboard_save(self, values: dict[str, Any]) -> None:
         try:
-            amount = float(values.get("amount") or 0)
+            amount = to_decimal(values.get("amount") or 0)
         except TypeError, ValueError:
-            amount = 0.0
+            amount = Decimal(0)
 
-        if not math.isfinite(amount) or amount <= 0:
+        if amount <= 0:
             self._show_error(self.lang["savings.error.invalid_amount"])
             return
 
@@ -1068,11 +1059,11 @@ class CongratulationsDialog(Dialog):
         self.on_success = on_success
         self.on_create_with_surplus = on_create_with_surplus
         self.completed_goal = None
-        self.surplus_amount = 0.0
+        self.surplus_amount = Decimal(0)
         self.available_goals: list[dict[str, Any]] = []
         self.selected_target_id = None
         self.goal_option_cards: dict[int, ft.Container] = {}
-        self.pending_followup: (tuple[dict[str, Any], float, list[dict[str, Any]]] | None) = None
+        self.pending_followup: (tuple[dict[str, Any], Decimal, list[dict[str, Any]]] | None) = None
         self._confetti_canvas = flet_canvas.Canvas(
             visible=False,
             disabled=True,
@@ -1165,7 +1156,7 @@ class CongratulationsDialog(Dialog):
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
         self.on_dismiss = self._handle_dismiss
 
-    def trigger(self, completed_goal: dict[str, Any], surplus_amount: float, available_goals: list[dict[str, Any]], confetti: bool = False) -> None:
+    def trigger(self, completed_goal: dict[str, Any], surplus_amount: Decimal, available_goals: list[dict[str, Any]], confetti: bool = False) -> None:
         self._confetti_generation += 1
         generation = self._confetti_generation
         if not confetti:

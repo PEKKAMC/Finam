@@ -253,13 +253,13 @@ class SavingsView(ft.View):
     def _build_objective_data(self, objectives: list[dict[str, Any]], currency: str) -> list[dict[str, Any]]:
         objectives_data = []
         for objective_id, title, reason, target_amount, _completed_at in objectives:
-            objective_id, target_amount = int(objective_id), int(target_amount)
+            objective_id = int(objective_id)
             objective_savings, card_progress, card_percentage = (
                 self.controller.get_objective_progress_data(objective_id, target_amount)
             )
             remaining_amt = max(0, target_amount - objective_savings)
 
-            def format_amount(amount: float) -> str:
+            def format_amount(amount) -> str:
                 return format_number(amount)
 
             objectives_data.append(

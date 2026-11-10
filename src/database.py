@@ -9,10 +9,11 @@ import re
 import secrets
 import sqlite3
 from datetime import datetime
+from decimal import Decimal
 from typing import List, Dict, Any, Optional
 
 from src.logger import Logger
-from src.utils import DefaultSettings, ThemeRegistry
+from src.utils import DefaultSettings, ThemeRegistry, to_decimal
 
 # ==========================================
 # DATABASE CONNECTION
@@ -24,11 +25,36 @@ class DatabaseConnection:
     def __init__(self, database_name: str):
         self.database_name = database_name
 
+    @staticmethod
+    def _decimal_sum_factory():
+        class DecimalSum:
+            def __init__(self) -> None:
+                self.total = Decimal(0)
+
+            def step(self, value: str | int | None) -> None:
+                if value is not None:
+                    self.total += to_decimal(value)
+
+            def finalize(self) -> str:
+                return format(self.total, "f")
+
+        return DecimalSum
+
     def execute(self, query: str, parameters: tuple = (), fetch_all: bool = False, fetch_one: bool = False) -> Any:
-        with sqlite3.connect(self.database_name) as connection:
+        connection = sqlite3.connect(self.database_name)
+        try:
             connection.execute("PRAGMA foreign_keys = ON;")
+            connection.create_aggregate("decimal_sum", 1, self._decimal_sum_factory())
             cursor = connection.cursor()
-            cursor.execute(query, parameters)
+            cursor.execute(
+                query,
+                tuple(
+                    format(parameter, "f")
+                    if isinstance(parameter, Decimal)
+                    else parameter
+                    for parameter in parameters
+                ),
+            )
 
             if fetch_all:
                 return cursor.fetchall()
@@ -37,13 +63,16 @@ class DatabaseConnection:
 
             connection.commit()
             return cursor.lastrowid
+        finally:
+            connection.close()
 
-    def _migrate_money_columns_to_real(self) -> None:
+    def _migrate_money_columns_to_decimal(self) -> None:
         money_columns = {
             "objectives": "target_amount",
             "savings": "amount",
             "expenses": "amount",
             "incomes": "amount",
+            "purchase_scan_history": "price",
         }
         connection = sqlite3.connect(self.database_name)
         try:
@@ -52,16 +81,16 @@ class DatabaseConnection:
             for table, column in money_columns.items():
                 table_info = connection.execute(f"PRAGMA table_info({table})").fetchall()
                 column_info = next((row for row in table_info if row[1] == column), [])
-                if not column_info or column_info[2].upper() == "REAL":
+                if not column_info or column_info[2].upper() == "TEXT":
                     continue
-                if column_info[2].upper() not in ("INT", "INTEGER"):
+                if column_info[2].upper() not in ("INT", "INTEGER", "REAL", "NUMERIC"):
                     raise RuntimeError(f"Unexpected type for {table}.{column}: {column_info[2]}")
 
                 create_sql = connection.execute(
                     "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
                     (table,),
                 ).fetchone()[0]
-                migration_table = f"__float_migration_{table}"
+                migration_table = f"__decimal_migration_{table}"
                 connection.execute(f"DROP TABLE IF EXISTS {migration_table}")
                 create_sql = create_sql.replace(
                     f"CREATE TABLE {table}",
@@ -69,17 +98,23 @@ class DatabaseConnection:
                     1,
                 )
                 create_sql, replacements = re.subn(
-                    rf"(\b{re.escape(column)}\s+)INTEGER\b",
-                    r"\1REAL",
+                    rf"(\b{re.escape(column)}\s+)(?:INTEGER|INT|REAL|NUMERIC)\b",
+                    r"\1TEXT",
                     create_sql,
                     count=1,
                     flags=re.IGNORECASE,
                 )
                 if replacements != 1:
-                    raise RuntimeError(f"Could not migrate {table}.{column} to REAL")
+                    raise RuntimeError(f"Could not migrate {table}.{column} to TEXT")
 
                 connection.execute(create_sql)
-                connection.execute(f"INSERT INTO {migration_table} SELECT * FROM {table}")
+                select_columns = [
+                    f"CAST({name} AS TEXT)" if name == column else name
+                    for _, name, *_ in table_info
+                ]
+                connection.execute(
+                    f"INSERT INTO {migration_table} SELECT {', '.join(select_columns)} FROM {table}"
+                )
                 connection.execute(f"DROP TABLE {table}")
                 connection.execute(f"ALTER TABLE {migration_table} RENAME TO {table}")
             connection.commit()
@@ -295,7 +330,7 @@ class DatabaseConnection:
                     user_id INTEGER NOT NULL,
                     title TEXT NOT NULL,
                     reason TEXT,
-                    target_amount REAL NOT NULL,
+                    target_amount TEXT NOT NULL,
                     created_at TEXT NOT NULL,
                     completed_at TEXT,
                     deleted_at TEXT,
@@ -307,7 +342,7 @@ class DatabaseConnection:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
                     objective_id INTEGER,
-                    amount REAL NOT NULL,
+                    amount TEXT NOT NULL,
                     date TEXT NOT NULL,
                     note TEXT,
                     deleted_at TEXT,
@@ -319,7 +354,7 @@ class DatabaseConnection:
                 CREATE TABLE IF NOT EXISTS expenses (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
-                    amount REAL NOT NULL,
+                    amount TEXT NOT NULL,
                     category TEXT NOT NULL,
                     note TEXT NOT NULL,
                     date TEXT NOT NULL,
@@ -330,7 +365,7 @@ class DatabaseConnection:
                 CREATE TABLE IF NOT EXISTS incomes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
-                amount REAL NOT NULL,
+                amount TEXT NOT NULL,
                 category TEXT NOT NULL,
                 note TEXT NOT NULL,
                 date TEXT NOT NULL,
@@ -353,7 +388,7 @@ class DatabaseConnection:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
                     item_name TEXT NOT NULL,
-                    price REAL NOT NULL,
+                    price TEXT NOT NULL,
                     trigger TEXT,
                     reason TEXT,
                     thinking_time TEXT,
@@ -374,7 +409,7 @@ class DatabaseConnection:
                 )
             ''')
 
-            self._migrate_money_columns_to_real()
+            self._migrate_money_columns_to_decimal()
 
             self.execute(
                 "CREATE INDEX IF NOT EXISTS idx_expenses_user_date ON expenses(user_id, date)"
@@ -396,6 +431,7 @@ class DatabaseConnection:
             Logger.info("Database initialized successfully.")
         except Exception as error:
             Logger.error(f"Failed to initialize database: {error}")
+            raise
 
 # ==========================================
 # USER & SETTINGS LOGIC
@@ -921,7 +957,7 @@ class SavingsDatabase:
         self.db = connection
         self.user_db = user_db
 
-    def add_saving_entry(self, username: str, amount: float, date: str, objective_id: int, note: str = "") -> bool:
+    def add_saving_entry(self, username: str, amount: Decimal, date: str, objective_id: int, note: str = "") -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id: return False
 
@@ -932,24 +968,24 @@ class SavingsDatabase:
         )
         if objective_id_value is not None and amount > 0:
             result = self.db.execute(
-                "SELECT o.target_amount, COALESCE(SUM(s.amount), 0) "
+                "SELECT o.target_amount, COALESCE(decimal_sum(s.amount), '0') "
                 "FROM objectives o LEFT JOIN savings s ON s.objective_id = o.id AND s.deleted_at IS NULL "
                 "WHERE o.id = ? GROUP BY o.id",
                 (objective_id_value,),
                 fetch_one=True,
             )
-            if result and 0 < result[0] <= result[1]:
+            if result and Decimal(result[0]) > 0 and Decimal(result[0]) <= Decimal(result[1]):
                 self.complete_objective(objective_id_value)
         return True
 
-    def get_total_savings(self, username: str) -> float:
+    def get_total_savings(self, username: str) -> Decimal:
         result = self.db.execute(
-            "SELECT SUM(amount) FROM savings s JOIN users u ON s.user_id = u.id WHERE u.name = ? AND s.deleted_at IS NULL",
+            "SELECT decimal_sum(amount) FROM savings s JOIN users u ON s.user_id = u.id WHERE u.name = ? AND s.deleted_at IS NULL",
             (username,), fetch_one=True
         )
-        return float(result[0]) if result and result[0] else 0.0
+        return Decimal(result[0]) if result and result[0] else Decimal(0)
 
-    def add_objective(self, username: str, title: str, reason: str, target_amount: float) -> bool:
+    def add_objective(self, username: str, title: str, reason: str, target_amount: Decimal) -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id: return False
 
@@ -960,7 +996,7 @@ class SavingsDatabase:
         )
         return True
 
-    def create_goal_with_initial_deposit(self, username: str, title: str, reason: str, target_amount: float, initial_deposit: float) -> bool:
+    def create_goal_with_initial_deposit(self, username: str, title: str, reason: str, target_amount: Decimal, initial_deposit: Decimal) -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id: return False
 
@@ -973,7 +1009,7 @@ class SavingsDatabase:
             self.add_saving_entry(username, initial_deposit, created_at, objective_id, "Nạp tiền dư khởi tạo")
         return True
 
-    def transfer_surplus(self, username: str, source_id: int, target_id: int, amount: float, note: str = "") -> bool:
+    def transfer_surplus(self, username: str, source_id: int, target_id: int, amount: Decimal, note: str = "") -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id: return False
 
@@ -1003,20 +1039,20 @@ class SavingsDatabase:
         )
         return True
 
-    def get_objective_progress(self, objective_id: int) -> float:
+    def get_objective_progress(self, objective_id: int) -> Decimal:
         result = self.db.execute(
-            "SELECT SUM(amount) FROM savings WHERE objective_id = ? AND deleted_at IS NULL",
+            "SELECT decimal_sum(amount) FROM savings WHERE objective_id = ? AND deleted_at IS NULL",
             (objective_id,),
             fetch_one=True)
-        return float(result[0]) if result and result[0] else 0.0
+        return Decimal(result[0]) if result and result[0] else Decimal(0)
 
-    def get_objective_target(self, objective_id: int) -> float:
+    def get_objective_target(self, objective_id: int) -> Decimal:
         result = self.db.execute(
             "SELECT target_amount FROM objectives WHERE id = ?",
             (objective_id,),
             fetch_one=True
         )
-        return float(result[0]) if result else 0.0
+        return Decimal(result[0]) if result else Decimal(0)
 
     def get_user_objectives(self, username: str) -> List[tuple]:
         user_id = self.user_db.get_user_id(username)
@@ -1027,15 +1063,15 @@ class SavingsDatabase:
             (user_id,),
             fetch_all=True
         )
-        return [(row[0], row[1], row[2], float(row[3]), row[4]) for row in rows]
+        return [(row[0], row[1], row[2], Decimal(row[3]), row[4]) for row in rows]
 
-    def get_total_target_amount(self, username: str) -> float:
+    def get_total_target_amount(self, username: str) -> Decimal:
         result = self.db.execute(
-            "SELECT SUM(target_amount) FROM objectives o JOIN users u ON o.user_id = u.id WHERE u.name = ? AND o.deleted_at IS NULL",
+            "SELECT decimal_sum(target_amount) FROM objectives o JOIN users u ON o.user_id = u.id WHERE u.name = ? AND o.deleted_at IS NULL",
             (username,),
             fetch_one=True
         )
-        return float(result[0]) if result and result[0] else 0.0
+        return Decimal(result[0]) if result and result[0] else Decimal(0)
 
     def get_objective_activity(self, objective_id: int) -> List[Dict[str, Any]]:
         rows = self.db.execute(
@@ -1043,7 +1079,7 @@ class SavingsDatabase:
             (objective_id,),
             fetch_all=True
         )
-        return [{"amount": float(row[0]), "date": row[1], "note": row[2]} for row in rows]
+        return [{"amount": Decimal(row[0]), "date": row[1], "note": row[2]} for row in rows]
 
     def get_user_activity_raw(self, username: str) -> List[Dict[str, Any]]:
         user_id = self.user_db.get_user_id(username)
@@ -1064,7 +1100,7 @@ class SavingsDatabase:
         )
 
         for amount, date, title, note in savings_rows:
-            activities.append({"type": "savings", "date": date, "amount": float(amount), "target_name": title, "note": note})
+            activities.append({"type": "savings", "date": date, "amount": Decimal(amount), "target_name": title, "note": note})
 
         objective_rows = self.db.execute(
             "SELECT title, created_at, target_amount, completed_at, deleted_at FROM objectives WHERE user_id = ?",
@@ -1073,7 +1109,7 @@ class SavingsDatabase:
         )
 
         for title, created_at, target, completed_at, deleted_at in objective_rows:
-            activities.append({"type": "objective", "date": created_at, "title": title, "target": float(target)})
+            activities.append({"type": "objective", "date": created_at, "title": title, "target": Decimal(target)})
             if completed_at: activities.append({"type": "completed", "date": completed_at, "title": title})
             if deleted_at: activities.append({"type": "deleted", "date": deleted_at, "title": title})
 
@@ -1092,7 +1128,7 @@ class SpendingDatabase:
         self.db = connection
         self.user_db = user_db
 
-    def add_expense_entry(self, username: str, amount: float, category: str, date: str, note: str = "") -> bool:
+    def add_expense_entry(self, username: str, amount: Decimal, category: str, date: str, note: str = "") -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id: return False
 
@@ -1102,13 +1138,13 @@ class SpendingDatabase:
         )
         return True
 
-    def get_total_expense(self, username: str) -> float:
+    def get_total_expense(self, username: str) -> Decimal:
         result = self.db.execute(
-            "SELECT SUM(amount) FROM expenses e JOIN users u ON e.user_id = u.id WHERE u.name = ?",
+            "SELECT decimal_sum(amount) FROM expenses e JOIN users u ON e.user_id = u.id WHERE u.name = ?",
             (username,),
             fetch_one=True
         )
-        return float(result[0]) if result and result[0] else 0.0
+        return Decimal(result[0]) if result and result[0] else Decimal(0)
 
     def get_user_expenses(self, username: str) -> list:
         rows = self.db.execute(
@@ -1116,9 +1152,9 @@ class SpendingDatabase:
             (username,),
             fetch_all=True
         )
-        return [{"id": row[0], "amount": float(row[1]), "category": row[2], "date": row[3], "note": row[4]} for row in rows]
+        return [{"id": row[0], "amount": Decimal(row[1]), "category": row[2], "date": row[3], "note": row[4]} for row in rows]
 
-    def add_income_entry(self, username: str, amount: float, category: str, date: str, note: str = "") -> bool:
+    def add_income_entry(self, username: str, amount: Decimal, category: str, date: str, note: str = "") -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id: return False
 
@@ -1128,13 +1164,13 @@ class SpendingDatabase:
         )
         return True
 
-    def get_total_income(self, username: str) -> float:
+    def get_total_income(self, username: str) -> Decimal:
         result = self.db.execute(
-            "SELECT SUM(amount) FROM incomes i JOIN users u ON i.user_id = u.id WHERE u.name = ?",
+            "SELECT decimal_sum(amount) FROM incomes i JOIN users u ON i.user_id = u.id WHERE u.name = ?",
             (username,),
             fetch_one=True
         )
-        return float(result[0]) if result and result[0] else 0.0
+        return Decimal(result[0]) if result and result[0] else Decimal(0)
 
     def get_user_incomes(self, username: str) -> list:
         rows = self.db.execute(
@@ -1142,7 +1178,7 @@ class SpendingDatabase:
             (username,),
             fetch_all=True
         )
-        return [{"id": row[0], "amount": float(row[1]), "category": row[2], "date": row[3], "note": row[4]} for row in rows]
+        return [{"id": row[0], "amount": Decimal(row[1]), "category": row[2], "date": row[3], "note": row[4]} for row in rows]
 
     def get_user_chart_totals(self, username: str, chart_type: str, start_date: str, end_date: str) -> list:
         """Aggregate chart buckets in SQLite without loading transaction rows into Python."""
@@ -1156,7 +1192,7 @@ class SpendingDatabase:
 
         return self.db.execute(
             f"""
-            SELECT {bucket_expression} AS bucket, kind, SUM(amount)
+            SELECT {bucket_expression} AS bucket, kind, decimal_sum(amount)
             FROM (
                 SELECT date, amount, 'expense' AS kind
                 FROM expenses
@@ -1325,7 +1361,7 @@ class PurchaseScannerDatabase:
         self.db = connection
         self.user_db = user_db
 
-    def add_scan_result(self, username: str, item_name: str, price: float, trigger: str, reason: str, thinking_time: str, risk_score: int, trigger_display: str, ai_advice: str) -> bool:
+    def add_scan_result(self, username: str, item_name: str, price: Decimal, trigger: str, reason: str, thinking_time: str, risk_score: int, trigger_display: str, ai_advice: str) -> bool:
         user_id = self.user_db.get_user_id(username)
         if not user_id:
             return False
@@ -1337,7 +1373,7 @@ class PurchaseScannerDatabase:
                 user_id, item_name, price, trigger, reason, thinking_time, risk_score, trigger_display, ai_advice, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (user_id, item_name, float(price), trigger, reason, thinking_time, int(risk_score), trigger_display, ai_advice, created_at),
+            (user_id, item_name, price, trigger, reason, thinking_time, int(risk_score), trigger_display, ai_advice, created_at),
         )
         return True
 
@@ -1360,7 +1396,7 @@ class PurchaseScannerDatabase:
             {
                 "id": row[0],
                 "item_name": row[1],
-                "price": row[2],
+                "price": Decimal(row[2]),
                 "trigger": row[3],
                 "reason": row[4],
                 "thinking_time": row[5],
@@ -1410,7 +1446,7 @@ class SpendingAnalysisDatabase:
             """,
             (
                 user_id,
-                json.dumps(report, ensure_ascii=False),
+                json.dumps(report, ensure_ascii=False, default=str),
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             ),
         )
@@ -1433,7 +1469,7 @@ class SpendingAnalysisDatabase:
         return [
             {
                 "id": row[0],
-                "report": json.loads(row[1]),
+                "report": json.loads(row[1], parse_float=Decimal),
                 "created_at": row[2],
             }
             for row in rows

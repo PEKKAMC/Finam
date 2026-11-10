@@ -4,6 +4,7 @@
 
 import asyncio
 import datetime
+from decimal import Decimal
 
 import flet as ft
 import flet_charts as fc
@@ -395,8 +396,8 @@ class FinancialChart(ft.Container):
         )
 
     def _generate_y_axis_labels(self):
-        max_val = max(1, self.max_value)
-        step = max_val / 4.0
+        max_val = max(Decimal(1), self.max_value)
+        step = max_val / Decimal(4)
         decimal_separator = get_decimal_separator()
         labels = []
         for i in range(5):
@@ -475,8 +476,8 @@ class FinancialChart(ft.Container):
                 )
             )
 
-            income_value = float(data.get("income", 0))
-            expense_value = float(data.get("expense", 0))
+            income_value = data.get("income", Decimal(0))
+            expense_value = data.get("expense", Decimal(0))
 
             groups.append(
                 fc.BarChartGroup(
@@ -484,7 +485,7 @@ class FinancialChart(ft.Container):
                     rods=[
                         fc.BarChartRod(
                             from_y=0,
-                            to_y=income_value,
+                            to_y=float(income_value),
                             width=bar_size,
                             color=Color.INCOME_COLOR,
                             border_radius=6,
@@ -494,7 +495,7 @@ class FinancialChart(ft.Container):
                         ),
                         fc.BarChartRod(
                             from_y=0,
-                            to_y=expense_value,
+                            to_y=float(expense_value),
                             width=bar_size,
                             color=Color.EXPENSE_COLOR,
                             border_radius=6,
@@ -519,7 +520,7 @@ class FinancialChart(ft.Container):
                         label_size=25,
                     ),
                     horizontal_grid_lines=fc.ChartGridLines(color=Color.TRANSPARENT),
-                    max_y=self.max_value,
+                    max_y=float(self.max_value),
                     interactive=True,
                     tooltip=fc.BarChartTooltip(
                         bgcolor=Color.CARD_BACKGROUND,
@@ -674,11 +675,11 @@ class FinancialChart(ft.Container):
 
         all_data = self.prev_data + self.curr_data + self.next_data
         max_chart_value = (
-            max(max(float(d["income"]), float(d["expense"])) for d in all_data)
+            max(max(Decimal(d["income"]), Decimal(d["expense"])) for d in all_data)
             if all_data
-            else 1
+            else Decimal(1)
         )
-        self.max_value = max_chart_value if max_chart_value > 0 else 1
+        self.max_value = max_chart_value if max_chart_value > 0 else Decimal(1)
 
     def update_data(self):
         """Fetches fresh chart data for all three periods and refreshes the UI."""

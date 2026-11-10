@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from io import BytesIO
+from decimal import Decimal
 from typing import Any
 
 import openpyxl
@@ -20,12 +21,12 @@ class LogicController:
     def get_currency(self) -> str:
         return get_user_currency(self.current_user)
 
-    def get_dashboard_totals(self) -> tuple[float, float, float, str]:
+    def get_dashboard_totals(self) -> tuple[Decimal, Decimal, float, str]:
         total_savings = db.savings.get_total_savings(self.current_user)
         total_target = db.savings.get_total_target_amount(self.current_user)
 
         if total_target > 0:
-            progress_value = min(total_savings / total_target, 1.0)
+            progress_value = float(min(total_savings / total_target, Decimal(1)))
             percentage = f"{(int(progress_value * 100))}%"
         else:
             progress_value = 1.0
@@ -36,11 +37,11 @@ class LogicController:
         return db.savings.get_user_objectives(self.current_user)
 
     @staticmethod
-    def get_objective_progress_data(objective_id: int, target_amount: float) -> tuple[float, float, str]:
+    def get_objective_progress_data(objective_id: int, target_amount: Decimal) -> tuple[Decimal, float, str]:
         objective_savings = db.savings.get_objective_progress(objective_id)
         if target_amount > 0:
             raw_progress = objective_savings / target_amount
-            progress_value = min(raw_progress, 1.0)
+            progress_value = float(min(raw_progress, Decimal(1)))
             percentage = f"{int(progress_value * 100)}%"
         else:
             progress_value = 1.0
@@ -48,7 +49,7 @@ class LogicController:
         return objective_savings, progress_value, percentage
 
     @staticmethod
-    def get_objective_amounts(objective_id: int) -> tuple[float, float]:
+    def get_objective_amounts(objective_id: int) -> tuple[Decimal, Decimal]:
         current = db.savings.get_objective_progress(objective_id)
         target = db.savings.get_objective_target(objective_id)
         return current, target
@@ -88,17 +89,17 @@ class LogicController:
                 item["date"] = item["date"][:16]
         return activities
 
-    def add_new_objective(self, title: str, reason: str, target_amount: float) -> bool:
+    def add_new_objective(self, title: str, reason: str, target_amount: Decimal) -> bool:
         return db.savings.add_objective(self.current_user, title, reason, target_amount)
 
-    def create_goal_with_surplus(self, title: str, reason: str, target_amount: float, surplus_amount: float) -> bool:
+    def create_goal_with_surplus(self, title: str, reason: str, target_amount: Decimal, surplus_amount: Decimal) -> bool:
         return db.savings.create_goal_with_initial_deposit(
             self.current_user, title, reason, target_amount, surplus_amount
         )
 
-    def transfer_surplus(self, source_id: int, target_id: int, amount: float) -> tuple[bool, float]:
+    def transfer_surplus(self, source_id: int, target_id: int, amount: Decimal) -> tuple[bool, Decimal]:
         current_saved, target_amount = self.get_objective_amounts(target_id)
-        amount_to_transfer = min(amount, max(0.0, target_amount - current_saved))
+        amount_to_transfer = min(amount, max(Decimal(0), target_amount - current_saved))
         remaining_surplus = amount - amount_to_transfer
         success = db.savings.transfer_surplus(
             self.current_user,
@@ -106,31 +107,31 @@ class LogicController:
             target_id,
             amount_to_transfer,
         )
-        return success, remaining_surplus if success else 0.0
+        return success, remaining_surplus if success else Decimal(0)
 
     @staticmethod
     def delete_objective(objective_id: int) -> None:
         db.savings.delete_objective(objective_id)
 
-    def process_quick_action(self, objective_id: int, action: str, amount: float, time: str, note: str = '') -> tuple[bool, str, float, float, bool]:
+    def process_quick_action(self, objective_id: int, action: str, amount: Decimal, time: str, note: str = '') -> tuple[bool, str, Decimal, Decimal, bool]:
         current_saved = db.savings.get_objective_progress(objective_id)
         target = db.savings.get_objective_target(objective_id)
-        surplus = 0.0
+        surplus = Decimal(0)
         reached_target = False
 
         if action in ("remove", "withdraw"):
             if amount > current_saved:
-                return False, "savings.error.not_enough_balance", current_saved, 0.0, False
+                return False, "savings.error.not_enough_balance", current_saved, Decimal(0), False
             amount = -amount
         else:
-            remaining = max(0.0, target - current_saved)
+            remaining = max(Decimal(0), target - current_saved)
             reached_target = amount >= remaining
             if amount > remaining:
                 surplus = amount - remaining
                 amount = remaining
 
         if not db.savings.add_saving_entry(self.current_user, amount, time, objective_id, note):
-            return False, "savings.error.action_failed", current_saved, 0.0, False
+            return False, "savings.error.action_failed", current_saved, Decimal(0), False
 
         return True, "", current_saved + amount, surplus, reached_target
 

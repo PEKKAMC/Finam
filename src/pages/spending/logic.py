@@ -4,6 +4,7 @@
 
 import os
 from datetime import date
+from decimal import Decimal
 from typing import Any
 
 import requests
@@ -11,12 +12,12 @@ import requests
 from src.database import db
 from src.logger import Logger
 from src.pages.common.logic import get_user_currency
-from src.utils import Data, format_display_number, get_language
+from src.utils import Data, format_display_number, get_language, to_decimal
 
 BACKEND_URL = (
     os.getenv("FINAM_BACKEND_URL", "").strip() or "https://finam-backend.vercel.app/"
 )
-Transaction = dict[str, int | float | str | bool | None]
+Transaction = dict[str, int | Decimal | str | bool | None]
 BalanceData = dict[str, str]
 TransactionGroups = dict[str, list[Transaction]]
 MIN_SPENDING_ANALYSIS_TRANSACTIONS = 10
@@ -66,8 +67,8 @@ class LogicController:
         expenses = db.spending.get_user_expenses(self.current_user) or []
         incomes = db.spending.get_user_incomes(self.current_user) or []
 
-        total_income = sum(float(item.get("amount", 0)) for item in incomes)
-        total_expense = sum(float(item.get("amount", 0)) for item in expenses)
+        total_income = sum((to_decimal(item.get("amount", 0)) for item in incomes), Decimal(0))
+        total_expense = sum((to_decimal(item.get("amount", 0)) for item in expenses), Decimal(0))
         net_balance = total_income - total_expense
         currency = get_user_currency(self.current_user)
 
@@ -114,7 +115,7 @@ class LogicController:
                 "id": record.get("id"),
                 "title": record.get("category", default_category),
                 "subtitle": record.get("note") or "",
-                "amount": float(record.get("amount", 0)),
+                "amount": to_decimal(record.get("amount", 0)),
                 "date": record.get("date", ""),
                 "positive": is_income,
             }
@@ -152,12 +153,12 @@ class LogicController:
             Logger.warning(f"Invalid transaction id: {transaction_id}")
             return False
 
-    def get_spending_analysis_inputs(self) -> tuple[list[dict[str, str | float]], list[dict[str, str | float]]]:
-        def compact(records: list[dict[str, Any]]) -> list[dict[str, str | float]]:
+    def get_spending_analysis_inputs(self) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+        def compact(records: list[dict[str, Any]]) -> list[dict[str, str]]:
             return [
                 {
                     "category": str(item.get("category") or ""),
-                    "amount": float(item.get("amount") or 0),
+                    "amount": format(to_decimal(item.get("amount") or 0), "f"),
                     "date": str(item.get("date") or ""),
                 }
                 for item in records
@@ -301,7 +302,7 @@ class LogicController:
     @staticmethod
     def _parse_response(response: requests.Response) -> dict[str, Any]:
         try:
-            data = response.json()
+            data = response.json(parse_float=Decimal)
         except ValueError:
             data = {}
         if not response.ok:

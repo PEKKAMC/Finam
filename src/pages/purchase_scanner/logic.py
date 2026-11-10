@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import os
+from decimal import Decimal
 from typing import Any, TypedDict
 
 import requests
@@ -12,6 +13,7 @@ import requests
 from src.database import db
 from src.logger import Logger
 from src.pages.common.logic import get_user_currency
+from src.utils import to_decimal
 
 BACKEND_URL = (
     os.getenv("FINAM_BACKEND_URL", "").strip() or "https://finam-backend.vercel.app/"
@@ -55,14 +57,14 @@ class LogicController:
     def has_google_refresh_token() -> bool:
         return bool(db.app_settings.get_google_refresh_token())
 
-    def analyze_purchase(self, lang: dict[str, str], name: str, price: str, reason: str, trigger: str, time: str, refresh_token: str) -> tuple[int | None, str, float, str]:
+    def analyze_purchase(self, lang: dict[str, str], name: str, price: str, reason: str, trigger: str, time: str, refresh_token: str) -> tuple[int | None, str, Decimal, str]:
         if not refresh_token:
             raise ScannerApiError(401, "Google sign-in is required.")
 
         try:
-            price = float(price.strip()) if price and str(price).strip() else 0.0
+            price = to_decimal(price) if price and str(price).strip() else Decimal(0)
         except ValueError, AttributeError:
-            price = 0.0
+            price = Decimal(0)
 
         trigger_texts = {
             "need": lang["purchase_scanner.trigger_actual_need"],
@@ -84,10 +86,10 @@ class LogicController:
 
             payload = {
                 "item_name": name or "Sản phẩm",
-                "price": price if price > 0 else 1.0,
+                "price": format(price if price > 0 else Decimal("1.0"), "f"),
                 "currency": self.get_currency().split(" ", 1)[0],
                 "category": trigger_display,
-                "monthly_budget_remaining": 5000000.0,
+                "monthly_budget_remaining": "5000000.0",
                 "user_notes": f"Lý do: {reason or 'Không có'}. Thời gian suy nghĩ: {time}.",
                 "language": language,
             }
@@ -116,7 +118,7 @@ class LogicController:
 
         return risk, trigger_display, price, ai_advice
 
-    def analyze_and_save_purchase(self, lang: dict[str, str], name: str, price: str, reason: str, trigger: str, time: str) -> tuple[int | None, str, float, str]:
+    def analyze_and_save_purchase(self, lang: dict[str, str], name: str, price: str, reason: str, trigger: str, time: str) -> tuple[int | None, str, Decimal, str]:
         risk, trigger_display, price_value, advice = self.analyze_purchase(
             lang,
             name,
@@ -269,7 +271,7 @@ class LogicController:
     @staticmethod
     def _parse_response(response: requests.Response) -> dict[str, Any]:
         try:
-            data = response.json()
+            data = response.json(parse_float=Decimal)
         except ValueError:
             data = {}
         if not response.ok:
@@ -282,7 +284,7 @@ class LogicController:
             raise ScannerApiError(502, "Scanner service returned an invalid response.")
         return data
 
-    def save_scan_result(self, item_name: str, price: float, trigger: str, reason: str, thinking_time: str, risk_score: int | None, trigger_display: str, ai_advice: str) -> bool:
+    def save_scan_result(self, item_name: str, price: Decimal, trigger: str, reason: str, thinking_time: str, risk_score: int | None, trigger_display: str, ai_advice: str) -> bool:
         if risk_score is None:
             return False
         return db.scanner_history.add_scan_result(self.current_user, item_name, price, trigger, reason, thinking_time, risk_score, trigger_display, ai_advice)

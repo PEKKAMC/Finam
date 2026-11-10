@@ -6,7 +6,7 @@ from typing import Any
 
 from src.database import db
 from src.logger import Logger
-from src.utils import Data
+from src.utils import Data, to_decimal
 
 
 class LogicController:
@@ -89,8 +89,8 @@ class LogicController:
             return 1
 
         try:
-            amount_val = float(amount)
-            if amount_val <= 0.0:
+            amount_val = to_decimal(amount)
+            if amount_val <= 0:
                 return 2
         except (TypeError, ValueError):
             Logger.error("Invalid amount provided")
@@ -117,8 +117,8 @@ class LogicController:
             return 1
 
         try:
-            amount_val = float(amount)
-            if amount_val <= 0.0:
+            amount_val = to_decimal(amount)
+            if amount_val <= 0:
                 return 2
         except (TypeError, ValueError):
             Logger.error("Invalid amount provided")

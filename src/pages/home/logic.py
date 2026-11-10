@@ -2,40 +2,41 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from decimal import Decimal
 from typing import NamedTuple, TypedDict
 
 from src.database import db
 from src.logger import Logger
 from src.pages.common.logic import get_user_currency
-from src.utils import Data, format_number
+from src.utils import Data, format_number, to_decimal
 
 
 MAX_SAVINGS_GOALS_ON_HOME = 3
-MINIMUM_GOAL_TARGET = 1.0
+MINIMUM_GOAL_TARGET = Decimal(1)
 
 
 class SavingsObjective(NamedTuple):
     objective_id: int
     title: str | None
     reason: str | None
-    target_amount: float
+    target_amount: Decimal
     completed_at: str | None
 
 
 class DashboardData(TypedDict):
-    total_income: float
-    total_expense: float
-    net_balance: float
-    total_savings: float
-    total_target: float
-    category_expenses: dict[str, float]
+    total_income: Decimal
+    total_expense: Decimal
+    net_balance: Decimal
+    total_savings: Decimal
+    total_target: Decimal
+    category_expenses: dict[str, Decimal]
 
 
 class SavingsProgressItem(TypedDict):
     id: int
     title: str
-    current_amount: float
-    target_amount: float
+    current_amount: Decimal
+    target_amount: Decimal
     progress_ratio: float
     progress_text: str
     completed: bool
@@ -58,18 +59,18 @@ class LogicController:
         expenses = db.spending.get_user_expenses(self.current_user) or []
         incomes = db.spending.get_user_incomes(self.current_user) or []
 
-        total_income = 0.0
-        total_expense = 0.0
-        category_expenses: dict[str, float] = {}
+        total_income = Decimal(0)
+        total_expense = Decimal(0)
+        category_expenses: dict[str, Decimal] = {}
 
         for expense in expenses:
-            amount = float(expense.get("amount", 0))
+            amount = to_decimal(expense.get("amount", 0))
             category = str(expense.get("category") or "")
             total_expense += amount
-            category_expenses[category] = category_expenses.get(category, 0.0) + amount
+            category_expenses[category] = category_expenses.get(category, Decimal(0)) + amount
 
         for income in incomes:
-            total_income += float(income.get("amount", 0))
+            total_income += to_decimal(income.get("amount", 0))
 
         net_balance = total_income - total_expense
 
@@ -98,16 +99,14 @@ class LogicController:
             return goal_items, 0
 
         for objective in objectives[:MAX_SAVINGS_GOALS_ON_HOME]:
-            current_amount = float(
-                db.savings.get_objective_progress(objective.objective_id)
-            )
+            current_amount = db.savings.get_objective_progress(objective.objective_id)
             target_value = max(
-                float(objective.target_amount or 0),
+                objective.target_amount or Decimal(0),
                 MINIMUM_GOAL_TARGET,
             )
 
             # Keep progress calculations defined for goals without a target.
-            progress_ratio = min(1.0, current_amount / target_value)
+            progress_ratio = min(Decimal(1), current_amount / target_value)
             display_title = objective.title or lang["home.default_goal_title"]
 
             goal_items.append({
@@ -115,7 +114,7 @@ class LogicController:
                 "title": display_title,
                 "current_amount": current_amount,
                 "target_amount": target_value,
-                "progress_ratio": progress_ratio,
+                "progress_ratio": float(progress_ratio),
                 "progress_text": f"{int(progress_ratio * 100)}%",
                 "completed": objective.completed_at is not None,
                 "contributed_label": f"{lang['home.contributed']}: {format_number(current_amount)} {currency}",

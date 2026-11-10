@@ -3,18 +3,13 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from collections.abc import Callable
+from decimal import Decimal
 
 import flet as ft
 import flet_charts as fc
 
 from src.pages.home.logic import SavingsProgressItem
-from src.utils import (
-    Color,
-    Text,
-    UISettings,
-    format_compact_number,
-    format_display_number,
-)
+from src.utils import Color, Text, UISettings, format_compact_number, format_display_number
 
 DEFAULT_CHART_RADIUS = 45
 DEFAULT_CHART_CENTER_RADIUS = 40
@@ -30,7 +25,7 @@ PIE_CHART_COLORS = (
 
 
 class BalanceCard(ft.Container):
-    def __init__(self, lang: dict[str, str], currency: str, net_balance: float, income: float, expense: float, savings: float, advice: str, on_add_click: Callable[..., None], on_scan_click: Callable[..., None] | None) -> None:
+    def __init__(self, lang: dict[str, str], currency: str, net_balance: Decimal, income: Decimal, expense: Decimal, savings: Decimal, advice: str, on_add_click: Callable[..., None], on_scan_click: Callable[..., None] | None) -> None:
         self.lang = lang
         self.currency = currency
         self.net_balance = net_balance
@@ -255,7 +250,7 @@ class BalanceCard(ft.Container):
             content=self.main_container
         )
 
-    def update_data(self, net_balance: float, income: float, expense: float, savings: float, ai_advice: str, currency: str) -> None:
+    def update_data(self, net_balance: Decimal, income: Decimal, expense: Decimal, savings: Decimal, ai_advice: str, currency: str) -> None:
         self.net_balance = net_balance
         self.income = income
         self.expense = expense
@@ -525,7 +520,7 @@ class SavingsProgressCard(ft.Container):
 
 
 class ExpenseCategoryItem(ft.Row):
-    def __init__(self, lang: dict[str, str], name: str, value: float, currency: str, color: str) -> None:
+    def __init__(self, lang: dict[str, str], name: str, value: Decimal, currency: str, color: str) -> None:
         self.lang = lang
         self.name = name
         self.value = value
@@ -561,7 +556,7 @@ class ExpenseCategoryItem(ft.Row):
             ]
         )
 
-    def update_data(self, name: str, value: float, currency: str, color: str) -> None:
+    def update_data(self, name: str, value: Decimal, currency: str, color: str) -> None:
         self.color_box.bgcolor = color
         self.expense_name_text.value = name
         self.expense_value_text.value = f"{format_compact_number(value, translations=self.lang)} {currency}"
@@ -573,7 +568,7 @@ class ExpenseCategoryItem(ft.Row):
 
 
 class ExpensePieChart(ft.Container):
-    def __init__(self, lang: dict[str, str], currency: str, category_data: dict[str, float], on_details_click: Callable[..., None] | None) -> None:
+    def __init__(self, lang: dict[str, str], currency: str, category_data: dict[str, Decimal], on_details_click: Callable[..., None] | None) -> None:
         self.lang = lang
         self.currency = currency
         self.category_data = category_data or {}
@@ -599,7 +594,7 @@ class ExpensePieChart(ft.Container):
         self.pie_chart = fc.PieChart(
             sections=[
                 fc.PieChartSection(
-                    val,
+                    float(val),
                     color=self._get_section_color(idx, len(self.category_data)),
                     radius=self.chart_radius,
                 )
@@ -710,7 +705,7 @@ class ExpensePieChart(ft.Container):
             return self.pie_colors[1]
         return self.pie_colors[index % len(self.pie_colors)]
 
-    def update_data(self, category_data: dict[str, float], currency: str) -> None:
+    def update_data(self, category_data: dict[str, Decimal], currency: str) -> None:
         self.category_data = category_data or {}
         self.currency = currency
 
@@ -730,7 +725,7 @@ class ExpensePieChart(ft.Container):
             for idx, (name, val) in enumerate(categories):
                 color = self._get_section_color(idx, len(categories))
                 sections.append(
-                    fc.PieChartSection(val, color=color, radius=self.chart_radius)
+                    fc.PieChartSection(float(val), color=color, radius=self.chart_radius)
                 )
 
                 if idx < len(self.legend_items):

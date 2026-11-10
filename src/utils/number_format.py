@@ -2,8 +2,10 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import math
 import re
+from decimal import Decimal
+
+from src.utils import to_decimal
 
 _digit_separator = ""
 _decimal_separator = "."
@@ -29,7 +31,8 @@ def get_decimal_separator() -> str:
     return _decimal_separator
 
 
-def format_number(value: float, decimals: int = 2, signed: bool = False) -> str:
+def format_number(value: Decimal | int | str, decimals: int = 2, signed: bool = False) -> str:
+    value = to_decimal(value)
     formatted = f"{value:{'+' if signed else ''},.{decimals}f}"
     integer, decimal, fraction = formatted.partition(".")
     if _digit_separator:
@@ -39,7 +42,7 @@ def format_number(value: float, decimals: int = 2, signed: bool = False) -> str:
     return integer + (_decimal_separator + fraction if decimal else "")
 
 
-def format_compact_number(value: float, decimals: int = 1, signed: bool = False, translations: dict[str, str] | None = None) -> str:
+def format_compact_number(value: Decimal | int | str, decimals: int = 1, signed: bool = False, translations: dict[str, str] | None = None) -> str:
     """Format large values with a compact magnitude suffix."""
     suffixes = (
         ("thousand", "K"),
@@ -60,15 +63,13 @@ def format_compact_number(value: float, decimals: int = 1, signed: bool = False,
         else fallback
         for key, fallback in suffixes
     )
+    value = to_decimal(value)
     absolute_value = abs(value)
-    if not math.isfinite(value) or absolute_value < 1_000:
+    if absolute_value < 1_000:
         return format_number(value, signed=signed)
 
-    magnitude = min(
-        len(magnitude_suffixes) - 1,
-        int(math.log10(absolute_value) // 3),
-    )
-    scaled_value = value / (1_000 ** magnitude)
+    magnitude = min(len(magnitude_suffixes) - 1, value.adjusted() // 3)
+    scaled_value = value / Decimal(1_000**magnitude)
 
     while (
         magnitude < len(magnitude_suffixes) - 1
@@ -83,11 +84,11 @@ def format_compact_number(value: float, decimals: int = 1, signed: bool = False,
     return f"{formatted}{magnitude_suffixes[magnitude]}"
 
 
-def format_display_number(value: float, translations: dict[str, str], decimals: int = 1, signed: bool = False) -> str:
+def format_display_number(value: Decimal | int | str, translations: dict[str, str], decimals: int = 1, signed: bool = False) -> str:
     """Keep up to 12 integer digits unabridged and localize larger values."""
-    if not math.isfinite(value):
-        return format_number(value, signed=signed)
-    if len(str(int(abs(value)))) <= 12:
+    value = to_decimal(value)
+    integer_digits = value.copy_abs().adjusted() + 1 if value else 1
+    if integer_digits <= 12:
         return format_number(value, signed=signed)
     return format_compact_number(
         value,
