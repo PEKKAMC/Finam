@@ -118,6 +118,7 @@ class LogicController:
 
     def analyze_and_save_purchase(self, lang: dict[str, str], name: str, price: str, reason: str, trigger: str, time: str) -> tuple[int | None, str, float, str]:
         risk, trigger_display, price_value, advice = self.analyze_purchase(
+            lang,
             name,
             price,
             reason,
