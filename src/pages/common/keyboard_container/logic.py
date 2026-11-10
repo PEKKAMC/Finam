@@ -3,7 +3,6 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import ast
-import operator
 from decimal import Decimal
 
 from src.logger import Logger
@@ -18,16 +17,6 @@ def evaluate_expression(expression: str) -> str | None:
 
         cleaned_expression = expression.replace("×", "*").replace("÷", "/")
         parsed_expression = ast.parse(cleaned_expression, mode="eval")
-        binary_operations = {
-            ast.Add: operator.add,
-            ast.Sub: operator.sub,
-            ast.Mult: operator.mul,
-            ast.Div: operator.truediv,
-            ast.Pow: operator.pow,
-            ast.Mod: operator.mod,
-        }
-        unary_operations = {ast.UAdd: operator.pos, ast.USub: operator.neg}
-
         def evaluate(node: ast.AST) -> Decimal:
             if isinstance(node, ast.Expression):
                 return evaluate(node.body)
@@ -36,14 +25,29 @@ def evaluate_expression(expression: str) -> str | None:
                 if literal is None:
                     raise ValueError("Could not read numeric literal")
                 return Decimal(literal)
-            if isinstance(node, ast.BinOp) and type(node.op) in binary_operations:
+            if isinstance(node, ast.BinOp):
                 left = evaluate(node.left)
                 right = evaluate(node.right)
-                if isinstance(node.op, ast.Pow) and right != right.to_integral_value():
-                    raise ValueError("Money expressions require an integer exponent")
-                return binary_operations[type(node.op)](left, right)
-            if isinstance(node, ast.UnaryOp) and type(node.op) in unary_operations:
-                return unary_operations[type(node.op)](evaluate(node.operand))
+                if isinstance(node.op, ast.Add):
+                    return left + right
+                if isinstance(node.op, ast.Sub):
+                    return left - right
+                if isinstance(node.op, ast.Mult):
+                    return left * right
+                if isinstance(node.op, ast.Div):
+                    return left / right
+                if isinstance(node.op, ast.Pow):
+                    if right != right.to_integral_value():
+                        raise ValueError("Money expressions require an integer exponent")
+                    return left ** right
+                if isinstance(node.op, ast.Mod):
+                    return left % right
+            if isinstance(node, ast.UnaryOp):
+                operand = evaluate(node.operand)
+                if isinstance(node.op, ast.UAdd):
+                    return +operand
+                if isinstance(node.op, ast.USub):
+                    return -operand
             raise ValueError("Unsupported expression element")
 
         result = evaluate(parsed_expression)

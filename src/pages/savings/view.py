@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from collections.abc import Callable
+from decimal import Decimal
 from typing import Any
 
 import flet as ft
@@ -124,7 +125,7 @@ class SavingsView(ft.View):
             on_deposit=self.dialogs.deposit_withdraw_dialog.trigger,
             on_achievement=lambda goal: self.dialogs.congratulations_dialog.trigger(
                 goal,
-                0,
+                Decimal(0),
                 self._objective_data,
             ),
             on_withdraw=self.dialogs.deposit_withdraw_dialog.trigger,
@@ -250,16 +251,20 @@ class SavingsView(ft.View):
             or query in objective["reason"].casefold()
         ]
 
-    def _build_objective_data(self, objectives: list[dict[str, Any]], currency: str) -> list[dict[str, Any]]:
+    def _build_objective_data(
+        self,
+        objectives: list[tuple[int, str, str | None, Decimal, str | None]],
+        currency: str,
+    ) -> list[dict[str, Any]]:
         objectives_data = []
         for objective_id, title, reason, target_amount, _completed_at in objectives:
             objective_id = int(objective_id)
             objective_savings, card_progress, card_percentage = (
                 self.controller.get_objective_progress_data(objective_id, target_amount)
             )
-            remaining_amt = max(0, target_amount - objective_savings)
+            remaining_amt = max(Decimal(0), target_amount - objective_savings)
 
-            def format_amount(amount) -> str:
+            def format_amount(amount: Decimal) -> str:
                 return format_number(amount)
 
             objectives_data.append(

@@ -33,7 +33,7 @@ class LogicController:
             percentage = "--%"
         return total_savings, total_target, progress_value, percentage
 
-    def get_user_objectives(self) -> list[dict[str, Any]]:
+    def get_user_objectives(self) -> list[tuple[int, str, str | None, Decimal, str | None]]:
         return db.savings.get_user_objectives(self.current_user)
 
     @staticmethod

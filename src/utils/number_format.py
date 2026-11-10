@@ -5,7 +5,7 @@
 import re
 from decimal import Decimal
 
-from src.utils import to_decimal
+from src.utils.money import to_decimal
 
 _digit_separator = ""
 _decimal_separator = "."

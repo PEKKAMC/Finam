@@ -8,9 +8,10 @@ import json
 import re
 import secrets
 import sqlite3
+from collections.abc import Callable
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Protocol
 
 from src.logger import Logger
 from src.utils import DefaultSettings, ThemeRegistry, to_decimal
@@ -19,6 +20,24 @@ from src.utils import DefaultSettings, ThemeRegistry, to_decimal
 # DATABASE CONNECTION
 # ==========================================
 
+class _AggregateProtocol(Protocol):
+    def step(self, value: str | int | None) -> None: ...
+
+    def finalize(self) -> str: ...
+
+
+class _DecimalSum:
+    def __init__(self) -> None:
+        self.total = Decimal(0)
+
+    def step(self, value: str | int | None) -> None:
+        if value is not None:
+            self.total += to_decimal(value)
+
+    def finalize(self) -> str:
+        return format(self.total, "f")
+
+
 class DatabaseConnection:
     """Handles the raw SQLite connection and table initialization."""
 
@@ -26,19 +45,8 @@ class DatabaseConnection:
         self.database_name = database_name
 
     @staticmethod
-    def _decimal_sum_factory():
-        class DecimalSum:
-            def __init__(self) -> None:
-                self.total = Decimal(0)
-
-            def step(self, value: str | int | None) -> None:
-                if value is not None:
-                    self.total += to_decimal(value)
-
-            def finalize(self) -> str:
-                return format(self.total, "f")
-
-        return DecimalSum
+    def _decimal_sum_factory() -> Callable[[], _AggregateProtocol]:
+        return _DecimalSum
 
     def execute(self, query: str, parameters: tuple = (), fetch_all: bool = False, fetch_one: bool = False) -> Any:
         connection = sqlite3.connect(self.database_name)
@@ -974,7 +982,7 @@ class SavingsDatabase:
                 (objective_id_value,),
                 fetch_one=True,
             )
-            if result and Decimal(result[0]) > 0 and Decimal(result[0]) <= Decimal(result[1]):
+            if result and 0 < Decimal(result[0]) <= Decimal(result[1]):
                 self.complete_objective(objective_id_value)
         return True
 
