@@ -1,33 +1,35 @@
-﻿# Copyright (c) 2026 PEKKAMC
+# Copyright (c) 2026 PEKKAMC
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from typing import Any
 
 import flet as ft
 
 from src.logger import Logger
-from src.database import db
-from src.pages.global_components import FinancialChart, Menu
-from src.pages.spending.components import DeleteSpendingReportDialog, DeleteTransactionDialog, MetricCards, SpendingMonthDialog, SpendingReportDialog, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
-from src.pages.spending.logic import LogicController, SpendingAnalysisApiError
-from src.utils import Color, Page, Text, get_menu_resize_values, get_safe_page_size, scale_width, UISettings
+from src.pages.common import FinancialChart, Menu
+from src.pages.spending.components import DeleteSpendingReportDialog, DeleteTransactionDialog, MetricCards, SpendingGoogleRequiredCard, SpendingMonthDialog, SpendingPageContent, SpendingReportDialog, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
+from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController, SpendingAnalysisApiError
+from src.utils import Color, Page, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Spending page...")
 
 
 class SpendingView(ft.View):
-    def __init__(self, page: Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict[str, str], user_info: dict[str, str]) -> None:
         self._page = page
         self.lang = lang
         self.user_info = user_info
 
-        # IMPORTED FUNCTIONS
-        self.get_safe_page_size = get_safe_page_size
-
         self.filter_type = "all"
         self.search_query = ""
         self.sort_by = "newest"
+
+        # IMPORTED FUNCTIONS
+        self.get_safe_page_size = get_safe_page_size
+        self.get_menu_resize_values = get_menu_resize_values
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(user_info["username"])
@@ -35,8 +37,6 @@ class SpendingView(ft.View):
 
         # FETCH INITIAL DATA
         balance_data, self.raw_transactions = self.controller.get_transaction_data()
-        self.current_chart_type = "daily"
-        self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data(self.current_chart_type)
 
         filtered_txs = self.controller.filter_transactions(
             self.raw_transactions, self.filter_type, self.sort_by, self.search_query
@@ -44,13 +44,17 @@ class SpendingView(ft.View):
         self.category_icons = self.controller.get_category_icon_map()
 
         # INITIALIZE PAGE COMPONENTS
-        self.menu = Menu(self._page, self.lang, self.user_info)
+        self.menu = Menu(
+            page=self._page,
+            lang=self.lang,
+            user_info=self.user_info
+        )
 
         self.financial_chart = FinancialChart(
             lang=self.lang,
             username=user_info["username"],
-            chart_type=self.chart_type,
-            show_mode_buttons=True
+            chart_type="daily",
+            show_mode_buttons=True,
         )
 
         self.metric_cards = MetricCards(
@@ -71,7 +75,7 @@ class SpendingView(ft.View):
             on_add_click=self._page.navigate_to("/category_selection"),
             on_scan_click=self.handle_spending_scan,
             search_query=self.search_query,
-            sort_by=self.sort_by
+            sort_by=self.sort_by,
         )
 
         self.spending_report_dialog = SpendingReportDialog(
@@ -79,62 +83,37 @@ class SpendingView(ft.View):
             lang=self.lang,
             on_delete=self._confirm_delete_spending_report,
         )
+
         self.delete_spending_report_dialog = DeleteSpendingReportDialog(
             page=self._page,
             lang=self.lang,
             on_confirm=self._delete_spending_report,
         )
+
         self.spending_month_dialog = SpendingMonthDialog(
             page=self._page,
             lang=self.lang,
             on_confirm=self._run_spending_scan,
         )
+
         self.spending_report_history_card = SpendingReportHistoryCard(
             lang=self.lang,
             on_open=self._open_saved_report,
         )
+
         self.spending_report_history_card.set_history(self.spending_report_history)
-        self.usage_card = SpendingUsageCard(self.lang)
-        self.google_required_message = ft.Text(
-            self.lang["spending.ai_google_required"],
-            color=Color.SECONDARY_TEXT,
-            size=13,
-            no_wrap=False,
+
+        self.usage_card = SpendingUsageCard(
+            lang=self.lang
         )
-        self.google_required_card = ft.Container(
-            visible=not db.app_settings.has_google_account_session(),
-            bgcolor=Color.CARD_BACKGROUND,
-            border_radius=18,
-            padding=18,
-            border=ft.Border.all(1, Color.INPUT_BORDER),
-            content=ft.Row(
-                spacing=12,
-                controls=[
-                    ft.Icon(
-                        ft.Icons.ACCOUNT_CIRCLE_OUTLINED,
-                        color=Color.PRIMARY_ACTION,
-                        size=24,
-                    ),
-                    ft.Column(
-                        expand=True,
-                        spacing=4,
-                        controls=[
-                            Text.MEDIUM(
-                                self.lang["spending.ai_google_required_title"],
-                                color=Color.PRIMARY_TEXT,
-                                weight=ft.FontWeight.BOLD,
-                            ),
-                            self.google_required_message,
-                        ],
-                    ),
-                    ft.TextButton(
-                        content=self.lang["purchase_scanner.google_login_action"],
-                        on_click=self._open_google_settings,
-                    ),
-                ],
-            ),
+
+        self.google_required_card = SpendingGoogleRequiredCard(
+            lang=self.lang,
+            on_login=self._open_google_settings,
+            visible=not self.controller.has_google_account_session(),
         )
-        self.usage_card.visible = db.app_settings.has_google_account_session()
+
+        self.usage_card.visible = self.controller.has_google_account_session()
 
         self.delete_dialog = DeleteTransactionDialog(
             page=self._page,
@@ -150,113 +129,68 @@ class SpendingView(ft.View):
             category_icons=self.category_icons,
         )
 
-        # INITIALIZE MAIN CONTAINER
-        self.content_container = ft.Container(
-            width=UISettings.MAX_APP_WIDTH,
-            padding=20,
-            content=ft.Column(
-                spacing=20,
-                expand=True,
-                controls=[
-                    self.metric_cards,
-                    self.financial_chart,
-                    self.google_required_card,
-                    self.usage_card,
-                    self.toolbar,
-                    self.history_card,
-                    self.spending_report_history_card,
-                ]
-            )
-        )
-        self.main_container = ft.Container(
-            content=ft.Column(
-                scroll=ft.ScrollMode.AUTO,
-                controls=[self.content_container]
-            ),
-            expand=True,
-            padding=0,
-            margin=ft.Margin(bottom=0)
+        self.page_content = SpendingPageContent(
+            metric_cards=self.metric_cards,
+            financial_chart=self.financial_chart,
+            google_required_card=self.google_required_card,
+            usage_card=self.usage_card,
+            toolbar=self.toolbar,
+            history_card=self.history_card,
+            report_history_card=self.spending_report_history_card,
         )
 
         super().__init__(
             route="/spending",
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
-            horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.SafeArea(
-                expand=True,
-                content=ft.Stack(
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.SafeArea(
                     expand=True,
-                    controls=[
-                        self.main_container,
-                        self.menu
-                    ]
-                )
-            )
+                    content=ft.Stack(
+                        expand=True, controls=[self.page_content, self.menu]
+                    ),
+                ),
+            ],
         )
 
-        self._page.on_resize = self._on_page_resize
-        self._on_page_resize()
+        self._page.on_resize = self._resize_page
+        self._resize_page()
         self._update_google_access()
-        if db.app_settings.has_google_account_session():
+        if self.controller.has_google_account_session():
             self._page.run_thread(self._load_monthly_usage)
 
     def _refresh_view(self) -> int:
-        try:
-            self._on_page_resize()
-            self._update_google_access()
-            if db.app_settings.has_google_account_session():
-                self._page.run_thread(self._load_monthly_usage)
-            self.current_chart_type = self.financial_chart.chart_type
+        self._resize_page()
+        self._update_google_access()
+        if self.controller.has_google_account_session():
+            self._page.run_thread(self._load_monthly_usage)
+        balance_data, self.raw_transactions = self.controller.get_transaction_data()
+        self.category_icons = self.controller.get_category_icon_map()
 
-            if self.financial_chart.chart_type == self.current_chart_type:
-                date_offset = self.financial_chart.date_offset
-                target_year = self.financial_chart.monthly_year
-            else:
-                date_offset = 0
-                target_year = None
+        filtered_txs = self.controller.filter_transactions(
+            self.raw_transactions, self.filter_type, self.sort_by, self.search_query
+        )
 
-            balance_data, self.raw_transactions = self.controller.get_transaction_data()
-            self.category_icons = self.controller.get_category_icon_map()
+        self.metric_cards.update_data(
+            total_income=balance_data["incomes"].replace("+", ""),
+            total_expense=balance_data["expenses"].replace("-", ""),
+            net_balance=balance_data["current"],
+        )
 
-            self.chart_date, self.chart_data, self.chart_type = self.controller.get_dashboard_data(
-                self.current_chart_type,
-                date_offset=date_offset,
-                target_year=target_year
-            )
+        self.toolbar.update_data(
+            filter_type=self.filter_type,
+            search_query=self.search_query,
+            sort_by=self.sort_by,
+        )
 
-            filtered_txs = self.controller.filter_transactions(
-                self.raw_transactions, self.filter_type, self.sort_by, self.search_query
-            )
+        self.history_card.update_data(filtered_txs, self.category_icons)
+        self.spending_report_history = self.controller.get_spending_report_history()
+        self.spending_report_history_card.set_history(self.spending_report_history)
 
-            self.metric_cards.update_data(
-                total_income=balance_data["incomes"].replace("+", ""),
-                total_expense=balance_data["expenses"].replace("-", ""),
-                net_balance=balance_data["current"],
-            )
-
-            self.toolbar.update_data(
-                filter_type=self.filter_type,
-                search_query=self.search_query,
-                sort_by=self.sort_by
-            )
-
-            self.history_card.update_data(filtered_txs, self.category_icons)
-            self.spending_report_history = (
-                self.controller.get_spending_report_history()
-            )
-            self.spending_report_history_card.set_history(
-                self.spending_report_history
-            )
-
-            self.financial_chart.update_data()
-            self._page.update()
-
-            return 0
-
-        except Exception as ex:
-            Logger.warn(f"Failed to refresh view {ex}")
-            return -1
+        self.financial_chart.update_data()
+        self._page.update()
+        return 0
 
     def _delete_transaction(self, transaction_id: int) -> None:
         if self.controller.delete_transaction(transaction_id):
@@ -264,130 +198,111 @@ class SpendingView(ft.View):
         else:
             Logger.warn(f"Failed to delete transaction {transaction_id}")
 
-    def _open_google_settings(self, e=None):
-        self._page.navigate_to("/user_management")()
+    def _open_google_settings(self, e: ft.ControlEvent | None = None) -> None:
+        self._page.navigate_to("/user_management")(e)
 
     def _update_google_access(self) -> None:
-        signed_in = db.app_settings.has_google_account_session()
-        self.google_required_card.visible = not signed_in
+        signed_in = self.controller.has_google_account_session()
+        self.google_required_card.set_access(signed_in)
         self.usage_card.visible = signed_in
         if not signed_in:
-            self._page.open_spending_month_dialog = False
-        if signed_in and self._is_cached_developer():
-            self._show_unlimited_usage()
+            self._page.consume_spending_month_dialog_request()
+        has_unlimited_access = signed_in and self.controller.is_cached_developer()
+        if has_unlimited_access:
+            self.usage_card.set_unlimited()
             self.toolbar.set_scan_enabled(True)
         else:
             self.toolbar.set_scan_enabled(False)
-        self.google_required_message.value = self.lang["spending.ai_google_required"]
         self._page.update()
 
-    @staticmethod
-    def _is_cached_developer() -> bool:
-        account = db.app_settings.get_google_account()
-        return bool(
-            account
-            and db.app_settings.get_google_account_tier(account["uid"])
-            == "developer"
-        )
-
-    def _show_unlimited_usage(self) -> None:
-        self.usage_card.usage_label.value = self.lang["spending.ai_usage_unlimited"]
-        self.usage_card.usage_progress.value = 1
-        self.usage_card.usage_progress.color = Color.PROGRESS_ACTIVE
-
     def _open_pending_month_dialog(self) -> None:
-        if not getattr(self._page, "open_spending_month_dialog", False):
+        if not self._page.consume_spending_month_dialog_request():
             return
-        self._page.open_spending_month_dialog = False
         if (
             self.toolbar.scan_button.disabled
-            or not db.app_settings.has_google_account_session()
+            or not self.controller.has_google_account_session()
         ):
             return
         self.spending_month_dialog.trigger()
 
     def _load_monthly_usage(self) -> None:
-        if self._is_cached_developer():
-            self._show_unlimited_usage()
-            self.toolbar.set_scan_enabled(db.app_settings.has_google_account_session())
+        if self.controller.is_cached_developer():
+            self.usage_card.set_unlimited()
+            self.toolbar.set_scan_enabled(
+                self.controller.has_google_account_session()
+            )
             self._page.update()
             self._open_pending_month_dialog()
             return
-        refresh_token = db.app_settings.get_google_refresh_token()
+        refresh_token = self.controller.get_google_refresh_token()
         try:
             usage = self.controller.get_monthly_analysis_usage(refresh_token or "")
-            remaining = usage["remaining"]
-            limit = usage["limit"]
-            if limit is None:
-                if remaining is not None:
-                    raise ValueError("Unlimited spending usage must not have a remaining count")
-            elif (
-                not isinstance(remaining, int)
-                or not isinstance(limit, int)
-                or not 0 <= remaining <= limit
-            ):
-                raise ValueError("Invalid monthly usage counts")
-            else:
+            remaining, limit = self.controller.get_monthly_usage_counts(usage)
+            if limit is not None:
                 reset_at = datetime.fromisoformat(usage["reset_at"])
                 if reset_at.tzinfo is None:
-                    reset_at = reset_at.replace(tzinfo=timezone.utc)
+                    reset_at = reset_at.replace(tzinfo=UTC)
                 reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
-            if limit is None:
+            else:
                 reset_label = None
             self.usage_card.set_usage(remaining, limit, reset_label)
-            self.toolbar.set_scan_enabled(limit is None or remaining > 0)
+            self.toolbar.set_scan_enabled(
+                limit is None or (remaining is not None and remaining > 0)
+            )
             self._open_pending_month_dialog()
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load spending analysis usage: {ex}")
             self.usage_card.set_unavailable()
             if ex.status_code in (401, 403):
-                self.google_required_message.value = self.lang[
-                    "purchase_scanner.google_session_expired"
-                ]
-                self.google_required_card.visible = True
+                self.google_required_card.set_access(
+                    False,
+                    self.lang["purchase_scanner.google_session_expired"],
+                )
                 self.usage_card.visible = False
-                self.toolbar.set_scan_enabled(False)
-            elif ex.status_code == 404:
-                self.toolbar.set_scan_enabled(False)
-            else:
-                self.toolbar.set_scan_enabled(False)
-            self._page.open_spending_month_dialog = False
+            self.toolbar.set_scan_enabled(False)
+            self._page.consume_spending_month_dialog_request()
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid spending analysis usage response: {ex}")
             self.usage_card.set_unavailable()
             self.toolbar.set_scan_enabled(False)
-            self._page.open_spending_month_dialog = False
+            self._page.consume_spending_month_dialog_request()
         self._page.update()
 
-    def handle_spending_scan(self, e=None) -> None:
+    def handle_spending_scan(self, e: ft.ControlEvent | None = None) -> None:
         if (
             self.toolbar.scan_button.disabled
-            or not db.app_settings.has_google_account_session()
+            or not self.controller.has_google_account_session()
         ):
             return
-        self.spending_month_dialog.trigger()
+        self.spending_month_dialog.trigger(e)
+
+        return
 
     def _run_spending_scan(self, month: str) -> None:
         if (
             self.toolbar.scan_button.disabled
-            or not db.app_settings.has_google_account_session()
+            or not self.controller.has_google_account_session()
         ):
+            return
+        transaction_count = self.controller.get_month_transaction_count(month)
+        if transaction_count < MIN_SPENDING_ANALYSIS_TRANSACTIONS:
+            self.spending_report_dialog.show_error(
+                self.lang["spending.ai_min_transactions"].format(
+                    required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
+                    count=transaction_count,
+                )
+            )
             return
         self.toolbar.set_scan_enabled(False)
         self._page.update()
         self.spending_report_dialog.show_loading()
 
-        def worker():
+        def worker() -> None:
             try:
-                report = self.controller.analyze_spending(
-                    db.app_settings.get_google_refresh_token() or "",
-                    month,
+                report, history = self.controller.analyze_and_save_spending(
+                    self.controller.get_google_refresh_token() or "", month
                 )
-                if not self.controller.save_spending_report(report):
-                    raise RuntimeError("Could not save generated spending report.")
-                self.spending_report_history = (
-                    self.controller.get_spending_report_history()
-                )
+                self.spending_report_history = history
                 self.spending_report_history_card.set_history(
                     self.spending_report_history
                 )
@@ -403,12 +318,17 @@ class SpendingView(ft.View):
                     message = self.lang["spending.ai_monthly_limit"]
                     self.toolbar.set_scan_enabled(False)
                     self._page.update()
+                elif ex.status_code == 422:
+                    message = self.lang["spending.ai_min_transactions"].format(
+                        required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
+                        count=self.controller.get_month_transaction_count(month),
+                    )
                 elif ex.status_code in (401, 403):
                     message = self.lang["purchase_scanner.sign_in_required"]
-                    self.google_required_message.value = self.lang[
-                        "purchase_scanner.google_session_expired"
-                    ]
-                    self.google_required_card.visible = True
+                    self.google_required_card.set_access(
+                        False,
+                        self.lang["purchase_scanner.google_session_expired"],
+                    )
                     self.usage_card.visible = False
                     self.toolbar.set_scan_enabled(False)
                     self._page.update()
@@ -417,18 +337,18 @@ class SpendingView(ft.View):
                 else:
                     message = self.lang["spending.ai_service_error"]
                 self.spending_report_dialog.show_error(message)
-            except Exception as ex:
+            except (KeyError, RuntimeError, sqlite3.Error, TypeError, ValueError) as ex:
                 Logger.error(f"Error during spending analysis: {ex}")
                 self.spending_report_dialog.show_error(
                     self.lang["spending.ai_service_error"]
                 )
             finally:
-                if db.app_settings.get_google_refresh_token():
+                if self.controller.get_google_refresh_token():
                     self._load_monthly_usage()
 
         self._page.run_thread(worker)
 
-    def _open_saved_report(self, entry: dict) -> None:
+    def _open_saved_report(self, entry: dict[str, Any]) -> None:
         self.spending_report_dialog.show_report(
             entry["report"],
             entry["created_at"],
@@ -444,41 +364,40 @@ class SpendingView(ft.View):
             return
         self.spending_report_dialog.dismiss()
         self.spending_report_history = self.controller.get_spending_report_history()
-        self.spending_report_history_card.set_history(
-            self.spending_report_history
-        )
+        self.spending_report_history_card.set_history(self.spending_report_history)
         self._page.update()
 
-    def on_filter_change(self, f_type: str):
+    def on_filter_change(self, f_type: str) -> None:
         self.filter_type = f_type
 
         self.toolbar.update_data(
             filter_type=self.filter_type,
             search_query=self.search_query,
-            sort_by=self.sort_by
+            sort_by=self.sort_by,
         )
 
         self.update_history_list()
 
-    def on_search_change(self, query: str):
+    def on_search_change(self, query: str) -> None:
         self.search_query = query
         self.update_history_list()
 
-    def on_sort_change(self, sort_by: str):
+    def on_sort_change(self, sort_by: str) -> None:
         self.sort_by = sort_by
         self.update_history_list()
 
-    def update_history_list(self):
+    def update_history_list(self) -> None:
         filtered_txs = self.controller.filter_transactions(
             self.raw_transactions, self.filter_type, self.sort_by, self.search_query
         )
         self.history_card.update_data(filtered_txs)
 
-    def _on_page_resize(self, e = None) -> int:
+    def _resize_page(self, e: ft.PageResizeEvent | None = None) -> None:
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
-            menu_resize_values = get_menu_resize_values(page_width, self.menu)
+            menu_resize_values = self.get_menu_resize_values(page_width, self.menu)
+
             content_width = scale_width(page_width, 392)
             card_content_width = scale_width(page_width, 352)
             usage_content_width = scale_width(page_width, 356)
@@ -492,39 +411,19 @@ class SpendingView(ft.View):
             secondary_dialog_content = scale_width(page_width, 330)
 
             # Resizing main container
-            self.main_container.width = page_width
-            self.main_container.height = page_height
-            self.content_container.width = page_width
-            self.google_required_card.width = content_width
-            self.usage_card.resize(content_width, usage_content_width)
-            self.spending_report_history_card.resize(
-                content_width,
-                card_content_width,
+            self.page_content.resize(
+                page_width=page_width,
+                page_height=page_height,
+                content_width=content_width,
+                card_content_width=card_content_width,
+                usage_content_width=usage_content_width,
+                transaction_item_content_width=transaction_item_content_width,
             )
-
-            # Resizing other components
             self.menu.resize(
                 width=page_width,
                 **menu_resize_values,
             )
-            self.main_container.margin.bottom = self.menu.reserved_height
-
-            self.metric_cards.resize(
-                width=content_width
-            )
-
-            self.toolbar.resize(
-                width=content_width,
-                content_width=card_content_width,
-            )
-
-            self.history_card.resize(
-                width=content_width,
-                content_width=card_content_width,
-                item_width=card_content_width,
-                item_content_width=transaction_item_content_width,
-            )
-            self.financial_chart.resize(card_content_width)
+            self.page_content.set_bottom_margin(self.menu.reserved_height)
 
             self.delete_dialog.resize(
                 outer_width=transaction_dialog_width,
@@ -544,21 +443,15 @@ class SpendingView(ft.View):
                 content_width=secondary_dialog_content,
             )
 
-            return 0
-
         except AttributeError as ex:
             Logger.error(f"Failed to get width/height of the page: {ex}")
-            return 1
 
         except (TypeError, ValueError) as ex:
             Logger.error(f"Value of width/height of the page is invalid: {ex}")
-            return 2
 
         except Exception as ex:
             Logger.error(f"Error during page resize: {ex}, event: {e}")
-            return -1
 
-
-def get_spending_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+def get_spending_view(page: Page, lang: dict[str, str], user_info: dict[str, str]) -> ft.View:
     Logger.info("Loading Spending page...")
     return SpendingView(page, lang, user_info)

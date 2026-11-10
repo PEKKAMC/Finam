@@ -4,6 +4,7 @@
 
 from collections.abc import Callable
 from datetime import datetime
+from typing import Any
 
 import flet as ft
 
@@ -12,7 +13,8 @@ from src.utils import Color, Dialog, Page, Text, UISettings, format_compact_numb
 
 class MetricCards(ft.ResponsiveRow):
     """Top summary metric cards matching the TSX TransactionsView layout."""
-    def __init__(self, page: Page, lang: dict, total_income: str, total_expense: str, net_balance: str):
+
+    def __init__(self, page: Page, lang: dict[str, str], total_income: str, total_expense: str, net_balance: str) -> None:
         self._page = page
         self.lang = lang
         self.total_income = total_income
@@ -31,9 +33,9 @@ class MetricCards(ft.ResponsiveRow):
         self.balance_icon = ft.Icon(ft.Icons.ACCOUNT_BALANCE_WALLET, color=Color.LIGHT_ACCENT, size=20)
 
         # Dynamic texts
-        self.income_value_text = Text.H3(f"+{self.total_income}", color=Color.INCOME_COLOR, weight=ft.FontWeight.BOLD)
-        self.expense_value_text = Text.H3(f"-{self.total_expense}", color=Color.EXPENSE_COLOR, weight=ft.FontWeight.BOLD)
-        self.balance_value_text = Text.H3(self.net_balance, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.income_value_text = Text.H4(f"+{self.total_income}", color=Color.INCOME_COLOR, weight=ft.FontWeight.BOLD)
+        self.expense_value_text = Text.H4(f"-{self.total_expense}", color=Color.EXPENSE_COLOR, weight=ft.FontWeight.BOLD)
+        self.balance_value_text = Text.H4(self.net_balance, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
 
         # CONTAINER COMPONENTS
         self.income_card = ft.Container(
@@ -49,7 +51,7 @@ class MetricCards(ft.ResponsiveRow):
                 controls=[
                     ft.Column(
                         spacing=4,
-                        controls=[self.income_title_text, self.income_value_text]
+                        controls=[self.income_title_text, self.income_value_text],
                     ),
                     ft.Container(
                         content=self.income_icon,
@@ -57,10 +59,10 @@ class MetricCards(ft.ResponsiveRow):
                         width=40,
                         height=40,
                         border_radius=16,
-                        alignment=ft.Alignment.CENTER
-                    )
-                ]
-            )
+                        alignment=ft.Alignment.CENTER,
+                    ),
+                ],
+            ),
         )
 
         self.expense_card = ft.Container(
@@ -76,7 +78,7 @@ class MetricCards(ft.ResponsiveRow):
                 controls=[
                     ft.Column(
                         spacing=4,
-                        controls=[self.expense_title_text, self.expense_value_text]
+                        controls=[self.expense_title_text, self.expense_value_text],
                     ),
                     ft.Container(
                         content=self.expense_icon,
@@ -84,10 +86,10 @@ class MetricCards(ft.ResponsiveRow):
                         width=40,
                         height=40,
                         border_radius=16,
-                        alignment=ft.Alignment.CENTER
-                    )
-                ]
-            )
+                        alignment=ft.Alignment.CENTER,
+                    ),
+                ],
+            ),
         )
 
         self.balance_card = ft.Container(
@@ -103,7 +105,7 @@ class MetricCards(ft.ResponsiveRow):
                 controls=[
                     ft.Column(
                         spacing=4,
-                        controls=[self.balance_title_text, self.balance_value_text]
+                        controls=[self.balance_title_text, self.balance_value_text],
                     ),
                     ft.Container(
                         content=self.balance_icon,
@@ -111,10 +113,10 @@ class MetricCards(ft.ResponsiveRow):
                         width=40,
                         height=40,
                         border_radius=16,
-                        alignment=ft.Alignment.CENTER
-                    )
-                ]
-            )
+                        alignment=ft.Alignment.CENTER,
+                    ),
+                ],
+            ),
         )
 
         self.main_container = ft.Container(
@@ -133,7 +135,7 @@ class MetricCards(ft.ResponsiveRow):
             controls=[self.main_container]
         )
 
-    def update_data(self, total_income: str, total_expense: str, net_balance: str):
+    def update_data(self, total_income: str, total_expense: str, net_balance: str) -> None:
         self.total_income = total_income
         self.total_expense = total_expense
         self.net_balance = net_balance
@@ -144,14 +146,15 @@ class MetricCards(ft.ResponsiveRow):
 
         self.update()
 
-    def resize(self, width: int):
+    def resize(self, width: int) -> None:
         self.width = width
         self.main_container.width = width
 
 
 class TransactionToolbar(ft.Container):
     """Filter, Search, and Action Toolbar"""
-    def __init__(self, page: Page, lang: dict, filter_type: str, on_filter_change: Callable, on_search_change: Callable, on_sort_change: Callable, on_add_click: Callable, on_scan_click: Callable | None = None, search_query: str = "", sort_by: str = "newest"):
+
+    def __init__(self, page: Page, lang: dict[str, str], filter_type: str, on_filter_change: Callable[..., None], on_search_change: Callable[..., None], on_sort_change: Callable[..., None], on_add_click: Callable[..., None], on_scan_click: Callable[..., None] | None = None, search_query: str = '', sort_by: str = 'newest') -> None:
         self._page = page
         self.lang = lang
         self.on_filter = on_filter_change
@@ -161,49 +164,37 @@ class TransactionToolbar(ft.Container):
         self.search_query = search_query
         self.sort_by = sort_by
 
-        def create_filter_button(label: str, f_type: str, active_bg: str):
-            is_active = (self.filter_type == f_type)
-            return ft.Button(
-                content=Text.SMALL(label, color=Color.WHITE if is_active else Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                bgcolor=active_bg if is_active else ft.Colors.TRANSPARENT,
-                on_click=lambda e: self.on_filter(f_type) if self.on_filter else None,
-                style=ft.ButtonStyle(
-                    shape=ft.RoundedRectangleBorder(radius=14),
-                    padding=ft.Padding(16, 10, 16, 10),
-                    bgcolor=active_bg if is_active else Color.CARD_BACKGROUND
-                )
-            )
-
         # TEXT AND ICON COMPONENTS
-        self.all_filter_button = create_filter_button(self.lang["generic.all"], "all", Color.PRIMARY)
-        self.expense_filter_button = create_filter_button(self.lang["spending.expense_label"], "expense", Color.PRIMARY)
-        self.income_filter_button = create_filter_button(self.lang["spending.income_label"], "income", Color.PRIMARY)
-
-        self.add_button = ft.Button(
-            content=ft.Row(
-                spacing=8,
-                controls=[
-                    ft.Icon(ft.Icons.ADD, color=Color.WHITE, size=18),
-                    Text.MEDIUM(self.lang["spending.add_transaction"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
-                ],
-                tight=True
-            ),
-            bgcolor=Color.PRIMARY_ACTION,
-            on_click=on_add_click,
-            style=ft.ButtonStyle(
-                shape=ft.RoundedRectangleBorder(radius=16),
-                padding=12
-            )
-        )
-        self.scan_icon = ft.Icon(
-            ft.Icons.AUTO_AWESOME,
-            color=Color.SECONDARY_TEXT,
-            size=18,
+        # Static texts
+        self.add_transaction_text = Text.MEDIUM(
+            self.lang["spending.add_transaction"],
+            color=Color.WHITE,
+            weight=ft.FontWeight.BOLD,
         )
         self.scan_label = Text.MEDIUM(
             self.lang["spending.ai_scan"],
             color=Color.SECONDARY_TEXT,
             weight=ft.FontWeight.BOLD,
+        )
+
+        # Static icons
+        self.add_transaction_icon = ft.Icon(ft.Icons.ADD, color=Color.WHITE, size=18)
+        self.add_button = ft.Button(
+            content=ft.Row(
+                spacing=8,
+                controls=[self.add_transaction_icon, self.add_transaction_text],
+                tight=True,
+            ),
+            bgcolor=Color.PRIMARY_ACTION,
+            on_click=on_add_click,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=16), padding=12
+            ),
+        )
+        self.scan_icon = ft.Icon(
+            ft.Icons.AUTO_AWESOME,
+            color=Color.SECONDARY_TEXT,
+            size=18,
         )
         self.scan_button = ft.Button(
             content=ft.Row(
@@ -234,13 +225,15 @@ class TransactionToolbar(ft.Container):
             value=self.search_query,
             hint_text=self.lang["spending.search"],
             prefix_icon=ft.Icons.SEARCH,
-            on_change=lambda e: self.on_search(e.control.value) if self.on_search else None,
+            on_change=lambda e: (
+                self.on_search(e.control.value) if self.on_search else None
+            ),
             bgcolor=Color.CARD_BACKGROUND,
             border_color=Color.INPUT_BORDER,
             border_radius=16,
             text_size=13,
             content_padding=12,
-            filled=True
+            filled=True,
         )
 
         self.sort_dropdown = ft.Dropdown(
@@ -253,16 +246,34 @@ class TransactionToolbar(ft.Container):
             border_radius=16,
             text_size=13,
             content_padding=12,
-            filled=True
+            filled=True,
         )
 
-        # LAYOUT CONTAINERS
+        # CONTAINER COMPONENTS
+        self.all_filter_button = self.create_filter_button(
+            label=self.lang["generic.all"],
+            f_type="all",
+            active_bg=Color.PRIMARY
+        )
+
+        self.expense_filter_button = self.create_filter_button(
+            label=self.lang["spending.expense_label"],
+            f_type="expense",
+            active_bg=Color.PRIMARY
+        )
+
+        self.income_filter_button = self.create_filter_button(
+            label=self.lang["spending.income_label"],
+            f_type="income",
+            active_bg=Color.PRIMARY
+        )
+
         self.filter_buttons_row = ft.Row(
             spacing=6,
             controls=[
                 self.all_filter_button,
                 self.expense_filter_button,
-                self.income_filter_button
+                self.income_filter_button,
             ]
         )
 
@@ -284,13 +295,11 @@ class TransactionToolbar(ft.Container):
         )
 
         self.search_box_container = ft.Container(
-            col={"xs": 12, "sm": 6},
-            content=self.search_field
+            col={"xs": 12, "sm": 6}, content=self.search_field
         )
 
         self.sort_box_container = ft.Container(
-            col={"xs": 12, "sm": 6},
-            content=self.sort_dropdown
+            col={"xs": 12, "sm": 6}, content=self.sort_dropdown
         )
 
         self.inputs_row = ft.ResponsiveRow(
@@ -319,6 +328,26 @@ class TransactionToolbar(ft.Container):
             content=self.main_container
         )
 
+    def create_filter_button(self, label: str, f_type: str, active_bg: str) -> ft.Button:
+        is_active = self.filter_type == f_type
+        filter_button_text = Text.SMALL(
+            label,
+            color=Color.WHITE if is_active else Color.SECONDARY_TEXT,
+            weight=ft.FontWeight.BOLD,
+        )
+        return ft.Button(
+            content=filter_button_text,
+            bgcolor=active_bg if is_active else ft.Colors.TRANSPARENT,
+            on_click=lambda _event: (
+                self.on_filter(f_type) if self.on_filter else None
+            ),
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=14),
+                padding=ft.Padding(16, 10, 16, 10),
+                bgcolor=active_bg if is_active else Color.CARD_BACKGROUND
+            )
+        )
+
     def set_scan_enabled(self, enabled: bool) -> None:
         self.scan_button.disabled = not enabled
         self.scan_button.bgcolor = Color.PRIMARY if enabled else Color.DARK_BUTTON
@@ -326,7 +355,7 @@ class TransactionToolbar(ft.Container):
         self.scan_label.color = Color.WHITE if enabled else Color.SECONDARY_TEXT
         self.scan_button.update()
 
-    def update_data(self, filter_type: str, search_query: str, sort_by: str):
+    def update_data(self, filter_type: str, search_query: str, sort_by: str) -> None:
         self.filter_type = filter_type
         self.search_query = search_query
         self.sort_by = sort_by
@@ -338,24 +367,31 @@ class TransactionToolbar(ft.Container):
         ]
 
         for button, f_type, active_bg in buttons_info:
-            is_active = (self.filter_type == f_type)
-            button.content.color = Color.WHITE if is_active else Color.SECONDARY_TEXT
+            is_active = self.filter_type == f_type
+            if isinstance(button.content, ft.Text):
+                button.content.color = (
+                    Color.WHITE if is_active else Color.SECONDARY_TEXT
+                )
             button.bgcolor = active_bg if is_active else Color.TRANSPARENT
-            button.style.bgcolor = active_bg if is_active else Color.CARD_BACKGROUND
+            if button.style is not None:
+                button.style.bgcolor = (
+                    active_bg if is_active else Color.CARD_BACKGROUND
+                )
 
         self.search_field.value = self.search_query
         self.sort_dropdown.value = self.sort_by if self.sort_by in ["newest", "oldest"] else "newest"
 
         self.update()
 
-    def resize(self, width: int, content_width: int):
+    def resize(self, width: int, content_width: int) -> None:
         self.width = width
         self.main_container.width = content_width
 
 
 class TransactionHistoryCard(ft.Container):
     """Transaction History Container matching HomeView component style."""
-    def __init__(self, page: Page, lang: dict, transactions: list, on_delete: Callable, category_icons: dict[str, str] | None = None, ):
+
+    def __init__(self, page: Page, lang: dict[str, str], transactions: list[dict[str, Any]], on_delete: Callable[[int], None], category_icons: dict[str, str] | None = None) -> None:
         self._page = page
         self.lang = lang
         self.transactions = transactions
@@ -377,15 +413,30 @@ class TransactionHistoryCard(ft.Container):
             content=self.history_column,
         )
 
-    def _render_controls(self):
+    def _render_controls(self) -> None:
         self.history_title = Text.H4(
-            self.lang["spending.transaction_history"].format(len=len(self.transactions)),
+            self.lang["spending.transaction_history"].format(
+                len=len(self.transactions)
+            ),
             color=Color.PRIMARY_TEXT,
             weight=ft.FontWeight.BOLD,
         )
+        empty_history_title = Text.MEDIUM(
+            self.lang["spending.no_transactions"],
+            color=Color.SECONDARY_TEXT,
+            weight=ft.FontWeight.BOLD,
+        )
+        empty_history_hint = Text.SMALL(
+            self.lang["spending.try_filter"],
+            color=Color.SECONDARY_TEXT,
+        )
+
+        # Dynamic icons
         self.toggle_button = ft.IconButton(
             icon=ft.Icons.EXPAND_LESS if self.is_expanded else ft.Icons.EXPAND_MORE,
-            tooltip=self.lang["generic.collapse"] if self.is_expanded else self.lang["generic.expand"],
+            tooltip=self.lang["generic.collapse"]
+            if self.is_expanded
+            else self.lang["generic.expand"],
             on_click=self._toggle_expanded,
         )
         history_header = ft.Row(
@@ -416,10 +467,7 @@ class TransactionHistoryCard(ft.Container):
                     content=ft.Column(
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=6,
-                        controls=[
-                            Text.MEDIUM(self.lang["spending.no_transactions"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                            Text.SMALL(self.lang["spending.try_filter"], color=Color.SECONDARY_TEXT),
-                        ],
+                        controls=[empty_history_title, empty_history_hint],
                     ),
                 )
             ]
@@ -435,15 +483,21 @@ class TransactionHistoryCard(ft.Container):
                 if isinstance(item, TransactionItemCard):
                     item.resize(self._item_width, self._item_content_width)
 
-    def _toggle_expanded(self, e):
+    def _toggle_expanded(self, _event: ft.Event[ft.IconButton]) -> None:
         self.is_expanded = not self.is_expanded
         self.history_content.visible = self.is_expanded
-        self.toggle_button.icon = ft.Icons.EXPAND_LESS if self.is_expanded else ft.Icons.EXPAND_MORE
-        self.toggle_button.tooltip = self.lang["generic.collapse"] if self.is_expanded else self.lang["generic.expand"]
+        self.toggle_button.icon = (
+            ft.Icons.EXPAND_LESS if self.is_expanded else ft.Icons.EXPAND_MORE
+        )
+        self.toggle_button.tooltip = (
+            self.lang["generic.collapse"]
+            if self.is_expanded
+            else self.lang["generic.expand"]
+        )
         if self._page is not None:
             self._page.update()
 
-    def update_data(self, transactions: list, category_icons: dict[str, str] | None = None):
+    def update_data(self, transactions: list[dict[str, Any]], category_icons: dict[str, str] | None = None) -> None:
         self.transactions = transactions
         if category_icons is not None:
             self.category_icons = category_icons
@@ -451,7 +505,7 @@ class TransactionHistoryCard(ft.Container):
         if self.page:
             self.update()
 
-    def resize(self, width: int, content_width: int, item_width: int, item_content_width: int):
+    def resize(self, width: int, content_width: int, item_width: int, item_content_width: int) -> None:
         self.width = width
         self.history_column.width = content_width
         self._item_width = item_width
@@ -459,12 +513,12 @@ class TransactionHistoryCard(ft.Container):
         for item in self.history_content.controls:
             if isinstance(item, TransactionItemCard):
                 item.resize(item_width, item_content_width)
-            else:
+            elif isinstance(item, ft.Container):
                 item.width = content_width
 
 
 class TransactionItemCard(ft.Container):
-    def __init__(self, page: Page, lang: dict, tx: dict, on_delete: Callable | None = None, category_icons: dict[str, str] | None = None):
+    def __init__(self, page: Page, lang: dict[str, str], tx: dict[str, Any], on_delete: Callable[[int], None] | None = None, category_icons: dict[str, str] | None = None) -> None:
         self._page = page
         self.lang = lang
         self.tx = tx
@@ -478,23 +532,32 @@ class TransactionItemCard(ft.Container):
         icon = (
             getattr(ft.Icons, icon_name)
             if icon_name and hasattr(ft.Icons, icon_name)
-            else ft.Icons.NORTH_EAST if is_income else ft.Icons.SOUTH_EAST
+            else ft.Icons.NORTH_EAST
+            if is_income
+            else ft.Icons.SOUTH_EAST
         )
 
         # TEXT AND ICON COMPONENTS
+        # Static icons
+        self.calendar_icon = ft.Icon(ft.Icons.CALENDAR_MONTH, color=Color.SECONDARY_TEXT, size=12)
+
+        # Dynamic texts
         self.title_text = Text.MEDIUM(self.tx["title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
         self.date_text = Text.SMALL(self.tx.get("date", ""), color=Color.SECONDARY_TEXT)
-        amount = float(self.tx["amount"])
-        signed_amount = amount if is_income else -amount
         self.amount_text = Text.MEDIUM(
-            format_compact_number(signed_amount, decimals=1, signed=True),
+            format_compact_number(
+                float(self.tx["amount"]) if is_income else -float(self.tx["amount"]),
+                decimals=1,
+                signed=True,
+                translations=self.lang,
+            ),
             color=amount_color,
             weight=ft.FontWeight.BOLD,
-            text_align=ft.TextAlign.RIGHT,
+            text_align=ft.TextAlign.RIGHT
         )
 
+        # Dynamic icons
         self.item_icon = ft.Icon(icon, color=icon_color, size=18)
-        self.calendar_icon = ft.Icon(ft.Icons.CALENDAR_MONTH, color=Color.SECONDARY_TEXT, size=12)
 
         # CONTAINER COMPONENTS
         self.icon_box = ft.Container(
@@ -503,7 +566,7 @@ class TransactionItemCard(ft.Container):
             width=42,
             height=42,
             border_radius=16,
-            alignment=ft.Alignment.CENTER
+            alignment=ft.Alignment.CENTER,
         )
 
         self.date_row = ft.Row(
@@ -533,15 +596,19 @@ class TransactionItemCard(ft.Container):
             ]
         )
 
-        if self.on_delete:
+        transaction_id = self.tx.get("id")
+        if self.on_delete and isinstance(transaction_id, int):
             self.delete_button = ft.IconButton(
                 icon=ft.Icons.DELETE_OUTLINE,
                 icon_color=ft.Colors.RED_400,
                 icon_size=18,
-                on_click=lambda e: self.on_delete(self.tx.get("id")) if self.on_delete else None,
-                tooltip=self.lang["spending.delete"]
+                on_click=self._delete_transaction,
+                tooltip=self.lang["spending.delete"],
             )
-            right_controls = [self.amount_text, self.delete_button]
+            right_controls: list[ft.Control] = [
+                self.amount_text,
+                self.delete_button,
+            ]
         else:
             right_controls = [self.amount_text]
 
@@ -563,8 +630,13 @@ class TransactionItemCard(ft.Container):
             border_radius=18,
             padding=14,
             ink=True,
-            content=self.main_row
+            content=self.main_row,
         )
+
+    def _delete_transaction(self, _event: ft.Event[ft.IconButton]) -> None:
+        transaction_id = self.tx.get("id")
+        if self.on_delete and isinstance(transaction_id, int):
+            self.on_delete(transaction_id)
 
     def resize(self, width: int, content_width: int) -> None:
         self.width = width
@@ -572,31 +644,30 @@ class TransactionItemCard(ft.Container):
 
 
 class DeleteTransactionDialog(Dialog):
-    def __init__(self, page: Page, lang: dict, on_confirm: Callable[[int], None]):
+    def __init__(self, page: Page, lang: dict[str, str], on_confirm: Callable[[int], None]) -> None:
         self._page = page
         self.lang = lang
         self.on_confirm = on_confirm
         self.transaction_id: int | None = None
 
-        self.title_text = Text.H3(
-            self.lang["spending.confirm_delete_title"],
-            color=Color.PRIMARY_TEXT,
-        )
-        self.desc_text = Text.P(
-            self.lang["spending.confirm_delete_content"],
-            color=Color.SECONDARY_TEXT,
-        )
-        self.close_button = ft.IconButton(
-            ft.Icons.CLOSE,
-            on_click=lambda e: self.dismiss(),
-            icon_color=Color.PRIMARY_TEXT,
-            tooltip=self.lang["generic.close"],
-        )
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.title_text = Text.H3(self.lang["spending.confirm_delete_title"], color=Color.PRIMARY_TEXT)
+        self.desc_text = Text.P(self.lang["spending.confirm_delete_content"], color=Color.SECONDARY_TEXT)
+        self.delete_button_label = Text.BUTTON(self.lang["generic.delete"], color=Color.WHITE)
+
+        # CONTAINER COMPONENTS
         self.delete_button = ft.Button(
-            self.lang["generic.delete"],
+            content=self.delete_button_label,
             on_click=self._confirm,
             bgcolor=Color.DELETE_ACTION,
-            color=Color.WHITE,
+        )
+
+        self.close_button = ft.IconButton(
+            ft.Icons.CLOSE,
+            on_click=lambda _event: self.dismiss(),
+            icon_color=Color.PRIMARY_TEXT,
+            tooltip=self.lang["generic.close"],
         )
 
         self.main_container = ft.Container(
@@ -628,41 +699,41 @@ class DeleteTransactionDialog(Dialog):
         self.transaction_id = transaction_id
         self.show()
 
-    def _confirm(self, e=None) -> None:
+    def _confirm(self, _event: ft.ControlEvent | None = None) -> None:
         if self.transaction_id is None:
             return
         self.dismiss()
         self.on_confirm(self.transaction_id)
 
-    def resize(
-        self,
-        outer_width: int,
-        content_width: int,
-        title_width: int,
-    ) -> None:
+    def resize(self, outer_width: int, content_width: int, title_width: int) -> None:
         self.main_container.width = outer_width
-        self.main_container.content.width = content_width
+        if isinstance(self.main_container.content, ft.Column):
+            self.main_container.content.width = content_width
         self.title_text.width = title_width
         self.desc_text.width = content_width
 
 
 class SpendingUsageCard(ft.Container):
-    def __init__(self, lang: dict):
+    def __init__(self, lang: dict[str, str]) -> None:
         self.lang = lang
-        self.usage_label = Text.MEDIUM(
-            self.lang["spending.ai_usage_loading"],
-            color=Color.PRIMARY_TEXT,
-        )
+
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.usage_label = Text.MEDIUM(self.lang["spending.ai_usage_loading"], color=Color.PRIMARY_TEXT)
+
+        # CONTAINER COMPONENTS
         self.usage_progress = ft.ProgressBar(
             value=1,
             color=Color.PROGRESS_ACTIVE,
             bgcolor=Color.DARK_BUTTON,
             height=8,
         )
+
         self.main_container = ft.Column(
             spacing=10,
             controls=[self.usage_label, self.usage_progress],
         )
+
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=18,
@@ -671,17 +742,13 @@ class SpendingUsageCard(ft.Container):
             content=self.main_container,
         )
 
-    def set_usage(
-        self,
-        remaining: int | None,
-        limit: int | None,
-        reset_at: str | None,
-    ) -> None:
+    def set_usage(self, remaining: int | None, limit: int | None, reset_at: str | None) -> None:
         if limit is None:
-            self.usage_label.value = self.lang[
-                "spending.ai_usage_unlimited"
-            ]
+            self.usage_label.value = self.lang["spending.ai_usage_unlimited"]
             self.usage_progress.value = 1
+        elif remaining is None:
+            self.set_unavailable()
+            return
         else:
             self.usage_label.value = self.lang["spending.ai_usage_remaining"].format(
                 remaining=remaining,
@@ -690,14 +757,18 @@ class SpendingUsageCard(ft.Container):
             )
             self.usage_progress.value = remaining / limit if limit else 0
         self.usage_progress.color = (
-            Color.PROGRESS_ACTIVE
-            if limit is None or remaining
-            else Color.WARNING_COLOR
+            Color.PROGRESS_ACTIVE if limit is None or remaining else Color.WARNING_COLOR
         )
         self.update()
 
     def set_unavailable(self, message: str | None = None) -> None:
         self.usage_label.value = message or self.lang["spending.ai_usage_unavailable"]
+        self.update()
+
+    def set_unlimited(self) -> None:
+        self.usage_label.value = self.lang["spending.ai_usage_unlimited"]
+        self.usage_progress.value = 1
+        self.usage_progress.color = Color.PROGRESS_ACTIVE
         self.update()
 
     def resize(self, width: int, content_width: int) -> None:
@@ -707,21 +778,139 @@ class SpendingUsageCard(ft.Container):
         self.usage_progress.width = content_width
 
 
+class SpendingGoogleRequiredCard(ft.Container):
+    def __init__(self, lang: dict[str, str], on_login: Callable[..., None], visible: bool) -> None:
+        self.lang = lang
+
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.title_text = Text.MEDIUM(self.lang["spending.ai_google_required_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.login_button_label = Text.BUTTON(self.lang["purchase_scanner.google_login_action"], color=Color.PRIMARY_ACTION)
+
+        # Static icons
+        self.account_icon = ft.Icon(ft.Icons.ACCOUNT_CIRCLE_OUTLINED, color=Color.PRIMARY_ACTION, size=24)
+
+        # Dynamic texts
+        self.message_text = Text.P(self.lang["spending.ai_google_required"], color=Color.SECONDARY_TEXT)
+
+        # CONTAINER COMPONENTS
+        self.login_button = ft.TextButton(
+            content=self.login_button_label,
+            on_click=on_login,
+        )
+
+        self.main_row = ft.Row(
+            spacing=12,
+            controls=[
+                self.account_icon,
+                ft.Column(
+                    expand=True,
+                    spacing=4,
+                    controls=[
+                        self.title_text,
+                        self.message_text
+                    ],
+                ),
+                self.login_button
+            ]
+        )
+
+        super().__init__(
+            visible=visible,
+            bgcolor=Color.CARD_BACKGROUND,
+            border_radius=18,
+            padding=18,
+            border=ft.Border.all(1, Color.INPUT_BORDER),
+            content=self.main_row,
+        )
+
+    def set_access(self, signed_in: bool, message: str | None = None) -> None:
+        self.visible = not signed_in
+        self.message_text.value = message or self.lang["spending.ai_google_required"]
+
+
+class SpendingPageContent(ft.Container):
+    def __init__(self, metric_cards: MetricCards, financial_chart: Any, google_required_card: SpendingGoogleRequiredCard, usage_card: SpendingUsageCard, toolbar: TransactionToolbar, history_card: TransactionHistoryCard, report_history_card: "SpendingReportHistoryCard") -> None:
+        self.metric_cards = metric_cards
+        self.financial_chart = financial_chart
+        self.google_required_card = google_required_card
+        self.usage_card = usage_card
+        self.toolbar = toolbar
+        self.history_card = history_card
+        self.report_history_card = report_history_card
+
+        # CONTAINER COMPONENTS
+        self.content_container = ft.Container(
+            width=UISettings.MAX_APP_WIDTH,
+            padding=20,
+            content=ft.Column(
+                spacing=20,
+                expand=True,
+                controls=[
+                    self.metric_cards,
+                    self.financial_chart,
+                    self.google_required_card,
+                    self.usage_card,
+                    self.toolbar,
+                    self.history_card,
+                    self.report_history_card,
+                ],
+            ),
+        )
+        super().__init__(
+            content=ft.Column(
+                scroll=ft.ScrollMode.AUTO, controls=[self.content_container]
+            ),
+            expand=True,
+            padding=0,
+            margin=ft.Margin(bottom=0),
+        )
+
+    def resize(
+        self,page_width: int, page_height: int, content_width: int, card_content_width: int, usage_content_width: int, transaction_item_content_width: int) -> None:
+        self.width = page_width
+        self.height = page_height
+        self.content_container.width = page_width
+        self.google_required_card.width = content_width
+        self.usage_card.resize(content_width, usage_content_width)
+        self.report_history_card.resize(content_width, card_content_width)
+        self.metric_cards.resize(content_width)
+        self.toolbar.resize(content_width, card_content_width)
+        self.history_card.resize(
+            width=content_width,
+            content_width=card_content_width,
+            item_width=card_content_width,
+            item_content_width=transaction_item_content_width,
+        )
+        self.financial_chart.resize(card_content_width)
+
+    def set_bottom_margin(self, height: int) -> None:
+        self.margin = ft.Margin(bottom=height)
+
+
 class SpendingMonthDialog(Dialog):
-    def __init__(self, page: Page, lang: dict, on_confirm: Callable[[str], None]):
+    def __init__(self, page: Page, lang: dict[str, str], on_confirm: Callable[[str], None]) -> None:
         self._page = page
         self.lang = lang
         self.on_confirm = on_confirm
         now = datetime.now()
         self.year = now.year
         self.month = now.month
+
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.month_selection_title = Text.H4(self.lang["spending.ai_select_month_title"], color=Color.PRIMARY_TEXT)
+        self.cancel_button_label = Text.BUTTON(self.lang["generic.cancel"])
+        self.confirm_button_label = Text.BUTTON(self.lang["spending.ai_scan_month"], color=Color.WHITE)
+
         self.month_dropdown = ft.Dropdown(
             label=self.lang["spending.ai_month_label"],
             value=str(self.month),
             options=[],
             on_select=self._on_month_changed,
-            menu_height=300,
+            menu_height=300
         )
+
         self.year_dropdown = ft.Dropdown(
             label=self.lang["spending.ai_year_label"],
             value=str(self.year),
@@ -730,39 +919,43 @@ class SpendingMonthDialog(Dialog):
                 for year in range(now.year, now.year - 51, -1)
             ],
             on_select=self._on_year_changed,
-            menu_height=300,
+            menu_height=300
         )
+
         self._update_month_options()
+
         self.main_container = ft.Container(
             padding=20,
             content=ft.Column(
                 tight=True,
                 spacing=14,
                 controls=[
-                    Text.H4(
-                        self.lang["spending.ai_select_month_title"],
-                        color=Color.PRIMARY_TEXT,
-                    ),
+                    self.month_selection_title,
                     self.month_dropdown,
-                    self.year_dropdown,
-                ],
-            ),
+                    self.year_dropdown
+                ]
+            )
         )
+
         self.cancel_button = ft.TextButton(
-            self.lang["generic.cancel"],
-            on_click=lambda e: self.dismiss(),
+            content=self.cancel_button_label,
+            on_click=lambda _event: self.dismiss()
         )
+
         self.confirm_button = ft.Button(
-            self.lang["spending.ai_scan_month"],
+            content=self.confirm_button_label,
             on_click=self._confirm,
-            bgcolor=Color.PRIMARY,
-            color=Color.WHITE,
+            bgcolor=Color.PRIMARY
         )
+
         super().__init__(
             dialog_content=self.main_container,
             color=Color.DIALOG_BACKGROUND,
-            options=[self.cancel_button, self.confirm_button],
-            padding=0,
+            options=[
+                self.cancel_button,
+                self.confirm_button
+            ],
+            padding=0
         )
 
     def resize(self, width: int, content_width: int) -> None:
@@ -770,11 +963,15 @@ class SpendingMonthDialog(Dialog):
         self.month_dropdown.width = content_width
         self.year_dropdown.width = content_width
 
-    def _on_month_changed(self, e=None) -> None:
+    def _on_month_changed(self, _event: ft.ControlEvent | None = None) -> None:
+        if self.month_dropdown.value is None:
+            return
         self.month = int(self.month_dropdown.value)
         self.month_dropdown.update()
 
-    def _on_year_changed(self, e=None) -> None:
+    def _on_year_changed(self, _event: ft.ControlEvent | None = None) -> None:
+        if self.year_dropdown.value is None:
+            return
         self.year = int(self.year_dropdown.value)
         self._update_month_options()
         self.month_dropdown.value = str(self.month)
@@ -789,10 +986,9 @@ class SpendingMonthDialog(Dialog):
             )
             for month in range(1, latest_month + 1)
         ]
-        if self.month > latest_month:
-            self.month = latest_month
+        self.month = min(self.month, latest_month)
 
-    def trigger(self, e=None) -> None:
+    def trigger(self, _event: ft.ControlEvent | None = None) -> None:
         now = datetime.now()
         self.year = now.year
         self.month = now.month
@@ -801,55 +997,64 @@ class SpendingMonthDialog(Dialog):
         self.month_dropdown.value = str(self.month)
         self.show()
 
-    def _confirm(self, e=None) -> None:
+    def _confirm(self, _event: ft.ControlEvent | None = None) -> None:
         month = f"{self.year:04d}-{self.month:02d}"
         self.dismiss()
         self.on_confirm(month)
 
 
 class DeleteSpendingReportDialog(Dialog):
-    def __init__(self, page: Page, lang: dict, on_confirm: Callable[[int], None]):
+    def __init__(self, page: Page, lang: dict[str, str], on_confirm: Callable[[int], None]) -> None:
         self._page = page
         self.lang = lang
         self.on_confirm = on_confirm
         self.report_id: int | None = None
+
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.confirm_delete_title = Text.H3(self.lang["spending.ai_confirm_delete_title"], color=Color.PRIMARY_TEXT)
+        self.confirm_delete_description = Text.P(self.lang["spending.ai_confirm_delete_content"], color=Color.SECONDARY_TEXT)
+        self.cancel_button_label = Text.BUTTON(self.lang["generic.cancel"])
+        self.delete_button_label = Text.BUTTON(self.lang["generic.delete"], color=Color.WHITE)
+
+        # CONTAINER COMPONENTS
         self.main_container = ft.Container(
             padding=20,
             content=ft.Column(
                 tight=True,
                 spacing=12,
                 controls=[
-                    Text.H3(
-                        self.lang["spending.ai_confirm_delete_title"],
-                        color=Color.PRIMARY_TEXT,
-                    ),
-                    Text.P(
-                        self.lang["spending.ai_confirm_delete_content"],
-                        color=Color.SECONDARY_TEXT,
-                    ),
-                ],
-            ),
+                    self.confirm_delete_title,
+                    self.confirm_delete_description
+                ]
+            )
         )
+
         self.cancel_button = ft.TextButton(
-            self.lang["generic.cancel"],
-            on_click=lambda e: self.dismiss(),
+            content=self.cancel_button_label,
+            on_click=lambda _event: self.dismiss()
         )
+
         self.delete_button = ft.Button(
-            self.lang["generic.delete"],
+            content=self.delete_button_label,
             on_click=self._confirm,
-            bgcolor=Color.DELETE_ACTION,
-            color=Color.WHITE,
+            bgcolor=Color.DELETE_ACTION
         )
+
         super().__init__(
             dialog_content=self.main_container,
             color=Color.DIALOG_BACKGROUND,
-            options=[self.cancel_button, self.delete_button],
-            padding=0,
+            options=[
+                self.cancel_button,
+                self.delete_button
+            ],
+            padding=0
         )
 
     def resize(self, width: int, content_width: int) -> None:
         self.main_container.width = width
-        self.main_container.content.width = content_width
+        if isinstance(self.main_container.content, ft.Column):
+            self.main_container.content.width = content_width
 
     def trigger(self, report_id: int | None) -> None:
         if report_id is None:
@@ -857,7 +1062,7 @@ class DeleteSpendingReportDialog(Dialog):
         self.report_id = report_id
         self.show()
 
-    def _confirm(self, e=None) -> None:
+    def _confirm(self, _event: ft.ControlEvent | None = None) -> None:
         if self.report_id is None:
             return
         report_id = self.report_id
@@ -873,47 +1078,43 @@ class SpendingReportDialog(Dialog):
         "top_income_source",
         "largest_expense",
         "savings_advice",
-        "spending_actions",
+        "spending_actions"
     )
 
-    def __init__(self, page: Page, lang: dict, on_delete: Callable[[int], None]):
+    def __init__(self, page: Page, lang: dict[str, str], on_delete: Callable[[int], None]) -> None:
         self._page = page
         self.lang = lang
         self.on_delete = on_delete
         self.report_id: int | None = None
-        self.title_text = Text.H4(
-            self.lang["spending.ai_title"],
-            color=Color.PRIMARY_TEXT,
-            weight=ft.FontWeight.BOLD,
-            expand=True,
-        )
+
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.title_text = Text.H4(self.lang["spending.ai_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD, expand=True)
+
+        # Dynamic texts
         self.updated_text = Text.SMALL("", color=Color.SECONDARY_TEXT)
-        self.error_text = Text.MEDIUM(
-            "",
-            color=Color.NEGATIVE_ACTION,
-            text_align=ft.TextAlign.CENTER,
-        )
+        self.error_text = Text.MEDIUM("", color=Color.NEGATIVE_ACTION, text_align=ft.TextAlign.CENTER)
+        self.loading_text = Text.MEDIUM(self.lang["spending.ai_waiting"], color=Color.SECONDARY_TEXT, text_align=ft.TextAlign.CENTER)
+
+        # CONTAINER COMPONENTS
         self.loading_content = ft.Column(
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=14,
             controls=[
                 ft.ProgressRing(color=Color.PRIMARY, width=42, height=42),
-                Text.MEDIUM(
-                    self.lang["spending.ai_waiting"],
-                    color=Color.SECONDARY_TEXT,
-                    text_align=ft.TextAlign.CENTER,
-                ),
-            ],
+                self.loading_text
+            ]
         )
-        self.report_content = ft.Column(
-            spacing=12,
-        )
+
+        self.report_content = ft.Column(spacing=12)
+
         self.report_card_width = 0
         self.body = ft.Container(
             content=self.loading_content,
             alignment=ft.Alignment.CENTER
         )
+
         self.delete_button = ft.IconButton(
             ft.Icons.DELETE_OUTLINE,
             visible=False,
@@ -921,12 +1122,14 @@ class SpendingReportDialog(Dialog):
             icon_color=Color.NEGATIVE_ACTION,
             tooltip=self.lang["spending.ai_delete_report"],
         )
+
         close_button = ft.IconButton(
             ft.Icons.CLOSE,
-            on_click=lambda e: self.dismiss(),
+            on_click=lambda _event: self.dismiss(),
             icon_color=Color.PRIMARY_TEXT,
             tooltip=self.lang["generic.close"],
         )
+
         self.main_container = ft.Container(
             padding=20,
             content=ft.Column(
@@ -941,14 +1144,18 @@ class SpendingReportDialog(Dialog):
                                 spacing=8,
                                 controls=[
                                     ft.Container(
-                                        content=ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.WHITE, size=16),
+                                        content=ft.Icon(
+                                            ft.Icons.AUTO_AWESOME,
+                                            color=Color.WHITE,
+                                            size=16,
+                                        ),
                                         bgcolor=Color.DARK_SURFACE,
                                         width=30,
                                         height=30,
                                         border_radius=10,
                                         alignment=ft.Alignment.CENTER,
                                     ),
-                                    self.title_text
+                                    self.title_text,
                                 ],
                             ),
                             ft.Row(
@@ -985,9 +1192,10 @@ class SpendingReportDialog(Dialog):
             content=self.error_text,
         )
         self.error_text.value = message
+        self.show()
         self.update()
 
-    def show_report(self, report: dict, created_at: str, report_id: int | None = None) -> None:
+    def show_report(self, report: dict[str, Any], created_at: str, report_id: int | None = None) -> None:
         self.report_id = report_id
         self.delete_button.visible = report_id is not None
         self.updated_text.value = self.lang["spending.ai_updated"].format(
@@ -1007,13 +1215,15 @@ class SpendingReportDialog(Dialog):
                     controls=[
                         ft.Container(
                             col={"xs": 12, "sm": 6},
-                            content=self._make_section_card(3, "top_income_source", sec3)
+                            content=self._make_section_card(
+                                3, "top_income_source", sec3
+                            ),
                         ),
                         ft.Container(
                             col={"xs": 12, "sm": 6},
-                            content=self._make_section_card(4, "largest_expense", sec4)
+                            content=self._make_section_card(4, "largest_expense", sec4),
                         ),
-                    ]
+                    ],
                 )
                 controls.append(row_control)
                 i += 2
@@ -1028,13 +1238,24 @@ class SpendingReportDialog(Dialog):
         self.show()
         self.update()
 
-    def _request_delete(self, e=None) -> None:
+    def _request_delete(self, _event: ft.ControlEvent | None = None) -> None:
         if self.report_id is not None:
             self.on_delete(self.report_id)
 
-    def _make_section_card(self, index: int, key: str, data) -> ft.Container:
+    def _make_section_card(self, index: int, key: str, data: Any) -> ft.Container:
         title = self.lang[f"spending.ai_section_{index}"]
         section = data if isinstance(data, dict) else {}
+        section_number_text = Text.SMALL(
+            str(index),
+            color=Color.WHITE,
+            weight=ft.FontWeight.BOLD,
+        )
+        section_title_text = Text.MEDIUM(
+            title,
+            color=Color.PRIMARY_TEXT,
+            weight=ft.FontWeight.BOLD,
+            expand=True,
+        )
 
         top_header_row = ft.Row(
             controls=[
@@ -1044,32 +1265,60 @@ class SpendingReportDialog(Dialog):
                     alignment=ft.Alignment.CENTER,
                     border_radius=9,
                     bgcolor=Color.DARK_SURFACE,
-                    content=Text.SMALL(
-                        str(index),
-                        color=Color.WHITE,
-                        weight=ft.FontWeight.BOLD,
-                    ),
+                    content=section_number_text,
                 ),
-                Text.MEDIUM(
-                    title,
-                    color=Color.PRIMARY_TEXT,
-                    weight=ft.FontWeight.BOLD,
-                    expand=True,
-                ),
+                section_title_text,
             ]
         )
 
-        card_content_items = [top_header_row]
+        card_content_items: list[ft.Control] = [top_header_row]
 
         if key in ("savings_advice", "spending_actions"):
-            items = data if isinstance(data, list) else (data.get("items", []) if isinstance(data, dict) else [])
+            raw_items = (
+                data
+                if isinstance(data, list)
+                else (data.get("items", []) if isinstance(data, dict) else [])
+            )
+            items = (
+                [advice for advice in raw_items if isinstance(advice, dict)]
+                if isinstance(raw_items, list)
+                else []
+            )
             for idx, advice in enumerate(items, start=1):
+                advice_index_text = Text.SMALL(
+                    str(idx),
+                    color=Color.WHITE
+                    if key == "savings_advice"
+                    else Color.WARNING_COLOR,
+                    weight=ft.FontWeight.BOLD,
+                )
+                advice_title_text = Text.MEDIUM(
+                    str(advice.get("title", "")),
+                    color=Color.PRIMARY_TEXT,
+                    weight=ft.FontWeight.BOLD,
+                    expand=True,
+                )
+                advice_description_text = Text.SMALL(
+                    str(advice.get("description", "")),
+                    color=Color.SECONDARY_TEXT,
+                )
+                advice_outcome_text = Text.MEDIUM(
+                    str(advice.get("outcome", "")),
+                    color=Color.WARNING_COLOR
+                    if key == "spending_actions"
+                    else Color.LIGHT_ACCENT,
+                    weight=ft.FontWeight.BOLD,
+                    expand=True,
+                )
                 card_content_items.append(
                     ft.Container(
                         padding=14,
                         border_radius=14,
-                        bgcolor=Color.GOAL_ITEM_BACKGROUND if key == "savings_advice" else Color.CARD_BACKGROUND,
-                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER if key == "savings_advice" else Color.WARNING_COLOR),
+                        bgcolor=Color.CARD_BACKGROUND,
+                        border=ft.Border.all(
+                            1,
+                            Color.GOAL_ITEM_BORDER,
+                        ),
                         content=ft.Column(
                             spacing=8,
                             controls=[
@@ -1080,40 +1329,29 @@ class SpendingReportDialog(Dialog):
                                             width=24,
                                             height=24,
                                             border_radius=12,
-                                            bgcolor=Color.DARK_SURFACE if key == "savings_advice" else Color.WARNING_BACKGROUND,
+                                            bgcolor=Color.DARK_SURFACE
+                                            if key == "savings_advice"
+                                            else Color.WARNING_BACKGROUND,
                                             alignment=ft.Alignment.CENTER,
-                                            content=Text.SMALL(
-                                                str(idx),
-                                                color=Color.WHITE if key == "savings_advice" else Color.WARNING_COLOR,
-                                                weight=ft.FontWeight.BOLD,
-                                            ),
+                                            content=advice_index_text,
                                         ),
-                                        Text.MEDIUM(
-                                            str(advice.get("title", "")),
-                                            color=Color.PRIMARY_TEXT,
-                                            weight=ft.FontWeight.BOLD,
-                                            expand=True,
-                                        ),
+                                        advice_title_text,
                                     ],
                                 ),
-                                Text.SMALL(
-                                    str(advice.get("description", "")),
-                                    color=Color.SECONDARY_TEXT,
-                                ),
+                                advice_description_text,
                                 ft.Row(
                                     spacing=6,
                                     controls=[
                                         ft.Icon(
-                                            ft.Icons.BOLT if key == "spending_actions" else ft.Icons.VERIFIED_OUTLINED,
-                                            color=Color.WARNING_COLOR if key == "spending_actions" else Color.PRIMARY,
+                                            ft.Icons.BOLT
+                                            if key == "spending_actions"
+                                            else ft.Icons.VERIFIED_OUTLINED,
+                                            color=Color.WARNING_COLOR
+                                            if key == "spending_actions"
+                                            else Color.PRIMARY,
                                             size=16,
                                         ),
-                                        Text.MEDIUM(
-                                            str(advice.get("outcome", "")),
-                                            color=Color.WARNING_COLOR if key == "spending_actions" else Color.PRIMARY,
-                                            weight=ft.FontWeight.BOLD,
-                                            expand=True,
-                                        ),
+                                        advice_outcome_text,
                                     ],
                                 ),
                             ],
@@ -1121,17 +1359,38 @@ class SpendingReportDialog(Dialog):
                     )
                 )
         elif key == "monthly_overview" and "income" in section:
+            month_name_text = Text.SMALL(
+                str(section.get("month", "")),
+                color=Color.SECONDARY_TEXT,
+            )
             card_content_items.append(
-                Text.SMALL(
-                    str(section.get("month", "")),
-                    color=Color.SECONDARY_TEXT,
-                )
+                month_name_text
             )
             expenses = float(section.get("expenses", 0))
             income = float(section.get("income", 0))
             expenses_val = format_number(expenses)
             income_val = format_number(income)
             currency = str(section.get("currency", "đ"))
+            total_expenses_label = Text.SMALL(
+                self.lang["spending.ai_month_total_expenses"].upper(),
+                color=Color.SECONDARY_TEXT,
+                weight=ft.FontWeight.BOLD,
+            )
+            total_expenses_value = Text.H3(
+                f"-{expenses_val} {currency}".strip(),
+                color=Color.EXPENSE_COLOR,
+                weight=ft.FontWeight.BOLD,
+            )
+            total_income_label = Text.SMALL(
+                self.lang["spending.ai_month_total_income"].upper(),
+                color=Color.SECONDARY_TEXT,
+                weight=ft.FontWeight.BOLD,
+            )
+            total_income_value = Text.H3(
+                f"+{income_val} {currency}".strip(),
+                color=Color.INCOME_COLOR,
+                weight=ft.FontWeight.BOLD,
+            )
 
             overview_row = ft.ResponsiveRow(
                 spacing=10,
@@ -1144,11 +1403,8 @@ class SpendingReportDialog(Dialog):
                         border=ft.Border.all(1, Color.INPUT_BORDER),
                         content=ft.Column(
                             spacing=4,
-                            controls=[
-                                Text.SMALL(self.lang["spending.ai_month_total_expenses"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                                Text.H3(f"-{expenses_val} {currency}".strip(), color=Color.EXPENSE_COLOR, weight=ft.FontWeight.BOLD),
-                            ]
-                        )
+                            controls=[total_expenses_label, total_expenses_value],
+                        ),
                     ),
                     ft.Container(
                         col={"xs": 12, "sm": 6},
@@ -1158,22 +1414,30 @@ class SpendingReportDialog(Dialog):
                         border=ft.Border.all(1, Color.INPUT_BORDER),
                         content=ft.Column(
                             spacing=4,
-                            controls=[
-                                Text.SMALL(self.lang["spending.ai_month_total_income"].upper(), color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD),
-                                Text.H3(f"+{income_val} {currency}".strip(), color=Color.INCOME_COLOR, weight=ft.FontWeight.BOLD),
-                            ]
-                        )
+                            controls=[total_income_label, total_income_value],
+                        ),
                     ),
-                ]
+                ],
             )
             card_content_items.append(overview_row)
 
             net_bal = format_number(float(section.get("net_balance", 0)))
+            net_balance_label = Text.MEDIUM(
+                self.lang["spending.net_balance"],
+                color=Color.SECONDARY_TEXT,
+                expand=True,
+            )
+            net_balance_value = Text.MEDIUM(
+                f"{net_bal} {currency}".strip(),
+                color=Color.EXPENSE_COLOR,
+                weight=ft.FontWeight.BOLD,
+                expand=True,
+            )
             card_content_items.append(
                 ft.Container(
                     padding=12,
                     border_radius=12,
-                    bgcolor=Color.GOAL_ITEM_BACKGROUND,
+                    bgcolor=Color.CARD_BACKGROUND,
                     border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
                     content=ft.Row(
                         spacing=8,
@@ -1184,120 +1448,135 @@ class SpendingReportDialog(Dialog):
                                 size=18,
                                 visible=expenses > income,
                             ),
-                            Text.MEDIUM(
-                                self.lang["spending.net_balance"],
-                                color=Color.SECONDARY_TEXT,
-                                expand=True,
-                            ),
-                            Text.MEDIUM(
-                                f"{net_bal} {currency}".strip(),
-                                color=Color.EXPENSE_COLOR,
-                                weight=ft.FontWeight.BOLD,
-                                expand=True,
-                            ),
+                            net_balance_label,
+                            net_balance_value,
                         ],
                     ),
                 )
             )
         elif key in ("top_income_source", "largest_expense"):
-            is_income = (key == "top_income_source")
+            is_income = key == "top_income_source"
             amount_color = Color.INCOME_COLOR if is_income else Color.EXPENSE_COLOR
-            badge_bg = Color.INCOME_BACKGROUND if is_income else Color.EXPENSE_BACKGROUND
+            badge_bg = (
+                Color.INCOME_BACKGROUND if is_income else Color.EXPENSE_BACKGROUND
+            )
             badge_color = Color.INCOME_COLOR if is_income else Color.EXPENSE_COLOR
 
-            card_content_items.append(
-                Text.MEDIUM(
-                    str(section.get("headline", "")),
-                    color=Color.PRIMARY_TEXT,
-                    weight=ft.FontWeight.BOLD,
-                )
+            headline_text = Text.MEDIUM(
+                str(section.get("headline", "")),
+                color=Color.PRIMARY_TEXT,
+                weight=ft.FontWeight.BOLD,
             )
+            card_content_items.append(headline_text)
             metric_str = str(section.get("metric", ""))
-            card_content_items.append(
-                Text.H3(
-                    metric_str,
-                    color=amount_color,
-                    weight=ft.FontWeight.BOLD,
-                )
+            metric_text = Text.H3(
+                metric_str,
+                color=amount_color,
+                weight=ft.FontWeight.BOLD,
             )
+            card_content_items.append(metric_text)
             summary_str = str(section.get("summary", ""))
             if summary_str:
+                summary_text = Text.SMALL(
+                    summary_str,
+                    color=badge_color,
+                    weight=ft.FontWeight.BOLD,
+                )
                 card_content_items.append(
                     ft.Container(
-                        content=Text.SMALL(summary_str, color=badge_color, weight=ft.FontWeight.BOLD),
+                        content=summary_text,
                         bgcolor=badge_bg,
                         padding=ft.Padding(8, 4, 8, 4),
                         border_radius=8,
                         alignment=ft.Alignment.CENTER,
                     )
                 )
-            card_content_items.append(
-                Text.SMALL(
-                    str(section.get("details", "")),
-                    color=Color.SECONDARY_TEXT,
-                )
+            details_text = Text.SMALL(
+                str(section.get("details", "")),
+                color=Color.SECONDARY_TEXT,
             )
+            card_content_items.append(details_text)
         elif key == "spending_trends":
-            card_content_items.append(
-                Text.MEDIUM(
-                    str(section.get("headline", "")),
-                    color=Color.PRIMARY_TEXT,
+            trend_headline_text = Text.MEDIUM(
+                str(section.get("headline", "")),
+                color=Color.PRIMARY_TEXT,
+                weight=ft.FontWeight.BOLD,
+            )
+            card_content_items.append(trend_headline_text)
+            trend_summary_text = Text.SMALL(
+                str(section.get("summary", "")),
+                color=Color.SECONDARY_TEXT,
+            )
+            card_content_items.append(trend_summary_text)
+            data_clarification = str(section.get("data_clarification") or "").strip()
+            if data_clarification:
+                clarification_title = Text.SMALL(
+                    self.lang["spending.ai_data_clarification"],
+                    color=Color.WARNING_COLOR,
                     weight=ft.FontWeight.BOLD,
                 )
-            )
-            card_content_items.append(
-                Text.SMALL(
-                    str(section.get("summary", "")),
-                    color=Color.SECONDARY_TEXT,
+                clarification_text = Text.SMALL(
+                    data_clarification,
+                    color=Color.PRIMARY_TEXT,
                 )
-            )
-            details_str = str(section.get("details", ""))
-            if details_str:
                 card_content_items.append(
                     ft.Container(
                         padding=12,
                         border_radius=12,
-                        bgcolor=Color.GOAL_ITEM_BACKGROUND,
-                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
-                        content=Text.MEDIUM(
-                            details_str,
-                            color=Color.PRIMARY_TEXT,
-                            weight=ft.FontWeight.BOLD,
+                        bgcolor=Color.WARNING_BACKGROUND,
+                        border=ft.Border.all(1, Color.WARNING_COLOR),
+                        content=ft.Column(
+                            spacing=6,
+                            controls=[clarification_title, clarification_text],
                         ),
                     )
                 )
-        else:
-            card_content_items.append(
-                Text.MEDIUM(
-                    str(section.get("headline", "")),
+            details_str = str(section.get("details", ""))
+            if details_str:
+                trend_details_text = Text.MEDIUM(
+                    details_str,
                     color=Color.PRIMARY_TEXT,
                     weight=ft.FontWeight.BOLD,
                 )
-            )
-            card_content_items.append(
-                Text.SMALL(
-                    str(section.get("summary", "")),
-                    color=Color.SECONDARY_TEXT,
+                card_content_items.append(
+                    ft.Container(
+                        padding=12,
+                        border_radius=12,
+                        bgcolor=Color.CARD_BACKGROUND,
+                        border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
+                        content=trend_details_text,
+                    )
                 )
+        else:
+            section_headline_text = Text.MEDIUM(
+                str(section.get("headline", "")),
+                color=Color.PRIMARY_TEXT,
+                weight=ft.FontWeight.BOLD,
             )
-            card_content_items.append(
-                Text.SMALL(
-                    str(section.get("details", "")),
-                    color=Color.SECONDARY_TEXT,
-                )
+            card_content_items.append(section_headline_text)
+            section_summary_text = Text.SMALL(
+                str(section.get("summary", "")),
+                color=Color.SECONDARY_TEXT,
             )
+            card_content_items.append(section_summary_text)
+            section_details_text = Text.SMALL(
+                str(section.get("details", "")),
+                color=Color.SECONDARY_TEXT,
+            )
+            card_content_items.append(section_details_text)
             metric = section.get("metric")
             if metric:
+                metric_text = Text.MEDIUM(
+                    str(metric),
+                    color=Color.PRIMARY,
+                    weight=ft.FontWeight.BOLD,
+                )
                 card_content_items.append(
                     ft.Container(
                         padding=ft.Padding(10, 8, 10, 8),
                         border_radius=12,
                         bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND,
-                        content=Text.MEDIUM(
-                            str(metric),
-                            color=Color.PRIMARY,
-                            weight=ft.FontWeight.BOLD,
-                        ),
+                        content=metric_text,
                     )
                 )
 
@@ -1325,33 +1604,41 @@ class SpendingReportDialog(Dialog):
 
 
 class SpendingReportHistoryCard(ft.Container):
-    def __init__(self, lang: dict, on_open: Callable[[dict], None]):
+    def __init__(self, lang: dict[str, str], on_open: Callable[[dict[str, Any]], None]) -> None:
         self.lang = lang
         self.on_open = on_open
-        self.reports: list[dict] = []
+        self.reports: list[dict[str, Any]] = []
         self.is_expanded = True
         self._content_width: int | None = None
-        self.history_title = Text.H4(
-            self.lang["spending.ai_history"].format(len=0),
-            color=Color.PRIMARY_TEXT,
-            weight=ft.FontWeight.BOLD,
-        )
+
+        # TEXT AND ICON COMPONENTS
+        # Static texts
+        self.history_title = Text.H4(self.lang["spending.ai_history"].format(len=0), color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
+        self.empty_history_text = Text.SMALL(self.lang["spending.ai_no_history"], color=Color.SECONDARY_TEXT)
+
+        # CONTAINER COMPONENTS
         self.toggle_button = ft.IconButton(
-            ft.Icons.EXPAND_LESS,
+            icon=ft.Icons.EXPAND_LESS,
             tooltip=self.lang["generic.collapse"],
-            on_click=self._toggle_expanded,
+            on_click=self._toggle_expanded
         )
+
         self.history_content = ft.Column(spacing=10)
+
         self.history_column = ft.Column(
             spacing=12,
             controls=[
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    controls=[self.history_title, self.toggle_button],
+                    controls=[
+                        self.history_title,
+                        self.toggle_button
+                    ],
                 ),
-                self.history_content,
-            ],
+                self.history_content
+            ]
         )
+
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=28,
@@ -1361,41 +1648,42 @@ class SpendingReportHistoryCard(ft.Container):
             content=self.history_column,
         )
 
-    def set_history(self, reports: list[dict]) -> None:
+    def set_history(self, reports: list[dict[str, Any]]) -> None:
         self.reports = reports
-        self.history_title.value = self.lang["spending.ai_history"].format(
-            len=len(reports)
-        )
+        self.history_title.value = self.lang["spending.ai_history"].format(len=len(reports))
         if not reports:
-            self.history_content.controls = [
-                Text.SMALL(
-                    self.lang["spending.ai_no_history"],
-                    color=Color.SECONDARY_TEXT,
-                )
-            ]
+            self.history_content.controls = [self.empty_history_text]
         else:
             self.history_content.controls = [
                 self._make_history_item(item) for item in reports
             ]
         if self._content_width is not None:
             for item in self.history_content.controls:
-                item.width = self._content_width
+                if isinstance(item, ft.Container):
+                    item.width = self._content_width
         self.history_content.visible = self.is_expanded
         if self.parent:
             self.update()
 
-    def _make_history_item(self, item: dict) -> ft.Control:
+    def _make_history_item(self, item: dict[str, Any]) -> ft.Control:
         report = item.get("report", {})
         overview = report.get("monthly_overview", {})
         summary = overview.get("headline") or overview.get("month", "")
         created_at = str(item.get("created_at", ""))
+        history_item_title = Text.MEDIUM(
+            self.lang["spending.ai_history_item_title"],
+            color=Color.PRIMARY_TEXT,
+            weight=ft.FontWeight.BOLD
+        )
+        history_item_created_at = Text.SMALL(created_at, color=Color.SECONDARY_TEXT)
+        history_item_summary = Text.SMALL(summary, color=Color.SECONDARY_TEXT)
         return ft.Container(
-            bgcolor=Color.GOAL_ITEM_BACKGROUND,
+            bgcolor=Color.CARD_BACKGROUND,
             border=ft.Border.all(1, Color.GOAL_ITEM_BORDER),
             border_radius=14,
             padding=14,
             ink=True,
-            on_click=lambda e, saved=item: self.on_open(saved),
+            on_click=self._create_open_report_handler(item),
             content=ft.Row(
                 spacing=12,
                 controls=[
@@ -1408,31 +1696,33 @@ class SpendingReportHistoryCard(ft.Container):
                         content=ft.Icon(
                             ft.Icons.AUTO_AWESOME,
                             color=Color.LIGHT_ACCENT,
-                            size=20,
-                        ),
+                            size=20
+                        )
                     ),
                     ft.Column(
                         expand=True,
                         spacing=4,
                         controls=[
-                            Text.MEDIUM(
-                                self.lang["spending.ai_history_item_title"],
-                                color=Color.PRIMARY_TEXT,
-                                weight=ft.FontWeight.BOLD,
-                            ),
-                            Text.SMALL(created_at, color=Color.SECONDARY_TEXT),
-                            Text.SMALL(summary, color=Color.SECONDARY_TEXT),
-                        ],
+                            history_item_title,
+                            history_item_created_at,
+                            history_item_summary
+                        ]
                     ),
                     ft.Icon(
                         ft.Icons.CHEVRON_RIGHT,
-                        color=Color.SECONDARY_TEXT,
-                    ),
-                ],
-            ),
+                        color=Color.SECONDARY_TEXT
+                    )
+                ]
+            )
         )
 
-    def _toggle_expanded(self, e=None) -> None:
+    def _create_open_report_handler(self, report: dict[str, Any]) -> Callable[[ft.Event[ft.Container]], None]:
+        def open_report(_event: ft.Event[ft.Container]) -> None:
+            self.on_open(report)
+
+        return open_report
+
+    def _toggle_expanded(self, _event: ft.Event[ft.IconButton]) -> None:
         self.is_expanded = not self.is_expanded
         self.history_content.visible = self.is_expanded
         self.toggle_button.icon = (
@@ -1451,4 +1741,5 @@ class SpendingReportHistoryCard(ft.Container):
         self.history_column.width = content_width
         self.history_content.width = content_width
         for item in self.history_content.controls:
-            item.width = width
+            if isinstance(item, ft.Container):
+                item.width = width
