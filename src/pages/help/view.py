@@ -9,6 +9,7 @@ from src.pages.common import Menu
 from src.pages.help.components import FaqSection, HelpForm
 from src.utils import (
     Color,
+    MenuResizeValues,
     Page,
     Text,
     UISettings,
@@ -111,7 +112,9 @@ class HelpView(ft.View):
             page_width, page_height = self.get_safe_page_size(page=self._page)
 
             # Get component size values
-            menu_resize_values = self.get_menu_resize_values(page_width, self.menu)
+            menu_resize_values: MenuResizeValues = self.get_menu_resize_values(
+                page_width, self.menu
+            )
 
             # Resizing main container
             self.main_container.width = page_width

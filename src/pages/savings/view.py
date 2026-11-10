@@ -11,7 +11,7 @@ from src.logger import Logger
 from src.pages.common import Menu
 from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CongratulationsDialog, CreateGoalDialog, DeleteConfirmDialog, DepositWithdrawDialog, GoalGrid
 from src.pages.savings.logic import LogicController
-from src.utils import Color, Page, UISettings, format_number, get_menu_resize_values, get_safe_page_size, scale_width
+from src.utils import Color, MenuResizeValues, Page, UISettings, format_number, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Savings page...")
 
@@ -298,7 +298,9 @@ class SavingsView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
-            menu_resize_values = self.get_menu_resize_values(page_width, self.menu)
+            menu_resize_values: MenuResizeValues = self.get_menu_resize_values(
+                page_width, self.menu
+            )
 
             content_width = scale_width(page_width, 392)
 

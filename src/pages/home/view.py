@@ -11,7 +11,7 @@ from src.pages.home.components import BalanceCard, ExpensePieChart, FeaturedLess
 from src.pages.home.logic import DashboardData, LogicController
 from src.pages.spending.logic import LogicController as SpendingLogicController
 from src.pages.spending.logic import SpendingAnalysisApiError
-from src.utils import Color, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
+from src.utils import Color, MenuResizeValues, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Home page...")
 
@@ -242,7 +242,9 @@ class HomeView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
-            menu_resize_values = self.get_menu_resize_values(page_width, self.menu)
+            menu_resize_values: MenuResizeValues = self.get_menu_resize_values(
+                page_width, self.menu
+            )
 
             content_width = scale_width(page_width, 392)
             inner_width = scale_width(page_width, 352)

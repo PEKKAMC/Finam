@@ -12,7 +12,7 @@ from src.logger import Logger
 from src.pages.common import FinancialChart, Menu
 from src.pages.spending.components import DeleteSpendingReportDialog, DeleteTransactionDialog, MetricCards, SpendingGoogleRequiredCard, SpendingMonthDialog, SpendingPageContent, SpendingReportDialog, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
 from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController, SpendingAnalysisApiError
-from src.utils import Color, Page, get_menu_resize_values, get_safe_page_size, scale_width
+from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Spending page...")
 
@@ -396,7 +396,9 @@ class SpendingView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
-            menu_resize_values = self.get_menu_resize_values(page_width, self.menu)
+            menu_resize_values: MenuResizeValues = self.get_menu_resize_values(
+                page_width, self.menu
+            )
 
             content_width = scale_width(page_width, 392)
             card_content_width = scale_width(page_width, 352)

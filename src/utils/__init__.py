@@ -27,6 +27,7 @@ from src.utils.number_format import (
 from src.utils.page import Page
 from src.utils.dialog import Dialog
 from src.utils.resizing import (
+    MenuResizeValues,
     get_menu_resize_values,
     get_safe_page_size,
     is_supported_page_size,
@@ -69,6 +70,7 @@ __all__ = [
     # Page
     "Page",
     # Resizing
+    "MenuResizeValues",
     "get_safe_page_size",
     "get_menu_resize_values",
     "is_supported_page_size",

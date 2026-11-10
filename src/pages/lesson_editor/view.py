@@ -14,7 +14,7 @@ from src.logger import Logger
 from src.pages.common import Menu
 from src.pages.lesson_editor.components import EditorToolbar, PropertiesTabs, SlideSidebarLayout
 from src.pages.lesson_editor.logic import CANVAS_DESIGN_HEIGHT, CANVAS_DESIGN_WIDTH, DEFAULT_ELEMENT_POSITION, DEFAULT_ELEMENT_SCALE, DEFAULT_ELEMENT_WIDTH, DEFAULT_TEXT_SIZE, ENTRANCE_EFFECTS, ENTRANCE_IDS, EXIT_EFFECTS, EXIT_IDS, ElementData, LogicController, calculate_pan_position, safe_float
-from src.utils import Color, Data, Page, Text, create_text, get_menu_resize_values, get_safe_page_size, scale_width
+from src.utils import Color, Data, MenuResizeValues, Page, Text, create_text, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Loading Lesson Editor page...")
 
@@ -869,7 +869,9 @@ class LessonEditorView(ft.View):
             # Get page size
             page_width, page_height = get_safe_page_size(page=self._page)
 
-            menu_resize_values = get_menu_resize_values(page_width, self.menu)
+            menu_resize_values: MenuResizeValues = get_menu_resize_values(
+                page_width, self.menu
+            )
             self.menu.resize(
                 width=page_width,
                 **menu_resize_values,

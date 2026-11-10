@@ -2,10 +2,23 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-from typing import Any
+from typing import Any, TypedDict
 
 from src.utils import Page
 from src.utils.settings import UISettings
+
+
+class MenuResizeValues(TypedDict):
+    item_size: int
+    item_height: int
+    inside_size: int
+    inside_height: int
+    banner_height: int
+    total_height: int
+    label_size: int
+    icon_size: int
+    label_spacing: int
+    label_visible: bool
 
 
 def get_safe_page_size(page: Page) -> tuple[int, int]: # -> (width, height)
@@ -35,7 +48,7 @@ def is_supported_page_size(page: Page) -> bool:
     )
 
 
-def get_menu_resize_values(page_width: int, menu: Any) -> dict[str, int | bool]:
+def get_menu_resize_values(page_width: int, menu: Any) -> MenuResizeValues:
     item_size = page_width // menu.items_count
     item_height = 48 if item_size < 48 else item_size
     banner_height = (

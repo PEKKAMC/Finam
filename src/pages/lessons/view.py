@@ -8,7 +8,7 @@ from src.logger import Logger
 from src.pages.common import Menu
 from src.pages.lessons.components import LessonGrid, LessonSummaryBanner
 from src.pages.lessons.logic import LogicController
-from src.utils import Color, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
+from src.utils import Color, MenuResizeValues, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Lessons page...")
 
@@ -110,7 +110,9 @@ class LessonsView(ft.View):
         try:
             # Get page size
             page_width, _page_height = self.get_safe_page_size(page=self._page)
-            menu_resize_values = self.get_menu_resize_values(page_width, self.menu)
+            menu_resize_values: MenuResizeValues = self.get_menu_resize_values(
+                page_width, self.menu
+            )
 
             # Resizing main container
             self.main_container.width = page_width

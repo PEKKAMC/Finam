@@ -16,7 +16,7 @@ from src.pages.purchase_scanner.components import (
     ScannerResult,
 )
 from src.pages.purchase_scanner.logic import LogicController, ScannerApiError
-from src.utils import Color, Page, get_menu_resize_values, get_safe_page_size
+from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size
 
 Logger.info("Initializing Purchase Scanner page...")
 
@@ -240,7 +240,9 @@ class PurchaseScannerView(ft.View):
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
-            menu_resize_values = self.get_menu_resize_values(page_width, self.menu)
+            menu_resize_values: MenuResizeValues = self.get_menu_resize_values(
+                page_width, self.menu
+            )
 
             self.scanner_content.resize(page_width, page_height)
             self.menu.resize(
