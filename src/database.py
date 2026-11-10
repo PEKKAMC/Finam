@@ -11,7 +11,7 @@ import sqlite3
 from collections.abc import Callable
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Dict, Any, Optional, Protocol
+from typing import List, Dict, Any, Optional, Protocol, cast
 
 from src.logger import Logger
 from src.utils import DefaultSettings, ThemeRegistry, to_decimal
@@ -52,7 +52,11 @@ class DatabaseConnection:
         connection = sqlite3.connect(self.database_name)
         try:
             connection.execute("PRAGMA foreign_keys = ON;")
-            connection.create_aggregate("decimal_sum", 1, self._decimal_sum_factory())
+            connection.create_aggregate(
+                "decimal_sum",
+                1,
+                cast(Any, self._decimal_sum_factory()),
+            )
             cursor = connection.cursor()
             cursor.execute(
                 query,
