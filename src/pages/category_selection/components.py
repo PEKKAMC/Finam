@@ -246,7 +246,7 @@ class CategoryGrid(ft.Column):
                     on_click=(
                         self._on_add
                         if is_add_action
-                        else lambda name=category_name: self._on_select(name)
+                        else lambda _event, name=category_name: self._on_select(name)
                     ),
                     is_selected=(
                         not is_add_action
