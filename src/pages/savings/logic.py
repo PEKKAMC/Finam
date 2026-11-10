@@ -3,20 +3,22 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from io import BytesIO
-from types import NoneType
+from typing import Any
 
 import openpyxl
+from openpyxl.worksheet.worksheet import Worksheet
 
 from src.database import db
+from src.pages.common.logic import get_user_currency
 from src.utils import format_number
 
 
 class LogicController:
-    def __init__(self, current_user: str):
+    def __init__(self, current_user: str) -> None:
         self.current_user = current_user
 
     def get_currency(self) -> str:
-        return db.users.get_currency(self.current_user)
+        return get_user_currency(self.current_user)
 
     def get_dashboard_totals(self) -> tuple[float, float, float, str]:
         total_savings = db.savings.get_total_savings(self.current_user)
@@ -30,7 +32,7 @@ class LogicController:
             percentage = "--%"
         return total_savings, total_target, progress_value, percentage
 
-    def get_user_objectives(self):
+    def get_user_objectives(self) -> list[dict[str, Any]]:
         return db.savings.get_user_objectives(self.current_user)
 
     @staticmethod
@@ -51,7 +53,7 @@ class LogicController:
         target = db.savings.get_objective_target(objective_id)
         return current, target
 
-    def get_recent_activity(self, lang: dict):
+    def get_recent_activity(self, lang: dict[str, str]) -> list[dict[str, Any]]:
         activities = db.savings.get_user_activity_raw(self.current_user)
         currency = self.get_currency()
         for item in activities:
@@ -59,18 +61,28 @@ class LogicController:
                 item["type"] = "saving"
                 target = item.get("target_name")
                 if target:
-                    action = lang["savings.added_to"] if item.get("amount", 0) > 0 else lang["savings.removed_from"]
+                    action = (
+                        lang["savings.added_to"]
+                        if item.get("amount", 0) > 0
+                        else lang["savings.removed_from"]
+                    )
                     item["desc"] = f"{action} {target}"
                 else:
                     item["desc"] = f"{lang['savings.transaction']} ({format_number(item.get('amount'))} {currency})"
 
             match item["type"]:
                 case "completed":
-                    item["desc"] = f"{lang['savings.completed_objective']} {item.get('title')}"
+                    item["desc"] = (
+                        f"{lang['savings.completed_objective']} {item.get('title')}"
+                    )
                 case "deleted":
-                    item["desc"] = f"{lang['savings.deleted_objective']} {item.get('title')}"
+                    item["desc"] = (
+                        f"{lang['savings.deleted_objective']} {item.get('title')}"
+                    )
                 case "objective":
-                    item["desc"] = f"{lang['savings.created_objective']} {item.get('title')}"
+                    item["desc"] = (
+                        f"{lang['savings.created_objective']} {item.get('title')}"
+                    )
 
             if len(item.get("date", "")) > 16:
                 item["date"] = item["date"][:16]
@@ -80,7 +92,9 @@ class LogicController:
         return db.savings.add_objective(self.current_user, title, reason, target_amount)
 
     def create_goal_with_surplus(self, title: str, reason: str, target_amount: float, surplus_amount: float) -> bool:
-        return db.savings.create_goal_with_initial_deposit(self.current_user, title, reason, target_amount, surplus_amount)
+        return db.savings.create_goal_with_initial_deposit(
+            self.current_user, title, reason, target_amount, surplus_amount
+        )
 
     def transfer_surplus(self, source_id: int, target_id: int, amount: float) -> tuple[bool, float]:
         current_saved, target_amount = self.get_objective_amounts(target_id)
@@ -95,10 +109,10 @@ class LogicController:
         return success, remaining_surplus if success else 0.0
 
     @staticmethod
-    def delete_objective(objective_id: int):
+    def delete_objective(objective_id: int) -> None:
         db.savings.delete_objective(objective_id)
 
-    def process_quick_action(self, objective_id: int, action: str, amount: float, time: str, note: str = "") -> tuple[bool, str, float, float, bool]:
+    def process_quick_action(self, objective_id: int, action: str, amount: float, time: str, note: str = '') -> tuple[bool, str, float, float, bool]:
         current_saved = db.savings.get_objective_progress(objective_id)
         target = db.savings.get_objective_target(objective_id)
         surplus = 0.0
@@ -120,33 +134,45 @@ class LogicController:
 
         return True, "", current_saved + amount, surplus, reached_target
 
-    def clear_activity_history(self):
+    def clear_activity_history(self) -> None:
         db.users.clear_activity_history(self.current_user)
 
-    def get_ledger_excel_bytes(self, lang: dict) -> tuple[bytes | None, str]:
+    def get_ledger_excel_bytes(self, lang: dict[str, str]) -> tuple[bytes | None, str]:
         activities = self.get_recent_activity(lang)
         try:
             workbook = openpyxl.Workbook()
-            worksheet = workbook.active
-            if isinstance(worksheet, NoneType):
-                raise RuntimeError(worksheet)
+            worksheet: Worksheet = workbook.active or workbook.create_sheet()
             worksheet.title = lang["savings.savings_ledger"]
-            worksheet.append([lang["generic.date"], lang["savings.ledger.action_type"], lang["savings.ledger.description"]])
+            worksheet.append(
+                [
+                    lang["generic.date"],
+                    lang["savings.ledger.action_type"],
+                    lang["savings.ledger.description"],
+                ]
+            )
             for activity in activities:
-                worksheet.append([activity["date"], lang[f"savings.activity.{activity['type']}"], activity["desc"]])
+                worksheet.append(
+                    [
+                        activity["date"],
+                        lang[f"savings.activity.{activity['type']}"],
+                        activity["desc"],
+                    ]
+                )
             output = BytesIO()
             workbook.save(output)
-            return output.getvalue(), ""
-        except Exception as error:
+        except (AttributeError, KeyError, OSError, TypeError, ValueError) as error:
             return None, str(error)
+        else:
+            return output.getvalue(), ""
 
-    def export_ledger_to_excel(self, file_path: str, lang: dict) -> tuple[bool, str]:
+    def export_ledger_to_excel(self, file_path: str, lang: dict[str, str]) -> tuple[bool, str]:
         data, error = self.get_ledger_excel_bytes(lang)
         if data is None:
             return False, error
         try:
             with open(file_path, "wb") as file:
                 file.write(data)
-            return True, ""
-        except Exception as error:
+        except OSError as error:
             return False, str(error)
+        else:
+            return True, ""

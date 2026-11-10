@@ -1,13 +1,15 @@
-﻿# Copyright (c) 2026 PEKKAMC
+# Copyright (c) 2026 PEKKAMC
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from collections.abc import Callable
+from typing import Any
+
 import flet as ft
 
 from src.logger import Logger
-from src.pages.global_components import Menu
-from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CreateGoalDialog, DepositWithdrawDialog, CongratulationsDialog, DeleteConfirmDialog, GoalGrid
+from src.pages.common import Menu
+from src.pages.savings.components import ActivityHistory, AggregateCard, ClearHistoryDialog, CongratulationsDialog, CreateGoalDialog, DeleteConfirmDialog, DepositWithdrawDialog, GoalGrid
 from src.pages.savings.logic import LogicController
 from src.utils import Color, Page, UISettings, format_number, get_menu_resize_values, get_safe_page_size, scale_width
 
@@ -16,7 +18,8 @@ Logger.info("Initializing Savings page...")
 
 class DialogManager:
     """Handles all dialog instantiation, states, and callbacks for the Savings View matching TSX components."""
-    def __init__(self, page: Page, lang: dict, controller: LogicController, currency: str, refresh_callback: Callable, trigger_export_callback: Callable, get_objectives_callback: Callable):
+
+    def __init__(self, page: Page, lang: dict[str, str], controller: LogicController, currency: str, refresh_callback: Callable[..., None], trigger_export_callback: Callable[..., None] | ft.CoroutineType[Any, Any, None], get_objectives_callback: Callable[[], list[dict[str, Any]]]) -> None:
         self._page = page
         self.lang = lang
         self.controller = controller
@@ -30,7 +33,7 @@ class DialogManager:
             lang=self.lang,
             controller=self.controller,
             currency=self.currency,
-            on_success=self._refresh_view
+            on_success=self._refresh_view,
         )
 
         self.congratulations_dialog = CongratulationsDialog(
@@ -39,7 +42,9 @@ class DialogManager:
             controller=self.controller,
             currency=self.currency,
             on_success=self._refresh_view,
-            on_create_with_surplus=lambda surplus: self.create_goal_dialog.trigger(surplus)
+            on_create_with_surplus=lambda surplus: self.create_goal_dialog.trigger(
+                surplus
+            ),
         )
 
         self.deposit_withdraw_dialog = DepositWithdrawDialog(
@@ -52,21 +57,21 @@ class DialogManager:
                 surplus,
                 self._get_objectives(),
                 confetti=True,
-            )
+            ),
         )
 
         self.delete_dialog = DeleteConfirmDialog(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
-            on_success=self._refresh_view
+            on_success=self._refresh_view,
         )
 
         self.clear_history_dialog = ClearHistoryDialog(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
-            on_success=self._refresh_view
+            on_success=self._refresh_view,
         )
 
     def update_currency(self, currency: str) -> None:
@@ -76,19 +81,22 @@ class DialogManager:
 
 
 class SavingsView(ft.View):
-    def __init__(self, page: Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict[str, str], user_info: dict[str, str]) -> None:
         self._page = page
         self.lang = lang
         self.user_info = user_info
 
         # IMPORTED FUNCTIONS
         self.get_safe_page_size = get_safe_page_size
+        self.get_menu_resize_values = get_menu_resize_values
 
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(user_info["username"])
 
         # FETCH DASHBOARD DATA
-        total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
+        total_savings, total_target, progress_value, percentage = (
+            self.controller.get_dashboard_totals()
+        )
         existing_objectives = self.controller.get_user_objectives()
         currency = self.controller.get_currency()
 
@@ -103,15 +111,11 @@ class SavingsView(ft.View):
             currency=currency,
             refresh_callback=self._refresh_view,
             trigger_export_callback=self.trigger_export,
-            get_objectives_callback=lambda: self._objective_data
+            get_objectives_callback=lambda: self._objective_data,
         )
 
         # INITIALIZE PAGE COMPONENTS
-        self.menu = Menu(
-            page=self._page,
-            lang=self.lang,
-            user_info=self.user_info
-        )
+        self.menu = Menu(page=self._page, lang=self.lang, user_info=self.user_info)
 
         self.goal_grid = GoalGrid(
             page=self._page,
@@ -159,7 +163,7 @@ class SavingsView(ft.View):
             percentage=percentage,
             progress_value=progress_value,
             currency=currency,
-            on_create_click=lambda e: self.dialogs.create_goal_dialog.trigger()
+            on_create_click=lambda e: self.dialogs.create_goal_dialog.trigger(),
         )
 
         self.activity_history = ActivityHistory(
@@ -182,17 +186,16 @@ class SavingsView(ft.View):
                     self.search_bar,
                     self.goal_grid,
                     self.activity_history,
-                ]
-            )
+                ],
+            ),
         )
         self.main_container = ft.Container(
             content=ft.Column(
-                scroll=ft.ScrollMode.AUTO,
-                controls=[self.content_container]
+                scroll=ft.ScrollMode.AUTO, controls=[self.content_container]
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=0)
+            margin=ft.Margin(bottom=0),
         )
 
         super().__init__(
@@ -203,29 +206,31 @@ class SavingsView(ft.View):
             controls=ft.SafeArea(
                 expand=True,
                 content=ft.Stack(
-                    expand=True,
-                    controls=[
-                        self.main_container,
-                        self.menu
-                    ]
-                )
-            )
+                    expand=True, controls=[self.main_container, self.menu]
+                ),
+            ),
         )
 
-        self._page.on_resize = self._on_page_resize
-        self._on_page_resize()
+        self._page.on_resize = self._resize_page
+        self._resize_page()
 
     def _refresh_view(self) -> None:
-        self._on_page_resize()
-        total_savings, total_target, progress_value, percentage = self.controller.get_dashboard_totals()
+        self._resize_page()
+        total_savings, total_target, progress_value, percentage = (
+            self.controller.get_dashboard_totals()
+        )
         existing_objectives = self.controller.get_user_objectives()
         currency = self.controller.get_currency()
 
         self._objective_data = self._build_objective_data(existing_objectives, currency)
         self.dialogs.update_currency(currency)
-        self.summary_banner.update_data(total_savings, total_target, percentage, progress_value, currency)
+        self.summary_banner.update_data(
+            total_savings, total_target, percentage, progress_value, currency
+        )
         self.goal_grid.update_grid(self._filter_objectives())
-        self.activity_history.update_history(self.controller.get_recent_activity(self.lang), currency)
+        self.activity_history.update_history(
+            self.controller.get_recent_activity(self.lang), currency
+        )
 
         self._page.update()
 
@@ -234,40 +239,49 @@ class SavingsView(ft.View):
         self.goal_grid.update_grid(self._filter_objectives())
         self._page.update()
 
-    def _filter_objectives(self) -> list:
+    def _filter_objectives(self) -> list[dict[str, Any]]:
         query = self.search_query.strip().casefold()
         if not query:
             return self._objective_data
         return [
-            objective for objective in self._objective_data
-            if query in objective["title"].casefold() or query in objective["reason"].casefold()
+            objective
+            for objective in self._objective_data
+            if query in objective["title"].casefold()
+            or query in objective["reason"].casefold()
         ]
 
-    def _build_objective_data(self, objectives: list, currency: str) -> list:
+    def _build_objective_data(self, objectives: list[dict[str, Any]], currency: str) -> list[dict[str, Any]]:
         objectives_data = []
         for objective_id, title, reason, target_amount, _completed_at in objectives:
-            objective_savings, card_progress, card_percentage = self.controller.get_objective_progress_data(objective_id, target_amount)
+            objective_id, target_amount = int(objective_id), int(target_amount)
+            objective_savings, card_progress, card_percentage = (
+                self.controller.get_objective_progress_data(objective_id, target_amount)
+            )
             remaining_amt = max(0, target_amount - objective_savings)
 
             def format_amount(amount: float) -> str:
                 return format_number(amount)
 
-            objectives_data.append({
-                "objective_id": objective_id,
-                "title": title,
-                "reason": reason,
-                "current_value": f"{format_amount(objective_savings)} {currency}",
-                "target_value": f"{format_amount(target_amount)} {currency}",
-                "remaining_value": self.lang["savings.remaining"].format(amount=f"{format_amount(remaining_amt)} {currency}"),
-                "percentage": card_percentage,
-                "progress": card_progress,
-                "completed": 0 < target_amount <= objective_savings,
-            })
+            objectives_data.append(
+                {
+                    "objective_id": objective_id,
+                    "title": title,
+                    "reason": reason,
+                    "current_value": f"{format_amount(objective_savings)} {currency}",
+                    "target_value": f"{format_amount(target_amount)} {currency}",
+                    "remaining_value": self.lang["savings.remaining"].format(amount=f"{format_amount(remaining_amt)} {currency}"),
+                    "percentage": card_percentage,
+                    "progress": card_progress,
+                    "completed": 0 < target_amount <= objective_savings,
+                }
+            )
         return objectives_data
 
-    async def trigger_export(self, e=None) -> None:
+    async def trigger_export(self, e: ft.ControlEvent | None = None) -> None:
         try:
-            file_bytes, error_message = self.controller.get_ledger_excel_bytes(self.lang)
+            file_bytes, error_message = self.controller.get_ledger_excel_bytes(
+                self.lang
+            )
             if file_bytes is None:
                 raise RuntimeError(error_message)
 
@@ -277,15 +291,17 @@ class SavingsView(ft.View):
                 src_bytes=file_bytes,
             )
 
-        except Exception as ex:
+        except (OSError, RuntimeError, ValueError) as ex:
             Logger.error(f"Error during export: {ex}, Event: {e}")
 
-    def _on_page_resize(self, e: ft.PageResizeEvent | None = None) -> int:
+    def _resize_page(self, e: ft.PageResizeEvent | None = None) -> None:
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
+            menu_resize_values = self.get_menu_resize_values(page_width, self.menu)
+
             content_width = scale_width(page_width, 392)
-            menu_resize_values = get_menu_resize_values(page_width, self.menu)
+
             dialog_width = page_width * 6 // 7
             card_content_width = scale_width(page_width, 352)
             summary_content_width = scale_width(page_width, 332)
@@ -305,6 +321,7 @@ class SavingsView(ft.View):
                 width=page_width,
                 **menu_resize_values,
             )
+
             self.main_container.margin.bottom = self.menu.reserved_height
 
             self.summary_banner.resize(
@@ -352,21 +369,15 @@ class SavingsView(ft.View):
                 title_width=delete_title_width,
             )
 
-            return 0
-
         except AttributeError as ex:
             Logger.error(f"Failed to get width/height of the page: {ex}")
-            return 1
 
         except (TypeError, ValueError) as ex:
             Logger.error(f"Value of width/height of the page is invalid: {ex}")
-            return 2
 
         except Exception as ex:
             Logger.error(f"Error during page resize: {ex}, event: {e}")
-            return -1
 
-
-def get_savings_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+def get_savings_view(page: Page, lang: dict[str, str], user_info: dict[str, str]) -> ft.View:
     Logger.info("Loading Savings page...")
     return SavingsView(page, lang, user_info)
