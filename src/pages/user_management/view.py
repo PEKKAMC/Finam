@@ -6,14 +6,16 @@ import asyncio
 import base64
 import hashlib
 import hmac
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 import secrets
 import sqlite3
+import socket
 import threading
 import time
 from collections.abc import Callable
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import flet as ft
@@ -23,21 +25,35 @@ from flet.auth import AuthorizationService, GoogleOAuthProvider
 
 from src.database import db
 from src.logger import Logger
-from src.pages.global_components import AddUserField, DeleteUserDialog, Menu, UserList, UserManagementDialog
-from src.pages.user_management.components import GoogleAccountCard, MenuItem, MenuSectionCard, ProfileCard, DeleteAllDataDialog
+from src.pages.common import Menu
+from src.pages.common.logic import (
+    close_user_management_dialog,
+    show_user_management_dialog,
+)
+from src.pages.purchase_scanner.logic import ScannerApiError
+from src.pages.user_management.components import (
+    GoogleAccountCard,
+    ProfileCard,
+    UserManagementDialogs,
+    UserManagementPageContent,
+)
 from src.pages.user_management.logic import LogicController
-from src.pages.purchase_scanner.logic import LogicController as PurchaseScannerController, ScannerApiError
-from src.utils import Color, DefaultSettings, Page, Text, UISettings, get_asset_path, get_menu_resize_values, get_safe_page_size, scale_width, scale_height
+from src.utils import (
+    Color,
+    DefaultSettings,
+    MenuResizeValues,
+    Page,
+    get_menu_resize_values,
+    get_safe_page_size,
+    scale_height,
+    scale_width,
+)
 from src.version_manager import get_version
 
 Logger.info("Initializing User Management page...")
 
-_pending_web_google_auth: dict[
-    str, tuple[float, AuthorizationService, str]
-] = {}
-_pending_mobile_google_auth: dict[
-    str, tuple[float, AuthorizationService, str]
-] = {}
+_pending_web_google_auth: dict[str, tuple[float, AuthorizationService, str]] = {}
+_pending_mobile_google_auth: dict[str, tuple[float, AuthorizationService, str]] = {}
 _web_google_auth_result: str | None = None
 
 
@@ -47,14 +63,24 @@ def is_google_oauth_callback_route(route: str) -> bool:
     return bool(path) and path.rsplit("/", maxsplit=1)[-1] == "oauth_callback"
 
 
-def _create_oauth_callback_handler(expected_state: str, loop, result_future):
+def _parse_oauth_query(query_string: str | bytes) -> dict[str, str]:
+    if isinstance(query_string, bytes):
+        query_string = query_string.decode("utf-8")
+    return {
+        key: values[0]
+        for key, values in parse_qs(query_string).items()
+        if values
+    }
+
+
+def _create_oauth_callback_handler(expected_state: str, loop: asyncio.AbstractEventLoop, result_future: asyncio.Future[dict[str, str]]) -> type[BaseHTTPRequestHandler]:
     class OAuthCallbackHandler(BaseHTTPRequestHandler):
-        def do_GET(self):
+        def do_GET(self) -> None:
             callback_url = urlparse(self.path)
-            query = parse_qs(callback_url.query)
-            state = query.get("state", [""])[0]
-            code = query.get("code", [""])[0]
-            error = query.get("error", [""])[0]
+            query = _parse_oauth_query(callback_url.query)
+            state = query.get("state", "")
+            code = query.get("code", "")
+            error = query.get("error", "")
 
             if callback_url.path != "/oauth_callback":
                 self.send_error(404)
@@ -78,13 +104,14 @@ def _create_oauth_callback_handler(expected_state: str, loop, result_future):
             self.end_headers()
             self.wfile.write(body)
 
-            def finish_callback():
+            def finish_callback() -> None:
                 if not result_future.done():
-                    result_future.set_result({"code": code, "error": error})
+                    _ = result_future.set_result({"code": code, "error": error})
 
-            loop.call_soon_threadsafe(finish_callback)
+            _ = loop.call_soon_threadsafe(finish_callback)
 
-        def log_message(self, format, *args):
+        def log_message(self, *args: object, **kwargs: object) -> None:
+            del args, kwargs
             return
 
     return OAuthCallbackHandler
@@ -96,8 +123,8 @@ async def complete_google_web_callback(route: str) -> bool:
     if not is_google_oauth_callback_route(route):
         return False
 
-    query = parse_qs(callback.query)
-    state = query.get("state", [""])[0]
+    query = _parse_oauth_query(callback.query)
+    state = query.get("state", "")
     pending = _pending_web_google_auth.pop(state, None)
     if pending is None:
         Logger.warning("Google web callback has no matching pending authorization")
@@ -110,9 +137,9 @@ async def complete_google_web_callback(route: str) -> bool:
         if time.monotonic() > expires_at:
             raise RuntimeError("Google web authorization expired")
         if query.get("error"):
-            raise RuntimeError(f"Google authorization failed: {query['error'][0]}")
+            raise RuntimeError(f"Google authorization failed: {query['error']}")
 
-        code = query.get("code", [""])[0]
+        code = query.get("code", "")
         if not code:
             raise RuntimeError("Google authorization code is missing")
 
@@ -121,13 +148,13 @@ async def complete_google_web_callback(route: str) -> bool:
         if token is None:
             raise RuntimeError("Firebase ID token is missing")
 
-        signed_in = await _save_google_account_globally(
+        signed_in = await LogicController.save_google_account(
             token.access_token,
             backend_url,
             token.refresh_token or "",
         )
         result = "signed_in" if signed_in else "failed"
-    except Exception as ex:
+    except (httpx.HTTPError, KeyError, OSError, requests.RequestException, RuntimeError, sqlite3.Error, TypeError, ValueError) as ex:
         Logger.warning(f"Could not complete Google web authorization: {ex}", exc_info=True)
     _web_google_auth_result = result
     return True
@@ -139,8 +166,8 @@ async def complete_google_mobile_callback(route: str) -> bool:
     if not is_google_oauth_callback_route(route):
         return False
 
-    query = parse_qs(callback.query)
-    state = query.get("state", [""])[0]
+    query = _parse_oauth_query(callback.query)
+    state = query.get("state", "")
     Logger.info(
         "Google mobile OAuth callback received "
         f"(path={callback.path!r}, has_code={bool(query.get('code'))}, "
@@ -193,9 +220,9 @@ async def complete_google_mobile_callback(route: str) -> bool:
         if time.time() > expires_at:
             raise RuntimeError("Google mobile authorization expired")
         if query.get("error"):
-            raise RuntimeError(f"Google authorization failed: {query['error'][0]}")
+            raise RuntimeError(f"Google authorization failed: {query['error']}")
 
-        code = query.get("code", [""])[0]
+        code = query.get("code", "")
         if not code:
             raise RuntimeError("Google mobile authorization code is missing")
 
@@ -212,18 +239,15 @@ async def complete_google_mobile_callback(route: str) -> bool:
             f"has_refresh_token={bool(token.refresh_token)})"
         )
         Logger.info("Validating Google account and saving app-wide session")
-        signed_in = await _save_google_account_globally(
+        signed_in = await LogicController.save_google_account(
             token.access_token,
             backend_url,
             token.refresh_token or "",
         )
         result = "signed_in" if signed_in else "failed"
         Logger.info(f"Mobile Google OAuth account save result: {result}")
-    except Exception as ex:
-        Logger.warning(
-            f"Could not complete Google mobile authorization: {ex}",
-            exc_info=True,
-        )
+    except (httpx.HTTPError, KeyError, OSError, requests.RequestException, RuntimeError, sqlite3.Error, TypeError, ValueError) as ex:
+        Logger.warning(f"Could not complete Google mobile authorization: {ex}", exc_info=True)
     _web_google_auth_result = result
     Logger.info(f"Mobile Google OAuth callback processing finished: {result}")
     return True
@@ -236,105 +260,59 @@ def take_google_web_auth_result() -> str | None:
     return result
 
 
-async def _save_google_account_globally(firebase_id_token: str, backend_url: str, refresh_token: str) -> bool:
-    def fetch_profile() -> dict:
-        response = requests.get(
-            f"{backend_url}/api/v1/auth/me",
-            headers={"Authorization": f"Bearer {firebase_id_token}"},
-            timeout=15,
-        )
-        response.raise_for_status()
-        return response.json()
-
-    profile = await asyncio.to_thread(fetch_profile)
-    if not isinstance(profile, dict):
-        raise RuntimeError("Firebase returned an invalid user profile")
-    google_uid = profile.get("uid", "")
-    email = profile.get("email", "")
-    if not google_uid or not email:
-        raise RuntimeError("Firebase returned an incomplete user profile")
-    return db.app_settings.set_google_account(
-        google_uid,
-        email,
-        refresh_token,
-    )
-
-
 class DialogManager:
     """Handles all dialog instantiation, states, and callbacks for the User Management View."""
-    def __init__(self, page: Page, lang: dict, user_info: dict, controller: LogicController, refresh_callback: Callable):
+
+    def __init__(self, page: Page, lang: dict[str, str], user_info: dict[str, str], controller: LogicController, refresh_callback: Callable[..., int]) -> None:
         self._page = page
         self.lang = lang
         self.user_info = user_info
         self.controller = controller
         self._refresh_view = refresh_callback
 
-        # INITIALIZE DIALOG COMPONENTS
-        self.user_list = UserList(
+        self.dialog_components = UserManagementDialogs(
             page=self._page,
             lang=self.lang,
             current_user=self.user_info["username"],
-            on_select_callback=self._handle_change_user,
-            on_delete_callback=self.show_delete_prompt
-        )
-
-        self.add_form = AddUserField(
-            page=self._page,
-            lang=self.lang,
-            on_submit_callback=self._handle_add_user,
             currencies=self.controller.get_currencies(),
             default_currency=DefaultSettings.CURRENCY,
+            on_change_user=self._handle_change_user,
+            on_delete_user=self._handle_delete_confirm,
+            on_add_user=self._handle_add_user,
+            on_close_user_dialog=self._close_user_management_dialog,
+            on_delete_all_data=self._handle_delete_all_data_confirm,
         )
-
-        self.user_dialog = UserManagementDialog(
-            page=self._page,
-            lang=self.lang,
-            user_list=self.user_list,
-            add_form=self.add_form,
-            on_close_callback=self._close_user_management_dialog
-        )
-
-        self.delete_dialog = DeleteUserDialog(
-            page=self._page,
-            lang=self.lang,
-            on_confirm_callback=self._handle_delete_confirm
-        )
-
-        self.delete_all_data_dialog = DeleteAllDataDialog(
-            page=self._page,
-            lang=self.lang,
-            on_confirm_callback=self._handle_delete_all_data_confirm
-        )
+        self.user_list = self.dialog_components.user_list
+        self.add_form = self.dialog_components.add_form
+        self.user_dialog = self.dialog_components.user_dialog
+        self.delete_dialog = self.dialog_components.delete_dialog
+        self.delete_all_data_dialog = self.dialog_components.delete_all_data_dialog
 
     # USER MANAGEMENT DIALOG
     def show_user_management_dialog(self) -> int:
-        self.user_list.update_data(
+        return show_user_management_dialog(
+            self._page,
+            self.user_list,
+            self.user_dialog,
             self.controller.get_all_users(),
-            self.user_info["username"]
+            self.user_info["username"],
         )
-        try:
-            self.user_list.main_container.update()
-            self.user_dialog.update()
-            self._page.update()
-        except RuntimeError:
-            pass
-        return self.user_dialog.show()
 
-    def _close_user_management_dialog(self, e: ft.ControlEvent | None = None) -> None:
-        self.user_dialog.dismiss()
+    def _close_user_management_dialog(self, _e: ft.ControlEvent | None = None) -> None:
+        close_user_management_dialog(self.user_dialog)
 
     # USER ACTIONS
-    def _handle_add_user(self, input_username: str, currency: str):
+    def _handle_add_user(self, input_username: str, currency: str) -> None:
         if not input_username:
             return
-        success, error_msg = self.controller.add_user(input_username, currency)
+        status = self.controller.add_user(input_username, currency)
 
-        if success:
+        if status == 0:
             self.add_form.clear()
-            self.user_list.update_data(
-                self.controller.get_all_users(),
-                self.user_info["username"]
-            )
+            users: list[dict[str, str] | str] = [
+                user for user in self.controller.get_all_users()
+            ]
+            self.user_list.update_data(users, self.user_info["username"])
             try:
                 self.user_dialog.update()
                 self._page.update()
@@ -344,7 +322,7 @@ class DialogManager:
         else:
             self.add_form.show_error("error")
 
-    def _handle_change_user(self, username: str):
+    def _handle_change_user(self, username: str) -> None:
         self.user_dialog.dismiss()
         if username != self.user_info["username"] and self._page.auth is not None:
             self._page.logout()
@@ -352,53 +330,58 @@ class DialogManager:
         self._refresh_view()
 
     # DELETE USER DIALOG
-    def show_delete_prompt(self, username: str = "") -> int:
+    def show_delete_prompt(self, username: str = '') -> int:
         try:
             if username:
                 self.delete_dialog.selected_user = username
             self.delete_dialog.show()
-            return 0
-        except Exception as ex:
+        except RuntimeError as ex:
             Logger.warn(f"Failed to show delete prompt {ex}")
             return -1
+        else:
+            return 0
 
     def _handle_delete_confirm(self, username: str) -> int:
         try:
             self.controller.delete_user(username)
             self._refresh_view()
-            return 0
-        except Exception as ex:
+        except (RuntimeError, sqlite3.Error) as ex:
             Logger.warn(f"Cannot delete user {username}, {ex}")
             return -1
+        else:
+            return 0
 
     # DELETE ALL DATA DIALOG
     def show_delete_all_data_prompt(self) -> int:
         try:
             self.delete_all_data_dialog.show()
-            return 0
-        except Exception as ex:
+        except RuntimeError as ex:
             Logger.warn(f"Failed to show delete all data prompt {ex}")
             return -1
+        else:
+            return 0
 
-    async def _handle_delete_all_data_confirm(self, e=None) -> int:
+    async def _handle_delete_all_data_confirm(self, _e: ft.ControlEvent | None = None) -> int:
         try:
             self.controller.delete_all_data()
             self._page.navigate_to("/starter")()
             self._page.delete_all_cached_views()
-
-            return 0
-        except Exception as ex:
+        except (RuntimeError, sqlite3.Error) as ex:
             Logger.error(f"Failed to delete all data: {ex}")
             return -1
+        else:
+            return 0
+
 
 class UserManagementView(ft.View):
-    def __init__(self, page: Page, lang: dict, user_info: dict):
+    def __init__(self, page: Page, lang: dict[str, str], user_info: dict[str, str]) -> None:
         self._page = page
         self.lang = lang
         self.user_info = user_info
 
         # IMPORTED FUNCTIONS
         self.get_safe_page_size = get_safe_page_size
+        self.get_menu_resize_values = get_menu_resize_values
         self.get_version = get_version
 
         # INITIALIZE PAGE CONTROLLER
@@ -410,37 +393,23 @@ class UserManagementView(ft.View):
             lang=self.lang,
             user_info=self.user_info,
             controller=self.controller,
-            refresh_callback=self._refresh_view
+            refresh_callback=self._refresh_view,
         )
 
         # FETCH DASHBOARD DATA
         self.app_version = self.get_version("Finam")
 
         # INITIALIZE PAGE COMPONENTS
-        self.menu = Menu(
-            page=self._page,
-            lang=self.lang,
-            user_info=self.user_info
-        )
-
-        self.top_header = ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            controls=[
-                Text.SMALL(self.lang["user_management.profile_and_options"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD),
-            ]
-        )
+        self.menu = Menu(page=self._page, lang=self.lang, user_info=self.user_info)
 
         self.profile_card = ProfileCard(
             username=self.user_info["username"],
             lang=self.lang,
-            on_change_user=self.dialogs.show_user_management_dialog
+            on_change_user=self.dialogs.show_user_management_dialog,
         )
         self.google_account_card = GoogleAccountCard(
             lang=self.lang,
-            on_connect=(
-                None if self._page.web else self._connect_google_account
-            ),
+            on_connect=(None if self._page.web else self._connect_google_account),
             on_disconnect=self._disconnect_google_account,
         )
         self._tier_request_uid: str | None = None
@@ -454,144 +423,48 @@ class UserManagementView(ft.View):
                 self.lang["user_management.google_auth_failed"]
             )
 
-        self.services_section_title = Text.SMALL(self.lang["user_management.services_and_features"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
-
         self._disable_ads_generation = 0
-        self.disable_ads_switch = ft.Switch(
-            value=False,
-            active_color=Color.PRIMARY_ACTION,
-            on_change=self._on_disable_ads_change,
-        )
-        self.services_card = MenuSectionCard(
-            items=[
-                MenuItem(
-                    icon=ft.Icons.SHIELD_OUTLINED,
-                    icon_color=Color.PRIMARY_ACTION,
-                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title=self.lang["user_management.disable_ads"],
-                    subtitle=self.lang["user_management.smooth_experience"],
-                    trailing=self.disable_ads_switch
-                ),
-                MenuItem(
-                    icon=ft.Icons.SETTINGS_OUTLINED,
-                    icon_color=Color.PRIMARY_ACTION,
-                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title=self.lang["settings.settings"],
-                    subtitle=self.lang["user_management.language_security_currency"],
-                    on_click=self._page.navigate_to("/settings")
-                )
-            ]
-        )
-
-        self.support_section_title = Text.SMALL(self.lang["user_management.support_and_info"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
-
-        self.support_card = MenuSectionCard(
-            items=[
-                MenuItem(
-                    icon=ft.Icons.HELP_OUTLINE,
-                    icon_color=Color.PRIMARY_ACTION,
-                    icon_bg_color=Color.AGGREGATE_BACKGROUND,
-                    title=self.lang["user_management.help_faq"],
-                    subtitle=self.lang["user_management.guide_expense_mgmt"],
-                    on_click=self._page.navigate_to("/help")
-                ),
-                MenuItem(
-                    icon=ft.Icons.LOGOUT,
-                    icon_color=Color.NEGATIVE_ACTION,
-                    icon_bg_color=Color.ACTIVITY_BACKGROUND,
-                    title=self.lang["user_management.logout"],
-                    subtitle="",
-                    on_click=self.logout
-                ),
-                MenuItem(
-                    icon=ft.Icons.DELETE_FOREVER,
-                    icon_color=Color.NEGATIVE_ACTION,
-                    icon_bg_color=Color.ACTIVITY_BACKGROUND,
-                    title=self.lang["user_management.delete_all_data"],
-                    subtitle="",
-                    on_click=lambda e: self.dialogs.show_delete_all_data_prompt()
-                )
-            ]
-        )
-
-        self.footer = ft.Column(
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=4,
-            controls=[
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    spacing=6,
-                    controls=[
-                        ft.Container(width=8, height=8, border_radius=4, bgcolor=Color.PRIMARY_ACTION),
-                        Text.SMALL(f"{self.lang["user_management.version"]} {self.app_version}", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
-                    ]
-                ),
-                Text.SMALL(self.lang["user_management.privacy_encryption"], color=Color.SUBTITLE_TEXT, text_align=ft.TextAlign.CENTER)
-            ]
-        )
-
-        # INITIALIZE MAIN CONTAINER
-        self.content_container = ft.Container(
-            width=UISettings.MAX_APP_WIDTH,
-            padding=20,
-            content=ft.Column(
-                spacing=16,
-                expand=True,
-                controls=[
-                    self.top_header,
-                    self.profile_card,
-                    self.google_account_card,
-                    self.services_section_title,
-                    self.services_card,
-                    self.support_section_title,
-                    self.support_card,
-                    ft.Container(height=8),
-                    self.footer
-                ]
-            )
-        )
-        self.main_container = ft.Container(
-            content=ft.Column(
-                scroll=ft.ScrollMode.AUTO,
-                controls=[self.content_container]
+        self.page_content = UserManagementPageContent(
+            lang=self.lang,
+            app_version=self.app_version,
+            profile_card=self.profile_card,
+            google_account_card=self.google_account_card,
+            on_disable_ads_change=self._on_disable_ads_change,
+            on_open_settings=self._page.navigate_to("/settings"),
+            on_open_help=self._page.navigate_to("/help"),
+            on_logout=self.logout,
+            on_delete_all_data=lambda _event: (
+                self.dialogs.show_delete_all_data_prompt()
             ),
-            expand=True,
-            padding=0,
-            margin=ft.Margin(bottom=0)
         )
+        self.disable_ads_switch = self.page_content.disable_ads_switch
 
         super().__init__(
             route="/user_management",
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
-            horizontal_alignment=ft.MainAxisAlignment.CENTER,
-            controls=ft.SafeArea(
-                expand=True,
-                content=ft.Stack(
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.SafeArea(
                     expand=True,
-                    controls=[
-                        self.main_container,
-                        self.menu
-                    ]
+                    content=ft.Stack(
+                        expand=True, controls=[self.page_content, self.menu]
+                    ),
                 )
-            )
+            ],
         )
 
-        self._page.on_resize = self._on_page_resize
-        self._on_page_resize()
+        self._page.on_resize = self._resize_page
+        self._resize_page()
 
-    async def _on_disable_ads_change(self, _e: ft.ControlEvent) -> None:
+    async def _on_disable_ads_change(self, _event: ft.Event[ft.Switch]) -> None:
         self._disable_ads_generation += 1
         generation = self._disable_ads_generation
         if not self.disable_ads_switch.value:
             return
 
         await asyncio.sleep(3)
-        if (
-            generation == self._disable_ads_generation
-            and self.disable_ads_switch.value
-        ):
+        if generation == self._disable_ads_generation and self.disable_ads_switch.value:
             self.disable_ads_switch.value = False
             self.disable_ads_switch.update()
 
@@ -601,22 +474,22 @@ class UserManagementView(ft.View):
             self.disable_ads_switch.value = False
             self.disable_ads_switch.update()
 
-    async def logout(self, e=None) -> None:
+    async def logout(self, _event: ft.ControlEvent | None = None) -> None:
         try:
-            language = db.users.get_language(self.user_info["username"])
-            if not db.app_settings.set_starter_language(language):
+            if not self.controller.save_starter_language_for_logout(
+                self.user_info["username"]
+            ):
                 Logger.error("Failed to persist starter language on logout")
                 return
             self._page.logout()
             self.user_info["username"] = ""
             self._page.skip_app_lock_once = True
             self._page.navigate_to("/starter")()
-        except Exception as ex:
+        except (KeyError, RuntimeError, sqlite3.Error) as ex:
             Logger.warn(f"Failed to logout: {ex}")
 
     def _refresh_google_account(self) -> None:
-        account = db.app_settings.get_google_account()
-        signed_in = db.app_settings.has_google_account_session()
+        account, signed_in, cached_tier = self.controller.get_google_account_state()
         self.google_account_card.set_account(
             account["email"] if account and signed_in else None
         )
@@ -625,17 +498,11 @@ class UserManagementView(ft.View):
             self._tier_loaded_uid = None
             self.profile_card.set_account_tier("guest")
             return
-        cached_tier = (
-            db.app_settings.get_google_account_tier(account["uid"])
-            if account
-            else None
-        )
         if cached_tier:
             self.profile_card.set_account_tier(cached_tier)
-        if (
-            account
-            and account["uid"]
-            in (self._tier_request_uid, self._tier_loaded_uid)
+        if account and account["uid"] in (
+            self._tier_request_uid,
+            self._tier_loaded_uid,
         ):
             return
         if not cached_tier:
@@ -644,63 +511,44 @@ class UserManagementView(ft.View):
         self._page.run_thread(self._load_account_tier)
 
     def _load_account_tier(self) -> None:
-        account = db.app_settings.get_google_account()
-        if not account or not db.app_settings.has_google_account_session():
-            self.profile_card.set_account_tier("guest")
-            return
-        refresh_token = db.app_settings.get_google_refresh_token()
         try:
-            tier = PurchaseScannerController(
-                self.user_info["username"]
-            ).get_account_tier(refresh_token or "")
-            current_account = db.app_settings.get_google_account()
-            if current_account and current_account["uid"] == account["uid"]:
-                if not db.app_settings.set_google_account_tier(
-                    account["uid"],
-                    tier,
-                ):
-                    Logger.warning("Could not cache Google account tier")
+            uid, tier = self.controller.fetch_google_account_tier()
+            if uid:
                 self.profile_card.set_account_tier(tier)
-                self._tier_loaded_uid = account["uid"]
+                self._tier_loaded_uid = uid
+            else:
+                self.profile_card.set_account_tier("guest")
         except ScannerApiError as ex:
             Logger.warning(f"Could not load Google account tier: {ex}")
-            current_account = db.app_settings.get_google_account()
-            if current_account and current_account["uid"] == account["uid"]:
-                self.profile_card.set_account_tier("unavailable")
-        except Exception as ex:
+            self.profile_card.set_account_tier("unavailable")
+        except (KeyError, RuntimeError, sqlite3.Error) as ex:
             Logger.error(f"Could not display Google account tier: {ex}")
-            current_account = db.app_settings.get_google_account()
-            if current_account and current_account["uid"] == account["uid"]:
-                self.profile_card.set_account_tier("unavailable")
+            self.profile_card.set_account_tier("unavailable")
         finally:
-            if self._tier_request_uid == account["uid"]:
-                self._tier_request_uid = None
+            self._tier_request_uid = None
 
     @staticmethod
-    def _get_google_auth_config() -> dict:
-        with open(get_asset_path("google_auth.json"), encoding="utf-8") as file:
-            config = json.load(file)
-        if not isinstance(config, dict):
-            raise ValueError("Google auth configuration must be a JSON object")
-        return config
+    def _get_google_auth_config() -> dict[str, Any]:
+        return LogicController.get_google_auth_config()
 
     def _prepare_web_google_authorization(self) -> None:
         try:
             config = self._get_google_auth_config()
-            client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip() or str(
-                config.get("google_client_id", "")
-            ).strip()
-            backend_url = os.getenv("FINAM_BACKEND_URL", "").strip() or str(
-                config.get("backend_url", "")
-            ).strip()
+            client_id = (
+                os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip()
+                or str(config.get("google_client_id", "")).strip()
+            )
+            backend_url = (
+                os.getenv("FINAM_BACKEND_URL", "").strip()
+                or str(config.get("backend_url", "")).strip()
+            )
             backend_url = backend_url.rstrip("/")
-            redirect_url = os.getenv(
-                "GOOGLE_OAUTH_REDIRECT_URL", ""
-            ).strip() or str(config.get("redirect_url", "")).strip()
+            redirect_url = (
+                os.getenv("GOOGLE_OAUTH_REDIRECT_URL", "").strip()
+                or str(config.get("redirect_url", "")).strip()
+            )
             if not client_id or not backend_url or not redirect_url:
-                raise ValueError(
-                    "Google client, backend, and redirect URLs are required"
-                )
+                raise ValueError("Google client, backend, and redirect URLs are required")
 
             redirect = urlparse(redirect_url)
             app_origin = urlparse(self._page.url or "")
@@ -711,14 +559,16 @@ class UserManagementView(ft.View):
                 or (redirect.scheme, redirect.netloc)
                 != (app_origin.scheme, app_origin.netloc)
             ):
-                raise ValueError(
-                    "Web sign-in requires an /oauth_callback URL on this app's origin"
-                )
+                raise ValueError("Web sign-in requires an /oauth_callback URL on this app's origin")
 
             verifier = secrets.token_urlsafe(64)
-            challenge = base64.urlsafe_b64encode(
-                hashlib.sha256(verifier.encode("ascii")).digest()
-            ).rstrip(b"=").decode("ascii")
+            challenge = (
+                base64.urlsafe_b64encode(
+                    hashlib.sha256(verifier.encode("ascii")).digest()
+                )
+                .rstrip(b"=")
+                .decode("ascii")
+            )
             provider = GoogleOAuthProvider(
                 client_id=client_id,
                 client_secret="",
@@ -750,18 +600,11 @@ class UserManagementView(ft.View):
                 authorization_url,
                 target=ft.UrlTarget.BLANK,
             )
-        except (
-            FileNotFoundError,
-            json.JSONDecodeError,
-            RuntimeError,
-            ValueError,
-        ) as ex:
+        except (FileNotFoundError, json.JSONDecodeError, RuntimeError, ValueError) as ex:
             Logger.warning(f"Could not prepare Google web authorization: {ex}")
-            self.google_account_card.show_error(
-                self.lang["user_management.google_not_configured"]
-            )
+            self.google_account_card.show_error(self.lang["user_management.google_not_configured"])
 
-    async def _connect_google_account(self, e=None) -> None:
+    async def _connect_google_account(self, _event: ft.ControlEvent | None = None) -> None:
         try:
             config = self._get_google_auth_config()
         except (FileNotFoundError, json.JSONDecodeError, ValueError) as ex:
@@ -771,12 +614,14 @@ class UserManagementView(ft.View):
             )
             return
 
-        client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip() or str(
-            config.get("google_client_id", "")
-        ).strip()
-        backend_url = os.getenv("FINAM_BACKEND_URL", "").strip() or str(
-            config.get("backend_url", "")
-        ).strip()
+        client_id = (
+            os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip()
+            or str(config.get("google_client_id", "")).strip()
+        )
+        backend_url = (
+            os.getenv("FINAM_BACKEND_URL", "").strip()
+            or str(config.get("backend_url", "")).strip()
+        )
         backend_url = backend_url.rstrip("/")
         is_mobile = bool(
             not self._page.web
@@ -784,18 +629,20 @@ class UserManagementView(ft.View):
             and self._page.platform.is_mobile()
         )
         if is_mobile:
-            redirect_url = os.getenv(
-                "GOOGLE_OAUTH_MOBILE_REDIRECT_URL", ""
-            ).strip() or str(
-                config.get(
-                    "mobile_redirect_url",
-                    f"{backend_url}/api/v1/auth/google/mobile-callback",
-                )
-            ).strip()
+            redirect_url = (
+                os.getenv("GOOGLE_OAUTH_MOBILE_REDIRECT_URL", "").strip()
+                or str(
+                    config.get(
+                        "mobile_redirect_url",
+                        f"{backend_url}/api/v1/auth/google/mobile-callback",
+                    )
+                ).strip()
+            )
         else:
-            redirect_url = os.getenv(
-                "GOOGLE_OAUTH_REDIRECT_URL", ""
-            ).strip() or str(config.get("redirect_url", "")).strip()
+            redirect_url = (
+                os.getenv("GOOGLE_OAUTH_REDIRECT_URL", "").strip()
+                or str(config.get("redirect_url", "")).strip()
+            )
         missing_settings = [
             setting
             for setting, value in (
@@ -814,9 +661,11 @@ class UserManagementView(ft.View):
             return
 
         verifier = secrets.token_urlsafe(64)
-        challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(verifier.encode("ascii")).digest()
-        ).rstrip(b"=").decode("ascii")
+        challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest())
+            .rstrip(b"=")
+            .decode("ascii")
+        )
         provider = GoogleOAuthProvider(
             client_id=client_id,
             client_secret="",
@@ -848,9 +697,7 @@ class UserManagementView(ft.View):
                     or (redirect.scheme, redirect.netloc)
                     != (app_origin.scheme, app_origin.netloc)
                 ):
-                    raise ValueError(
-                        "Web sign-in requires an /oauth_callback URL on this app's origin"
-                    )
+                    raise ValueError("Web sign-in requires an /oauth_callback URL on this app's origin")
 
                 now = time.monotonic()
                 for pending_state, pending in list(_pending_web_google_auth.items()):
@@ -868,7 +715,7 @@ class UserManagementView(ft.View):
                         authorization_url,
                         web_only_window_name="_blank",
                     )
-                except Exception:
+                except (OSError, RuntimeError):
                     _pending_web_google_auth.pop(state, None)
                     raise
                 finally:
@@ -887,14 +734,10 @@ class UserManagementView(ft.View):
                     or redirect.query
                     or redirect.fragment
                 ):
-                    raise ValueError(
-                        "Mobile sign-in requires the HTTPS backend mobile callback URL"
-                    )
+                    raise ValueError("Mobile sign-in requires the HTTPS backend mobile callback URL")
 
                 now = time.time()
-                for pending_state, pending in list(
-                    _pending_mobile_google_auth.items()
-                ):
+                for pending_state, pending in list(_pending_mobile_google_auth.items()):
                     if pending[0] < now:
                         _pending_mobile_google_auth.pop(pending_state, None)
                 expires_at = now + 300
@@ -906,9 +749,7 @@ class UserManagementView(ft.View):
                     client_id,
                     redirect_url,
                 ):
-                    raise RuntimeError(
-                        "Could not persist pending mobile Google authorization"
-                    )
+                    raise RuntimeError("Could not persist pending mobile Google authorization")
                 Logger.info("Persisted pending mobile Google OAuth state")
                 _pending_mobile_google_auth[state] = (
                     expires_at,
@@ -931,25 +772,29 @@ class UserManagementView(ft.View):
                     self.google_account_card.set_busy(False)
                 return
 
+            redirect_host = redirect.hostname
             if (
                 redirect.scheme != "http"
-                or redirect.hostname not in ("localhost", "127.0.0.1")
+                or redirect_host is None
+                or redirect_host not in ("localhost", "127.0.0.1")
                 or redirect.path != "/oauth_callback"
             ):
-                raise ValueError(
-                    "Desktop sign-in requires a localhost /oauth_callback redirect URL"
-                )
+                raise ValueError("Desktop sign-in requires a localhost /oauth_callback redirect URL")
 
             loop = asyncio.get_running_loop()
             callback_result = loop.create_future()
-            callback_handler = _create_oauth_callback_handler(
+            callback_handler_class = _create_oauth_callback_handler(
                 state,
                 loop,
                 callback_result,
             )
+
+            def callback_handler_factory(request: socket.socket, client_address: tuple[str, int], server: ThreadingHTTPServer) -> BaseHTTPRequestHandler:
+                return callback_handler_class(request, client_address, server)
+
             callback_server = ThreadingHTTPServer(
-                (redirect.hostname, redirect.port or 80),
-                callback_handler,
+                (redirect_host, redirect.port or 80),
+                callback_handler_factory,
             )
             callback_thread = threading.Thread(
                 target=callback_server.serve_forever,
@@ -979,32 +824,21 @@ class UserManagementView(ft.View):
         except httpx.HTTPStatusError as ex:
             try:
                 error_detail = ex.response.json().get("detail", "")
-            except (ValueError, AttributeError):
+            except ValueError, AttributeError:
                 error_detail = ex.response.text[:500]
-            Logger.warning(
-                "Google authorization backend rejected the request "
-                f"(HTTP {ex.response.status_code}): {error_detail or ex!r}",
-                exc_info=True,
-            )
-            self.google_account_card.show_error(
-                self.lang["user_management.google_auth_failed"]
-            )
+            Logger.warning(f"Google authorization backend rejected the request\n(HTTP {ex.response.status_code}): {error_detail or ex!r}",exc_info=True)
+            self.google_account_card.show_error(self.lang["user_management.google_auth_failed"])
             self.google_account_card.set_busy(False)
-        except Exception as ex:
-            Logger.warning(
-                f"Failed to start Google authorization ({type(ex).__name__}): {ex!r}",
-                exc_info=True,
-            )
-            self.google_account_card.show_error(
-                self.lang["user_management.google_auth_failed"]
-            )
+        except (httpx.HTTPError, KeyError, OSError, requests.RequestException, RuntimeError, sqlite3.Error, TypeError, ValueError) as ex:
+            Logger.warning(f"Failed to start Google authorization ({type(ex).__name__}): {ex!r}", exc_info=True)
+            self.google_account_card.show_error(self.lang["user_management.google_auth_failed"])
             self.google_account_card.set_busy(False)
 
     async def _save_google_account(self, firebase_id_token: str, backend_url: str, refresh_token: str) -> None:
         try:
             if not refresh_token:
                 raise RuntimeError("Firebase refresh token is missing")
-            saved = await _save_google_account_globally(
+            saved = await self.controller.save_google_account(
                 firebase_id_token,
                 backend_url,
                 refresh_token,
@@ -1017,73 +851,62 @@ class UserManagementView(ft.View):
             Logger.info("Google account signed in for the app")
         except (requests.RequestException, KeyError, RuntimeError, sqlite3.Error, ValueError) as ex:
             Logger.warning(f"Could not complete Google authorization: {ex}")
-            self.google_account_card.show_error(
-                self.lang["user_management.google_auth_failed"]
-            )
+            self.google_account_card.show_error(self.lang["user_management.google_auth_failed"])
         finally:
             self.google_account_card.set_busy(False)
 
-    def _disconnect_google_account(self, e=None) -> None:
-        if not db.app_settings.clear_google_account():
-            self.google_account_card.show_error(
-                self.lang["user_management.google_auth_failed"]
-            )
+    def _disconnect_google_account(self, _event: ft.ControlEvent | None = None) -> None:
+        if not self.controller.clear_google_account():
+            self.google_account_card.show_error(self.lang["user_management.google_auth_failed"])
             return
         self._page.delete_cached_view("/purchase_scanner")
         self._refresh_google_account()
 
     def _refresh_view(self) -> int:
         try:
-            self._on_page_resize()
+            self._resize_page()
+            users: list[dict[str, str] | str] = [
+                user for user in self.controller.get_all_users()
+            ]
             self.dialogs.user_list.update_data(
-                self.controller.get_all_users(),
-                self.user_info["username"]
+                users, self.user_info["username"]
             )
             self.profile_card.update_data(self.user_info["username"])
             self._refresh_google_account()
-            return 0
         except RuntimeError as ex:
             Logger.warn(f"Failed to refresh view {ex}")
             return -1
+        else:
+            return 0
 
-    def _on_page_resize(self, e = ft.PageResizeEvent | None) -> int:
+    def _resize_page(self, e: ft.PageResizeEvent | None = None) -> None:
         try:
             # Get page size
             page_width, page_height = self.get_safe_page_size(page=self._page)
+            menu_resize_values: MenuResizeValues = self.get_menu_resize_values(
+                page_width, self.menu
+            )
+
             content_width = scale_width(page_width, 392)
             card_content_width = scale_width(page_width, 352)
-            menu_resize_values = get_menu_resize_values(page_width, self.menu)
+
             dialog_width = page_width // 3 * 2
             user_list_height = scale_height(page_height, 300)
 
-            # Resizing main container
-            self.main_container.width = page_width
-            self.main_container.height = page_height
-            self.content_container.width = page_width
-            self.top_header.width = content_width
-            self.services_section_title.width = content_width
-            self.support_section_title.width = content_width
-            self.footer.width = content_width
+            self.page_content.resize(
+                page_width=page_width,
+                page_height=page_height,
+                content_width=content_width,
+                card_content_width=card_content_width,
+            )
 
-            # Resizing other components
             self.menu.resize(
                 width=page_width,
                 **menu_resize_values,
             )
-            self.main_container.margin.bottom = self.menu.reserved_height
-            self.profile_card.resize(
-                width=content_width,
-                content_width=card_content_width,
-            )
-            self.google_account_card.resize(
-                width=content_width,
-                content_width=card_content_width,
-            )
-            self.services_card.resize(
-                width=content_width
-            )
-            self.support_card.resize(
-                width=content_width
+
+            self.page_content.set_bottom_margin(
+                self.menu.reserved_height
             )
 
             self.dialogs.user_dialog.resize(
@@ -1091,20 +914,16 @@ class UserManagementView(ft.View):
                 list_height=user_list_height,
             )
 
-            return 0
-
         except AttributeError as ex:
             Logger.error(f"Failed to get width/height of the page: {ex}")
-            return 1
 
         except (TypeError, ValueError) as ex:
             Logger.error(f"Value of width/height of the page is invalid: {ex}")
-            return 2
 
         except Exception as ex:
             Logger.error(f"Error during page resize: {ex}, event: {e}")
-            return -1
 
-def get_user_management_view(page: Page, lang: dict, user_info: dict) -> ft.View:
+
+def get_user_management_view(page: Page, lang: dict[str, str], user_info: dict[str, str]) -> ft.View:
     Logger.info("Loading User Management page...")
     return UserManagementView(page, lang, user_info)
