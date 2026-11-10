@@ -2,48 +2,77 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from __future__ import annotations
+
 import os
+from typing import Any, TypedDict
 
 import requests
 
 from src.database import db
 from src.logger import Logger
+from src.pages.common.logic import get_user_currency
 
 BACKEND_URL = (
-    os.getenv("FINAM_BACKEND_URL", "").strip()
-    or "https://finam-backend.vercel.app/"
+    os.getenv("FINAM_BACKEND_URL", "").strip() or "https://finam-backend.vercel.app/"
 )
+
+
 class ScannerApiError(RuntimeError):
-    def __init__(self, status_code: int, detail: str):
+    def __init__(self, status_code: int, detail: str) -> None:
         super().__init__(detail)
         self.status_code = status_code
         self.detail = detail
 
 
+class ScannerUsage(TypedDict):
+    tier: str
+    limit: int | None
+    remaining: int | None
+    reset_at: str | None
+
+
 class LogicController:
-    def __init__(self, username: str = "Admin"):
+    def __init__(self, username: str = 'Admin') -> None:
         self.current_user = username or "Admin"
 
     def get_currency(self) -> str:
-        return db.users.get_currency(self.current_user)
+        return get_user_currency(self.current_user)
 
-    def analyze_purchase(self, name: str, price: str, reason: str, trigger: str, time: str, refresh_token: str):
+    @staticmethod
+    def has_google_account_session() -> bool:
+        return db.app_settings.has_google_account_session()
+
+    @staticmethod
+    def is_cached_developer() -> bool:
+        return db.app_settings.is_cached_developer()
+
+    @staticmethod
+    def get_google_refresh_token() -> str:
+        return db.app_settings.get_google_refresh_token() or ""
+
+    @staticmethod
+    def has_google_refresh_token() -> bool:
+        return bool(db.app_settings.get_google_refresh_token())
+
+    def analyze_purchase(self, lang: dict[str, str], name: str, price: str, reason: str, trigger: str, time: str, refresh_token: str) -> tuple[int | None, str, float, str]:
         if not refresh_token:
             raise ScannerApiError(401, "Google sign-in is required.")
 
         try:
             price = float(price.strip()) if price and str(price).strip() else 0.0
-        except (ValueError, AttributeError):
+        except ValueError, AttributeError:
             price = 0.0
 
         trigger_texts = {
-            "need": "nhu cầu thật sự",
-            "social": "áp lực bạn bè",
-            "tiktok": "nội dung social media",
-            "sale": "flash sale/giảm giá",
-            "emotion": "cảm xúc nhất thời",
+            "need": lang["purchase_scanner.trigger_actual_need"],
+            "social": lang["purchase_scanner.trigger_friends"],
+            "tiktok": lang["purchase_scanner.trigger_social_media"],
+            "sale": lang["purchase_scanner.trigger_flash_sale"],
+            "emotion": lang["purchase_scanner.trigger_emotion"]
         }
-        trigger_display = trigger_texts.get(trigger, "yếu tố bên ngoài")
+
+        trigger_display = trigger_texts.get(trigger, lang["purchase_scanner.trigger_actual_need"])
         language = db.users.get_language(self.current_user)
 
         try:
@@ -75,6 +104,7 @@ class LogicController:
             )
             data = self._parse_response(response)
             raw_risk = data.get("risk")
+            # noinspection PyTypeChecker
             risk = int(raw_risk) if raw_risk is not None else None
             ai_advice = data.get("advice", "")
         except requests.RequestException as ex:
@@ -86,7 +116,29 @@ class LogicController:
 
         return risk, trigger_display, price, ai_advice
 
-    def get_monthly_usage(self, refresh_token: str) -> dict:
+    def analyze_and_save_purchase(self, lang: dict[str, str], name: str, price: str, reason: str, trigger: str, time: str) -> tuple[int | None, str, float, str]:
+        risk, trigger_display, price_value, advice = self.analyze_purchase(
+            name,
+            price,
+            reason,
+            trigger,
+            time,
+            self.get_google_refresh_token(),
+        )
+        if risk is not None:
+            self.save_scan_result(
+                name,
+                price_value,
+                trigger,
+                reason,
+                time,
+                risk,
+                trigger_display,
+                advice,
+            )
+        return risk, trigger_display, price_value, advice
+
+    def get_monthly_usage(self, refresh_token: str) -> ScannerUsage:
         if not refresh_token:
             raise ScannerApiError(401, "Google sign-in is required.")
         base_url = BACKEND_URL.rstrip("/")
@@ -112,22 +164,41 @@ class LogicController:
                 "Could not connect to the purchase scanner service.",
             ) from ex
         data = self._parse_response(response)
-        if (
-            data.get("tier") not in {"free", "premium", "developer"}
-            or (
-                data.get("limit") is not None
-                and (
-                    not isinstance(data.get("limit"), int)
-                    or not isinstance(data.get("reset_at"), str)
+        tier = data.get("tier")
+        limit = data.get("limit")
+        remaining = data.get("remaining")
+        reset_at = data.get("reset_at")
+        if not isinstance(tier, str) or tier not in {
+            "free",
+            "premium",
+            "developer",
+        }:
+            raise ScannerApiError(502, "Scanner service returned invalid usage data.")
+        if limit is None:
+            if remaining is not None or (
+                reset_at is not None and not isinstance(reset_at, str)
+            ):
+                raise ScannerApiError(
+                    502, "Scanner service returned invalid unlimited usage data."
                 )
-            )
-            or (
-                data.get("remaining") is not None
-                and not isinstance(data.get("remaining"), int)
-            )
+        elif (
+            not isinstance(limit, int)
+            or isinstance(limit, bool)
+            or not isinstance(remaining, int)
+            or isinstance(remaining, bool)
+            or not 0 <= remaining <= limit
+            or not isinstance(reset_at, str)
         ):
             raise ScannerApiError(502, "Scanner service returned invalid usage data.")
-        return data
+        return {
+            "tier": tier,
+            "limit": limit,
+            "remaining": remaining,
+            "reset_at": reset_at,
+        }
+
+    def get_monthly_usage_for_current_session(self) -> ScannerUsage:
+        return self.get_monthly_usage(self.get_google_refresh_token())
 
     def get_account_tier(self, refresh_token: str) -> str:
         if not refresh_token:
@@ -161,11 +232,7 @@ class LogicController:
         return tier
 
     @classmethod
-    def _refresh_firebase_id_token(
-        cls,
-        base_url: str,
-        refresh_token: str,
-    ) -> str:
+    def _refresh_firebase_id_token(cls: type[LogicController], base_url: str, refresh_token: str) -> Any | None:
         try:
             response = requests.post(
                 f"{base_url}/api/v1/auth/google/token",
@@ -199,7 +266,7 @@ class LogicController:
         return firebase_id_token
 
     @staticmethod
-    def _parse_response(response: requests.Response) -> dict:
+    def _parse_response(response: requests.Response) -> dict[str, Any]:
         try:
             data = response.json()
         except ValueError:
@@ -219,7 +286,7 @@ class LogicController:
             return False
         return db.scanner_history.add_scan_result(self.current_user, item_name, price, trigger, reason, thinking_time, risk_score, trigger_display, ai_advice)
 
-    def get_scan_history(self):
+    def get_scan_history(self) -> list[dict[str, Any]]:
         return db.scanner_history.get_user_scan_history(self.current_user)
 
     def delete_scan_result(self, scan_id: int | None) -> bool:
