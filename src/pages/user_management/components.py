@@ -228,6 +228,11 @@ class GoogleAccountCard(ft.Container):
             if email
             else self.lang["user_management.google_not_connected"]
         )
+        self.connect_button_label.value = (
+            self.lang["user_management.google_switch_account"]
+            if email
+            else self.lang["user_management.google_sign_in"]
+        )
         self.disconnect_button.visible = bool(email)
         self.error_text.value = ""
         self._update_if_attached()

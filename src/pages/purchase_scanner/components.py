@@ -71,22 +71,33 @@ class ScannerHeaderBanner(ft.Container):
 
 
 class GoogleRequiredCard(ft.Container):
-    def __init__(self, lang: dict[str, str], on_login: Callable[..., None]) -> None:
+    def __init__(self, lang: dict[str, str]) -> None:
         self.lang = lang
 
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.title_text = Text.MEDIUM(self.lang["purchase_scanner.google_required_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
-        self.login_button_label = Text.BUTTON(self.lang["purchase_scanner.google_login_action"])
-        self.message_text = Text.SMALL(self.lang["purchase_scanner.google_required"], color=Color.SECONDARY_TEXT)
+        self.title_text = Text.MEDIUM(self.lang["spending.ai_google_required_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
 
         # Static icons
         self.account_icon = ft.Icon(ft.Icons.ACCOUNT_CIRCLE_OUTLINED, color=Color.PRIMARY_ACTION, size=24)
 
+        # Dynamic texts
+        self.message_text = Text.P(self.lang["spending.ai_google_required"], color=Color.SECONDARY_TEXT)
+
         # CONTAINER COMPONENTS
-        self.login_button = ft.TextButton(
-            content=self.login_button_label,
-            on_click=on_login,
+        self.main_row = ft.Row(
+            spacing=12,
+            controls=[
+                self.account_icon,
+                ft.Column(
+                    expand=True,
+                    spacing=4,
+                    controls=[
+                        self.title_text,
+                        self.message_text
+                    ]
+                )
+            ]
         )
 
         super().__init__(
@@ -94,23 +105,12 @@ class GoogleRequiredCard(ft.Container):
             border_radius=18,
             padding=18,
             border=ft.Border.all(1, Color.INPUT_BORDER),
-            content=ft.Row(
-                spacing=12,
-                wrap=True,
-                controls=[
-                    self.account_icon,
-                    ft.Column(
-                        expand=True,
-                        spacing=4,
-                        controls=[
-                            self.title_text,
-                            self.message_text
-                        ],
-                    ),
-                    self.login_button,
-                ],
-            ),
+            content=self.main_row,
         )
+
+    def set_access(self, signed_in: bool, message: str | None = None) -> None:
+        self.visible = not signed_in
+        self.message_text.value = message or self.lang["spending.ai_google_required"]
 
 
 class ScannerUsageCard(ft.Container):
@@ -1138,7 +1138,7 @@ class ScannerResult(ft.Container):
 
 
 class ScannerPageContent(ft.Container):
-    def __init__(self, lang: dict[str, str], form_card: ScannerForm, result_card: ScannerResult, history_card: ScannerHistoryCard, on_google_login: Callable[..., None], signed_in: bool) -> None:
+    def __init__(self, lang: dict[str, str], form_card: ScannerForm, result_card: ScannerResult, history_card: ScannerHistoryCard, signed_in: bool) -> None:
         self.lang = lang
         self.form_card = form_card
         self.result_card = result_card
@@ -1146,7 +1146,7 @@ class ScannerPageContent(ft.Container):
 
         # CONTAINER COMPONENTS
         self.header_banner = ScannerHeaderBanner(self.lang)
-        self.google_required_card = GoogleRequiredCard(self.lang, on_google_login)
+        self.google_required_card = GoogleRequiredCard(self.lang)
         self.usage_card = ScannerUsageCard(self.lang)
         self.scanner_locked_overlay = ft.Container(
             left=0,

@@ -9,8 +9,14 @@ from typing import Any
 import flet as ft
 
 from src.logger import Logger
-from src.pages.common import FinancialChart, Menu
-from src.pages.spending.components import DeleteSpendingReportDialog, DeleteTransactionDialog, MetricCards, SpendingGoogleRequiredCard, SpendingMonthDialog, SpendingPageContent, SpendingReportDialog, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
+from src.pages.common import (
+    DeleteSpendingReportDialog,
+    FinancialChart,
+    Menu,
+    SpendingMonthDialog,
+    SpendingReportDialog,
+)
+from src.pages.spending.components import DeleteTransactionDialog, MetricCards, SpendingGoogleRequiredCard, SpendingPageContent, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
 from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController, SpendingAnalysisApiError
 from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size, scale_width
 
@@ -109,7 +115,6 @@ class SpendingView(ft.View):
 
         self.google_required_card = SpendingGoogleRequiredCard(
             lang=self.lang,
-            on_login=self._open_google_settings,
             visible=not self.controller.has_google_account_session(),
         )
 
@@ -197,9 +202,6 @@ class SpendingView(ft.View):
             self._refresh_view()
         else:
             Logger.warn(f"Failed to delete transaction {transaction_id}")
-
-    def _open_google_settings(self, e: ft.ControlEvent | None = None) -> None:
-        self._page.navigate_to("/user_management")(e)
 
     def _update_google_access(self) -> None:
         signed_in = self.controller.has_google_account_session()

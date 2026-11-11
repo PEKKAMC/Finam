@@ -64,7 +64,6 @@ class PurchaseScannerView(ft.View):
             form_card=self.form_card,
             result_card=self.result_card,
             history_card=self.history_card,
-            on_google_login=self._open_google_settings,
             signed_in=self.controller.has_google_account_session(),
         )
 
@@ -88,9 +87,6 @@ class PurchaseScannerView(ft.View):
         self._page.on_resize = self._resize_page
         self._resize_page()
         self._update_google_access()
-
-    def _open_google_settings(self, e: ft.ControlEvent | None = None) -> None:
-        self._page.navigate_to("/user_management")(e)
 
     def _update_google_access(self) -> None:
         signed_in = self.controller.has_google_account_session()
@@ -120,9 +116,7 @@ class PurchaseScannerView(ft.View):
             remaining = usage["remaining"]
             limit = usage["limit"]
             if limit is None:
-                self.scanner_content.usage_card.usage_label.value = self.lang[
-                    "purchase_scanner.usage_unlimited"
-                ]
+                self.scanner_content.usage_card.usage_label.value = self.lang["purchase_scanner.usage_unlimited"]
                 progress = 1.0
             else:
                 reset_at_value = usage["reset_at"]
@@ -149,21 +143,15 @@ class PurchaseScannerView(ft.View):
             )
         except ScannerApiError as ex:
             Logger.warning(f"Could not load purchase scanner monthly usage: {ex}")
-            self.scanner_content.usage_card.usage_label.value = self.lang[
-                "purchase_scanner.usage_unavailable"
-            ]
+            self.scanner_content.usage_card.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
             self.form_card.set_enabled(False)
             if ex.status_code in (401, 403):
-                self.scanner_content.google_required_card.message_text.value = self.lang[
-                    "purchase_scanner.google_session_expired"
-                ]
+                self.scanner_content.google_required_card.message_text.value = self.lang["purchase_scanner.google_session_expired"]
                 self.scanner_content.set_google_access(False)
                 self.form_card.set_enabled(False)
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid purchase scanner usage response: {ex}")
-            self.scanner_content.usage_card.usage_label.value = self.lang[
-                "purchase_scanner.usage_unavailable"
-            ]
+            self.scanner_content.usage_card.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
             self.form_card.set_enabled(False)
         try:
             self.scanner_content.usage_card.update()

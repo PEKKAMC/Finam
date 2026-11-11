@@ -3,17 +3,11 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 from collections.abc import Callable
-from datetime import datetime
 from typing import Any
 
 import flet as ft
 
-from src.utils import Color, Dialog, Page, Text, UISettings, format_compact_number, format_number, to_decimal
-from src.pages.common.spending_analysis_dialogs import (
-    DeleteSpendingReportDialog,
-    SpendingMonthDialog,
-    SpendingReportDialog,
-)
+from src.utils import Color, Dialog, Page, Text, UISettings, format_compact_number, to_decimal
 
 
 class MetricCards(ft.ResponsiveRow):
@@ -788,13 +782,12 @@ class SpendingUsageCard(ft.Container):
 
 
 class SpendingGoogleRequiredCard(ft.Container):
-    def __init__(self, lang: dict[str, str], on_login: Callable[..., None], visible: bool) -> None:
+    def __init__(self, lang: dict[str, str], visible: bool) -> None:
         self.lang = lang
 
         # TEXT AND ICON COMPONENTS
         # Static texts
         self.title_text = Text.MEDIUM(self.lang["spending.ai_google_required_title"], color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
-        self.login_button_label = Text.BUTTON(self.lang["purchase_scanner.google_login_action"], color=Color.PRIMARY_ACTION)
 
         # Static icons
         self.account_icon = ft.Icon(ft.Icons.ACCOUNT_CIRCLE_OUTLINED, color=Color.PRIMARY_ACTION, size=24)
@@ -803,11 +796,6 @@ class SpendingGoogleRequiredCard(ft.Container):
         self.message_text = Text.P(self.lang["spending.ai_google_required"], color=Color.SECONDARY_TEXT)
 
         # CONTAINER COMPONENTS
-        self.login_button = ft.TextButton(
-            content=self.login_button_label,
-            on_click=on_login,
-        )
-
         self.main_row = ft.Row(
             spacing=12,
             controls=[
@@ -818,9 +806,8 @@ class SpendingGoogleRequiredCard(ft.Container):
                     controls=[
                         self.title_text,
                         self.message_text
-                    ],
-                ),
-                self.login_button
+                    ]
+                )
             ]
         )
 
