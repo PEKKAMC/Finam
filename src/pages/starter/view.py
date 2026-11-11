@@ -34,7 +34,7 @@ class StarterView(ft.View):
             lang=self.lang,
             user_info=self.user_info,
             controller=self.controller,
-            refresh_callback=self._refresh_view,
+            refresh_callback=self._refresh_view
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -42,10 +42,10 @@ class StarterView(ft.View):
             content=ft.Column(
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                scroll=ft.ScrollMode.AUTO,
+                scroll=ft.ScrollMode.AUTO
             ),
             expand=True,
-            padding=0,
+            padding=0
         )
 
         super().__init__(
@@ -60,8 +60,8 @@ class StarterView(ft.View):
                     controls=[
                         self.main_container
                     ]
-                ),
-            ),
+                )
+            )
         )
 
         self._page.on_resize = self._resize_page
@@ -76,7 +76,7 @@ class StarterView(ft.View):
         self.lock_screen = AppLockCard(
             page=self._page,
             lang=self.lang,
-            on_unlock=self._on_unlock_click,
+            on_unlock=self._on_unlock_click
         )
         self.main_container.content.controls = [self.lock_screen]
         self._resize_page()
@@ -124,12 +124,12 @@ class StarterView(ft.View):
             if hasattr(self, "lock_screen"):
                 self.lock_screen.resize(
                     width=lock_card_width,
-                    pin_field_width=pin_field_width,
+                    pin_field_width=pin_field_width
                 )
 
             self.dialogs.user_dialog.resize(
                 width=dialog_width,
-                list_height=user_list_height,
+                list_height=user_list_height
             )
 
         except AttributeError as ex:

@@ -22,24 +22,8 @@ from src.pages.savings import get_savings_view
 from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.starter.view import StarterView, get_starter_view
-from src.pages.user_management import (
-    complete_google_mobile_callback,
-    complete_google_web_callback,
-    get_user_management_view,
-    is_google_oauth_callback_route,
-)
-from src.utils import (
-    DefaultSettings,
-    Page,
-    ThemeManager,
-    UISettings,
-    currency_for_region,
-    get_language,
-    is_supported_page_size,
-    language_for_device_locale,
-    set_decimal_separator,
-    set_digit_separator,
-)
+from src.pages.user_management import complete_google_mobile_callback, complete_google_web_callback, get_user_management_view, is_google_oauth_callback_route
+from src.utils import DefaultSettings, Page, ThemeManager, UISettings, currency_for_region, get_language, is_supported_page_size, language_for_device_locale, set_decimal_separator, set_digit_separator
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
@@ -104,7 +88,7 @@ async def main(page: Page) -> None:
             ios=ft.PageTransitionTheme.CUPERTINO,
             linux=ft.PageTransitionTheme.NONE,
             macos=ft.PageTransitionTheme.NONE,
-            windows=ft.PageTransitionTheme.NONE,
+            windows=ft.PageTransitionTheme.NONE
         )
     )
     page.padding = 0
@@ -267,7 +251,7 @@ async def main(page: Page) -> None:
             set_decimal_separator(current_decimal_separator)
             ThemeManager.set_theme(
                 current_theme,
-                system_dark=page.platform_brightness == ft.Brightness.DARK,
+                system_dark=page.platform_brightness == ft.Brightness.DARK
             )
             page.theme_mode = (
                 ft.ThemeMode.SYSTEM
@@ -292,7 +276,7 @@ async def main(page: Page) -> None:
                 current_theme,
                 current_digit_separator,
                 current_decimal_separator,
-                current_username,
+                current_username
             )
 
             if route_name in ("/starter", "/fallback"):

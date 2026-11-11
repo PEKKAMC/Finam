@@ -20,7 +20,7 @@ class ReturnButton(ft.Row):
             icon=ft.Icons.ARROW_BACK,
             icon_color=Color.BLACK,
             icon_size=30,
-            on_click=on_click,
+            on_click=on_click
         )
 
         # CONTAINER COMPONENTS
@@ -28,7 +28,7 @@ class ReturnButton(ft.Row):
             controls=[
                 ft.Container(content=self.return_button, alignment=ft.Alignment.CENTER)
             ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
         super().__init__(
@@ -51,20 +51,20 @@ class NotSupportedMessageBox(ft.Container):
             content=ft.Column(
                 controls=[self.message_text],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                alignment=ft.MainAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.CENTER
             ),
             border=ft.Border.all(width=1, color=Color.DEFAULT_BORDER),
-            padding=30,
+            padding=30
         )
 
         self.main_container = ft.Container(
             content=self.message_box,
-            alignment=ft.Alignment.CENTER,
+            alignment=ft.Alignment.CENTER
         )
 
         super().__init__(
             content=self.main_container,
-            alignment=ft.Alignment.CENTER,
+            alignment=ft.Alignment.CENTER
         )
 
     def update_message(self, message: str) -> None:

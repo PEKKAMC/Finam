@@ -14,5 +14,5 @@ __all__ = [
     "LessonSummaryBanner",
     "LessonsView",
     "LogicController",
-    "get_lessons_view",
+    "get_lessons_view"
 ]

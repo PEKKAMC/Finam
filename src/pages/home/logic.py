@@ -102,7 +102,7 @@ class LogicController:
             current_amount = db.savings.get_objective_progress(objective.objective_id)
             target_value = max(
                 objective.target_amount or Decimal(0),
-                MINIMUM_GOAL_TARGET,
+                MINIMUM_GOAL_TARGET
             )
 
             # Keep progress calculations defined for goals without a target.

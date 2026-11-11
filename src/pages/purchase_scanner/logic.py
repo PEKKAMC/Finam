@@ -81,7 +81,7 @@ class LogicController:
             base_url = BACKEND_URL.rstrip("/")
             firebase_id_token = self._refresh_firebase_id_token(
                 base_url,
-                refresh_token,
+                refresh_token
             )
 
             payload = {
@@ -102,7 +102,7 @@ class LogicController:
                 f"{base_url}/api/v1/purchase-advice",
                 json=payload,
                 headers=headers,
-                timeout=30,
+                timeout=30
             )
             data = self._parse_response(response)
             raw_risk = data.get("risk")
@@ -122,7 +122,7 @@ class LogicController:
             Logger.warn(f"Purchase scanner request failed: {ex}")
             raise ScannerApiError(
                 0,
-                "Could not connect to the purchase scanner service.",
+                "Could not connect to the purchase scanner service."
             ) from ex
 
         return risk, trigger_display, price, ai_advice
@@ -135,7 +135,7 @@ class LogicController:
             reason,
             trigger,
             time,
-            self.get_google_refresh_token(),
+            self.get_google_refresh_token()
         )
         if risk is not None:
             self.save_scan_result(
@@ -146,7 +146,7 @@ class LogicController:
                 time,
                 risk,
                 trigger_display,
-                advice,
+                advice
             )
         return risk, trigger_display, price_value, advice
 
@@ -156,24 +156,24 @@ class LogicController:
         base_url = BACKEND_URL.rstrip("/")
         firebase_id_token = self._refresh_firebase_id_token(
             base_url,
-            refresh_token,
+            refresh_token
         )
         if not isinstance(firebase_id_token, str) or not firebase_id_token.strip():
             raise ScannerApiError(
                 502,
-                "Authentication service returned an empty Firebase ID token.",
+                "Authentication service returned an empty Firebase ID token."
             )
         try:
             response = requests.get(
                 f"{base_url}/api/v1/purchase-advice/usage",
                 headers={"Authorization": f"Bearer {firebase_id_token}"},
-                timeout=15,
+                timeout=15
             )
         except requests.RequestException as ex:
             Logger.warn(f"Purchase scanner usage request failed: {ex}")
             raise ScannerApiError(
                 0,
-                "Could not connect to the purchase scanner service.",
+                "Could not connect to the purchase scanner service."
             ) from ex
         data = self._parse_response(response)
         tier = data.get("tier")
@@ -218,24 +218,24 @@ class LogicController:
         base_url = BACKEND_URL.rstrip("/")
         firebase_id_token = self._refresh_firebase_id_token(
             base_url,
-            refresh_token,
+            refresh_token
         )
         if not isinstance(firebase_id_token, str) or not firebase_id_token.strip():
             raise ScannerApiError(
                 502,
-                "Authentication service returned an empty Firebase ID token.",
+                "Authentication service returned an empty Firebase ID token."
             )
         try:
             response = requests.get(
                 f"{base_url}/api/v1/account/tier",
                 headers={"Authorization": "Bearer " + firebase_id_token.strip()},
-                timeout=15,
+                timeout=15
             )
         except requests.RequestException as ex:
             Logger.warn(f"Account tier request failed: {ex}")
             raise ScannerApiError(
                 0,
-                "Could not connect to the account service.",
+                "Could not connect to the account service."
             ) from ex
         data = self._parse_response(response)
         tier = data.get("tier")
@@ -252,20 +252,20 @@ class LogicController:
                     "grant_type": "refresh_token",
                     "refresh_token": refresh_token,
                 },
-                timeout=15,
+                timeout=15
             )
         except requests.RequestException as ex:
             Logger.warn(f"Google session refresh failed: {ex}")
             raise ScannerApiError(
                 0,
-                "Could not refresh the Google sign-in.",
+                "Could not refresh the Google sign-in."
             ) from ex
         token_data = cls._parse_response(response)
         firebase_id_token = token_data.get("access_token")
         if not firebase_id_token:
             raise ScannerApiError(
                 502,
-                "Authentication service returned no Firebase ID token.",
+                "Authentication service returned no Firebase ID token."
             )
         rotated_refresh_token = token_data.get("refresh_token")
         if rotated_refresh_token and not db.app_settings.update_google_refresh_token(
@@ -273,7 +273,7 @@ class LogicController:
         ):
             raise ScannerApiError(
                 500,
-                "Could not persist the refreshed Google sign-in.",
+                "Could not persist the refreshed Google sign-in."
             )
         return firebase_id_token
 
@@ -287,7 +287,7 @@ class LogicController:
             detail = data.get("detail", "") if isinstance(data, dict) else ""
             raise ScannerApiError(
                 response.status_code,
-                detail or f"Scanner service returned HTTP {response.status_code}.",
+                detail or f"Scanner service returned HTTP {response.status_code}."
             )
         if not isinstance(data, dict):
             raise ScannerApiError(502, "Scanner service returned an invalid response.")

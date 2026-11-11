@@ -9,13 +9,7 @@ from typing import Any
 import flet as ft
 
 from src.logger import Logger
-from src.pages.common import (
-    DeleteSpendingReportDialog,
-    FinancialChart,
-    Menu,
-    SpendingMonthDialog,
-    SpendingReportDialog,
-)
+from src.pages.common import DeleteSpendingReportDialog, FinancialChart, Menu, SpendingMonthDialog, SpendingReportDialog
 from src.pages.spending.components import DeleteTransactionDialog, MetricCards, SpendingGoogleRequiredCard, SpendingPageContent, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
 from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController, SpendingAnalysisApiError
 from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size, scale_width
@@ -60,7 +54,7 @@ class SpendingView(ft.View):
             lang=self.lang,
             username=user_info["username"],
             chart_type="daily",
-            show_mode_buttons=True,
+            show_mode_buttons=True
         )
 
         self.metric_cards = MetricCards(
@@ -68,7 +62,7 @@ class SpendingView(ft.View):
             lang=self.lang,
             total_income=balance_data["incomes"].replace("+", ""),
             total_expense=balance_data["expenses"].replace("-", ""),
-            net_balance=balance_data["current"],
+            net_balance=balance_data["current"]
         )
 
         self.toolbar = TransactionToolbar(
@@ -81,30 +75,30 @@ class SpendingView(ft.View):
             on_add_click=self._page.navigate_to("/category_selection"),
             on_scan_click=self.handle_spending_scan,
             search_query=self.search_query,
-            sort_by=self.sort_by,
+            sort_by=self.sort_by
         )
 
         self.spending_report_dialog = SpendingReportDialog(
             page=self._page,
             lang=self.lang,
-            on_delete=self._confirm_delete_spending_report,
+            on_delete=self._confirm_delete_spending_report
         )
 
         self.delete_spending_report_dialog = DeleteSpendingReportDialog(
             page=self._page,
             lang=self.lang,
-            on_confirm=self._delete_spending_report,
+            on_confirm=self._delete_spending_report
         )
 
         self.spending_month_dialog = SpendingMonthDialog(
             page=self._page,
             lang=self.lang,
-            on_confirm=self._run_spending_scan,
+            on_confirm=self._run_spending_scan
         )
 
         self.spending_report_history_card = SpendingReportHistoryCard(
             lang=self.lang,
-            on_open=self._open_saved_report,
+            on_open=self._open_saved_report
         )
 
         self.spending_report_history_card.set_history(self.spending_report_history)
@@ -115,7 +109,7 @@ class SpendingView(ft.View):
 
         self.google_required_card = SpendingGoogleRequiredCard(
             lang=self.lang,
-            visible=not self.controller.has_google_account_session(),
+            visible=not self.controller.has_google_account_session()
         )
 
         self.usage_card.visible = self.controller.has_google_account_session()
@@ -123,7 +117,7 @@ class SpendingView(ft.View):
         self.delete_dialog = DeleteTransactionDialog(
             page=self._page,
             lang=self.lang,
-            on_confirm=self._delete_transaction,
+            on_confirm=self._delete_transaction
         )
 
         self.history_card = TransactionHistoryCard(
@@ -131,7 +125,7 @@ class SpendingView(ft.View):
             lang=self.lang,
             transactions=filtered_txs,
             on_delete=self.delete_dialog.trigger,
-            category_icons=self.category_icons,
+            category_icons=self.category_icons
         )
 
         self.page_content = SpendingPageContent(
@@ -141,7 +135,7 @@ class SpendingView(ft.View):
             usage_card=self.usage_card,
             toolbar=self.toolbar,
             history_card=self.history_card,
-            report_history_card=self.spending_report_history_card,
+            report_history_card=self.spending_report_history_card
         )
 
         super().__init__(
@@ -154,9 +148,9 @@ class SpendingView(ft.View):
                     expand=True,
                     content=ft.Stack(
                         expand=True, controls=[self.page_content, self.menu]
-                    ),
-                ),
-            ],
+                    )
+                )
+            ]
         )
 
         self._page.on_resize = self._resize_page
@@ -180,13 +174,13 @@ class SpendingView(ft.View):
         self.metric_cards.update_data(
             total_income=balance_data["incomes"].replace("+", ""),
             total_expense=balance_data["expenses"].replace("-", ""),
-            net_balance=balance_data["current"],
+            net_balance=balance_data["current"]
         )
 
         self.toolbar.update_data(
             filter_type=self.filter_type,
             search_query=self.search_query,
-            sort_by=self.sort_by,
+            sort_by=self.sort_by
         )
 
         self.history_card.update_data(filtered_txs, self.category_icons)
@@ -244,7 +238,7 @@ class SpendingView(ft.View):
             if ex.status_code in (401, 403):
                 self.google_required_card.set_access(
                     False,
-                    self.lang["purchase_scanner.google_session_expired"],
+                    self.lang["purchase_scanner.google_session_expired"]
                 )
                 self.usage_card.visible = False
             self.toolbar.set_scan_enabled(False)
@@ -275,7 +269,7 @@ class SpendingView(ft.View):
             self.spending_report_dialog.show_error(
                 self.lang["spending.ai_min_transactions"].format(
                     required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
-                    count=transaction_count,
+                    count=transaction_count
                 )
             )
             return
@@ -296,7 +290,7 @@ class SpendingView(ft.View):
                 self.spending_report_dialog.show_report(
                     report,
                     saved_report["created_at"],
-                    saved_report["id"],
+                    saved_report["id"]
                 )
             except SpendingAnalysisApiError as ex:
                 Logger.warning(f"Spending analysis request rejected: {ex}")
@@ -307,13 +301,13 @@ class SpendingView(ft.View):
                 elif ex.status_code == 422:
                     message = self.lang["spending.ai_min_transactions"].format(
                         required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
-                        count=self.controller.get_month_transaction_count(month),
+                        count=self.controller.get_month_transaction_count(month)
                     )
                 elif ex.status_code in (401, 403):
                     message = self.lang["purchase_scanner.sign_in_required"]
                     self.google_required_card.set_access(
                         False,
-                        self.lang["purchase_scanner.google_session_expired"],
+                        self.lang["purchase_scanner.google_session_expired"]
                     )
                     self.usage_card.visible = False
                     self.toolbar.set_scan_enabled(False)
@@ -338,7 +332,7 @@ class SpendingView(ft.View):
         self.spending_report_dialog.show_report(
             entry["report"],
             entry["created_at"],
-            entry["id"],
+            entry["id"]
         )
 
     def _confirm_delete_spending_report(self, report_id: int) -> None:
@@ -359,7 +353,7 @@ class SpendingView(ft.View):
         self.toolbar.update_data(
             filter_type=self.filter_type,
             search_query=self.search_query,
-            sort_by=self.sort_by,
+            sort_by=self.sort_by
         )
 
         self.update_history_list()
@@ -405,30 +399,30 @@ class SpendingView(ft.View):
                 content_width=content_width,
                 card_content_width=card_content_width,
                 usage_content_width=usage_content_width,
-                transaction_item_content_width=transaction_item_content_width,
+                transaction_item_content_width=transaction_item_content_width
             )
             self.menu.resize(
                 width=page_width,
-                **menu_resize_values,
+                **menu_resize_values
             )
             self.page_content.set_bottom_margin(self.menu.reserved_height)
 
             self.delete_dialog.resize(
                 outer_width=transaction_dialog_width,
                 content_width=transaction_dialog_content,
-                title_width=transaction_title_width,
+                title_width=transaction_title_width
             )
             self.spending_report_dialog.resize(
                 dialog_width=report_dialog_width,
-                report_card_width=report_card_width,
+                report_card_width=report_card_width
             )
             self.spending_month_dialog.resize(
                 width=secondary_dialog_width,
-                content_width=secondary_dialog_content,
+                content_width=secondary_dialog_content
             )
             self.delete_spending_report_dialog.resize(
                 width=secondary_dialog_width,
-                content_width=secondary_dialog_content,
+                content_width=secondary_dialog_content
             )
 
         except AttributeError as ex:

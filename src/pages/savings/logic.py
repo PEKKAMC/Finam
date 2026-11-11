@@ -105,7 +105,7 @@ class LogicController:
             self.current_user,
             source_id,
             target_id,
-            amount_to_transfer,
+            amount_to_transfer
         )
         return success, remaining_surplus if success else Decimal(0)
 
@@ -148,7 +148,7 @@ class LogicController:
                 [
                     lang["generic.date"],
                     lang["savings.ledger.action_type"],
-                    lang["savings.ledger.description"],
+                    lang["savings.ledger.description"]
                 ]
             )
             for activity in activities:
@@ -156,7 +156,7 @@ class LogicController:
                     [
                         activity["date"],
                         lang[f"savings.activity.{activity['type']}"],
-                        activity["desc"],
+                        activity["desc"]
                     ]
                 )
             output = BytesIO()

@@ -34,7 +34,7 @@ class DialogManager:
             lang=self.lang,
             controller=self.controller,
             currency=self.currency,
-            on_success=self._refresh_view,
+            on_success=self._refresh_view
         )
 
         self.congratulations_dialog = CongratulationsDialog(
@@ -45,7 +45,7 @@ class DialogManager:
             on_success=self._refresh_view,
             on_create_with_surplus=lambda surplus: self.create_goal_dialog.trigger(
                 surplus
-            ),
+            )
         )
 
         self.deposit_withdraw_dialog = DepositWithdrawDialog(
@@ -57,22 +57,22 @@ class DialogManager:
                 goal,
                 surplus,
                 self._get_objectives(),
-                confetti=True,
-            ),
+                confetti=True
+            )
         )
 
         self.delete_dialog = DeleteConfirmDialog(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
-            on_success=self._refresh_view,
+            on_success=self._refresh_view
         )
 
         self.clear_history_dialog = ClearHistoryDialog(
             page=self._page,
             lang=self.lang,
             controller=self.controller,
-            on_success=self._refresh_view,
+            on_success=self._refresh_view
         )
 
     def update_currency(self, currency: str) -> None:
@@ -112,7 +112,7 @@ class SavingsView(ft.View):
             currency=currency,
             refresh_callback=self._refresh_view,
             trigger_export_callback=self.trigger_export,
-            get_objectives_callback=lambda: self._objective_data,
+            get_objectives_callback=lambda: self._objective_data
         )
 
         # INITIALIZE PAGE COMPONENTS
@@ -126,10 +126,10 @@ class SavingsView(ft.View):
             on_achievement=lambda goal: self.dialogs.congratulations_dialog.trigger(
                 goal,
                 Decimal(0),
-                self._objective_data,
+                self._objective_data
             ),
             on_withdraw=self.dialogs.deposit_withdraw_dialog.trigger,
-            on_delete=self.dialogs.delete_dialog.trigger,
+            on_delete=self.dialogs.delete_dialog.trigger
         )
         self.dialogs.deposit_withdraw_dialog.on_action_message = (
             self.goal_grid.show_action_message
@@ -145,7 +145,7 @@ class SavingsView(ft.View):
             border_radius=16,
             text_size=13,
             content_padding=12,
-            filled=True,
+            filled=True
         )
         self.search_bar = ft.Container(
             bgcolor=Color.CARD_BACKGROUND,
@@ -153,7 +153,7 @@ class SavingsView(ft.View):
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
-            content=self.search_field,
+            content=self.search_field
         )
 
         self.summary_banner = AggregateCard(
@@ -164,7 +164,7 @@ class SavingsView(ft.View):
             percentage=percentage,
             progress_value=progress_value,
             currency=currency,
-            on_create_click=lambda e: self.dialogs.create_goal_dialog.trigger(),
+            on_create_click=lambda e: self.dialogs.create_goal_dialog.trigger()
         )
 
         self.activity_history = ActivityHistory(
@@ -173,7 +173,7 @@ class SavingsView(ft.View):
             activities=self.controller.get_recent_activity(self.lang),
             currency=currency,
             on_export=self.trigger_export,
-            on_clear=lambda e: self.dialogs.clear_history_dialog.trigger(),
+            on_clear=lambda e: self.dialogs.clear_history_dialog.trigger()
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -186,9 +186,9 @@ class SavingsView(ft.View):
                     self.summary_banner,
                     self.search_bar,
                     self.goal_grid,
-                    self.activity_history,
-                ],
-            ),
+                    self.activity_history
+                ]
+            )
         )
         self.main_container = ft.Container(
             content=ft.Column(
@@ -196,7 +196,7 @@ class SavingsView(ft.View):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=0),
+            margin=ft.Margin(bottom=0)
         )
 
         super().__init__(
@@ -208,8 +208,8 @@ class SavingsView(ft.View):
                 expand=True,
                 content=ft.Stack(
                     expand=True, controls=[self.main_container, self.menu]
-                ),
-            ),
+                )
+            )
         )
 
         self._page.on_resize = self._resize_page
@@ -251,11 +251,7 @@ class SavingsView(ft.View):
             or query in objective["reason"].casefold()
         ]
 
-    def _build_objective_data(
-        self,
-        objectives: list[tuple[int, str, str | None, Decimal, str | None]],
-        currency: str,
-    ) -> list[dict[str, Any]]:
+    def _build_objective_data(self, objectives: list[tuple[int, str, str | None, Decimal, str | None]], currency: str) -> list[dict[str, Any]]:
         objectives_data = []
         for objective_id, title, reason, target_amount, _completed_at in objectives:
             objective_id = int(objective_id)
@@ -293,7 +289,7 @@ class SavingsView(ft.View):
             await ft.FilePicker().save_file(
                 allowed_extensions=["xlsx"],
                 file_name="savings.xlsx",
-                src_bytes=file_bytes,
+                src_bytes=file_bytes
             )
 
         except (OSError, RuntimeError, ValueError) as ex:
@@ -326,54 +322,54 @@ class SavingsView(ft.View):
             # Resizing other components
             self.menu.resize(
                 width=page_width,
-                **menu_resize_values,
+                **menu_resize_values
             )
 
             self.main_container.margin.bottom = self.menu.reserved_height
 
             self.summary_banner.resize(
                 width=content_width,
-                content_width=summary_content_width,
+                content_width=summary_content_width
             )
 
             self.search_bar.width = content_width
 
             self.goal_grid.resize(
                 width=content_width,
-                card_content_width=card_content_width,
+                card_content_width=card_content_width
             )
 
             self.activity_history.resize(
                 width=content_width,
-                content_width=activity_content_width,
+                content_width=activity_content_width
             )
 
             self.dialogs.create_goal_dialog.resize(
                 outer_width=dialog_width,
-                content_width=create_content_width,
+                content_width=create_content_width
             )
 
             self.dialogs.congratulations_dialog.resize(
                 outer_width=dialog_width,
-                content_width=achievement_content_width,
+                content_width=achievement_content_width
             )
 
             self.dialogs.deposit_withdraw_dialog.resize(
                 page_width=page_width,
                 outer_width=dialog_width,
-                content_width=create_content_width,
+                content_width=create_content_width
             )
 
             self.dialogs.delete_dialog.resize(
                 outer_width=dialog_width,
                 content_width=delete_content_width,
-                title_width=delete_title_width,
+                title_width=delete_title_width
             )
 
             self.dialogs.clear_history_dialog.resize(
                 outer_width=dialog_width,
                 content_width=delete_content_width,
-                title_width=delete_title_width,
+                title_width=delete_title_width
             )
 
         except AttributeError as ex:

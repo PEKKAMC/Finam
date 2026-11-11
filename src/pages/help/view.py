@@ -7,16 +7,7 @@ import flet as ft
 from src.logger import Logger
 from src.pages.common import Menu
 from src.pages.help.components import FaqSection, HelpForm
-from src.utils import (
-    Color,
-    MenuResizeValues,
-    Page,
-    Text,
-    UISettings,
-    get_menu_resize_values,
-    get_safe_page_size,
-    scale_width,
-)
+from src.utils import Color, MenuResizeValues, Page, Text, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Help page...")
 
@@ -38,7 +29,7 @@ class HelpView(ft.View):
         self.menu = Menu(
             page=self._page,
             lang=self.lang,
-            user_info=self.user_info,
+            user_info=self.user_info
         )
 
         self.faq_section = FaqSection(
@@ -56,13 +47,13 @@ class HelpView(ft.View):
             controls=[
                 Text.H1(
                     self.lang["help.title"],
-                    color=Color.PRIMARY_TEXT,
+                    color=Color.PRIMARY_TEXT
                 ),
                 Text.P(
                     self.lang["help.description"],
-                    color=Color.SECONDARY_TEXT,
-                ),
-            ],
+                    color=Color.SECONDARY_TEXT
+                )
+            ]
         )
         self.content_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
@@ -72,18 +63,18 @@ class HelpView(ft.View):
                 controls=[
                     self.page_heading,
                     self.faq_section,
-                    self.help_form,
-                ],
-            ),
+                    self.help_form
+                ]
+            )
         )
         self.main_container = ft.Container(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                controls=[self.content_container],
+                controls=[self.content_container]
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=0),
+            margin=ft.Margin(bottom=0)
         )
 
         super().__init__(
@@ -97,10 +88,10 @@ class HelpView(ft.View):
                     expand=True,
                     controls=[
                         self.main_container,
-                        self.menu,
-                    ],
-                ),
-            ),
+                        self.menu
+                    ]
+                )
+            )
         )
 
         self._page.on_resize = self._resize_page
@@ -123,20 +114,20 @@ class HelpView(ft.View):
             content_width = scale_width(page_width, CONTENT_DESIGN_WIDTH)
             form_content_width = scale_width(
                 page_width,
-                FORM_CONTENT_DESIGN_WIDTH,
+                FORM_CONTENT_DESIGN_WIDTH
             )
             self.faq_section.resize(content_width)
 
             # Resizing other components
             self.menu.resize(
                 width=page_width,
-                **menu_resize_values,
+                **menu_resize_values
             )
             self.main_container.margin.bottom = self.menu.reserved_height
 
             self.help_form.resize(
                 width=content_width,
-                content_width=form_content_width,
+                content_width=form_content_width
             )
 
         except AttributeError as ex:

@@ -86,7 +86,7 @@ class LogicController:
         for date_key, daily_transactions in self._group_transactions(
             localized_expenses,
             False,
-            self.lang["category_selection.defaults.income.other"],
+            self.lang["category_selection.defaults.income.other"]
         ).items():
             transactions.setdefault(date_key, []).extend(daily_transactions)
 
@@ -166,7 +166,7 @@ class LogicController:
 
         return (
             compact(db.spending.get_user_incomes(self.current_user)),
-            compact(db.spending.get_user_expenses(self.current_user)),
+            compact(db.spending.get_user_expenses(self.current_user))
         )
 
     def get_month_transaction_count(self, month: str) -> int:
@@ -193,7 +193,7 @@ class LogicController:
             "GET",
             "/api/v1/spending-analysis/usage",
             firebase_id_token,
-            timeout=15,
+            timeout=15
         )
 
     @staticmethod
@@ -218,7 +218,7 @@ class LogicController:
         if transaction_count < MIN_SPENDING_ANALYSIS_TRANSACTIONS:
             raise SpendingAnalysisApiError(
                 422,
-                f"At least {MIN_SPENDING_ANALYSIS_TRANSACTIONS} transactions are required.",
+                f"At least {MIN_SPENDING_ANALYSIS_TRANSACTIONS} transactions are required."
             )
         firebase_id_token = self._refresh_firebase_id_token(refresh_token)
         incomes, expenses = self.get_spending_analysis_inputs()
@@ -234,7 +234,7 @@ class LogicController:
             "/api/v1/spending-analysis",
             firebase_id_token,
             timeout=60,
-            payload=payload,
+            payload=payload
         )
 
     def analyze_and_save_spending(self, refresh_token: str, month: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -258,7 +258,7 @@ class LogicController:
                     "grant_type": "refresh_token",
                     "refresh_token": refresh_token,
                 },
-                timeout=15,
+                timeout=15
             )
         except requests.RequestException as ex:
             Logger.warning(f"Google session refresh failed: {ex}")
@@ -277,20 +277,14 @@ class LogicController:
         return firebase_id_token
 
     @staticmethod
-    def _request_json(
-        method: str,
-        path: str,
-        firebase_id_token: str,
-        timeout: int,
-        payload: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    def _request_json(method: str, path: str, firebase_id_token: str, timeout: int, payload: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
             response = requests.request(
                 method,
                 f"{BACKEND_URL.rstrip('/')}{path}",
                 headers={"Authorization": f"Bearer {firebase_id_token}"},
                 timeout=timeout,
-                json=payload,
+                json=payload
             )
         except requests.RequestException as ex:
             Logger.warning(f"Spending analysis request failed: {ex}")
@@ -310,7 +304,7 @@ class LogicController:
             raise SpendingAnalysisApiError(
                 response.status_code,
                 detail
-                or f"Spending analysis service returned HTTP {response.status_code}.",
+                or f"Spending analysis service returned HTTP {response.status_code}."
             )
         if not isinstance(data, dict):
             raise SpendingAnalysisApiError(502, "Spending analysis service returned an invalid response.")
@@ -326,7 +320,7 @@ class LogicController:
         try:
             return db.spending_analysis_history.delete_report(
                 self.current_user,
-                int(report_id),
+                int(report_id)
             )
         except (TypeError, ValueError):
             Logger.warning(f"Invalid spending report id: {report_id}")

@@ -14,5 +14,5 @@ __all__ = [
     "HelpForm",
     "HelpFormLogic",
     "HelpView",
-    "get_help_view",
+    "get_help_view"
 ]

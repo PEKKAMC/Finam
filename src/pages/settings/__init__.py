@@ -4,12 +4,7 @@
 
 """Settings page - User settings"""
 
-from src.pages.settings.components import (
-    SettingCard,
-    SettingDropdown,
-    SettingRow,
-    SettingsHeader,
-)
+from src.pages.settings.components import SettingCard, SettingDropdown, SettingRow, SettingsHeader
 from src.pages.settings.logic import LogicController
 from src.pages.settings.view import SettingsView, get_settings_view
 
@@ -20,5 +15,5 @@ __all__ = [
     "SettingRow",
     "SettingsHeader",
     "SettingsView",
-    "get_settings_view",
+    "get_settings_view"
 ]

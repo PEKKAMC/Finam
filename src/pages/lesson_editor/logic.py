@@ -134,10 +134,10 @@ class LogicController:
         if self.current_slide_index > 0:
             (
                 self.slides_data[self.current_slide_index],
-                self.slides_data[self.current_slide_index - 1],
+                self.slides_data[self.current_slide_index - 1]
             ) = (
                 self.slides_data[self.current_slide_index - 1],
-                self.slides_data[self.current_slide_index],
+                self.slides_data[self.current_slide_index]
             )
             self.current_slide_index -= 1
             self.selected_element_index = None
@@ -146,10 +146,10 @@ class LogicController:
         if self.current_slide_index < len(self.slides_data) - 1:
             (
                 self.slides_data[self.current_slide_index],
-                self.slides_data[self.current_slide_index + 1],
+                self.slides_data[self.current_slide_index + 1]
             ) = (
                 self.slides_data[self.current_slide_index + 1],
-                self.slides_data[self.current_slide_index],
+                self.slides_data[self.current_slide_index]
             )
             self.current_slide_index += 1
             self.selected_element_index = None
@@ -164,7 +164,7 @@ class LogicController:
             next_index = selected_element_index + 1
             elements[selected_element_index], elements[next_index] = (
                 elements[next_index],
-                elements[selected_element_index],
+                elements[selected_element_index]
             )
             self.selected_element_index = next_index
             return True
@@ -172,7 +172,7 @@ class LogicController:
             previous_index = selected_element_index - 1
             elements[selected_element_index], elements[previous_index] = (
                 elements[previous_index],
-                elements[selected_element_index],
+                elements[selected_element_index]
             )
             self.selected_element_index = previous_index
             return True
@@ -191,7 +191,7 @@ class LogicController:
                         "entrance",
                         "exit",
                         "duration_in",
-                        "duration_out",
+                        "duration_out"
                     ]:
                         element.pop(key, None)
         return {
@@ -231,7 +231,7 @@ class LogicController:
                         element.setdefault(
                             "y",
                             DEFAULT_ELEMENT_POSITION
-                            + element_position * LOADED_ELEMENT_VERTICAL_SPACING,
+                            + element_position * LOADED_ELEMENT_VERTICAL_SPACING
                         )
                         if element.get("type") in {"text", "divider"}:
                             element.setdefault("width", DEFAULT_ELEMENT_WIDTH)

@@ -30,7 +30,7 @@ class LessonItemCard(ft.Container):
             if self.is_completed
             else self.lang["lessons.start_lesson"],
             color=Color.WHITE,
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
         self.title_text = Text.H4(self.title, color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.subtitle_text = Text.SMALL(self.subtitle, color=Color.SECONDARY_TEXT)
@@ -57,19 +57,19 @@ class LessonItemCard(ft.Container):
                                 spacing=4,
                                 controls=[
                                     self.completed_badge_icon,
-                                    self.completed_badge_text,
+                                    self.completed_badge_text
                                 ],
-                                tight=True,
+                                tight=True
                             ),
                             bgcolor=Color.SUCCESS_BACKGROUND,
                             padding=ft.Padding(8, 4, 8, 4),
-                            border_radius=12,
+                            border_radius=12
                         )
                     ]
                     if self.is_completed
                     else []
                 )
-            ],
+            ]
         )
 
         self.cover_stack = ft.Stack(
@@ -77,7 +77,7 @@ class LessonItemCard(ft.Container):
                 ft.Image(
                     src=self.cover_image.strip() if self.cover_image else "",
                     fit=ft.BoxFit.COVER,
-                    width=float("inf"),
+                    width=float("inf")
                 ),
                 ft.Container(
                     gradient=ft.LinearGradient(
@@ -85,8 +85,8 @@ class LessonItemCard(ft.Container):
                         end=ft.Alignment.BOTTOM_CENTER,
                         colors=[
                             ft.Colors.with_opacity(0.2, "#020617"),
-                            ft.Colors.with_opacity(0.9, "#020617"),
-                        ],
+                            ft.Colors.with_opacity(0.9, "#020617")
+                        ]
                     ),
                     padding=12,
                     content=ft.Column(
@@ -94,17 +94,17 @@ class LessonItemCard(ft.Container):
                         controls=[
                             self.top_badges,
                             # Dynamic texts
-                            self.title_text,
-                        ],
-                    ),
-                ),
+                            self.title_text
+                        ]
+                    )
+                )
             ]
         )
 
         self.cover_container = ft.Container(
             bgcolor=Color.DARK_SURFACE,
             content=self.cover_stack,
-            clip_behavior=ft.ClipBehavior.HARD_EDGE,
+            clip_behavior=ft.ClipBehavior.HARD_EDGE
         )
 
         self.content_panel = ft.Container(
@@ -120,18 +120,18 @@ class LessonItemCard(ft.Container):
                             spacing=6,
                             controls=[
                                 self.action_button_icon,
-                                self.action_button_label,
+                                self.action_button_label
                             ],
-                            tight=True,
+                            tight=True
                         ),
                         bgcolor=Color.PRIMARY,
                         on_click=self._page.navigate_to(self.route),
                         style=ft.ButtonStyle(
                             shape=ft.RoundedRectangleBorder(radius=16), padding=12
-                        ),
-                    ),
-                ],
-            ),
+                        )
+                    )
+                ]
+            )
         )
 
         self.main_container = ft.Column(
@@ -151,7 +151,7 @@ class LessonItemCard(ft.Container):
             content=self.main_container,
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
             padding=0,
-            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
+            shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW)
         )
 
     def resize(self, width: int, cover_height: int) -> None:
@@ -200,11 +200,11 @@ class LessonSummaryBanner(ft.Container):
                             border_radius=16,
                             border=ft.Border.all(
                                 1, ft.Colors.with_opacity(0.3, Color.PRIMARY)
-                            ),
+                            )
                         ),
                         self.banner_title_text,
-                        self.banner_description_text,
-                    ],
+                        self.banner_description_text
+                    ]
                 ),
                 ft.Row(
                     spacing=12,
@@ -222,9 +222,9 @@ class LessonSummaryBanner(ft.Container):
                                 spacing=2,
                                 controls=[
                                     self.completed_lessons_count,
-                                    self.completed_lessons_label,
-                                ],
-                            ),
+                                    self.completed_lessons_label
+                                ]
+                            )
                         ),
                         ft.Container(
                             padding=12,
@@ -239,13 +239,13 @@ class LessonSummaryBanner(ft.Container):
                                 spacing=2,
                                 controls=[
                                     self.total_minutes_text,
-                                    self.accumulated_time_label,
-                                ],
-                            ),
-                        ),
-                    ],
-                ),
-            ],
+                                    self.accumulated_time_label
+                                ]
+                            )
+                        )
+                    ]
+                )
+            ]
         )
 
         self.progress_bar = ft.Container(
@@ -257,8 +257,8 @@ class LessonSummaryBanner(ft.Container):
                 value=completion_pct / 100.0 if total_lessons > 0 else 0.0,
                 color=Color.LIGHT_ACCENT,
                 bgcolor=Color.TRANSPARENT,
-                height=8,
-            ),
+                height=8
+            )
         )
 
         super().__init__(
@@ -268,7 +268,7 @@ class LessonSummaryBanner(ft.Container):
             shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
             content=ft.Column(
                 spacing=20, controls=[self.summary_banner_row, self.progress_bar]
-            ),
+            )
         )
 
     def resize(self, width: int, content_width: int) -> None:
@@ -291,7 +291,7 @@ class LessonGrid(ft.Stack):
                 subtitle=lesson["subtitle"],
                 cover_image=lesson["cover_image"],
                 is_completed=lesson["is_completed"],
-                route=lesson["route"],
+                route=lesson["route"]
             )
             for lesson in lessons
         ]
@@ -302,10 +302,10 @@ class LessonGrid(ft.Stack):
             controls=[
                 ft.Container(
                     content=card,
-                    col={"xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12},
+                    col={"xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12}
                 )
                 for card in self.lesson_cards
-            ],
+            ]
         )
 
         super().__init__(

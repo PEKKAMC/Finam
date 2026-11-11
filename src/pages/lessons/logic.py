@@ -25,9 +25,7 @@ class LogicController:
         self.current_user = current_user
 
     @staticmethod
-    def get_user_statistics(
-        available_lessons: list[dict[str, Any]] | None = None,
-    ) -> LessonStatistics:
+    def get_user_statistics(available_lessons: list[dict[str, Any]] | None = None) -> LessonStatistics:
         lessons = available_lessons or []
         total_lessons = len(lessons)
         completed_lessons = sum(

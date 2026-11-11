@@ -34,7 +34,7 @@ class Data:
             {"name": "Ăn vặt", "icon": "BAKERY_DINING", "translation_key": "category_selection.defaults.expense.snacks"},
             {"name": "Trẻ em", "icon": "CHILD_CARE", "translation_key": "category_selection.defaults.expense.children"},
             {"name": "Rau quả", "icon": "LOCAL_FLORIST", "translation_key": "category_selection.defaults.expense.vegetables"},
-            {"name": "Hoa quả", "icon": "APPLE", "translation_key": "category_selection.defaults.expense.fruit"},
+            {"name": "Hoa quả", "icon": "APPLE", "translation_key": "category_selection.defaults.expense.fruit"}
         ]
 
         self.default_income_categories: list[dict[str, str]] = [
@@ -42,7 +42,7 @@ class Data:
             {"name": "Khoản đầu tư", "icon": "TRENDING_UP", "translation_key": "category_selection.defaults.income.investments"},
             {"name": "Làm thêm", "icon": "MONEY", "translation_key": "category_selection.defaults.income.side_job"},
             {"name": "Tiền thưởng", "icon": "EMOJI_EVENTS", "translation_key": "category_selection.defaults.income.bonus"},
-            {"name": "Khác", "icon": "MONETIZATION_ON", "translation_key": "category_selection.defaults.income.other"},
+            {"name": "Khác", "icon": "MONETIZATION_ON", "translation_key": "category_selection.defaults.income.other"}
         ]
 
         self.category_icons: list[str] = [
@@ -157,7 +157,7 @@ class Data:
             "WEEKEND",
             "WORK",
             "YARD",
-            "ACCOUNT_CIRCLE",
+            "ACCOUNT_CIRCLE"
         ]
 
         self.supported_currencies: list[str] = [

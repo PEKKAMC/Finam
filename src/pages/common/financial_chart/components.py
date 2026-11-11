@@ -12,14 +12,7 @@ import flet_charts as fc
 from src.logger import Logger
 from src.pages.common.financial_chart.logic import get_financial_chart_data
 from src.pages.common.logic.accounts import get_user_currency
-from src.utils import (
-    Color,
-    Text,
-    UISettings,
-    format_compact_number,
-    format_number,
-    get_decimal_separator,
-)
+from src.utils import Color, Text, UISettings, format_compact_number, format_number, get_decimal_separator
 
 Logger.info("Building financial chart...")
 
@@ -320,7 +313,7 @@ class FinancialChart(ft.Container):
                 ft.Container(
                     content=Text.LABEL(
                         mode_label,
-                        color=Color.WHITE if is_active else Color.PRIMARY,
+                        color=Color.WHITE if is_active else Color.PRIMARY
                     ),
                     bgcolor=Color.PRIMARY if is_active else Color.LIGHT_ACCENT,
                     border_radius=8,
@@ -380,14 +373,14 @@ class FinancialChart(ft.Container):
                             spacing=4,
                             controls=[
                                 ft.Container(width=10, height=10, bgcolor=Color.INCOME_COLOR, border_radius=5),
-                                Text.LABEL(self.lang["generic.income"], color=Color.INCOME_COLOR),
+                                Text.LABEL(self.lang["generic.income"], color=Color.INCOME_COLOR)
                             ]
                         ),
                         ft.Row(
                             spacing=4,
                             controls=[
                                 ft.Container(width=10, height=10, bgcolor=Color.EXPENSE_COLOR, border_radius=5),
-                                Text.LABEL(self.lang["generic.expense"], color=Color.EXPENSE_COLOR),
+                                Text.LABEL(self.lang["generic.expense"], color=Color.EXPENSE_COLOR)
                             ]
                         )
                     ]
@@ -410,7 +403,7 @@ class FinancialChart(ft.Container):
                     value=float(value),
                     label=Text.LABEL(
                         label_text,
-                        color=Color.SECONDARY_TEXT,
+                        color=Color.SECONDARY_TEXT
                     )
                 )
             )
@@ -435,7 +428,7 @@ class FinancialChart(ft.Container):
                             "thursday",
                             "friday",
                             "saturday",
-                            "sunday",
+                            "sunday"
                         )
                     ]
                     label_text = days[actual_index] if actual_index < len(days) else ""
@@ -454,7 +447,7 @@ class FinancialChart(ft.Container):
                         "sep",
                         "oct",
                         "nov",
-                        "dec",
+                        "dec"
                     )
                     month_index = data.get("month", actual_index + 1) - 1
                     label_text = (
@@ -491,7 +484,7 @@ class FinancialChart(ft.Container):
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
                                 text=f"{self.lang['generic.income']}: {format_number(income_value)} {self.currency}"
-                            ),
+                            )
                         ),
                         fc.BarChartRod(
                             from_y=0,
@@ -501,7 +494,7 @@ class FinancialChart(ft.Container):
                             border_radius=6,
                             tooltip=fc.BarChartRodTooltip(
                                 text=f"{self.lang['generic.expense']}: {format_number(expense_value)} {self.currency}"
-                            ),
+                            )
                         )
                     ]
                 )
@@ -513,11 +506,11 @@ class FinancialChart(ft.Container):
                     groups=groups,
                     bottom_axis=fc.ChartAxis(
                         labels=chart_label,
-                        label_size=40,
+                        label_size=40
                     ),
                     left_axis=fc.ChartAxis(
                         labels=self._generate_y_axis_labels(),
-                        label_size=25,
+                        label_size=25
                     ),
                     horizontal_grid_lines=fc.ChartGridLines(color=Color.TRANSPARENT),
                     max_y=float(self.max_value),
@@ -526,8 +519,8 @@ class FinancialChart(ft.Container):
                         bgcolor=Color.CARD_BACKGROUND,
                         border_radius=8,
                         padding=ft.Padding.all(8),
-                        border_side=ft.BorderSide(color=Color.DEFAULT_BORDER, width=1),
-                    ),
+                        border_side=ft.BorderSide(color=Color.DEFAULT_BORDER, width=1)
+                    )
                 ),
                 expand=True,
                 padding=ft.Padding.only(top=10)
@@ -571,19 +564,19 @@ class FinancialChart(ft.Container):
             content=prev_chart,
             expand=True,
             visible=self.is_dragging and self.can_go_prev,
-            offset=ft.Offset(-1.0, 0.0),
+            offset=ft.Offset(-1.0, 0.0)
         )
         self.curr_container = ft.Container(
             content=curr_chart,
             expand=True,
             visible=True,
-            offset=ft.Offset(0.0, 0.0),
+            offset=ft.Offset(0.0, 0.0)
         )
         self.next_container = ft.Container(
             content=next_chart,
             expand=True,
             visible=self.is_dragging and self.can_go_next,
-            offset=ft.Offset(1.0, 0.0),
+            offset=ft.Offset(1.0, 0.0)
         )
 
         chart_stack = ft.Stack(
@@ -592,7 +585,7 @@ class FinancialChart(ft.Container):
             controls=[
                 self.prev_container,
                 self.curr_container,
-                self.next_container,
+                self.next_container
             ]
         )
 
@@ -603,7 +596,7 @@ class FinancialChart(ft.Container):
                 ft.Container(
                     expand=True,
                     padding=ft.Padding.only(left=48, right=48),
-                    content=chart_stack,
+                    content=chart_stack
                 ),
                 ft.Container(
                     expand=True,
@@ -614,7 +607,7 @@ class FinancialChart(ft.Container):
                         mouse_cursor=ft.MouseCursor.MOVE,
                         on_horizontal_drag_start=self._handle_pan_start,
                         on_horizontal_drag_update=self._handle_pan_update,
-                        on_horizontal_drag_end=self._handle_pan_end,
+                        on_horizontal_drag_end=self._handle_pan_end
                     )
                 ),
                 ft.Container(
@@ -624,7 +617,7 @@ class FinancialChart(ft.Container):
                     width=48,
                     bgcolor=Color.CARD_BACKGROUND,
                     alignment=ft.Alignment.CENTER,
-                    content=prev_button,
+                    content=prev_button
                 ),
                 ft.Container(
                     right=0,
@@ -633,8 +626,8 @@ class FinancialChart(ft.Container):
                     width=48,
                     bgcolor=Color.CARD_BACKGROUND,
                     alignment=ft.Alignment.CENTER,
-                    content=next_button,
-                ),
+                    content=next_button
+                )
             ]
         )
 
@@ -655,7 +648,7 @@ class FinancialChart(ft.Container):
         requests = [
             (curr_offset, self.monthly_year, self.monthly_page),
             (prev_offset, prev_year, prev_page),
-            (next_offset, next_year, next_page),
+            (next_offset, next_year, next_page)
         ]
         curr_result, prev_result, next_result = [
             self._get_period_data(self.chart_type, offset, year, page)
@@ -761,7 +754,7 @@ class FinancialChart(ft.Container):
                 username=self.username,
                 chart_type=chart_type,
                 date_offset=date_offset,
-                target_year=target_year,
+                target_year=target_year
             )
             self._period_data_cache[cache_key] = (chart_date, chart_data, 0)
         chart_date, chart_data, _ = self._period_data_cache[cache_key]

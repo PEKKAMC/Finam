@@ -50,7 +50,7 @@ class GoalCard(ft.Container):
             value=goal["progress"],
             color=Color.PRIMARY,
             bgcolor=Color.PROGRESS_TRACK_BACKGROUND,
-            height=10,
+            height=10
         )
 
         self.deposit_button = ft.Button(
@@ -58,20 +58,20 @@ class GoalCard(ft.Container):
             on_click=lambda: (
                 on_achievement(goal) if self.completed else on_deposit(goal, "deposit")
             ),
-            bgcolor=Color.COMPLETED_ACTION if self.completed else Color.PRIMARY_ACTION,
+            bgcolor=Color.COMPLETED_ACTION if self.completed else Color.PRIMARY_ACTION
         )
 
         self.withdraw_button = ft.Button(
             content=self.withdraw_button_label,
             on_click=lambda: on_withdraw(goal, "withdraw"),
-            bgcolor=Color.NEGATIVE_ACTION,
+            bgcolor=Color.NEGATIVE_ACTION
         )
 
         self.delete_button = ft.IconButton(
             icon=ft.Icons.DELETE_OUTLINE,
             icon_color=Color.DELETE_ACTION,
             tooltip=self.lang["generic.delete"],
-            on_click=lambda: on_delete(self.objective_id),
+            on_click=lambda: on_delete(self.objective_id)
         )
 
         self.action_message_row = ft.Container(
@@ -79,10 +79,10 @@ class GoalCard(ft.Container):
                 spacing=6,
                 controls=[
                     self.action_message_icon,
-                    self.action_message_text,
-                ],
+                    self.action_message_text
+                ]
             ),
-            visible=False,
+            visible=False
         )
         self._action_message_generation = 0
 
@@ -104,14 +104,14 @@ class GoalCard(ft.Container):
                                         ft.Icon(
                                             ft.Icons.CHECK_CIRCLE,
                                             color=Color.PROGRESS_ACTIVE,
-                                            size=18,
+                                            size=18
                                         )
                                         if self.completed
-                                        else ft.Container(),
-                                    ],
+                                        else ft.Container()
+                                    ]
                                 ),
-                                self.subtitle_text,
-                            ],
+                                self.subtitle_text
+                            ]
                         ),
                         ft.Row(
                             spacing=4,
@@ -123,12 +123,12 @@ class GoalCard(ft.Container):
                                     if self.completed
                                     else Color.LIGHT_ACCENT,
                                     padding=ft.Padding(10, 5, 10, 5),
-                                    border_radius=16,
+                                    border_radius=16
                                 ),
-                                self.delete_button,
-                            ],
-                        ),
-                    ],
+                                self.delete_button
+                            ]
+                        )
+                    ]
                 ),
                 ft.Column(
                     spacing=8,
@@ -137,8 +137,8 @@ class GoalCard(ft.Container):
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                             controls=[
                                 self.accumulated_label_text,
-                                self.current_value_text,
-                            ],
+                                self.current_value_text
+                            ]
                         ),
                         self.progress_bar,
                         ft.Row(
@@ -169,7 +169,7 @@ class GoalCard(ft.Container):
             padding=20,
             border=None,
             shadow=ft.BoxShadow(spread_radius=2, blur_radius=12, color=Color.SHADOW),
-            content=self.main_container,
+            content=self.main_container
         )
 
     async def show_action_message(self, message: str, is_success: bool = False) -> None:
@@ -212,7 +212,7 @@ class GoalGrid(ft.Column):
         self.toggle_button = ft.IconButton(
             icon=ft.Icons.EXPAND_LESS,
             tooltip=self.lang["generic.collapse"],
-            on_click=self._toggle_expanded,
+            on_click=self._toggle_expanded
         )
 
         self.objectives_column = ft.Column(spacing=20)
@@ -347,8 +347,8 @@ class AggregateCard(ft.Container):
                                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                                     controls=[
                                         self.pill_container,
-                                        self.add_button_container,
-                                    ],
+                                        self.add_button_container
+                                    ]
                                 ),
                                 self.savings_text,
                                 self.target_text,
@@ -468,7 +468,7 @@ class ActivityHistory(ft.Container):
             content=self.main_container,
             padding=20,
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=24,
+            border_radius=24
         )
 
     def update_history(self, activities: list[dict[str, Any]], currency: str) -> None:
@@ -618,7 +618,7 @@ class CreateGoalDialog(Dialog):
         self.submit_button = ft.Button(
             content=ft.Row(
                 controls=[self.submit_button_icon, self.submit_button_label],
-                spacing=6,
+                spacing=6
             ),
             on_click=self._process_submit,
             bgcolor=Color.PRIMARY_ACTION,
@@ -654,7 +654,7 @@ class CreateGoalDialog(Dialog):
             padding=24,
             bgcolor=Color.DIALOG_BACKGROUND,
             border_radius=32,
-            content=self.content_column,
+            content=self.content_column
         )
 
         super().__init__(
@@ -671,20 +671,20 @@ class CreateGoalDialog(Dialog):
             self.goal_amount_input.value = format(initial_surplus * 5, "f")
             self.reason_input.value = self.lang["savings.surplus_reason"].format(
                 amount=format_number(initial_surplus, decimals=0),
-                currency=self.currency,
+                currency=self.currency
             )
             self.surplus_banner.visible = True
             surplus_prefill_text = Text.SMALL(
                 self.lang["savings.surplus_prefill"].format(
                     amount=format_number(initial_surplus, decimals=0),
-                    currency=self.currency,
+                    currency=self.currency
                 ),
-                color=Color.PRIMARY,
+                color=Color.PRIMARY
             )
             self.surplus_banner.content = ft.Row(
                 controls=[
                     ft.Icon(ft.Icons.AUTO_AWESOME, size=16, color=Color.PRIMARY),
-                    surplus_prefill_text,
+                    surplus_prefill_text
                 ]
             )
             self.surplus_banner.bgcolor = Color.LIGHT_ACCENT
@@ -918,7 +918,7 @@ class DepositWithdrawDialog(ft.Container):
         super().__init__(
             expand=True,
             visible=False,
-            content=self.overlay_stack,
+            content=self.overlay_stack
         )
 
         if self._page.overlay is not None and self not in self._page.overlay:
@@ -1146,7 +1146,7 @@ class CongratulationsDialog(Dialog):
             padding=28,
             bgcolor=Color.DIALOG_BACKGROUND,
             border_radius=32,
-            content=self.content_column,
+            content=self.content_column
         )
 
         super().__init__(
@@ -1186,7 +1186,7 @@ class CongratulationsDialog(Dialog):
                     amount=format_number(surplus_amount, decimals=0),
                     currency=self.currency
                 ),
-                color=Color.NEGATIVE_ACTION,
+                color=Color.NEGATIVE_ACTION
             )
             surplus_description_text = Text.SMALL(
                 self.lang["savings.surplus_transfer_desc"],
@@ -1225,9 +1225,9 @@ class CongratulationsDialog(Dialog):
                     goal_surplus_text = Text.SMALL(
                         self.lang["savings.surplus_amount"].format(
                             amount=format_number(surplus_amount, decimals=0),
-                            currency=self.currency,
+                            currency=self.currency
                         ),
-                        color=Color.PRIMARY,
+                        color=Color.PRIMARY
                     )
                     option_card = ft.Container(
                         padding=10,
@@ -1243,8 +1243,8 @@ class CongratulationsDialog(Dialog):
                         ),
                         content=ft.Row(
                             [goal_title_text, goal_surplus_text],
-                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        ),
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                        )
                     )
                     goal_cards.append(option_card)
                     self.goal_option_cards[g["objective_id"]] = option_card
@@ -1284,7 +1284,7 @@ class CongratulationsDialog(Dialog):
                 y,
                 size,
                 size * 1.6,
-                paint=paints[color],
+                paint=paints[color]
             )
             particles.append(
                 (x, y, random.uniform(-1.5, 1.5), random.uniform(3, 6), size, shape)
@@ -1364,7 +1364,7 @@ class CongratulationsDialog(Dialog):
                     for goal in self.available_goals
                     if goal["objective_id"] == self.selected_target_id
                 ),
-                None,
+                None
             )
             if target_goal is None:
                 Logger.error(
@@ -1387,7 +1387,7 @@ class CongratulationsDialog(Dialog):
                 self.pending_followup = (
                     target_goal,
                     remaining_surplus,
-                    self.available_goals,
+                    self.available_goals
                 )
             self.dismiss()
             self.on_success()
@@ -1426,13 +1426,13 @@ class DeleteConfirmDialog(Dialog):
             ft.Icons.CLOSE,
             on_click=self._close_dialog,
             icon_color=Color.PRIMARY_TEXT,
-            tooltip=self.lang["generic.close"],
+            tooltip=self.lang["generic.close"]
         )
 
         self.delete_button = ft.Button(
             content=self.delete_button_label,
             on_click=self._delete,
-            bgcolor=Color.DELETE_ACTION,
+            bgcolor=Color.DELETE_ACTION
         )
 
         self.content_column = ft.Column(
@@ -1443,9 +1443,9 @@ class DeleteConfirmDialog(Dialog):
                     controls=[
                         self.title_text,
                         self.close_button
-                    ],
+                    ]
                 ),
-                self.desc_text,
+                self.desc_text
             ],
             spacing=12
         )
@@ -1500,13 +1500,13 @@ class ClearHistoryDialog(Dialog):
             ft.Icons.CLOSE,
             on_click=lambda e: self.dismiss(),
             icon_color=Color.PRIMARY_TEXT,
-            tooltip=self.lang["generic.close"],
+            tooltip=self.lang["generic.close"]
         )
 
         self.clear_button = ft.Button(
             content=self.clear_button_label,
             on_click=self._process,
-            bgcolor=Color.DELETE_ACTION,
+            bgcolor=Color.DELETE_ACTION
         )
 
         self.content_column = ft.Column(
@@ -1514,22 +1514,22 @@ class ClearHistoryDialog(Dialog):
             controls=[
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    controls=[self.title_text, self.close_button],
+                    controls=[self.title_text, self.close_button]
                 ),
-                self.desc_text,
+                self.desc_text
             ],
-            spacing=12,
+            spacing=12
         )
         self.main_container = ft.Container(
             content=self.content_column,
-            padding=20,
+            padding=20
         )
 
         super().__init__(
             dialog_content=self.main_container,
             color=Color.DIALOG_BACKGROUND,
             options=[self.clear_button],
-            padding=0,
+            padding=0
         )
 
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)

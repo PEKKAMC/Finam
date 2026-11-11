@@ -42,13 +42,13 @@ class KeyboardContainer(ft.Container):
             bgcolor=Color.CARD_BACKGROUND,
             prefix_icon=ft.Icons.NOTES,
             text_size=14,
-            content_padding=10,
+            content_padding=10
         )
 
         # CONTAINER COMPONENTS
         self.date_picker = ft.DatePicker(
             value=datetime.strptime(self.selected_date, "%Y-%m-%d").date(),
-            on_change=self._on_date_changed,
+            on_change=self._on_date_changed
         )
 
         if self._page.overlay is not None and self.date_picker not in self._page.overlay:
@@ -56,7 +56,7 @@ class KeyboardContainer(ft.Container):
 
         self.time_picker = ft.TimePicker(
             value=datetime.strptime(self.selected_time, "%H:%M").time(),
-            on_change=self._on_time_changed,
+            on_change=self._on_time_changed
         )
         if self._page.overlay is not None and self.time_picker not in self._page.overlay:
             self._page.overlay.append(self.time_picker)
@@ -81,9 +81,9 @@ class KeyboardContainer(ft.Container):
                             spacing=4,
                             controls=[
                                 ft.Icon(ft.Icons.CALENDAR_MONTH, color=Color.DEFAULT_TEXT, size=14),
-                                self.date_display,
-                            ],
-                        ),
+                                self.date_display
+                            ]
+                        )
                     ),
                     ft.Container(
                         ink=True,
@@ -95,12 +95,12 @@ class KeyboardContainer(ft.Container):
                             spacing=4,
                             controls=[
                                 ft.Icon(ft.Icons.ACCESS_TIME, color=Color.DEFAULT_TEXT, size=14),
-                                self.time_display,
-                            ],
-                        ),
-                    ),
-                ],
-            ),
+                                self.time_display
+                            ]
+                        )
+                    )
+                ]
+            )
         )
 
         self.main_container = ft.Container(
@@ -112,21 +112,21 @@ class KeyboardContainer(ft.Container):
                         alignment=ft.MainAxisAlignment.END,
                         controls=[
                             self.amount_display
-                        ],
+                        ]
                     ),
                     ft.Container(
                         content=self.status_message,
-                        alignment=ft.Alignment.CENTER_RIGHT,
+                        alignment=ft.Alignment.CENTER_RIGHT
                     ),
                     ft.Container(
                         bgcolor=Color.PAGE_BACKGROUND,
                         border_radius=8,
                         padding=ft.Padding.symmetric(horizontal=8, vertical=2),
-                        content=self.note_input,
+                        content=self.note_input
                     ),
-                    self._build_keypad(),
+                    self._build_keypad()
                 ]
-            ),
+            )
         )
 
         super().__init__(
@@ -150,7 +150,7 @@ class KeyboardContainer(ft.Container):
                 else Text.H3(
                     text,
                     color=txt_color,
-                    weight=ft.FontWeight.BOLD,
+                    weight=ft.FontWeight.BOLD
                 )
             )
             return ft.Container(
@@ -161,7 +161,7 @@ class KeyboardContainer(ft.Container):
                 expand=expand,
                 height=45,
                 ink=True,
-                on_click=on_click,
+                on_click=on_click
             )
 
         return ft.Column(
@@ -173,8 +173,8 @@ class KeyboardContainer(ft.Container):
                         k_button("7", lambda e: self._on_key_press("7")),
                         k_button("8", lambda e: self._on_key_press("8")),
                         k_button("9", lambda e: self._on_key_press("9")),
-                        self.datetime_container,
-                    ],
+                        self.datetime_container
+                    ]
                 ),
                 ft.Row(
                     spacing=6,
@@ -183,8 +183,8 @@ class KeyboardContainer(ft.Container):
                         k_button("5", lambda e: self._on_key_press("5")),
                         k_button("6", lambda e: self._on_key_press("6")),
                         k_button("+", lambda e: self._on_key_press("+")),
-                        k_button("-", lambda e: self._on_key_press("-")),
-                    ],
+                        k_button("-", lambda e: self._on_key_press("-"))
+                    ]
                 ),
                 ft.Row(
                     spacing=6,
@@ -193,8 +193,8 @@ class KeyboardContainer(ft.Container):
                         k_button("2", lambda e: self._on_key_press("2")),
                         k_button("3", lambda e: self._on_key_press("3")),
                         k_button("×", lambda e: self._on_key_press("*")),
-                        k_button("÷", lambda e: self._on_key_press("/")),
-                    ],
+                        k_button("÷", lambda e: self._on_key_press("/"))
+                    ]
                 ),
                 ft.Row(
                     spacing=6,
@@ -203,10 +203,10 @@ class KeyboardContainer(ft.Container):
                         k_button("0", lambda e: self._on_key_press("0")),
                         k_button("", lambda e: self._on_backspace(), icon=ft.Icons.BACKSPACE),
                         k_button("=", lambda e: self._on_equal_pressed()),
-                        k_button("", lambda e: self._handle_save_click(), icon=ft.Icons.CHECK),
-                    ],
-                ),
-            ],
+                        k_button("", lambda e: self._handle_save_click(), icon=ft.Icons.CHECK)
+                    ]
+                )
+            ]
         )
 
     @staticmethod

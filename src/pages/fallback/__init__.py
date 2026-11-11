@@ -11,5 +11,5 @@ __all__ = [
     "FallbackView",
     "NotSupportedMessageBox",
     "ReturnButton",
-    "get_fallback_view",
+    "get_fallback_view"
 ]

@@ -50,7 +50,7 @@ class MetricCards(ft.ResponsiveRow):
                 controls=[
                     ft.Column(
                         spacing=4,
-                        controls=[self.income_title_text, self.income_value_text],
+                        controls=[self.income_title_text, self.income_value_text]
                     ),
                     ft.Container(
                         content=self.income_icon,
@@ -58,10 +58,10 @@ class MetricCards(ft.ResponsiveRow):
                         width=40,
                         height=40,
                         border_radius=16,
-                        alignment=ft.Alignment.CENTER,
-                    ),
-                ],
-            ),
+                        alignment=ft.Alignment.CENTER
+                    )
+                ]
+            )
         )
 
         self.expense_card = ft.Container(
@@ -77,7 +77,7 @@ class MetricCards(ft.ResponsiveRow):
                 controls=[
                     ft.Column(
                         spacing=4,
-                        controls=[self.expense_title_text, self.expense_value_text],
+                        controls=[self.expense_title_text, self.expense_value_text]
                     ),
                     ft.Container(
                         content=self.expense_icon,
@@ -85,10 +85,10 @@ class MetricCards(ft.ResponsiveRow):
                         width=40,
                         height=40,
                         border_radius=16,
-                        alignment=ft.Alignment.CENTER,
-                    ),
-                ],
-            ),
+                        alignment=ft.Alignment.CENTER
+                    )
+                ]
+            )
         )
 
         self.balance_card = ft.Container(
@@ -104,7 +104,7 @@ class MetricCards(ft.ResponsiveRow):
                 controls=[
                     ft.Column(
                         spacing=4,
-                        controls=[self.balance_title_text, self.balance_value_text],
+                        controls=[self.balance_title_text, self.balance_value_text]
                     ),
                     ft.Container(
                         content=self.balance_icon,
@@ -112,10 +112,10 @@ class MetricCards(ft.ResponsiveRow):
                         width=40,
                         height=40,
                         border_radius=16,
-                        alignment=ft.Alignment.CENTER,
-                    ),
-                ],
-            ),
+                        alignment=ft.Alignment.CENTER
+                    )
+                ]
+            )
         )
 
         self.main_container = ft.Container(
@@ -168,12 +168,12 @@ class TransactionToolbar(ft.Container):
         self.add_transaction_text = Text.MEDIUM(
             self.lang["spending.add_transaction"],
             color=Color.WHITE,
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
         self.scan_label = Text.MEDIUM(
             self.lang["spending.ai_scan"],
             color=Color.SECONDARY_TEXT,
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
 
         # Static icons
@@ -182,40 +182,40 @@ class TransactionToolbar(ft.Container):
             content=ft.Row(
                 spacing=8,
                 controls=[self.add_transaction_icon, self.add_transaction_text],
-                tight=True,
+                tight=True
             ),
             bgcolor=Color.PRIMARY_ACTION,
             on_click=on_add_click,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=16), padding=12
-            ),
+            )
         )
         self.scan_icon = ft.Icon(
             ft.Icons.AUTO_AWESOME,
             color=Color.SECONDARY_TEXT,
-            size=18,
+            size=18
         )
         self.scan_button = ft.Button(
             content=ft.Row(
                 spacing=8,
                 controls=[
                     self.scan_icon,
-                    self.scan_label,
+                    self.scan_label
                 ],
-                tight=True,
+                tight=True
             ),
             bgcolor=Color.DARK_BUTTON,
             disabled=True,
             on_click=on_scan_click,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=16),
-                padding=12,
-            ),
+                padding=12
+            )
         )
 
         sort_options = [
             ft.dropdown.Option("newest", lang["spending.sort_newest"]),
-            ft.dropdown.Option("oldest", lang["spending.sort_oldest"]),
+            ft.dropdown.Option("oldest", lang["spending.sort_oldest"])
         ]
         valid_sort_keys = [opt.key for opt in sort_options]
         dropdown_value = self.sort_by if self.sort_by in valid_sort_keys else "newest"
@@ -232,7 +232,7 @@ class TransactionToolbar(ft.Container):
             border_radius=16,
             text_size=13,
             content_padding=12,
-            filled=True,
+            filled=True
         )
 
         self.sort_dropdown = ft.Dropdown(
@@ -245,7 +245,7 @@ class TransactionToolbar(ft.Container):
             border_radius=16,
             text_size=13,
             content_padding=12,
-            filled=True,
+            filled=True
         )
 
         # CONTAINER COMPONENTS
@@ -272,7 +272,7 @@ class TransactionToolbar(ft.Container):
             controls=[
                 self.all_filter_button,
                 self.expense_filter_button,
-                self.income_filter_button,
+                self.income_filter_button
             ]
         )
 
@@ -280,7 +280,7 @@ class TransactionToolbar(ft.Container):
             spacing=6,
             controls=[
                 self.add_button,
-                self.scan_button,
+                self.scan_button
             ]
         )
 
@@ -332,7 +332,7 @@ class TransactionToolbar(ft.Container):
         filter_button_text = Text.SMALL(
             label,
             color=Color.WHITE if is_active else Color.SECONDARY_TEXT,
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
         return ft.Button(
             content=filter_button_text,
@@ -409,7 +409,7 @@ class TransactionHistoryCard(ft.Container):
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
-            content=self.history_column,
+            content=self.history_column
         )
 
     def _render_controls(self) -> None:
@@ -418,16 +418,16 @@ class TransactionHistoryCard(ft.Container):
                 len=len(self.transactions)
             ),
             color=Color.PRIMARY_TEXT,
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
         empty_history_title = Text.MEDIUM(
             self.lang["spending.no_transactions"],
             color=Color.SECONDARY_TEXT,
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
         empty_history_hint = Text.SMALL(
             self.lang["spending.try_filter"],
-            color=Color.SECONDARY_TEXT,
+            color=Color.SECONDARY_TEXT
         )
 
         # Dynamic icons
@@ -436,14 +436,14 @@ class TransactionHistoryCard(ft.Container):
             tooltip=self.lang["generic.collapse"]
             if self.is_expanded
             else self.lang["generic.expand"],
-            on_click=self._toggle_expanded,
+            on_click=self._toggle_expanded
         )
         history_header = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
                 self.history_title,
-                self.toggle_button,
-            ],
+                self.toggle_button
+            ]
         )
 
         tx_list_controls: list[ft.Control] = []
@@ -455,7 +455,7 @@ class TransactionHistoryCard(ft.Container):
                         lang=self.lang,
                         tx=tx,
                         on_delete=self.on_delete,
-                        category_icons=self.category_icons,
+                        category_icons=self.category_icons
                     )
                 )
         else:
@@ -466,15 +466,15 @@ class TransactionHistoryCard(ft.Container):
                     content=ft.Column(
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=6,
-                        controls=[empty_history_title, empty_history_hint],
-                    ),
+                        controls=[empty_history_title, empty_history_hint]
+                    )
                 )
             ]
 
         self.history_content = ft.Column(
             spacing=12,
             controls=tx_list_controls,
-            visible=self.is_expanded,
+            visible=self.is_expanded
         )
         self.history_column.controls = [history_header, self.history_content]
         if self._item_width is not None and self._item_content_width is not None:
@@ -548,7 +548,7 @@ class TransactionItemCard(ft.Container):
                 to_decimal(self.tx["amount"]) if is_income else -to_decimal(self.tx["amount"]),
                 decimals=1,
                 signed=True,
-                translations=self.lang,
+                translations=self.lang
             ),
             color=amount_color,
             weight=ft.FontWeight.BOLD,
@@ -565,7 +565,7 @@ class TransactionItemCard(ft.Container):
             width=42,
             height=42,
             border_radius=16,
-            alignment=ft.Alignment.CENTER,
+            alignment=ft.Alignment.CENTER
         )
 
         self.date_row = ft.Row(
@@ -602,11 +602,11 @@ class TransactionItemCard(ft.Container):
                 icon_color=ft.Colors.RED_400,
                 icon_size=18,
                 on_click=self._delete_transaction,
-                tooltip=self.lang["spending.delete"],
+                tooltip=self.lang["spending.delete"]
             )
             right_controls: list[ft.Control] = [
                 self.amount_text,
-                self.delete_button,
+                self.delete_button
             ]
         else:
             right_controls = [self.amount_text]
@@ -629,7 +629,7 @@ class TransactionItemCard(ft.Container):
             border_radius=18,
             padding=14,
             ink=True,
-            content=self.main_row,
+            content=self.main_row
         )
 
     def _delete_transaction(self, _event: ft.Event[ft.IconButton]) -> None:
@@ -659,14 +659,14 @@ class DeleteTransactionDialog(Dialog):
         self.delete_button = ft.Button(
             content=self.delete_button_label,
             on_click=self._confirm,
-            bgcolor=Color.DELETE_ACTION,
+            bgcolor=Color.DELETE_ACTION
         )
 
         self.close_button = ft.IconButton(
             ft.Icons.CLOSE,
             on_click=lambda _event: self.dismiss(),
             icon_color=Color.PRIMARY_TEXT,
-            tooltip=self.lang["generic.close"],
+            tooltip=self.lang["generic.close"]
         )
 
         self.main_container = ft.Container(
@@ -677,18 +677,18 @@ class DeleteTransactionDialog(Dialog):
                 controls=[
                     ft.Row(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        controls=[self.title_text, self.close_button],
+                        controls=[self.title_text, self.close_button]
                     ),
-                    self.desc_text,
-                ],
-            ),
+                    self.desc_text
+                ]
+            )
         )
 
         super().__init__(
             dialog_content=self.main_container,
             color=Color.DIALOG_BACKGROUND,
             options=[self.delete_button],
-            padding=0,
+            padding=0
         )
         self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
 
@@ -756,7 +756,7 @@ class SpendingUsageCard(ft.Container):
             self.usage_label.value = self.lang["spending.ai_usage_remaining"].format(
                 remaining=remaining,
                 limit=limit,
-                reset=reset_at,
+                reset=reset_at
             )
             self.usage_progress.value = remaining / limit if limit else 0
         self.usage_progress.color = (
@@ -817,7 +817,7 @@ class SpendingGoogleRequiredCard(ft.Container):
             border_radius=18,
             padding=18,
             border=ft.Border.all(1, Color.INPUT_BORDER),
-            content=self.main_row,
+            content=self.main_row
         )
 
     def set_access(self, signed_in: bool, message: str | None = None) -> None:
@@ -849,9 +849,9 @@ class SpendingPageContent(ft.Container):
                     self.usage_card,
                     self.toolbar,
                     self.history_card,
-                    self.report_history_card,
-                ],
-            ),
+                    self.report_history_card
+                ]
+            )
         )
         super().__init__(
             content=ft.Column(
@@ -859,11 +859,10 @@ class SpendingPageContent(ft.Container):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=0),
+            margin=ft.Margin(bottom=0)
         )
 
-    def resize(
-        self,page_width: int, page_height: int, content_width: int, card_content_width: int, usage_content_width: int, transaction_item_content_width: int) -> None:
+    def resize(self, page_width: int, page_height: int, content_width: int, card_content_width: int, usage_content_width: int, transaction_item_content_width: int) -> None:
         self.width = page_width
         self.height = page_height
         self.content_container.width = page_width
@@ -876,7 +875,7 @@ class SpendingPageContent(ft.Container):
             width=content_width,
             content_width=card_content_width,
             item_width=card_content_width,
-            item_content_width=transaction_item_content_width,
+            item_content_width=transaction_item_content_width
         )
         self.financial_chart.resize(card_content_width)
 
@@ -914,7 +913,7 @@ class SpendingReportHistoryCard(ft.Container):
                     controls=[
                         self.history_title,
                         self.toggle_button
-                    ],
+                    ]
                 ),
                 self.history_content
             ]
@@ -926,7 +925,7 @@ class SpendingReportHistoryCard(ft.Container):
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
-            content=self.history_column,
+            content=self.history_column
         )
 
     def set_history(self, reports: list[dict[str, Any]]) -> None:

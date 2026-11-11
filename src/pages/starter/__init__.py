@@ -13,5 +13,5 @@ __all__ = [
     "DialogManager",
     "LogicController",
     "StarterView",
-    "get_starter_view",
+    "get_starter_view"
 ]

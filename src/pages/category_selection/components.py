@@ -27,7 +27,7 @@ class CategoryItem(ft.Container):
             color=Color.NAVIGATION_ACTIVE_TEXT
             if self.is_selected
             else Color.DEFAULT_TEXT,
-            text_align=ft.TextAlign.CENTER,
+            text_align=ft.TextAlign.CENTER
         )
 
         # Dynamic icons
@@ -38,7 +38,7 @@ class CategoryItem(ft.Container):
             border_radius=28,
             bgcolor=(self.selected_background_color if self.is_selected else None),
             alignment=ft.Alignment.CENTER,
-            content=self.icon_control,
+            content=self.icon_control
         )
 
         self.main_container = ft.Container(
@@ -48,15 +48,15 @@ class CategoryItem(ft.Container):
                 spacing=0,
                 controls=[
                     self.icon_circle,
-                    self.icon_label,
-                ],
+                    self.icon_label
+                ]
             ),
             border_radius=28,
             bgcolor=(
                 self.selected_background_color
                 if self.is_selected
                 else Color.TRANSPARENT
-            ),
+            )
         )
 
         super().__init__(
@@ -64,10 +64,10 @@ class CategoryItem(ft.Container):
                 content=self.main_container,
                 on_tap=self._on_click,
                 on_long_press=on_edit,
-                on_secondary_tap=on_edit,
+                on_secondary_tap=on_edit
             ),
             expand=True,
-            alignment=ft.Alignment.CENTER,
+            alignment=ft.Alignment.CENTER
         )
 
     def resize(self, width: int, height: int, icon_size: int, glyph_size: int) -> None:
@@ -108,7 +108,7 @@ class CategoryTypeSelector(ft.Container):
             border_radius=8,
             alignment=ft.Alignment.CENTER,
             on_click=lambda e: self.on_change("expense"),
-            expand=True,
+            expand=True
         )
 
         self.income_button = ft.Container(
@@ -118,7 +118,7 @@ class CategoryTypeSelector(ft.Container):
             border_radius=8,
             alignment=ft.Alignment.CENTER,
             on_click=lambda e: self.on_change("income"),
-            expand=True,
+            expand=True
         )
 
         super().__init__(
@@ -128,8 +128,8 @@ class CategoryTypeSelector(ft.Container):
             content=ft.Row(
                 controls=[self.expense_button, self.income_button],
                 spacing=0,
-                alignment=ft.MainAxisAlignment.CENTER,
-            ),
+                alignment=ft.MainAxisAlignment.CENTER
+            )
         )
 
     def set_type(self, category_type: str) -> None:
@@ -179,7 +179,7 @@ class CategoryGrid(ft.Column):
             alignment=ft.MainAxisAlignment.START,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             scroll=ft.ScrollMode.AUTO,
-            expand=True,
+            expand=True
         )
 
     def set_categories(self, categories: list[dict[str, Any]], category_type: str, selected_category: str, on_select: Callable[[str], None], on_add: Callable[[], None], on_edit: Callable[[dict[str, Any]], None]) -> None:
@@ -224,15 +224,15 @@ class CategoryGrid(ft.Column):
                     "icon": "ADD",
                 },
                 False,
-                True,
-            ),
+                True
+            )
         ]
 
         for start in range(0, len(grid_items), self._columns):
             category_row = ft.Row(
                 width=self._content_width,
                 spacing=0,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER
             )
             for category, is_custom, is_add_action in grid_items[
                 start : start + self._columns
@@ -262,13 +262,13 @@ class CategoryGrid(ft.Column):
                         if self._category_type == "expense"
                         else Color.INCOME_BACKGROUND
                     ),
-                    on_edit=self._create_edit_handler(category) if is_custom else None,
+                    on_edit=self._create_edit_handler(category) if is_custom else None
                 )
                 item.resize(
                     self._item_width,
                     self._item_height,
                     self._icon_size,
-                    self._glyph_size,
+                    self._glyph_size
                 )
                 if not is_add_action:
                     self.category_items.append(item)
@@ -304,7 +304,7 @@ class CategorySelectionContent(ft.Container):
         # CONTAINER COMPONENTS
         self.back_button = ft.TextButton(
             content=ft.Icon(ft.Icons.ARROW_BACK, color=Color.DEFAULT_BUTTON),
-            on_click=on_cancel,
+            on_click=on_cancel
         )
         super().__init__(
             width=UISettings.MAX_APP_WIDTH,
@@ -317,12 +317,12 @@ class CategorySelectionContent(ft.Container):
                 controls=[
                     ft.Row(
                         alignment=ft.MainAxisAlignment.START,
-                        controls=[self.back_button],
+                        controls=[self.back_button]
                     ),
                     self.category_type_selector,
-                    self.category_grid,
-                ],
-            ),
+                    self.category_grid
+                ]
+            )
         )
 
     def resize(self, page_width: int, content_width: int, columns: int) -> None:
@@ -354,14 +354,14 @@ class CategoryEditorDialog(Dialog):
         self.icon_preview = ft.Icon(
             icon=getattr(ft.Icons, self.icon_names[0]),
             color=Color.PRIMARY,
-            size=28,
+            size=28
         )
 
         # CONTAINER COMPONENTS
         self.name_field = ft.TextField(
             label=self.lang["category_selection.category_name"],
             max_length=30,
-            autofocus=True,
+            autofocus=True
         )
 
         self.icon_dropdown = ft.Dropdown(
@@ -371,7 +371,7 @@ class CategoryEditorDialog(Dialog):
                 ft.dropdown.Option(
                     key=name,
                     text=name.replace("_", " ").title(),
-                    leading_icon=getattr(ft.Icons, name),
+                    leading_icon=getattr(ft.Icons, name)
                 )
                 for name in self.icon_names
             ],
@@ -379,24 +379,24 @@ class CategoryEditorDialog(Dialog):
             enable_filter=True,
             editable=True,
             menu_height=320,
-            expand=True,
+            expand=True
         )
 
         self.save_button = ft.TextButton(
             content=self.save_button_label,
-            on_click=self._save,
+            on_click=self._save
         )
 
         self.cancel_button = ft.TextButton(
             content=self.cancel_button_label,
-            on_click=lambda e: self.dismiss(),
+            on_click=lambda e: self.dismiss()
         )
 
         self.delete_button = ft.TextButton(
             content=self.delete_button_label,
             style=ft.ButtonStyle(color=Color.NEGATIVE_ACTION),
             on_click=self._request_delete,
-            visible=False,
+            visible=False
         )
 
         self.content_container = ft.Column(
@@ -407,16 +407,16 @@ class CategoryEditorDialog(Dialog):
                 self.name_field,
                 ft.Row(
                     spacing=12,
-                    controls=[self.icon_dropdown, self.icon_preview],
+                    controls=[self.icon_dropdown, self.icon_preview]
                 ),
-                self.error_text,
-            ],
+                self.error_text
+            ]
         )
 
         super().__init__(
             dialog_content=self.content_container,
             color=Color.DIALOG_BACKGROUND,
-            options=[self.delete_button, self.cancel_button, self.save_button],
+            options=[self.delete_button, self.cancel_button, self.save_button]
         )
 
         self._dialog_page = page
@@ -460,7 +460,7 @@ class CategoryEditorDialog(Dialog):
         error_key = self.on_save(
             self.name_field.value or "",
             self.icon_dropdown.value or "",
-            self.category_id,
+            self.category_id
         )
         if error_key is None:
             self.dismiss()
@@ -489,11 +489,11 @@ class DeleteCategoryDialog(Dialog):
         # CONTAINER COMPONENTS
         self.delete_button = ft.TextButton(
             content=self.delete_button_label,
-            on_click=self._delete,
+            on_click=self._delete
         )
         self.cancel_button = ft.TextButton(
             content=self.cancel_button_label,
-            on_click=lambda e: self.dismiss(),
+            on_click=lambda e: self.dismiss()
         )
         self.content_container = ft.Column(
             tight=True,
@@ -501,13 +501,13 @@ class DeleteCategoryDialog(Dialog):
             controls=[
                 self.dialog_title,
                 self.description,
-                self.error_text,
-            ],
+                self.error_text
+            ]
         )
         super().__init__(
             dialog_content=self.content_container,
             color=Color.DIALOG_BACKGROUND,
-            options=[self.cancel_button, self.delete_button],
+            options=[self.cancel_button, self.delete_button]
         )
         self._dialog_page = page
 
@@ -525,7 +525,7 @@ class DeleteCategoryDialog(Dialog):
         )
         self.description.value = self.lang[message_key].format(
             name=category["name"],
-            count=transaction_count,
+            count=transaction_count
         )
         self.error_text.value = ""
         self.show()

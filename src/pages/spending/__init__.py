@@ -4,12 +4,7 @@
 
 """Spending page - Financial metrics, transaction tracking, and filters."""
 
-from src.pages.spending.components import (
-    DeleteTransactionDialog,
-    MetricCards,
-    TransactionItemCard,
-    TransactionToolbar,
-)
+from src.pages.spending.components import DeleteTransactionDialog, MetricCards, TransactionItemCard, TransactionToolbar
 from src.pages.spending.logic import LogicController
 from src.pages.spending.view import SpendingView, get_spending_view
 
@@ -20,5 +15,5 @@ __all__ = [
     "SpendingView",
     "TransactionItemCard",
     "TransactionToolbar",
-    "get_spending_view",
+    "get_spending_view"
 ]

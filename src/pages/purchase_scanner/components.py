@@ -23,23 +23,23 @@ class ScannerHeaderBanner(ft.Container):
         self.ai_title_text = Text.SMALL(
             lang["purchase_scanner.ai_title"],
             color=Color.LIGHT_ACCENT,
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
         self.title_text = Text.H2(
             lang["purchase_scanner.title"],
             color=Color.WHITE,
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
         self.description_text = Text.SMALL(
             lang["purchase_scanner.description"],
-            color=Color.LIGHT_ACCENT,
+            color=Color.LIGHT_ACCENT
         )
 
         # Static icons
         self.ai_title_icon = ft.Icon(
             ft.Icons.AUTO_AWESOME,
             color=Color.PROGRESS_ACTIVE,
-            size=14,
+            size=14
         )
 
         # CONTAINER COMPONENTS
@@ -47,12 +47,12 @@ class ScannerHeaderBanner(ft.Container):
             content=ft.Row(
                 controls=[self.ai_title_icon, self.ai_title_text],
                 tight=True,
-                spacing=6,
+                spacing=6
             ),
             bgcolor=Color.DARK_SURFACE,
             padding=ft.Padding(12, 6, 12, 6),
             border_radius=20,
-            border=ft.Border.all(1, Color.METRIC_PILL_BORDER),
+            border=ft.Border.all(1, Color.METRIC_PILL_BORDER)
         )
         super().__init__(
             bgcolor=Color.PRIMARY,
@@ -64,9 +64,9 @@ class ScannerHeaderBanner(ft.Container):
                 controls=[
                     ft.Row(controls=[self.ai_title_badge]),
                     self.title_text,
-                    self.description_text,
-                ],
-            ),
+                    self.description_text
+                ]
+            )
         )
 
 
@@ -105,7 +105,7 @@ class GoogleRequiredCard(ft.Container):
             border_radius=18,
             padding=18,
             border=ft.Border.all(1, Color.INPUT_BORDER),
-            content=self.main_row,
+            content=self.main_row
         )
 
     def set_access(self, signed_in: bool, message: str | None = None) -> None:
@@ -163,7 +163,7 @@ class SelectableOptionGroup(ft.Container):
                 border_radius=16,
                 animate=ft.Animation(200, ft.AnimationCurve.EASE_IN_OUT),
                 on_click=lambda e, vid=val_id: self._select(vid),
-                expand=True,
+                expand=True
             )
             self.button_controls[val_id] = button
 
@@ -236,7 +236,7 @@ class ThinkingTimeUnitContainer(ft.Container):
             height=48,
             keyboard_type=ft.KeyboardType.NUMBER,
             content_padding=ft.Padding(16, 12, 16, 12),
-            expand=True,
+            expand=True
         )
 
         self.unit_dropdown = ft.Dropdown(
@@ -244,7 +244,7 @@ class ThinkingTimeUnitContainer(ft.Container):
                 ft.dropdown.Option("minute", self.lang["generic.minute"]),
                 ft.dropdown.Option("hour", self.lang["generic.hour"]),
                 ft.dropdown.Option("day", self.lang["generic.day"]),
-                ft.dropdown.Option("week", self.lang["generic.week"]),
+                ft.dropdown.Option("week", self.lang["generic.week"])
             ],
             value=default_unit,
             border_color=Color.INPUT_BORDER,
@@ -254,7 +254,7 @@ class ThinkingTimeUnitContainer(ft.Container):
             bgcolor=Color.PAGE_BACKGROUND,
             text_size=13,
             height=48,
-            content_padding=ft.Padding(16, 12, 16, 12),
+            content_padding=ft.Padding(16, 12, 16, 12)
         )
         row = ft.Row(spacing=10, controls=[self.value_field, self.unit_dropdown])
         super().__init__(content=row)
@@ -301,7 +301,7 @@ class ScannerForm(ft.Container):
             bgcolor=Color.PAGE_BACKGROUND,
             height=48,
             text_size=13,
-            content_padding=ft.Padding(16, 12, 16, 12),
+            content_padding=ft.Padding(16, 12, 16, 12)
         )
 
         self.item_price = ft.TextField(
@@ -319,7 +319,7 @@ class ScannerForm(ft.Container):
             height=48,
             text_size=13,
             keyboard_type=ft.KeyboardType.NUMBER,
-            content_padding=ft.Padding(16, 12, 16, 12),
+            content_padding=ft.Padding(16, 12, 16, 12)
         )
 
         self.item_reason = ft.TextField(
@@ -331,7 +331,7 @@ class ScannerForm(ft.Container):
             bgcolor=Color.PAGE_BACKGROUND,
             height=48,
             text_size=12,
-            content_padding=ft.Padding(16, 12, 16, 12),
+            content_padding=ft.Padding(16, 12, 16, 12)
         )
 
         # Triggers selection grid
@@ -340,7 +340,7 @@ class ScannerForm(ft.Container):
             ("sale", self.lang["purchase_scanner.trigger_flash_sale"]),
             ("tiktok", self.lang["purchase_scanner.trigger_social_media"]),
             ("social", self.lang["purchase_scanner.trigger_friends"]),
-            ("emotion", self.lang["purchase_scanner.trigger_emotion"]),
+            ("emotion", self.lang["purchase_scanner.trigger_emotion"])
         ]
 
         self.trigger = SelectableOptionGroup(
@@ -355,15 +355,15 @@ class ScannerForm(ft.Container):
             content=ft.Row(
                 controls=[
                     self.submit_icon,
-                    self.submit_label,
+                    self.submit_label
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
-                spacing=8,
+                spacing=8
             ),
             bgcolor=Color.PRIMARY,
             border_radius=16,
             padding=ft.Padding(0, 14, 0, 14),
-            on_click=None,
+            on_click=None
         )
         self._scan_enabled = False
         self._scan_busy = False
@@ -376,52 +376,52 @@ class ScannerForm(ft.Container):
                     spacing=8,
                     controls=[
                         self.form_icon,
-                        self.form_title_text,
-                    ],
+                        self.form_title_text
+                    ]
                 ),
                 ft.Divider(height=1, color=Color.CARD_DIVIDER),
                 # Name
                 ft.Column(
                     [
                         self.product_name_label,
-                        self.item_name,
+                        self.item_name
                     ],
-                    spacing=6,
+                    spacing=6
                 ),
                 # Price
                 ft.Column(
                     [
                         self.price_label,
-                        self.item_price,
+                        self.item_price
                     ],
-                    spacing=6,
+                    spacing=6
                 ),
                 # Trigger
                 ft.Column(
                     [
                         self.trigger_question_label,
-                        self.trigger,
+                        self.trigger
                     ],
-                    spacing=6,
+                    spacing=6
                 ),
                 # Thinking time
                 ft.Column(
                     [
                         self.thinking_time_label,
-                        self.thinking_time,
+                        self.thinking_time
                     ],
-                    spacing=6,
+                    spacing=6
                 ),
                 # Reason
                 ft.Column(
                     [
                         self.reason_label,
-                        self.item_reason,
+                        self.item_reason
                     ],
-                    spacing=6,
+                    spacing=6
                 ),
-                self.submit_button,
-            ],
+                self.submit_button
+            ]
         )
 
         super().__init__(
@@ -430,7 +430,7 @@ class ScannerForm(ft.Container):
             padding=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
-            content=self.main_container,
+            content=self.main_container
         )
 
     def _handle_scan_click(self) -> None:
@@ -454,7 +454,7 @@ class ScannerForm(ft.Container):
             item_price,
             self.item_reason.value,
             self.trigger.value,
-            self.thinking_time.value,
+            self.thinking_time.value
         )
         self.reset()
 
@@ -521,20 +521,20 @@ class InterventionItem(ft.Container):
             controls=[
                 ft.Row(
                     [self.status_icon, self.title_text],
-                    spacing=6,
+                    spacing=6
                 ),
                 ft.Container(
                     content=self.description_text,
-                    padding=ft.Padding(22, 0, 0, 0),
-                ),
-            ],
+                    padding=ft.Padding(22, 0, 0, 0)
+                )
+            ]
         )
         super().__init__(
             border=ft.Border.all(1, Color.INPUT_BORDER),
             border_radius=16,
             padding=14,
             bgcolor=Color.CARD_BACKGROUND,
-            content=self.main_container,
+            content=self.main_container
         )
 
     def resize(self, width: int) -> None:
@@ -565,7 +565,7 @@ class ScannerHistoryCard(ft.Container):
         self.history_expander = ft.IconButton(
             icon=ft.Icons.KEYBOARD_ARROW_UP,
             on_click=lambda e: self.toggle_history_panel(),
-            style=ft.ButtonStyle(shape=ft.CircleBorder()),
+            style=ft.ButtonStyle(shape=ft.CircleBorder())
         )
 
         self.clear_all_button = ft.TextButton(
@@ -573,7 +573,7 @@ class ScannerHistoryCard(ft.Container):
                 controls=[self.clear_all_icon, self.clear_all_label], spacing=6
             ),
             on_click=lambda e: self._handle_clear_all(),
-            style=ft.ButtonStyle(color=Color.NEGATIVE_ACTION),
+            style=ft.ButtonStyle(color=Color.NEGATIVE_ACTION)
         )
 
         self.history_list = ft.Column(spacing=8)
@@ -583,7 +583,7 @@ class ScannerHistoryCard(ft.Container):
             controls=[self.history_list],
             visible=True,
             scroll=ft.ScrollMode.AUTO,
-            expand=True,
+            expand=True
         )
 
         super().__init__(
@@ -601,13 +601,13 @@ class ScannerHistoryCard(ft.Container):
                             self.history_title,
                             ft.Row(
                                 controls=[self.clear_all_button, self.history_expander],
-                                spacing=0,
-                            ),
-                        ],
+                                spacing=0
+                            )
+                        ]
                     ),
-                    self.history_content,
-                ],
-            ),
+                    self.history_content
+                ]
+            )
         )
 
     def _handle_delete(self, scan_id: int) -> None:
@@ -626,7 +626,7 @@ class ScannerHistoryCard(ft.Container):
         if not history_entries:
             no_history_text = Text.SMALL(
                 self.lang["purchase_scanner.no_history"],
-                color=Color.SECONDARY_TEXT,
+                color=Color.SECONDARY_TEXT
             )
             self.history_list.controls.append(
                 no_history_text
@@ -649,36 +649,36 @@ class ScannerHistoryCard(ft.Container):
 
             price_and_trigger_text = Text.SMALL(
                 f"{format_number(price)} {self.currency} • {trigger_display}",
-                color=Color.SECONDARY_TEXT,
+                color=Color.SECONDARY_TEXT
             )
             created_at_text = Text.SMALL(created_at, color=Color.SECONDARY_TEXT)
             advice_text = Text.SMALL(advice, color=Color.DEFAULT_TEXT)
             details = ft.Column(
                 spacing=4,
                 visible=False,
-                controls=[price_and_trigger_text, created_at_text, advice_text],
+                controls=[price_and_trigger_text, created_at_text, advice_text]
             )
             expander = ft.IconButton(
                 icon=ft.Icons.KEYBOARD_ARROW_DOWN,
-                tooltip=self.lang["purchase_scanner.history"],
+                tooltip=self.lang["purchase_scanner.history"]
             )
             delete_button = ft.IconButton(
                 icon=ft.Icons.DELETE_OUTLINE,
                 tooltip=self.lang["purchase_scanner.delete_item"],
                 icon_color=Color.NEGATIVE_ACTION,
-                disabled=not isinstance(scan_id, int),
+                disabled=not isinstance(scan_id, int)
             )
             if isinstance(scan_id, int):
                 delete_button.on_click = self._create_delete_handler(scan_id)
             item_name_text = Text.MEDIUM(
                 item_name,
                 weight=ft.FontWeight.BOLD,
-                color=Color.DEFAULT_TEXT,
+                color=Color.DEFAULT_TEXT
             )
             risk_score_text = Text.SMALL(
                 f"{risk_score}",
                 color=Color.WHITE,
-                weight=ft.FontWeight.BOLD,
+                weight=ft.FontWeight.BOLD
             )
             item_card = ft.Container(
                 bgcolor=Color.CARD_BACKGROUND,
@@ -704,24 +704,24 @@ class ScannerHistoryCard(ft.Container):
                                                 else Color.WARNING_COLOR
                                             ),
                                             border_radius=12,
-                                            padding=ft.Padding(8, 4, 8, 4),
+                                            padding=ft.Padding(8, 4, 8, 4)
                                         ),
                                         expander,
-                                        delete_button,
+                                        delete_button
                                     ],
-                                    spacing=0,
-                                ),
-                            ],
+                                    spacing=0
+                                )
+                            ]
                         ),
-                        details,
-                    ],
-                ),
+                        details
+                    ]
+                )
             )
 
             expander.on_click = self._create_history_toggle_handler(
                 details,
                 expander,
-                item_card,
+                item_card
             )
             if self._content_width is not None:
                 item_card.width = self._content_width
@@ -732,20 +732,14 @@ class ScannerHistoryCard(ft.Container):
         if self.parent:
             self.update()
 
-    def _create_delete_handler(
-        self, scan_id: int
-    ) -> Callable[[ft.Event[ft.IconButton]], None]:
+    def _create_delete_handler(self, scan_id: int) -> Callable[[ft.Event[ft.IconButton]], None]:
         def delete_entry(_event: ft.Event[ft.IconButton]) -> None:
             self._handle_delete(scan_id)
 
         return delete_entry
 
     @staticmethod
-    def _create_history_toggle_handler(
-        details: ft.Column,
-        expander: ft.IconButton,
-        item_card: ft.Container,
-    ) -> Callable[[ft.Event[ft.IconButton]], None]:
+    def _create_history_toggle_handler(details: ft.Column, expander: ft.IconButton, item_card: ft.Container) -> Callable[[ft.Event[ft.IconButton]], None]:
         def toggle_entry(_event: ft.Event[ft.IconButton]) -> None:
             details.visible = not details.visible
             expander.icon = (
@@ -816,14 +810,14 @@ class ScannerResult(ft.Container):
             controls=[
                 self.empty_state_icon,
                 self.no_results_text,
-                self.empty_message,
-            ],
+                self.empty_message
+            ]
         )
 
         self.error_state = ft.Container(
             visible=False,
             alignment=ft.Alignment.CENTER,
-            content=self.error_text,
+            content=self.error_text
         )
 
         self.loading_container = ft.Container(
@@ -837,15 +831,15 @@ class ScannerResult(ft.Container):
                         width=48, height=48, stroke_width=5, color=Color.PRIMARY
                     ),
                     self.waiting_text,
-                    self.loading_hint_text,
-                ],
-            ),
+                    self.loading_hint_text
+                ]
+            )
         )
 
         self.the_rock_animation = ft.Image(
             src="gif/the_rock.gif",
             fit=ft.BoxFit.CONTAIN,
-            visible=False,
+            visible=False
         )
 
         self.progress_bar = ft.ProgressBar(
@@ -868,19 +862,19 @@ class ScannerResult(ft.Container):
                                 content=self.risk_badge_text,
                                 bgcolor=Color.DARK_BUTTON,
                                 padding=ft.Padding(10, 4, 10, 4),
-                                border_radius=12,
-                            ),
-                        ],
+                                border_radius=12
+                            )
+                        ]
                     ),
                     ft.Row(
                         controls=[self.risk_score_text, self.risk_status_text],
                         alignment=ft.MainAxisAlignment.START,
                         vertical_alignment=ft.CrossAxisAlignment.END,
-                        spacing=10,
+                        spacing=10
                     ),
-                    self.progress_bar,
-                ],
-            ),
+                    self.progress_bar
+                ]
+            )
         )
 
         self.advice_box = ft.Container(
@@ -893,11 +887,11 @@ class ScannerResult(ft.Container):
                 controls=[
                     ft.Row(
                         [self.expert_perspective_icon, self.expert_perspective_label],
-                        spacing=6,
+                        spacing=6
                     ),
-                    self.advice_text,
-                ],
-            ),
+                    self.advice_text
+                ]
+            )
         )
 
         self.interventions_col = ft.Column(spacing=10)
@@ -911,11 +905,11 @@ class ScannerResult(ft.Container):
                 ft.Column(
                     [
                         self.intervention_rules_label,
-                        self.interventions_col,
+                        self.interventions_col
                     ],
-                    spacing=8,
-                ),
-            ],
+                    spacing=8
+                )
+            ]
         )
 
         self.main_container = ft.Container(
@@ -925,13 +919,13 @@ class ScannerResult(ft.Container):
                     self.error_state,
                     self.loading_container,
                     self.the_rock_animation,
-                    self.result_container,
+                    self.result_container
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER
             ),
             alignment=ft.Alignment.CENTER,
-            expand=True,
+            expand=True
         )
 
         super().__init__(
@@ -940,7 +934,7 @@ class ScannerResult(ft.Container):
             padding=24,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
-            content=self.main_container,
+            content=self.main_container
         )
 
     def set_loading_state(self) -> int:
@@ -975,7 +969,7 @@ class ScannerResult(ft.Container):
             src="/audio/the_rock.mp3",
             autoplay=False,
             on_state_change=self._on_the_rock_audio_state_change,
-            on_loaded=self._on_the_rock_audio_loaded,
+            on_loaded=self._on_the_rock_audio_loaded
         )
         self._the_rock_audio = audio
         self._page.services.append(audio)
@@ -1098,22 +1092,22 @@ class ScannerResult(ft.Container):
                 self.lang["purchase_scanner.pause_rule"],
                 self.lang["purchase_scanner.pause_rule_description"].format(
                     pause_time=pause_time
-                ),
+                )
             ),
             InterventionItem(
                 self._page,
                 self.lang["purchase_scanner.budget_check"],
                 self.lang["purchase_scanner.budget_check_description"].format(
                     price=formatted_price
-                ),
+                )
             ),
             InterventionItem(
                 self._page,
                 self.lang["purchase_scanner.reflection"],
                 self.lang["purchase_scanner.reflection_description"].format(
                     trigger=trigger_display
-                ),
-            ),
+                )
+            )
         ]
 
         self.interventions_col.controls.clear()
@@ -1155,7 +1149,7 @@ class ScannerPageContent(ft.Container):
             bottom=0,
             blur=ft.Blur(6, 6),
             bgcolor=ft.Colors.with_opacity(0.45, Color.DARK_SURFACE),
-            alignment=ft.Alignment.CENTER,
+            alignment=ft.Alignment.CENTER
         )
 
         self.scan_cards_row = ft.Column(
@@ -1184,19 +1178,19 @@ class ScannerPageContent(ft.Container):
                     self.google_required_card,
                     self.usage_card,
                     self.scan_cards_stack,
-                    ft.Container(history_card, margin=ft.Margin.only(top=4)),
-                ],
+                    ft.Container(history_card, margin=ft.Margin.only(top=4))
+                ]
             )
         )
 
         super().__init__(
             content=ft.Column(
                 scroll=ft.ScrollMode.AUTO,
-                controls=[self.content_container],
+                controls=[self.content_container]
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=0),
+            margin=ft.Margin(bottom=0)
         )
         self.set_google_access(signed_in)
 
@@ -1222,15 +1216,15 @@ class ScannerPageContent(ft.Container):
             width=content_width,
             content_width=component_content_width,
             thinking_value_width=scale_width(page_width, 184),
-            thinking_unit_width=scale_width(page_width, 150),
+            thinking_unit_width=scale_width(page_width, 150)
         )
         self.result_card.resize(
             width=content_width,
             content_width=component_content_width,
             intervention_width=scale_width(page_width, 316),
-            illustration_size=scale_width(page_width, 240),
+            illustration_size=scale_width(page_width, 240)
         )
         self.history_card.resize(
             width=content_width,
-            content_width=scale_width(page_width, 368),
+            content_width=scale_width(page_width, 368)
         )

@@ -9,12 +9,7 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.common import Menu
-from src.pages.purchase_scanner.components import (
-    ScannerForm,
-    ScannerHistoryCard,
-    ScannerPageContent,
-    ScannerResult,
-)
+from src.pages.purchase_scanner.components import ScannerForm, ScannerHistoryCard, ScannerPageContent, ScannerResult
 from src.pages.purchase_scanner.logic import LogicController, ScannerApiError
 from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size
 
@@ -43,7 +38,7 @@ class PurchaseScannerView(ft.View):
             page=self._page,
             lang=self.lang,
             currency=self.currency,
-            on_scan_click=self.handle_scan_click,
+            on_scan_click=self.handle_scan_click
         )
 
         self.result_card = ScannerResult(
@@ -55,7 +50,7 @@ class PurchaseScannerView(ft.View):
             lang=self.lang,
             on_delete_entry=self.handle_delete_history_entry,
             on_clear_all=self.handle_clear_history,
-            currency=self.currency,
+            currency=self.currency
         )
 
         self.history_card.set_history(self.scan_history)
@@ -64,7 +59,7 @@ class PurchaseScannerView(ft.View):
             form_card=self.form_card,
             result_card=self.result_card,
             history_card=self.history_card,
-            signed_in=self.controller.has_google_account_session(),
+            signed_in=self.controller.has_google_account_session()
         )
 
         super().__init__(
@@ -80,8 +75,8 @@ class PurchaseScannerView(ft.View):
                         self.scanner_content,
                         self.menu
                     ]
-                ),
-            ),
+                )
+            )
         )
 
         self._page.on_resize = self._resize_page
@@ -235,7 +230,7 @@ class PurchaseScannerView(ft.View):
             self.scanner_content.resize(page_width, page_height)
             self.menu.resize(
                 width=page_width,
-                **menu_resize_values,
+                **menu_resize_values
             )
             self.scanner_content.margin.bottom = self.menu.reserved_height
 

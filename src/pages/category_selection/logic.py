@@ -58,7 +58,7 @@ class LogicController:
                 category_id,
                 category_type,
                 name,
-                icon_name,
+                icon_name
             )
         return 0 if saved else -1
 

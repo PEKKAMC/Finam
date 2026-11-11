@@ -4,12 +4,7 @@
 
 """Purchase Scanner page - AI-assisted purchase decision analysis."""
 
-from src.pages.purchase_scanner.components import (
-    InterventionItem,
-    ScannerForm,
-    ScannerResult,
-    SelectableOptionGroup,
-)
+from src.pages.purchase_scanner.components import InterventionItem, ScannerForm, ScannerResult, SelectableOptionGroup
 from src.pages.purchase_scanner.logic import LogicController
 from src.pages.purchase_scanner.view import PurchaseScannerView, get_scanner_view
 
@@ -20,5 +15,5 @@ __all__ = [
     "ScannerForm",
     "ScannerResult",
     "SelectableOptionGroup",
-    "get_scanner_view",
+    "get_scanner_view"
 ]

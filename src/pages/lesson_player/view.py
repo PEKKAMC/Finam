@@ -9,28 +9,9 @@ import re
 import flet as ft
 
 from src.logger import Logger
-from src.pages.lesson_player.components import (
-    LessonControls,
-    LessonHeader,
-    PresentationBoard,
-    SlideCanvas,
-    TopNavigationMenu,
-)
-from src.pages.lesson_player.logic import (
-    ENTRANCE_EFFECTS,
-    AnimationController,
-    AudioController,
-    InterfaceItem,
-    LogicController,
-)
-from src.utils import (
-    Color,
-    Page,
-    create_text,
-    get_safe_page_size,
-    scale_height,
-    scale_width,
-)
+from src.pages.lesson_player.components import LessonControls, LessonHeader, PresentationBoard, SlideCanvas, TopNavigationMenu
+from src.pages.lesson_player.logic import ENTRANCE_EFFECTS, AnimationController, AudioController, InterfaceItem, LogicController
+from src.utils import Color, Page, create_text, get_safe_page_size, scale_height, scale_width
 
 Logger.info("Initializing Lesson Player page...")
 
@@ -64,37 +45,37 @@ class LessonPlayerView(ft.View):
         self.lesson_header = LessonHeader(
             page=self._page,
             lang=self.lang,
-            default_title=self.lesson_logic.lesson_title,
+            default_title=self.lesson_logic.lesson_title
         )
         self.lesson_controls = LessonControls(
             page=self._page,
             lang=self.lang,
             on_previous_click=self.handle_previous_slide,
-            on_next_click=self.handle_next_slide,
+            on_next_click=self.handle_next_slide
         )
         self.presentation_board = PresentationBoard(
             self._page,
             self.lang,
             self.lesson_header,
             self.lesson_controls,
-            self.slide_canvas,
+            self.slide_canvas
         )
 
         self.center_alignment_container = ft.Container(
             content=ft.Column(
                 spacing=25, controls=[self.top_navigation_menu, self.presentation_board]
             ),
-            padding=20,
+            padding=20
         )
 
         # INITIALIZE MAIN CONTAINER
         self.main_container = ft.Container(
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.CENTER,
-                controls=[self.center_alignment_container],
+                controls=[self.center_alignment_container]
             ),
             expand=True,
-            padding=0,
+            padding=0
         )
 
         routing_path = (
@@ -107,7 +88,7 @@ class LessonPlayerView(ft.View):
             route=routing_path,
             padding=0,
             bgcolor=Color.PAGE_BACKGROUND,
-            controls=[ft.Stack(controls=[self.main_container], expand=True)],
+            controls=[ft.Stack(controls=[self.main_container], expand=True)]
         )
 
         self._page.on_resize = self._resize_page
@@ -118,7 +99,7 @@ class LessonPlayerView(ft.View):
                 PROJECT_ROOT_DIRECTORY,
                 ASSETS_DIRECTORY,
                 LESSONS_DIRECTORY,
-                target_lesson_filename,
+                target_lesson_filename
             )
             self._page.run_task(self.initialize_lesson_from_path, full_target_path)
 
@@ -184,7 +165,7 @@ class LessonPlayerView(ft.View):
                         clean_text_content,
                         size=font_size,
                         color=Color.DEFAULT_TEXT,
-                        width=target_width,
+                        width=target_width
                     )
 
             elif is_divider_element:
@@ -195,7 +176,7 @@ class LessonPlayerView(ft.View):
                     content=ft.Divider(thickness=2, color=Color.DEFAULT_TEXT),
                     width=target_width,
                     height=20,
-                    alignment=ft.Alignment.CENTER,
+                    alignment=ft.Alignment.CENTER
                 )
 
                 if entrance_effect == "Wipe":
@@ -204,7 +185,7 @@ class LessonPlayerView(ft.View):
                             ft.Container(
                                 content=divider_content,
                                 width=target_width,
-                                alignment=ft.Alignment.TOP_LEFT,
+                                alignment=ft.Alignment.TOP_LEFT
                             )
                         ]
                     )
@@ -215,7 +196,7 @@ class LessonPlayerView(ft.View):
                         alignment=ft.Alignment.TOP_LEFT,
                         animate=ft.Animation(
                             animation_duration_milliseconds, ft.AnimationCurve.LINEAR
-                        ),
+                        )
                     )
                 else:
                     visual_control = divider_content
@@ -232,7 +213,7 @@ class LessonPlayerView(ft.View):
                     image_content = ft.Image(
                         src=final_image_source,
                         fit=ft.BoxFit.CONTAIN,
-                        width=target_width,
+                        width=target_width
                     )
                 else:
                     image_content = ft.Icon(ft.Icons.BROKEN_IMAGE, size=target_width)
@@ -243,7 +224,7 @@ class LessonPlayerView(ft.View):
                             ft.Container(
                                 content=image_content,
                                 width=target_width,
-                                alignment=ft.Alignment.TOP_LEFT,
+                                alignment=ft.Alignment.TOP_LEFT
                             )
                         ]
                     )
@@ -254,7 +235,7 @@ class LessonPlayerView(ft.View):
                         alignment=ft.Alignment.TOP_LEFT,
                         animate=ft.Animation(
                             animation_duration_milliseconds, ft.AnimationCurve.LINEAR
-                        ),
+                        )
                     )
                 else:
                     visual_control = image_content
@@ -276,7 +257,7 @@ class LessonPlayerView(ft.View):
                 animate_opacity=initial_animation_object,
                 animate_offset=initial_animation_object,
                 animate_scale=initial_animation_object,
-                alignment=ft.Alignment.CENTER,
+                alignment=ft.Alignment.CENTER
             )
 
             user_interface_elements.append(
@@ -315,7 +296,7 @@ class LessonPlayerView(ft.View):
             PROJECT_ROOT_DIRECTORY,
             ASSETS_DIRECTORY,
             IMAGES_DIRECTORY,
-            image_source_path,
+            image_source_path
         )
         return resolved_path if os.path.isfile(resolved_path) else ""
 
@@ -343,11 +324,11 @@ class LessonPlayerView(ft.View):
                     self.lesson_logic.lesson_title,
                     self.lesson_logic.current_slide_index,
                     self.lesson_logic.get_total_slides(),
-                    self.lang,
+                    self.lang
                 )
                 self.lesson_controls.update_button_states(
                     self.lesson_logic.has_previous_slide(),
-                    self.lesson_logic.has_next_slide(),
+                    self.lesson_logic.has_next_slide()
                 )
 
                 self._page.update()
@@ -375,7 +356,7 @@ class LessonPlayerView(ft.View):
             self.lesson_logic.lesson_title,
             self.lesson_logic.current_slide_index,
             self.lesson_logic.get_total_slides(),
-            self.lang,
+            self.lang
         )
         self.lesson_controls.update_button_states(
             self.lesson_logic.has_previous_slide(), self.lesson_logic.has_next_slide()
@@ -433,13 +414,13 @@ class LessonPlayerView(ft.View):
                 width=center_width,
                 height=board_height,
                 padding=board_padding,
-                content_width=board_content_width,
+                content_width=board_content_width
             )
             self.lesson_header.resize(width=board_content_width)
             self.lesson_controls.resize(width=board_content_width)
             self.slide_canvas.resize(
                 width=board_content_width,
-                height=canvas_height,
+                height=canvas_height
             )
 
             return 0

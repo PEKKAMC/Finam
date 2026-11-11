@@ -9,10 +9,7 @@ from collections.abc import Callable
 import flet as ft
 
 from src.logger import Logger
-from src.pages.common.user_dialog.logic import (
-    format_created_date_label,
-    get_user_initial,
-)
+from src.pages.common.user_dialog.logic import format_created_date_label, get_user_initial
 from src.utils import Color, DefaultSettings, Dialog, Page, Text, scale_width
 
 
@@ -93,7 +90,7 @@ class UserManagementDialog(Dialog):
                         ]
                     ),
                     self.selection_section,
-                    self.add_user_section,
+                    self.add_user_section
                 ]
             )
         )
@@ -126,7 +123,7 @@ class UserList(ft.Container):
 
         self.list_column = ft.Column(
             spacing=12,
-            scroll=ft.ScrollMode.AUTO,
+            scroll=ft.ScrollMode.AUTO
         )
         self.main_container = ft.Container(
             content=self.list_column,
@@ -151,11 +148,11 @@ class UserList(ft.Container):
         username_label = Text.MEDIUM(
             username,
             color=Color.PRIMARY_TEXT,
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
         created_at_label = Text.SMALL(
             format_created_date_label(created_prefix, created_at),
-            color=Color.SECONDARY_TEXT,
+            color=Color.SECONDARY_TEXT
         )
         avatar = ft.Container(
             content=avatar_label,
@@ -163,19 +160,19 @@ class UserList(ft.Container):
             width=40,
             height=40,
             border_radius=14,
-            alignment=ft.Alignment.CENTER,
+            alignment=ft.Alignment.CENTER
         )
         user_info = ft.Column(
             spacing=2,
             expand=True,
             horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
-            controls=[username_label, created_at_label],
+            controls=[username_label, created_at_label]
         )
         # Dynamic icons
         active_user_icon = ft.Icon(
             ft.Icons.PERSON_PIN,
             color=Color.PRIMARY,
-            size=20,
+            size=20
         )
         user_actions = ft.Column(
             alignment=ft.MainAxisAlignment.CENTER,
@@ -194,11 +191,11 @@ class UserList(ft.Container):
                             icon_color=Color.DELETE_ACTION,
                             icon_size=18,
                             on_click=lambda e, u=username: self.on_delete(u),
-                            tooltip=self.lang["user_management.delete_user_tooltip"],
+                            tooltip=self.lang["user_management.delete_user_tooltip"]
                         )
                     ] if not is_active else []
-                ),
-            ],
+                )
+            ]
         )
 
         user_box = ft.Container(
@@ -214,9 +211,9 @@ class UserList(ft.Container):
                 controls=[
                     avatar,
                     user_info,
-                    user_actions,
+                    user_actions
                 ]
-            ),
+            )
         )
         user_box.content.width = scale_width(self._list_width, 404) if self._list_width is not None else None
         return user_box
@@ -322,18 +319,18 @@ class AddUserField(ft.Container):
             border_radius=25,
             margin=ft.Margin.only(top=10),
             on_click=self._handle_submit,
-            expand=True,
+            expand=True
         )
         self.create_button_row = ft.Row(
             expand=True,
-            controls=[self.submit_button],
+            controls=[self.submit_button]
         )
         self.input_row = ft.Row(
             spacing=12,
-            controls=[self.input_field],
+            controls=[self.input_field]
         )
         self.currency_row = ft.Row(
-            controls=[self.currency_dropdown],
+            controls=[self.currency_dropdown]
         )
         self.main_container = ft.Column(
             tight=True,

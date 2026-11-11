@@ -19,13 +19,13 @@ class TopNavigationMenu(ft.Row):
             icon=ft.Icons.ARROW_BACK,
             icon_color=Color.PRIMARY_TEXT,
             icon_size=30,
-            on_click=on_return_click,
+            on_click=on_return_click
         )
         self.main_container = ft.Row(
             controls=[
                 ft.Container(content=self.return_button, alignment=ft.Alignment.CENTER)
             ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
         super().__init__(
@@ -49,7 +49,7 @@ class SlideCanvas(ft.Container):
             content=self.main_container,
             bgcolor=Color.CARD_BACKGROUND,
             border=ft.Border.all(1, Color.INPUT_BORDER),
-            clip_behavior=ft.ClipBehavior.HARD_EDGE,
+            clip_behavior=ft.ClipBehavior.HARD_EDGE
         )
 
     def clear_canvas(self) -> None:
@@ -77,7 +77,7 @@ class LessonHeader(ft.Row):
         self.progress_display = Text.H4("0 / 0", color=Color.SECONDARY_TEXT)
         self.main_container = ft.Row(
             controls=[self.title_display, self.progress_display],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
         super().__init__(
@@ -110,21 +110,21 @@ class LessonControls(ft.Row):
         self.button_previous = ft.Button(
             content=ft.Row(
                 controls=[self.previous_button_icon, self.previous_button_label],
-                spacing=6,
+                spacing=6
             ),
             on_click=on_previous_click,
-            disabled=True,
+            disabled=True
         )
         self.button_next = ft.Button(
             content=ft.Row(
                 controls=[self.next_button_icon, self.next_button_label], spacing=6
             ),
             on_click=on_next_click,
-            disabled=True,
+            disabled=True
         )
         self.main_container = ft.Row(
             controls=[self.button_previous, self.button_next],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
         super().__init__(
@@ -152,10 +152,10 @@ class PresentationBoard(ft.Container):
             controls=[
                 self.lesson_header,
                 self.lesson_controls,
-                ft.Row([self.slide_canvas], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Row([self.slide_canvas], alignment=ft.MainAxisAlignment.CENTER)
             ],
             expand=True,
-            scroll=ft.ScrollMode.AUTO,
+            scroll=ft.ScrollMode.AUTO
         )
 
         super().__init__(
@@ -166,8 +166,8 @@ class PresentationBoard(ft.Container):
             shadow=ft.BoxShadow(
                 spread_radius=1,
                 blur_radius=10,
-                color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK),
-            ),
+                color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK)
+            )
         )
 
     def resize(self, width: int, height: int, padding: int, content_width: int) -> None:

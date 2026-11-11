@@ -80,7 +80,7 @@ class LogicController:
             response = requests.get(
                 f"{backend_url}/api/v1/auth/me",
                 headers={"Authorization": f"Bearer {firebase_id_token}"},
-                timeout=15,
+                timeout=15
             )
             response.raise_for_status()
             return response.json()
@@ -95,7 +95,7 @@ class LogicController:
         return db.app_settings.set_google_account(
             google_uid,
             email,
-            refresh_token,
+            refresh_token
         )
 
     @staticmethod

@@ -6,18 +6,8 @@ from collections.abc import Callable
 
 import flet as ft
 
-from src.pages.common import (
-    AddUserField,
-    DeleteUserDialog,
-    UserList,
-    UserManagementDialog,
-)
-from src.pages.common.logic import (
-    change_user,
-    close_user_management_dialog,
-    save_last_user,
-    show_user_management_dialog,
-)
+from src.pages.common import AddUserField, DeleteUserDialog, UserList, UserManagementDialog
+from src.pages.common.logic import change_user, close_user_management_dialog, save_last_user, show_user_management_dialog
 from src.pages.starter.logic import LogicController
 from src.utils import Color, Data, DefaultSettings, Page, Text
 
@@ -37,7 +27,7 @@ class DialogManager:
             lang=self.lang,
             current_user=self.user_info["username"],
             on_select_callback=self.handle_change_user,
-            on_delete_callback=self.show_delete_prompt,
+            on_delete_callback=self.show_delete_prompt
         )
 
         self.add_form = AddUserField(
@@ -45,7 +35,7 @@ class DialogManager:
             lang=self.lang,
             on_submit_callback=self.handle_add_user,
             currencies=self.controller.get_currencies(),
-            default_currency=DefaultSettings.CURRENCY,
+            default_currency=DefaultSettings.CURRENCY
         )
 
         self.user_dialog = UserManagementDialog(
@@ -54,13 +44,13 @@ class DialogManager:
             user_list=self.user_list,
             add_form=self.add_form,
             on_close_callback=self._close_user_management_dialog,
-            has_cancel_button=False,
+            has_cancel_button=False
         )
 
         self.delete_dialog = DeleteUserDialog(
             page=self._page,
             lang=self.lang,
-            on_confirm_callback=self._handle_delete_confirm,
+            on_confirm_callback=self._handle_delete_confirm
         )
 
     def show_user_management_dialog(self) -> int:
@@ -97,7 +87,7 @@ class DialogManager:
         self._page.run_task(
             save_last_user,
             self._page.last_user_preferences,
-            username,
+            username
         )
         self._page.navigate_to("/home")(e)
 
@@ -134,7 +124,7 @@ class AppLockCard(ft.Container):
                 color=Color.PRIMARY_TEXT,
                 text_size=24,
                 on_change=lambda e, field_index=index: self._on_digit_change(field_index, e.control.value or ""),
-                on_focus=lambda e, field_index=index: self._on_field_focus(field_index),
+                on_focus=lambda e, field_index=index: self._on_field_focus(field_index)
             )
             for index in range(4)
         ]
@@ -153,7 +143,7 @@ class AppLockCard(ft.Container):
                 self.pin_title_text,
                 self.pin_fields,
                 self.error_text
-            ],
+            ]
         )
 
         super().__init__(

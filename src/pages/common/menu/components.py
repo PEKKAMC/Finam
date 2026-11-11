@@ -45,14 +45,14 @@ class Menu(ft.Container):
                 on_load=lambda e: Logger.info("AdMob banner loaded"),
                 on_error=lambda e: Logger.warning(
                     f"AdMob banner failed to load: {e.data}"
-                ),
+                )
             )
             self.ad_banner_height = self.BANNER_HEIGHT
             self.ad_container = ft.Container(
                 content=self.ad_banner,
                 height=self.ad_banner_height,
                 alignment=ft.Alignment.CENTER,
-                bgcolor=Color.PAGE_BACKGROUND,
+                bgcolor=Color.PAGE_BACKGROUND
             )
 
         self.navigation_items: list[NavigationItem] = [
@@ -61,7 +61,7 @@ class Menu(ft.Container):
             self.build_nav_item(ft.Icons.SAVINGS_ROUNDED, self.lang["generic.saving"], self._page.navigate_to("/savings"), is_active=self.active_icon == "saving"),
             self.build_nav_item(ft.Icons.ACCOUNT_BALANCE_WALLET_ROUNDED, self.lang["generic.spending"], self._page.navigate_to("/spending"), is_active=self.active_icon == "spending"),
             self.build_nav_item(ft.Icons.AUTO_AWESOME_ROUNDED, self.lang["generic.purchase_scanner"], self._page.navigate_to("/purchase_scanner"), is_active=self.active_icon == "scanner"),
-            self.build_nav_item(ft.Icons.PERSON_ROUNDED, self.lang["generic.change_user"], self._page.navigate_to("/user_management"), is_active=self.active_icon == "user_management"),
+            self.build_nav_item(ft.Icons.PERSON_ROUNDED, self.lang["generic.change_user"], self._page.navigate_to("/user_management"), is_active=self.active_icon == "user_management")
         ]
 
         if os.getenv("ENABLE_EDITOR") == "1":
@@ -80,8 +80,8 @@ class Menu(ft.Container):
                 alignment=ft.MainAxisAlignment.SPACE_AROUND,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=0,
-                controls=self.navigation_items,
-            ),
+                controls=self.navigation_items
+            )
         )
 
         menu_controls = []
@@ -90,7 +90,7 @@ class Menu(ft.Container):
         menu_controls.append(self.main_container)
         self.content_column = ft.Column(
             spacing=0,
-            controls=menu_controls,
+            controls=menu_controls
         )
 
         super().__init__(
@@ -99,7 +99,7 @@ class Menu(ft.Container):
             bottom=0,
             left=0,
             right=0,
-            alignment=ft.Alignment.CENTER,
+            alignment=ft.Alignment.CENTER
         )
 
     @staticmethod
@@ -132,7 +132,7 @@ class Menu(ft.Container):
                 icon_size,
                 label_size,
                 label_spacing,
-                label_visible,
+                label_visible
             )
 
 
@@ -152,7 +152,7 @@ class NavigationItem(ft.Container):
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=4,
-            controls=[self.icon, self.label],
+            controls=[self.icon, self.label]
         )
 
         super().__init__(
@@ -164,8 +164,8 @@ class NavigationItem(ft.Container):
                 border_radius=16,
                 bgcolor=active_background,
                 alignment=ft.Alignment.CENTER,
-                content=self.content_column,
-            ),
+                content=self.content_column
+            )
         )
 
     def resize(self, width: int, height: int, icon_size: int, label_size: int, spacing: int, label_visible: bool) -> None:

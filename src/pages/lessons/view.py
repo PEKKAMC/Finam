@@ -40,7 +40,7 @@ class LessonsView(ft.View):
             total_lessons=stats["total_lessons"],
             completed_lessons=stats["completed_lessons"],
             total_minutes=stats["total_minutes"],
-            completion_pct=stats["completion_percentage"],
+            completion_pct=stats["completion_percentage"]
         )
 
         self.lesson_grid = LessonGrid(
@@ -55,7 +55,7 @@ class LessonsView(ft.View):
         self.content_container = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
             padding=20,
-            content=self.content_column,
+            content=self.content_column
         )
         self.main_container = ft.Container(
             content=ft.Column(
@@ -63,7 +63,7 @@ class LessonsView(ft.View):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=0),
+            margin=ft.Margin(bottom=0)
         )
 
         super().__init__(
@@ -75,8 +75,8 @@ class LessonsView(ft.View):
                 expand=True,
                 content=ft.Stack(
                     expand=True, controls=[self.main_container, self.menu]
-                ),
-            ),
+                )
+            )
         )
 
         self._page.on_resize = self._resize_page
@@ -96,7 +96,7 @@ class LessonsView(ft.View):
             total_lessons=stats["total_lessons"],
             completed_lessons=stats["completed_lessons"],
             total_minutes=stats["total_minutes"],
-            completion_pct=stats["completion_percentage"],
+            completion_pct=stats["completion_percentage"]
         )
         self.lesson_grid = LessonGrid(
             page=self._page, lang=self.lang, lessons=self.available_lessons
@@ -127,18 +127,18 @@ class LessonsView(ft.View):
 
             self.menu.resize(
                 width=page_width,
-                **menu_resize_values,
+                **menu_resize_values
             )
 
             self.summary_banner.resize(
                 width=content_width,
-                content_width=scale_width(page_width, 344),
+                content_width=scale_width(page_width, 344)
             )
 
             self.lesson_grid.resize(
                 width=content_width,
                 card_width=lesson_card_width,
-                cover_height=lesson_cover_height,
+                cover_height=lesson_cover_height
             )
 
         except AttributeError as ex:

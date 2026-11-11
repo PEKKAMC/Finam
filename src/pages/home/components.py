@@ -20,7 +20,7 @@ PIE_CHART_COLORS = (
     Color.PIE_CHART_GREEN,
     Color.PIE_CHART_YELLOW,
     Color.PIE_CHART_TURQUOISE,
-    Color.PIE_CHART_PURPLE,
+    Color.PIE_CHART_PURPLE
 )
 
 
@@ -93,7 +93,7 @@ class BalanceCard(ft.Container):
                 controls=[
                     self.add_transaction_button_icon,
                     self.add_transaction_button_label
-                ],
+                ]
             ),
             bgcolor=Color.LIGHT_ACCENT,
             on_click=self.on_add_click,
@@ -112,7 +112,7 @@ class BalanceCard(ft.Container):
                 controls=[
                     self.purchase_scanner_icon,
                     self.purchase_scanner_button_label
-                ],
+                ]
             ),
             on_click=self.on_scan_click,
             style=ft.ButtonStyle(
@@ -205,7 +205,7 @@ class BalanceCard(ft.Container):
             border_radius=10,
             bgcolor=Color.LIGHT_ACCENT,
             alignment=ft.Alignment.CENTER,
-            content=self.ai_icon,
+            content=self.ai_icon
         )
 
         self.ai_banner_texts = ft.Column(
@@ -285,19 +285,19 @@ class SavingsGoalItem(ft.Container):
             item["title"],
             color=Color.DEFAULT_TEXT,
             weight=ft.FontWeight.BOLD,
-            expand=True,
+            expand=True
         )
         self.progress_text = Text.SMALL(item["progress_text"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.contributed_label = Text.SMALL(
             item["contributed_label"],
             color=Color.PRIMARY,
             weight=ft.FontWeight.BOLD,
-            expand=True,
+            expand=True
         )
         self.target_label = Text.SMALL(
             item["target_label"],
             color=Color.BLAND_TEXT,
-            expand=True,
+            expand=True
         )
 
         # CONTAINER COMPONENTS
@@ -500,7 +500,7 @@ class SavingsProgressCard(ft.Container):
                     if self._inner_width is not None:
                         self.goal_items[-1].resize(
                             self._inner_width,
-                            self._goal_item_content_width or 0,
+                            self._goal_item_content_width or 0
                         )
 
             self.goal_items_column.controls = list(self.goal_items)
@@ -596,7 +596,7 @@ class ExpensePieChart(ft.Container):
                 fc.PieChartSection(
                     float(val),
                     color=self._get_section_color(idx, len(self.category_data)),
-                    radius=self.chart_radius,
+                    radius=self.chart_radius
                 )
                 for idx, val in enumerate(self.category_data.values())
             ] if self.category_data else [fc.PieChartSection(1, color=Color.TRANSPARENT, radius=self.chart_radius)],

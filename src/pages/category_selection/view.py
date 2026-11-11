@@ -33,7 +33,7 @@ class CategorySelectionView(ft.View):
         self.keyboard_container = KeyboardContainer(
             page=self._page,
             lang=self.lang,
-            on_save=self._on_save_clicked,
+            on_save=self._on_save_clicked
         )
 
         self.keyboard_container.bottom = None
@@ -43,20 +43,20 @@ class CategorySelectionView(ft.View):
             self.lang,
             self.controller.data.get_category_icons(),
             self._save_custom_category,
-            self._confirm_delete_category,
+            self._confirm_delete_category
         )
 
         self.delete_category_dialog = DeleteCategoryDialog(
             self._page,
             self.lang,
-            self._delete_custom_category,
+            self._delete_custom_category
         )
 
         self.content_component = CategorySelectionContent(
             page=self._page,
             lang=self.lang,
             on_cancel=self._on_cancel_clicked,
-            on_type_change=self.switch_type,
+            on_type_change=self.switch_type
         )
 
         self.load_categories("expense")
@@ -73,9 +73,9 @@ class CategorySelectionView(ft.View):
                     controls=[
                         self.content_component,
                         self.keyboard_container
-                    ],
-                ),
-            ),
+                    ]
+                )
+            )
         )
 
         self._page.on_resize = self._resize_page
@@ -108,7 +108,7 @@ class CategorySelectionView(ft.View):
             self.selected_category,
             self.set_category,
             self._open_add_category,
-            self._edit_custom_category,
+            self._edit_custom_category
         )
 
     def _open_add_category(self) -> None:
@@ -142,7 +142,7 @@ class CategorySelectionView(ft.View):
     def _confirm_delete_category(self, category: dict[str, Any]) -> None:
         transaction_count = self.controller.get_category_transaction_count(
             self.current_type,
-            category["name"],
+            category["name"]
         )
         self.delete_category_dialog.show_confirmation(category, transaction_count)
 
@@ -150,7 +150,7 @@ class CategorySelectionView(ft.View):
         category = self.delete_category_dialog.category
         success = self.controller.delete_custom_category(
             category_id,
-            self.current_type,
+            self.current_type
         )
         if not success:
             return False

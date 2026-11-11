@@ -55,7 +55,7 @@ class DatabaseConnection:
             connection.create_aggregate(
                 "decimal_sum",
                 1,
-                cast(Any, self._decimal_sum_factory()),
+                cast(Any, self._decimal_sum_factory())
             )
             cursor = connection.cursor()
             cursor.execute(
@@ -65,7 +65,7 @@ class DatabaseConnection:
                     if isinstance(parameter, Decimal)
                     else parameter
                     for parameter in parameters
-                ),
+                )
             )
 
             if fetch_all:
@@ -100,21 +100,21 @@ class DatabaseConnection:
 
                 create_sql = connection.execute(
                     "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
-                    (table,),
+                    (table,)
                 ).fetchone()[0]
                 migration_table = f"__decimal_migration_{table}"
                 connection.execute(f"DROP TABLE IF EXISTS {migration_table}")
                 create_sql = create_sql.replace(
                     f"CREATE TABLE {table}",
                     f"CREATE TABLE {migration_table}",
-                    1,
+                    1
                 )
                 create_sql, replacements = re.subn(
                     rf"(\b{re.escape(column)}\s+)(?:INTEGER|INT|REAL|NUMERIC)\b",
                     r"\1TEXT",
                     create_sql,
                     count=1,
-                    flags=re.IGNORECASE,
+                    flags=re.IGNORECASE
                 )
                 if replacements != 1:
                     raise RuntimeError(f"Could not migrate {table}.{column} to TEXT")
@@ -186,7 +186,7 @@ class DatabaseConnection:
                 "google_refresh_token",
                 "google_tier_uid",
                 "google_tier",
-                "mobile_google_oauth_pending",
+                "mobile_google_oauth_pending"
             ):
                 try:
                     self.execute(
@@ -204,7 +204,7 @@ class DatabaseConnection:
                 pass
             self.execute(
                 "INSERT OR IGNORE INTO app_settings (id, digit_separator) VALUES (1, ?)",
-                (DefaultSettings.DIGIT_SEPARATOR,),
+                (DefaultSettings.DIGIT_SEPARATOR,)
             )
             user_columns = {
                 row[1]
@@ -214,7 +214,7 @@ class DatabaseConnection:
                 legacy_account = self.execute(
                     "SELECT google_uid, google_email FROM users "
                     "WHERE google_uid IS NOT NULL LIMIT 1",
-                    fetch_one=True,
+                    fetch_one=True
                 )
                 if legacy_account:
                     self.execute(
@@ -223,7 +223,7 @@ class DatabaseConnection:
                         SET google_uid = ?, google_email = ?
                         WHERE id = 1 AND google_uid IS NULL
                         """,
-                        legacy_account,
+                        legacy_account
                     )
                 self.execute(
                     "UPDATE users SET google_uid = NULL, google_email = NULL "
@@ -237,13 +237,13 @@ class DatabaseConnection:
             separator_migration = self.execute(
                 "SELECT 1 FROM app_settings_migrations "
                 "WHERE migration = 'digit_separator_default_v1'",
-                fetch_one=True,
+                fetch_one=True
             )
             if not separator_migration:
                 self.execute(
                     "UPDATE app_settings SET digit_separator = ? "
                     "WHERE digit_separator = ''",
-                    (DefaultSettings.DIGIT_SEPARATOR,),
+                    (DefaultSettings.DIGIT_SEPARATOR,)
                 )
                 self.execute(
                     "INSERT INTO app_settings_migrations (migration) "
@@ -288,28 +288,28 @@ class DatabaseConnection:
             self.execute(
                 "UPDATE user_settings SET currency = ? "
                 "WHERE currency IS NULL OR currency = ''",
-                (DefaultSettings.CURRENCY,),
+                (DefaultSettings.CURRENCY,)
             )
 
             theme_default_migration = self.execute(
                 "SELECT 1 FROM app_settings_migrations "
                 "WHERE migration = 'system_theme_and_language_default_v1'",
-                fetch_one=True,
+                fetch_one=True
             )
             if not theme_default_migration:
                 configured_language = self.execute(
                     "SELECT starter_language FROM app_settings WHERE id = 1",
-                    fetch_one=True,
+                    fetch_one=True
                 )
                 if not configured_language or not configured_language[0]:
                     self.execute(
                         "UPDATE user_settings SET language = ? "
                         "WHERE language = 'vi'",
-                        (DefaultSettings.LANGUAGE,),
+                        (DefaultSettings.LANGUAGE,)
                     )
                     self.execute(
                         "UPDATE app_settings SET theme = 'system' "
-                        "WHERE theme = 'light'",
+                        "WHERE theme = 'light'"
                     )
                 self.execute(
                     "INSERT INTO app_settings_migrations (migration) "
@@ -318,18 +318,18 @@ class DatabaseConnection:
             language_default_migration = self.execute(
                 "SELECT 1 FROM app_settings_migrations "
                 "WHERE migration = 'device_language_default_v1'",
-                fetch_one=True,
+                fetch_one=True
             )
             if not language_default_migration:
                 configured_language = self.execute(
                     "SELECT starter_language FROM app_settings WHERE id = 1",
-                    fetch_one=True,
+                    fetch_one=True
                 )
                 if not configured_language or not configured_language[0]:
                     self.execute(
                         "UPDATE user_settings SET language = ? "
                         "WHERE language = 'vi'",
-                        (DefaultSettings.LANGUAGE,),
+                        (DefaultSettings.LANGUAGE,)
                     )
                 self.execute(
                     "INSERT INTO app_settings_migrations (migration) "
@@ -430,11 +430,6 @@ class DatabaseConnection:
                 "CREATE INDEX IF NOT EXISTS idx_incomes_user_date ON incomes(user_id, date)"
             )
 
-            count = self.execute(
-                "SELECT COUNT(*) FROM users",
-                fetch_one=True
-            )[0]
-
             Logger.info("Database initialized successfully.")
         except Exception as error:
             Logger.error(f"Failed to initialize database: {error}")
@@ -483,7 +478,7 @@ class UserDatabase:
         self.db.execute("DELETE FROM purchase_scan_history WHERE user_id = ?", (user_id,))
         self.db.execute(
             "DELETE FROM spending_analysis_history WHERE user_id = ?",
-            (user_id,),
+            (user_id,)
         )
         self.db.execute("DELETE FROM expenses WHERE user_id = ?", (user_id,))
         self.db.execute("DELETE FROM incomes WHERE user_id = ?", (user_id,))
@@ -624,7 +619,7 @@ class AppSettingsDatabase:
             self.db.execute(
                 "UPDATE app_settings SET mobile_google_oauth_pending = ? "
                 "WHERE id = 1",
-                (pending,),
+                (pending,)
             )
             return True
         except sqlite3.Error as ex:
@@ -634,7 +629,7 @@ class AppSettingsDatabase:
     def take_mobile_google_oauth(self, state: str) -> Optional[Dict[str, Any]]:
         pending_row = self.db.execute(
             "SELECT mobile_google_oauth_pending FROM app_settings WHERE id = 1",
-            fetch_one=True,
+            fetch_one=True
         )
         if not pending_row or not pending_row[0]:
             return None
@@ -669,7 +664,7 @@ class AppSettingsDatabase:
     def get_starter_language(self) -> str:
         result = self.db.execute(
             "SELECT starter_language FROM app_settings WHERE id = 1",
-            fetch_one=True,
+            fetch_one=True
         )
         if result and result[0]:
             return result[0]
@@ -682,7 +677,7 @@ class AppSettingsDatabase:
             ORDER BY u.id
             LIMIT 1
             """,
-            fetch_one=True,
+            fetch_one=True
         )
         return (
             first_user_language[0]
@@ -697,7 +692,7 @@ class AppSettingsDatabase:
         try:
             self.db.execute(
                 "UPDATE app_settings SET starter_language = ? WHERE id = 1",
-                (language,),
+                (language,)
             )
             return True
         except sqlite3.Error as ex:
@@ -707,7 +702,7 @@ class AppSettingsDatabase:
     def get_google_account(self) -> Optional[Dict[str, str]]:
         result = self.db.execute(
             "SELECT google_uid, google_email FROM app_settings WHERE id = 1",
-            fetch_one=True,
+            fetch_one=True
         )
         if not result or not result[0]:
             return None
@@ -733,7 +728,7 @@ class AppSettingsDatabase:
             self.db.execute(
                 "UPDATE app_settings SET google_uid = ?, google_email = ?, "
                 "google_refresh_token = ? WHERE id = 1",
-                (google_uid, email, refresh_token),
+                (google_uid, email, refresh_token)
             )
             return True
         except sqlite3.Error as ex:
@@ -743,7 +738,7 @@ class AppSettingsDatabase:
     def get_google_refresh_token(self) -> Optional[str]:
         result = self.db.execute(
             "SELECT google_refresh_token FROM app_settings WHERE id = 1",
-            fetch_one=True,
+            fetch_one=True
         )
         return result[0] if result and result[0] else None
 
@@ -753,7 +748,7 @@ class AppSettingsDatabase:
         try:
             self.db.execute(
                 "UPDATE app_settings SET google_refresh_token = ? WHERE id = 1",
-                (refresh_token,),
+                (refresh_token,)
             )
             return True
         except sqlite3.Error as ex:
@@ -767,7 +762,7 @@ class AppSettingsDatabase:
             "SELECT google_tier FROM app_settings "
             "WHERE id = 1 AND google_tier_uid = ?",
             (google_uid,),
-            fetch_one=True,
+            fetch_one=True
         )
         tier = result[0] if result and result[0] else None
         return tier if tier in {"free", "premium", "developer"} else None
@@ -779,7 +774,7 @@ class AppSettingsDatabase:
             self.db.execute(
                 "UPDATE app_settings SET google_tier_uid = ?, google_tier = ? "
                 "WHERE id = 1",
-                (google_uid, tier),
+                (google_uid, tier)
             )
             return True
         except sqlite3.Error as ex:
@@ -802,7 +797,7 @@ class AppSettingsDatabase:
         """Get the app-wide theme setting."""
         result = self.db.execute(
             "SELECT theme FROM app_settings WHERE id = 1",
-            fetch_one=True,
+            fetch_one=True
         )
         theme = result[0] if result and result[0] else DefaultSettings.THEME
         if theme == "system":
@@ -821,7 +816,7 @@ class AppSettingsDatabase:
                 ThemeRegistry.get(theme)
             self.db.execute(
                 "UPDATE app_settings SET theme = ? WHERE id = 1",
-                (theme,),
+                (theme,)
             )
             return True
         except (ValueError, sqlite3.Error) as ex:
@@ -831,7 +826,7 @@ class AppSettingsDatabase:
     def get_digit_separator(self) -> str:
         result = self.db.execute(
             "SELECT digit_separator FROM app_settings WHERE id = 1",
-            fetch_one=True,
+            fetch_one=True
         )
         separator = result[0] if result and result[0] is not None else DefaultSettings.DIGIT_SEPARATOR
         if separator not in ("", ".", ",", "_"):
@@ -846,7 +841,7 @@ class AppSettingsDatabase:
         try:
             self.db.execute(
                 "UPDATE app_settings SET digit_separator = ? WHERE id = 1",
-                (separator,),
+                (separator,)
             )
             return True
         except sqlite3.Error as ex:
@@ -856,7 +851,7 @@ class AppSettingsDatabase:
     def get_decimal_separator(self) -> str:
         result = self.db.execute(
             "SELECT decimal_separator FROM app_settings WHERE id = 1",
-            fetch_one=True,
+            fetch_one=True
         )
         separator = result[0] if result and result[0] is not None else DefaultSettings.DECIMAL_SEPARATOR
         if separator not in (".", ","):
@@ -871,7 +866,7 @@ class AppSettingsDatabase:
         try:
             self.db.execute(
                 "UPDATE app_settings SET decimal_separator = ? WHERE id = 1",
-                (separator,),
+                (separator,)
             )
             return True
         except sqlite3.Error as ex:
@@ -979,7 +974,7 @@ class SavingsDatabase:
                 "FROM objectives o LEFT JOIN savings s ON s.objective_id = o.id AND s.deleted_at IS NULL "
                 "WHERE o.id = ? GROUP BY o.id",
                 (objective_id_value,),
-                fetch_one=True,
+                fetch_one=True
             )
             if result and 0 < Decimal(result[0]) <= Decimal(result[1]):
                 self.complete_objective(objective_id_value)
@@ -1214,7 +1209,7 @@ class SpendingDatabase:
             GROUP BY bucket, kind
             """,
             (username, start_date, end_date, username, start_date, end_date),
-            fetch_all=True,
+            fetch_all=True
         )
 
     def delete_entry(self, username: str, entry_id: int) -> bool:
@@ -1260,7 +1255,7 @@ class CategoryDatabase:
             ORDER BY c.name COLLATE NOCASE
             """,
             (username, category_type),
-            fetch_all=True,
+            fetch_all=True
         )
         return [
             {"id": row[0], "name": row[1], "icon": row[2]}
@@ -1278,7 +1273,7 @@ class CategoryDatabase:
                     (user_id, category_type, name, icon_name)
                 VALUES (?, ?, ?, ?)
                 """,
-                (user_id, category_type, name, icon_name),
+                (user_id, category_type, name, icon_name)
             )
             return True
         except sqlite3.IntegrityError:
@@ -1299,7 +1294,7 @@ class CategoryDatabase:
                     SELECT name FROM custom_categories
                     WHERE id = ? AND user_id = ? AND category_type = ?
                     """,
-                    (category_id, user_id, category_type),
+                    (category_id, user_id, category_type)
                 ).fetchone()
                 if row is None:
                     return False
@@ -1310,7 +1305,7 @@ class CategoryDatabase:
                     connection.execute(
                         f"UPDATE {table} SET category = ? "
                         "WHERE user_id = ? AND category = ?",
-                        (name, user_id, old_name),
+                        (name, user_id, old_name)
                     )
                 connection.execute(
                     """
@@ -1318,7 +1313,7 @@ class CategoryDatabase:
                     SET name = ?, icon_name = ?
                     WHERE id = ? AND user_id = ? AND category_type = ?
                     """,
-                    (name, icon_name, category_id, user_id, category_type),
+                    (name, icon_name, category_id, user_id, category_type)
                 )
                 return True
         except sqlite3.IntegrityError:
@@ -1335,7 +1330,7 @@ class CategoryDatabase:
         result = self.db.execute(
             f"SELECT COUNT(*) FROM {table} WHERE user_id = ? AND category = ?",
             (user_id, category_name),
-            fetch_one=True,
+            fetch_one=True
         )
         return int(result[0]) if result else 0
 
@@ -1350,7 +1345,7 @@ class CategoryDatabase:
                     DELETE FROM custom_categories
                     WHERE id = ? AND user_id = ? AND category_type = ?
                     """,
-                    (category_id, user_id, category_type),
+                    (category_id, user_id, category_type)
                 )
                 return cursor.rowcount > 0
         except sqlite3.Error as ex:
@@ -1380,7 +1375,7 @@ class PurchaseScannerDatabase:
                 user_id, item_name, price, trigger, reason, thinking_time, risk_score, trigger_display, ai_advice, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (user_id, item_name, price, trigger, reason, thinking_time, int(risk_score), trigger_display, ai_advice, created_at),
+            (user_id, item_name, price, trigger, reason, thinking_time, int(risk_score), trigger_display, ai_advice, created_at)
         )
         return True
 
@@ -1397,7 +1392,7 @@ class PurchaseScannerDatabase:
             ORDER BY id DESC
             """,
             (user_id,),
-            fetch_all=True,
+            fetch_all=True
         )
         return [
             {
@@ -1422,7 +1417,7 @@ class PurchaseScannerDatabase:
 
         self.db.execute(
             "DELETE FROM purchase_scan_history WHERE user_id = ? AND id = ?",
-            (user_id, scan_id),
+            (user_id, scan_id)
         )
         return True
 
@@ -1454,8 +1449,8 @@ class SpendingAnalysisDatabase:
             (
                 user_id,
                 json.dumps(report, ensure_ascii=False, default=str),
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            ),
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            )
         )
         return True
 
@@ -1471,7 +1466,7 @@ class SpendingAnalysisDatabase:
             ORDER BY id DESC
             """,
             (user_id,),
-            fetch_all=True,
+            fetch_all=True
         )
         return [
             {
@@ -1492,7 +1487,7 @@ class SpendingAnalysisDatabase:
             WHERE id = ? AND user_id = ?
             """,
             (report_id, user_id),
-            fetch_one=True,
+            fetch_one=True
         )
         if not existing_report:
             return False
@@ -1501,7 +1496,7 @@ class SpendingAnalysisDatabase:
             DELETE FROM spending_analysis_history
             WHERE id = ? AND user_id = ?
             """,
-            (report_id, user_id),
+            (report_id, user_id)
         )
         return True
 

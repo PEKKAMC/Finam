@@ -40,26 +40,26 @@ class LessonEditorView(ft.View):
             label=self.lang["lesson_editor.lesson_id"],
             value="1",
             width=100,
-            color=Color.DEFAULT_TEXT,
+            color=Color.DEFAULT_TEXT
         )
         self.title_input = ft.TextField(
             label=self.lang["lesson_editor.lesson_title"],
             color=Color.DEFAULT_TEXT,
-            expand=True,
+            expand=True
         )
         self.subtitle_input = ft.TextField(
             label=self.lang["lesson_editor.lesson_subtitle"],
             color=Color.DEFAULT_TEXT,
-            expand=True,
+            expand=True
         )
         self.cover_image_input = ft.TextField(
             label=self.lang["lesson_editor.cover_image"],
             color=Color.DEFAULT_TEXT,
-            expand=True,
+            expand=True
         )
         self.slide_number_title = Text.MEDIUM(
             f"{self.lang['lesson_editor.slide']} {self.logic.current_slide_index + 1}",
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
 
         self.sidebar_column = ft.Column(
@@ -73,7 +73,7 @@ class LessonEditorView(ft.View):
             bgcolor=Color.CARD_BACKGROUND,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             border_radius=8,
-            clip_behavior=ft.ClipBehavior.HARD_EDGE,
+            clip_behavior=ft.ClipBehavior.HARD_EDGE
         )
 
         self.element_properties = ft.Column(
@@ -88,7 +88,7 @@ class LessonEditorView(ft.View):
             self.lang,
             self.element_properties,
             self.animation_pane,
-            self.audio_pane,
+            self.audio_pane
         )
 
         self.toolbar = EditorToolbar(
@@ -97,7 +97,7 @@ class LessonEditorView(ft.View):
             self.add_element_handler,
             self.add_element_handler,
             self.add_element_handler,
-            self.add_element_handler,
+            self.add_element_handler
         )
         self.slide_sidebar = SlideSidebarLayout(
             self._page,
@@ -106,30 +106,30 @@ class LessonEditorView(ft.View):
             self.add_slide_handler,
             self.move_slide_up_handler,
             self.move_slide_down_handler,
-            self.delete_slide_handler,
+            self.delete_slide_handler
         )
 
         self.center_editor = ft.Column(
             [
                 ft.Row(
                     [self.slide_number_title, self.toolbar],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN
                 ),
-                ft.Row([self.canvas_container], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Row([self.canvas_container], alignment=ft.MainAxisAlignment.CENTER)
             ],
-            expand=True,
+            expand=True
         )
         self.center_panel = ft.Container(
             content=self.center_editor,
             padding=20,
-            expand=True,
+            expand=True
         )
         self.properties_panel = ft.Container(
             content=self.properties_tabs,
             width=320,
             padding=10,
             border=ft.Border(left=ft.BorderSide(1, Color.INPUT_BORDER)),
-            bgcolor=Color.CARD_BACKGROUND,
+            bgcolor=Color.CARD_BACKGROUND
         )
 
         self.editor_layout = ft.Container(
@@ -137,15 +137,15 @@ class LessonEditorView(ft.View):
                 [
                     self.slide_sidebar,
                     self.center_panel,
-                    self.properties_panel,
+                    self.properties_panel
                 ],
                 expand=True,
-                scroll=ft.ScrollMode.AUTO,
+                scroll=ft.ScrollMode.AUTO
             ),
             height=CANVAS_DESIGN_HEIGHT,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             border_radius=10,
-            bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND,
+            bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND
         )
 
         page_content = ft.Container(
@@ -156,16 +156,16 @@ class LessonEditorView(ft.View):
                             self.lesson_id_input,
                             self.title_input,
                             self.subtitle_input,
-                            self.cover_image_input,
+                            self.cover_image_input
                         ],
-                        spacing=15,
+                        spacing=15
                     ),
-                    self.editor_layout,
+                    self.editor_layout
                 ],
-                expand=True,
+                expand=True
             ),
             expand=True,
-            padding=20,
+            padding=20
         )
 
         # INITIALIZE MAIN CONTAINER
@@ -173,7 +173,7 @@ class LessonEditorView(ft.View):
             content=ft.Column(scroll=ft.ScrollMode.AUTO, controls=[page_content]),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=0),
+            margin=ft.Margin(bottom=0)
         )
 
         super().__init__(
@@ -185,8 +185,8 @@ class LessonEditorView(ft.View):
                 expand=True,
                 content=ft.Stack(
                     expand=True, controls=[self.main_container, self.menu]
-                ),
-            ),
+                )
+            )
         )
 
         self._page.on_resize = self._resize_page
@@ -207,7 +207,7 @@ class LessonEditorView(ft.View):
                 lesson_id,
                 (self.title_input.value or "").strip(),
                 (self.subtitle_input.value or "").strip(),
-                (self.cover_image_input.value or "").strip(),
+                (self.cover_image_input.value or "").strip()
             )
             try:
                 serialized_data = json.dumps(data, ensure_ascii=False, indent=2)
@@ -240,7 +240,7 @@ class LessonEditorView(ft.View):
     async def pick_image(self, e: ft.ControlEvent, text_field: ft.TextField, key: str) -> None:
         files = await ft.FilePicker().pick_files(
             allow_multiple=False,
-            allowed_extensions=["png", "jpg", "jpeg", "gif", "webp", "svg"],
+            allowed_extensions=["png", "jpg", "jpeg", "gif", "webp", "svg"]
         )
         if not files or not files[0].path:
             return
@@ -348,7 +348,7 @@ class LessonEditorView(ft.View):
                     content=create_text(
                         display_text, size=font_size, color=Color.DEFAULT_TEXT
                     ),
-                    width=element_width,
+                    width=element_width
                 )
             elif is_divider:
                 element_width = safe_float(element.get("width"), DEFAULT_ELEMENT_WIDTH)
@@ -356,7 +356,7 @@ class LessonEditorView(ft.View):
                     content=ft.Divider(thickness=2, color=Color.DEFAULT_TEXT),
                     width=element_width,
                     height=20,
-                    alignment=ft.Alignment.CENTER,
+                    alignment=ft.Alignment.CENTER
                 )
             else:
                 image_scale = safe_float(element.get("scale"), DEFAULT_ELEMENT_SCALE)
@@ -370,25 +370,25 @@ class LessonEditorView(ft.View):
                         fit=ft.BoxFit.CONTAIN,
                         width=final_width,
                         filter_quality=ft.FilterQuality.LOW,
-                        gapless_playback=True,
+                        gapless_playback=True
                     )
                 else:
                     visual = ft.Container(
                         content=ft.Icon(
                             ft.Icons.IMAGE,
                             color=Color.SECONDARY_TEXT,
-                            size=24 * image_scale,
+                            size=24 * image_scale
                         ),
                         bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND,
                         border_radius=5,
                         width=100 * image_scale,
                         height=100 * image_scale,
-                        alignment=ft.Alignment.CENTER,
+                        alignment=ft.Alignment.CENTER
                     )
 
             pos_container = ft.Container(
                 left=safe_float(element.get("x"), DEFAULT_ELEMENT_POSITION),
-                top=safe_float(element.get("y"), DEFAULT_ELEMENT_POSITION),
+                top=safe_float(element.get("y"), DEFAULT_ELEMENT_POSITION)
             )
             draggable_wrapper = ft.GestureDetector(
                 data=element,
@@ -402,8 +402,8 @@ class LessonEditorView(ft.View):
                     border=ft.Border.all(
                         2, ft.Colors.BLUE if is_selected else ft.Colors.TRANSPARENT
                     ),
-                    padding=2,
-                ),
+                    padding=2
+                )
             )
             pos_container.content = draggable_wrapper
             self.canvas_stack.controls.append(pos_container)
@@ -459,7 +459,7 @@ class LessonEditorView(ft.View):
                     color=Color.DEFAULT_TEXT,
                     on_change=lambda e, i=orig_idx: self._update_audio_element_property(
                         e, "content", i
-                    ),
+                    )
                 )
                 delay_tf = ft.TextField(
                     label="Delay In (s)",
@@ -470,13 +470,13 @@ class LessonEditorView(ft.View):
                     input_filter=float_filter,
                     on_change=lambda e, i=orig_idx: self._update_audio_element_property(
                         e, "timer_in", i
-                    ),
+                    )
                 )
                 del_button = ft.IconButton(
                     icon=ft.Icons.DELETE,
                     icon_color=ft.Colors.RED,
                     tooltip="Delete Track",
-                    on_click=lambda e, i=orig_idx: self.delete_element_handler(i),
+                    on_click=lambda e, i=orig_idx: self.delete_element_handler(i)
                 )
                 browse_button = ft.IconButton(
                     icon=ft.Icons.FOLDER_OPEN,
@@ -484,7 +484,7 @@ class LessonEditorView(ft.View):
                     tooltip="Browse File",
                     on_click=lambda e, tf=path_tf, i=orig_idx: self._page.run_task(
                         self.pick_audio_element, e, tf, i
-                    ),
+                    )
                 )
                 card = ft.Container(
                     content=ft.Column(
@@ -492,14 +492,14 @@ class LessonEditorView(ft.View):
                             ft.Row([path_tf, browse_button]),
                             ft.Row(
                                 [delay_tf, del_button],
-                                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                            ),
+                                alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                            )
                         ]
                     ),
                     padding=10,
                     border=ft.Border.all(1, Color.INPUT_BORDER),
                     border_radius=8,
-                    bgcolor=Color.CARD_BACKGROUND,
+                    bgcolor=Color.CARD_BACKGROUND
                 )
                 self.audio_pane.controls.append(card)
 
@@ -518,7 +518,7 @@ class LessonEditorView(ft.View):
                 if el_type == "text":
                     preview, icon_name = (
                         el.get("content", "")[:15] or "[Empty Text]",
-                        ft.Icons.TEXT_FIELDS,
+                        ft.Icons.TEXT_FIELDS
                     )
                 elif el_type == "divider":
                     preview, icon_name = "Text Divider", ft.Icons.HORIZONTAL_RULE
@@ -527,7 +527,7 @@ class LessonEditorView(ft.View):
                         os.path.basename(el.get("content", ""))
                         if el.get("content", "")
                         else "[Empty Image]",
-                        ft.Icons.IMAGE,
+                        ft.Icons.IMAGE
                     )
                 ent = ENTRANCE_EFFECTS.get(el.get("entrance", 0), "None")
                 has_anim = (
@@ -548,7 +548,7 @@ class LessonEditorView(ft.View):
                                 size=18,
                                 color=Color.NAVIGATION_ACTIVE_ICON
                                 if is_sel
-                                else Color.SECONDARY_TEXT,
+                                else Color.SECONDARY_TEXT
                             ),
                             ft.Column(
                                 [
@@ -559,20 +559,20 @@ class LessonEditorView(ft.View):
                                         else ft.FontWeight.NORMAL,
                                         color=Color.NAVIGATION_ACTIVE_TEXT
                                         if is_sel
-                                        else Color.DEFAULT_TEXT,
+                                        else Color.DEFAULT_TEXT
                                     ),
-                                    Text.MEDIUM(anim_desc, color=Color.SECONDARY_TEXT),
+                                    Text.MEDIUM(anim_desc, color=Color.SECONDARY_TEXT)
                                 ],
                                 spacing=2,
-                                expand=True,
+                                expand=True
                             ),
                             ft.Icon(
                                 ft.Icons.STAR,
                                 size=14,
                                 color=Color.WARNING_COLOR
                                 if has_anim
-                                else Color.TRANSPARENT,
-                            ),
+                                else Color.TRANSPARENT
+                            )
                         ]
                     ),
                     padding=10,
@@ -581,11 +581,11 @@ class LessonEditorView(ft.View):
                     else Color.CARD_BACKGROUND,
                     border=ft.Border.all(
                         1,
-                        Color.NAVIGATION_ACTIVE_ICON if is_sel else Color.INPUT_BORDER,
+                        Color.NAVIGATION_ACTIVE_ICON if is_sel else Color.INPUT_BORDER
                     ),
                     border_radius=8,
                     ink=True,
-                    on_click=lambda e, i_idx=i: self.select_element_by_index(i_idx),
+                    on_click=lambda e, i_idx=i: self.select_element_by_index(i_idx)
                 )
                 self.animation_pane.controls.append(anim_item)
 
@@ -613,7 +613,7 @@ class LessonEditorView(ft.View):
                                     )
                                 ),
                                 color=Color.DEFAULT_TEXT,
-                                input_filter=float_filter,
+                                input_filter=float_filter
                             ),
                             ft.TextField(
                                 label="Delay Out (s)",
@@ -625,8 +625,8 @@ class LessonEditorView(ft.View):
                                     )
                                 ),
                                 color=Color.DEFAULT_TEXT,
-                                input_filter=float_filter,
-                            ),
+                                input_filter=float_filter
+                            )
                         ]
                     )
                 )
@@ -635,7 +635,7 @@ class LessonEditorView(ft.View):
                     Text.MEDIUM(
                         "Entrance Animation",
                         weight=ft.FontWeight.BOLD,
-                        color=Color.PRIMARY_TEXT,
+                        color=Color.PRIMARY_TEXT
                     )
                 )
                 self.animation_pane.controls.append(
@@ -651,7 +651,7 @@ class LessonEditorView(ft.View):
                             ft.dropdown.Option(x)
                             for x in list(ENTRANCE_EFFECTS.values())[:5]
                         ],
-                        color=Color.DEFAULT_TEXT,
+                        color=Color.DEFAULT_TEXT
                     )
                 )
                 self.animation_pane.controls.append(
@@ -668,7 +668,7 @@ class LessonEditorView(ft.View):
                         ),
                         tooltip="e.g., 0.5",
                         color=Color.DEFAULT_TEXT,
-                        input_filter=float_filter,
+                        input_filter=float_filter
                     )
                 )
                 self.animation_pane.controls.append(ft.Divider())
@@ -676,7 +676,7 @@ class LessonEditorView(ft.View):
                     Text.MEDIUM(
                         "Exit Animation",
                         weight=ft.FontWeight.BOLD,
-                        color=Color.PRIMARY_TEXT,
+                        color=Color.PRIMARY_TEXT
                     )
                 )
                 self.animation_pane.controls.append(
@@ -687,7 +687,7 @@ class LessonEditorView(ft.View):
                             e, "exit", rebuild_ui=True, value_map=EXIT_IDS
                         ),
                         options=[ft.dropdown.Option(x) for x in EXIT_EFFECTS.values()],
-                        color=Color.DEFAULT_TEXT,
+                        color=Color.DEFAULT_TEXT
                     )
                 )
                 self.animation_pane.controls.append(
@@ -704,7 +704,7 @@ class LessonEditorView(ft.View):
                         ),
                         tooltip="e.g., 0.5",
                         color=Color.DEFAULT_TEXT,
-                        input_filter=float_filter,
+                        input_filter=float_filter
                     )
                 )
 
@@ -717,7 +717,7 @@ class LessonEditorView(ft.View):
             self.element_properties.controls.append(
                 Text.MEDIUM(
                     "Select a visual element to edit properties.",
-                    color=Color.SECONDARY_TEXT,
+                    color=Color.SECONDARY_TEXT
                 )
             )
             return
@@ -727,7 +727,7 @@ class LessonEditorView(ft.View):
             Text.MEDIUM(
                 "Element Properties",
                 weight=ft.FontWeight.BOLD,
-                color=Color.PRIMARY_TEXT,
+                color=Color.PRIMARY_TEXT
             )
         )
         if selected_element["type"] == "text":
@@ -739,7 +739,7 @@ class LessonEditorView(ft.View):
                     on_change=lambda e: self._update_selected_element_property(
                         e, "content", needs_canvas_update=True
                     ),
-                    color=Color.DEFAULT_TEXT,
+                    color=Color.DEFAULT_TEXT
                 )
             )
             self.element_properties.controls.append(
@@ -755,7 +755,7 @@ class LessonEditorView(ft.View):
                             ),
                             color=Color.DEFAULT_TEXT,
                             input_filter=float_filter,
-                            expand=True,
+                            expand=True
                         ),
                         ft.TextField(
                             label="Font Size",
@@ -765,8 +765,8 @@ class LessonEditorView(ft.View):
                             ),
                             color=Color.DEFAULT_TEXT,
                             input_filter=float_filter,
-                            expand=True,
-                        ),
+                            expand=True
+                        )
                     ]
                 )
             )
@@ -779,7 +779,7 @@ class LessonEditorView(ft.View):
                         e, "width", needs_canvas_update=True
                     ),
                     color=Color.DEFAULT_TEXT,
-                    input_filter=float_filter,
+                    input_filter=float_filter
                 )
             )
         else:
@@ -790,7 +790,7 @@ class LessonEditorView(ft.View):
                 on_change=lambda e: self._update_selected_element_property(
                     e, "content", needs_canvas_update=True
                 ),
-                color=Color.DEFAULT_TEXT,
+                color=Color.DEFAULT_TEXT
             )
             self.element_properties.controls.append(
                 ft.Row(
@@ -802,8 +802,8 @@ class LessonEditorView(ft.View):
                             icon_color=Color.SECONDARY_TEXT,
                             on_click=lambda e: self._page.run_task(
                                 self.pick_image, e, path_tf, "content"
-                            ),
-                        ),
+                            )
+                        )
                     ]
                 )
             )
@@ -818,7 +818,7 @@ class LessonEditorView(ft.View):
                     weight=ft.FontWeight.BOLD,
                     color=Color.NAVIGATION_ACTIVE_TEXT
                     if is_selected
-                    else Color.DEFAULT_TEXT,
+                    else Color.DEFAULT_TEXT
                 ),
                 padding=10,
                 bgcolor=Color.NAVIGATION_ACTIVE_BACKGROUND
@@ -829,7 +829,7 @@ class LessonEditorView(ft.View):
                 else ft.Border.all(1, Color.INPUT_BORDER),
                 border_radius=8,
                 ink=True,
-                on_click=lambda e, idx=i: self.select_slide(idx),
+                on_click=lambda e, idx=i: self.select_slide(idx)
             )
             self.sidebar_column.controls.append(item)
 
@@ -874,7 +874,7 @@ class LessonEditorView(ft.View):
             )
             self.menu.resize(
                 width=page_width,
-                **menu_resize_values,
+                **menu_resize_values
             )
             self.main_container.margin.bottom = self.menu.reserved_height
 
@@ -885,7 +885,7 @@ class LessonEditorView(ft.View):
             self.editor_layout.width = page_width
             self.slide_sidebar.resize(
                 content_width,
-                scale_width(page_width, SIDEBAR_CONTENT_DESIGN_WIDTH),
+                scale_width(page_width, SIDEBAR_CONTENT_DESIGN_WIDTH)
             )
             self.center_panel.width = content_width
             editor_content_width = scale_width(page_width, EDITOR_CONTENT_DESIGN_WIDTH)

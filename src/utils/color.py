@@ -290,12 +290,7 @@ class Theme:
     dark_mode: bool
 
     @classmethod
-    def from_color_class(
-        cls,
-        name: str,
-        color_class: type[Color],
-        dark_mode: bool,
-    ) -> "Theme":
+    def from_color_class(cls, name: str, color_class: type[Color], dark_mode: bool) -> "Theme":
         available_colors = {
             member
             for base in color_class.__mro__
@@ -312,7 +307,7 @@ class Theme:
                 member: getattr(color_class, member)
                 for member in Color.__annotations__
             }),
-            dark_mode=dark_mode,
+            dark_mode=dark_mode
         )
 
 
@@ -333,7 +328,7 @@ class ThemeRegistry:
         cls._themes[theme.name] = Theme(
             name=theme.name,
             colors=MappingProxyType(colors),
-            dark_mode=theme.dark_mode,
+            dark_mode=theme.dark_mode
         )
 
     @classmethod

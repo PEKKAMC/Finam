@@ -158,7 +158,7 @@ class LogicController:
             UnicodeDecodeError,
             json.JSONDecodeError,
             AttributeError,
-            TypeError,
+            TypeError
         ) as error:
             Logger.error(f"Failed to load lesson: {error}")
             return False
@@ -288,7 +288,7 @@ class AnimationController:
                         os.path.join(project_root, audio_source_path),
                         os.path.join(
                             project_root, "assets", "lessons", audio_source_path
-                        ),
+                        )
                     ]
                     for path_option in possible_paths:
                         if os.path.isfile(path_option):
@@ -362,7 +362,7 @@ class AnimationController:
                         animation_frames = generate_timeline(
                             segment_character_length,
                             segment_duration_seconds,
-                            ANIMATION_FRAME_RATE,
+                            ANIMATION_FRAME_RATE
                         )
 
                         for frame_data in animation_frames:

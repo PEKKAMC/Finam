@@ -8,20 +8,10 @@ import flet as ft
 
 from src.logger import Logger
 from src.database import db
-from src.pages.common import (
-    DeleteSpendingReportDialog,
-    FinancialChart,
-    Menu,
-    SpendingMonthDialog,
-    SpendingReportDialog,
-)
+from src.pages.common import DeleteSpendingReportDialog, FinancialChart, Menu, SpendingMonthDialog, SpendingReportDialog
 from src.pages.home.components import BalanceCard, ExpensePieChart, FeaturedLessonCard, SavingsProgressCard
 from src.pages.home.logic import DashboardData, LogicController
-from src.pages.spending.logic import (
-    MIN_SPENDING_ANALYSIS_TRANSACTIONS,
-    LogicController as SpendingLogicController,
-    SpendingAnalysisApiError,
-)
+from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController as SpendingLogicController, SpendingAnalysisApiError
 from src.utils import Color, MenuResizeValues, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Home page...")
@@ -44,17 +34,17 @@ class HomeView(ft.View):
         self.spending_report_dialog = SpendingReportDialog(
             page=self._page,
             lang=self.lang,
-            on_delete=self._confirm_delete_spending_report,
+            on_delete=self._confirm_delete_spending_report
         )
         self.delete_spending_report_dialog = DeleteSpendingReportDialog(
             page=self._page,
             lang=self.lang,
-            on_confirm=self._delete_spending_report,
+            on_confirm=self._delete_spending_report
         )
         self.spending_month_dialog = SpendingMonthDialog(
             page=self._page,
             lang=self.lang,
-            on_confirm=self._run_spending_scan,
+            on_confirm=self._run_spending_scan
         )
 
         # FETCH DASHBOARD DATA
@@ -76,7 +66,7 @@ class HomeView(ft.View):
             savings=self.dashboard_metrics["total_savings"],
             advice=self.advice,
             on_add_click=self._page.navigate_to("/category_selection"),
-            on_scan_click=self._open_spending_report,
+            on_scan_click=self._open_spending_report
         )
 
         self.financial_chart = FinancialChart(
@@ -91,7 +81,7 @@ class HomeView(ft.View):
             objective_items=self.controller.get_saving_progress_items(
                 self.objectives,
                 self.lang,
-                self.currency,
+                self.currency
             ),
             on_view_all_click=self._page.navigate_to("/savings")
         )
@@ -188,7 +178,7 @@ class HomeView(ft.View):
             expense=self.dashboard_metrics["total_expense"],
             savings=self.dashboard_metrics["total_savings"],
             ai_advice=self.advice,
-            currency=self.currency,
+            currency=self.currency
         )
 
         self.financial_chart.update_data()
@@ -197,18 +187,18 @@ class HomeView(ft.View):
             self.controller.get_saving_progress_items(
                 objectives=self.objectives,
                 lang=self.lang,
-                currency=self.currency,
+                currency=self.currency
             )
         )
 
         self.savings_progress_card.update_data(
             objective_items=goal_items,
-            objective_count=objective_count,
+            objective_count=objective_count
         )
 
         self.expense_pie_chart.update_data(
             category_data=self.dashboard_metrics["category_expenses"],
-            currency=self.currency,
+            currency=self.currency
         )
 
     def _load_spending_usage(self) -> None:
@@ -258,7 +248,7 @@ class HomeView(ft.View):
             self.spending_report_dialog.show_error(
                 self.lang["spending.ai_min_transactions"].format(
                     required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
-                    count=transaction_count,
+                    count=transaction_count
                 )
             )
             return
@@ -271,13 +261,13 @@ class HomeView(ft.View):
             try:
                 report, history = self.spending_controller.analyze_and_save_spending(
                     self.spending_controller.get_google_refresh_token() or "",
-                    month,
+                    month
                 )
                 saved_report = history[0]
                 self.spending_report_dialog.show_report(
                     report,
                     saved_report["created_at"],
-                    saved_report["id"],
+                    saved_report["id"]
                 )
             except SpendingAnalysisApiError as ex:
                 Logger.warning(f"Home spending analysis request rejected: {ex}")
@@ -289,7 +279,7 @@ class HomeView(ft.View):
                         required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
                         count=self.spending_controller.get_month_transaction_count(
                             month
-                        ),
+                        )
                     )
                 elif ex.status_code in (401, 403):
                     message = self.lang["purchase_scanner.sign_in_required"]
@@ -363,7 +353,7 @@ class HomeView(ft.View):
             # Resizing other components
             self.menu.resize(
                 width=page_width,
-                **menu_resize_values,
+                **menu_resize_values
             )
 
             self.balance_card.resize(
@@ -382,7 +372,7 @@ class HomeView(ft.View):
             self.savings_progress_card.resize(
                 width=content_width,
                 inner_width=savings_inner_width,
-                goal_item_content_width=goal_item_content_width,
+                goal_item_content_width=goal_item_content_width
             )
 
             self.expense_pie_chart.resize(
@@ -395,15 +385,15 @@ class HomeView(ft.View):
 
             self.spending_report_dialog.resize(
                 dialog_width=report_dialog_width,
-                report_card_width=report_card_width,
+                report_card_width=report_card_width
             )
             self.spending_month_dialog.resize(
                 width=secondary_dialog_width,
-                content_width=secondary_dialog_content,
+                content_width=secondary_dialog_content
             )
             self.delete_spending_report_dialog.resize(
                 width=secondary_dialog_width,
-                content_width=secondary_dialog_content,
+                content_width=secondary_dialog_content
             )
 
         except AttributeError as ex:

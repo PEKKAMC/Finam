@@ -22,7 +22,7 @@ class FaqItem(ft.Container):
         # CONTAINER COMPONENTS
         self.content_column = ft.Column(
             spacing=8,
-            controls=[self.question_text, self.answer_text],
+            controls=[self.question_text, self.answer_text]
         )
 
         super().__init__(
@@ -32,9 +32,9 @@ class FaqItem(ft.Container):
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
                 blur_radius=UISettings.SHADOW_BLUR,
-                color=Color.SHADOW,
+                color=Color.SHADOW
             ),
-            content=self.content_column,
+            content=self.content_column
         )
 
     def resize(self, width: int) -> None:
@@ -68,14 +68,14 @@ class HelpForm(ft.Container):
             keyboard_type=ft.KeyboardType.EMAIL,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
-            border_radius=12,
+            border_radius=12
         )
 
         self.subject_input = ft.TextField(
             label=self.subject_input_label_text,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
-            border_radius=12,
+            border_radius=12
         )
 
         self.message_input = ft.TextField(
@@ -85,7 +85,7 @@ class HelpForm(ft.Container):
             max_lines=MAXIMUM_MESSAGE_LINES,
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
-            border_radius=12,
+            border_radius=12
         )
 
         self.email_error_row, self.email_error_text = self._build_error_row()
@@ -99,10 +99,10 @@ class HelpForm(ft.Container):
                     self.submit_button_label
                 ],
                 tight=True,
-                spacing=8,
+                spacing=8
             ),
             on_click=self._on_submit,
-            bgcolor=Color.PRIMARY_ACTION,
+            bgcolor=Color.PRIMARY_ACTION
         )
 
         self.input_fields: dict[str, ft.TextField] = {
@@ -119,7 +119,7 @@ class HelpForm(ft.Container):
 
         self.submit_button_row = ft.Row(
             alignment=ft.MainAxisAlignment.END,
-            controls=[self.submit_button],
+            controls=[self.submit_button]
         )
 
         self.form_column = ft.Column(
@@ -134,8 +134,8 @@ class HelpForm(ft.Container):
                 self.message_input,
                 self.message_error_row,
                 self.submit_button_row,
-                self.status_text,
-            ],
+                self.status_text
+            ]
         )
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
@@ -144,15 +144,15 @@ class HelpForm(ft.Container):
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
                 blur_radius=UISettings.SHADOW_BLUR,
-                color=Color.SHADOW,
+                color=Color.SHADOW
             ),
-            content=self.form_column,
+            content=self.form_column
         )
 
     def _build_error_row(self) -> tuple[ft.Row, ft.Text]:
         error_text = Text.SMALL(
             self.lang["help.form_required"],
-            color=Color.NEGATIVE_ACTION,
+            color=Color.NEGATIVE_ACTION
         )
         error_row = ft.Row(
             spacing=6,
@@ -161,10 +161,10 @@ class HelpForm(ft.Container):
                 ft.Icon(
                     ft.Icons.ERROR_OUTLINE,
                     color=Color.NEGATIVE_ACTION,
-                    size=16,
+                    size=16
                 ),
-                error_text,
-            ],
+                error_text
+            ]
         )
         return error_row, error_text
 
@@ -172,7 +172,7 @@ class HelpForm(ft.Container):
         return self.logic.validate_submission(
             email=self.email_input.value or "",
             subject=self.subject_input.value or "",
-            message=self.message_input.value or "",
+            message=self.message_input.value or ""
         )
 
     def _show_validation_errors(self, validation: HelpFormValidation) -> None:
@@ -216,7 +216,7 @@ class FaqSection(ft.Column):
         # CONTAINER COMPONENTS
         super().__init__(
             spacing=12,
-            controls=[self.section_title, *self.faq_items],
+            controls=[self.section_title, *self.faq_items]
         )
 
     def resize(self, width: int) -> None:

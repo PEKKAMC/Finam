@@ -22,7 +22,7 @@ class TopNavigationBar(ft.Row):
             self.lang["lesson_editor.title"],
             weight=ft.FontWeight.BOLD,
             color=Color.PRIMARY_TEXT,
-            expand=True,
+            expand=True
         )
         # Static icons
         self.save_button_icon = ft.Icon(ft.Icons.SAVE, color=Color.WHITE)
@@ -36,24 +36,24 @@ class TopNavigationBar(ft.Row):
                             ft.Icons.FOLDER_OPEN,
                             icon_color=Color.SECONDARY_TEXT,
                             tooltip=self.lang["lesson_editor.load_json"],
-                            on_click=on_load,
+                            on_click=on_load
                         ),
                         ft.Button(
                             content=ft.Row(
                                 controls=[
                                     self.save_button_icon,
-                                    self.save_button_label_text,
+                                    self.save_button_label_text
                                 ],
-                                spacing=6,
+                                spacing=6
                             ),
                             bgcolor=Color.PRIMARY_ACTION,
-                            on_click=on_save,
-                        ),
+                            on_click=on_save
+                        )
                     ],
-                    spacing=5,
-                ),
+                    spacing=5
+                )
             ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
         super().__init__(
             controls=[self.main_container], alignment=ft.MainAxisAlignment.SPACE_BETWEEN
@@ -84,7 +84,7 @@ class EditorToolbar(ft.Row):
             controls=[
                 ft.Button(
                     content=ft.Row(controls=[self.add_text_icon, self.add_text_label]),
-                    on_click=lambda _: on_add_text("text") if on_add_text else None,
+                    on_click=lambda _: on_add_text("text") if on_add_text else None
                 ),
                 ft.Button(
                     content=ft.Row(
@@ -92,19 +92,19 @@ class EditorToolbar(ft.Row):
                     ),
                     on_click=lambda _: (
                         on_add_divider("divider") if on_add_divider else None
-                    ),
+                    )
                 ),
                 ft.Button(
                     content=ft.Row(controls=[self.add_image_icon, self.add_image_label]),
-                    on_click=lambda _: on_add_image("image") if on_add_image else None,
+                    on_click=lambda _: on_add_image("image") if on_add_image else None
                 ),
                 ft.Button(
                     content=ft.Row(controls=[self.add_audio_icon, self.add_audio_label]),
-                    on_click=lambda _: on_add_audio("audio") if on_add_audio else None,
-                ),
+                    on_click=lambda _: on_add_audio("audio") if on_add_audio else None
+                )
             ],
             spacing=10,
-            wrap=True,
+            wrap=True
         )
         super().__init__(controls=[self.main_container], spacing=10)
 
@@ -123,7 +123,7 @@ class PropertiesTabs(ft.Tabs):
             tabs=[
                 ft.Tab(label=self.lang["lesson_editor.properties"]),
                 ft.Tab(label=self.lang["lesson_editor.animations"]),
-                ft.Tab(label=self.lang["lesson_editor.audio"]),
+                ft.Tab(label=self.lang["lesson_editor.audio"])
             ]
         )
         self.tab_view = ft.TabBarView(
@@ -131,8 +131,8 @@ class PropertiesTabs(ft.Tabs):
             controls=[
                 element_properties or ft.Column(),
                 animation_pane or ft.Column(),
-                audio_pane or ft.Column(),
-            ],
+                audio_pane or ft.Column()
+            ]
         )
         self.main_container = ft.Column(
             expand=True, controls=[self.tab_bar, self.tab_view]
@@ -142,7 +142,7 @@ class PropertiesTabs(ft.Tabs):
             selected_index=0,
             animation_duration=200,
             expand=True,
-            content=self.main_container,
+            content=self.main_container
         )
 
     def resize(self, width: int) -> None:
@@ -159,7 +159,7 @@ class SlideSidebarLayout(ft.Container):
         self.new_slide_label = Text.BUTTON(self.lang["lesson_editor.new_slide"])
         self.slides_title_text = Text.MEDIUM(
             self.lang["lesson_editor.slides"],
-            weight=ft.FontWeight.BOLD,
+            weight=ft.FontWeight.BOLD
         )
         # Static icons
         self.new_slide_icon = ft.Icon(ft.Icons.ADD)
@@ -171,7 +171,7 @@ class SlideSidebarLayout(ft.Container):
                     content=ft.Row(
                         controls=[self.new_slide_icon, self.new_slide_label]
                     ),
-                    on_click=on_add_slide,
+                    on_click=on_add_slide
                 ),
                 ft.Row(
                     [
@@ -179,34 +179,34 @@ class SlideSidebarLayout(ft.Container):
                             icon=ft.Icons.ARROW_UPWARD,
                             tooltip=self.lang["lesson_editor.move_up"],
                             on_click=on_move_up,
-                            icon_size=18,
+                            icon_size=18
                         ),
                         ft.IconButton(
                             icon=ft.Icons.ARROW_DOWNWARD,
                             tooltip=self.lang["lesson_editor.move_down"],
                             on_click=on_move_down,
-                            icon_size=18,
+                            icon_size=18
                         ),
                         ft.IconButton(
                             icon=ft.Icons.DELETE,
                             tooltip=self.lang["lesson_editor.delete_slide"],
                             icon_color=ft.Colors.RED,
                             on_click=on_delete_slide,
-                            icon_size=18,
-                        ),
+                            icon_size=18
+                        )
                     ],
                     spacing=0,
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN
                 ),
                 ft.Divider(),
-                sidebar_column or ft.Column(),
+                sidebar_column or ft.Column()
             ]
         )
         super().__init__(
             content=self.main_container,
             padding=10,
             border=ft.Border(right=ft.BorderSide(1, Color.INPUT_BORDER)),
-            bgcolor=Color.CARD_BACKGROUND,
+            bgcolor=Color.CARD_BACKGROUND
         )
 
     def resize(self, width: int, content_width: int) -> None:
