@@ -9,8 +9,8 @@ import hmac
 import json
 import os
 import secrets
-import sqlite3
 import socket
+import sqlite3
 import threading
 import time
 from collections.abc import Callable
@@ -28,6 +28,7 @@ from src.logger import Logger
 from src.pages.common import Menu
 from src.pages.common.logic import (
     close_user_management_dialog,
+    save_last_user,
     show_user_management_dialog,
 )
 from src.pages.purchase_scanner.logic import ScannerApiError
@@ -327,6 +328,11 @@ class DialogManager:
         if username != self.user_info["username"] and self._page.auth is not None:
             self._page.logout()
         self.controller.change_user(username)
+        self._page.run_task(
+            save_last_user,
+            self._page.last_user_preferences,
+            username,
+        )
         self._refresh_view()
 
     # DELETE USER DIALOG
@@ -480,6 +486,9 @@ class UserManagementView(ft.View):
                 self.user_info["username"]
             ):
                 Logger.error("Failed to persist starter language on logout")
+                return
+            if not await save_last_user(self._page.last_user_preferences, ""):
+                Logger.error("Failed to clear saved user on logout")
                 return
             self._page.logout()
             self.user_info["username"] = ""

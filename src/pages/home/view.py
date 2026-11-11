@@ -2,15 +2,26 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import sqlite3
+
 import flet as ft
 
 from src.logger import Logger
 from src.database import db
-from src.pages.common import FinancialChart, Menu
+from src.pages.common import (
+    DeleteSpendingReportDialog,
+    FinancialChart,
+    Menu,
+    SpendingMonthDialog,
+    SpendingReportDialog,
+)
 from src.pages.home.components import BalanceCard, ExpensePieChart, FeaturedLessonCard, SavingsProgressCard
 from src.pages.home.logic import DashboardData, LogicController
-from src.pages.spending.logic import LogicController as SpendingLogicController
-from src.pages.spending.logic import SpendingAnalysisApiError
+from src.pages.spending.logic import (
+    MIN_SPENDING_ANALYSIS_TRANSACTIONS,
+    LogicController as SpendingLogicController,
+    SpendingAnalysisApiError,
+)
 from src.utils import Color, MenuResizeValues, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Home page...")
@@ -29,6 +40,22 @@ class HomeView(ft.View):
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info["username"])
         self.spending_controller = SpendingLogicController(user_info["username"])
+
+        self.spending_report_dialog = SpendingReportDialog(
+            page=self._page,
+            lang=self.lang,
+            on_delete=self._confirm_delete_spending_report,
+        )
+        self.delete_spending_report_dialog = DeleteSpendingReportDialog(
+            page=self._page,
+            lang=self.lang,
+            on_confirm=self._delete_spending_report,
+        )
+        self.spending_month_dialog = SpendingMonthDialog(
+            page=self._page,
+            lang=self.lang,
+            on_confirm=self._run_spending_scan,
+        )
 
         # FETCH DASHBOARD DATA
         self._load_dashboard_data()
@@ -137,9 +164,7 @@ class HomeView(ft.View):
             or not db.app_settings.has_google_account_session()
         ):
             return
-        # Spending checks usage asynchronously, so carry a one-shot intent across navigation.
-        self._page.request_spending_month_dialog()
-        self._page.navigate_to("/spending")(e)
+        self.spending_month_dialog.trigger(e)
 
     def _update_spending_scan_access(self) -> None:
         if (
@@ -202,16 +227,12 @@ class HomeView(ft.View):
             usage = self.spending_controller.get_monthly_analysis_usage(
                 refresh_token or ""
             )
-
-            remaining, limit = (
-                self.spending_controller.get_monthly_usage_counts(usage)
+            remaining, limit = self.spending_controller.get_monthly_usage_counts(
+                usage
             )
-
-            available = limit is None or (
-                remaining is not None and remaining > 0
+            self.balance_card.purchase_scanner_button.disabled = (
+                limit is not None and (remaining is None or remaining <= 0)
             )
-
-            self.balance_card.purchase_scanner_button.disabled = not available
 
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load home spending AI usage: {ex}")
@@ -221,6 +242,81 @@ class HomeView(ft.View):
             Logger.warning(f"Invalid home spending AI usage response: {ex}")
             self.balance_card.purchase_scanner_button.disabled = True
 
+        self._page.update()
+
+    def _run_spending_scan(self, month: str) -> None:
+        if (
+            self.balance_card.purchase_scanner_button.disabled
+            or not self.spending_controller.has_google_account_session()
+        ):
+            return
+
+        transaction_count = self.spending_controller.get_month_transaction_count(
+            month
+        )
+        if transaction_count < MIN_SPENDING_ANALYSIS_TRANSACTIONS:
+            self.spending_report_dialog.show_error(
+                self.lang["spending.ai_min_transactions"].format(
+                    required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
+                    count=transaction_count,
+                )
+            )
+            return
+
+        self.balance_card.purchase_scanner_button.disabled = True
+        self._page.update()
+        self.spending_report_dialog.show_loading()
+
+        def worker() -> None:
+            try:
+                report, history = self.spending_controller.analyze_and_save_spending(
+                    self.spending_controller.get_google_refresh_token() or "",
+                    month,
+                )
+                saved_report = history[0]
+                self.spending_report_dialog.show_report(
+                    report,
+                    saved_report["created_at"],
+                    saved_report["id"],
+                )
+            except SpendingAnalysisApiError as ex:
+                Logger.warning(f"Home spending analysis request rejected: {ex}")
+                if ex.status_code == 429:
+                    message = self.lang["spending.ai_monthly_limit"]
+                    self.balance_card.purchase_scanner_button.disabled = True
+                elif ex.status_code == 422:
+                    message = self.lang["spending.ai_min_transactions"].format(
+                        required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
+                        count=self.spending_controller.get_month_transaction_count(
+                            month
+                        ),
+                    )
+                elif ex.status_code in (401, 403):
+                    message = self.lang["purchase_scanner.sign_in_required"]
+                    self.balance_card.purchase_scanner_button.disabled = True
+                elif ex.status_code == 0:
+                    message = self.lang["purchase_scanner.connection_error"]
+                else:
+                    message = self.lang["spending.ai_service_error"]
+                self.spending_report_dialog.show_error(message)
+            except (KeyError, RuntimeError, sqlite3.Error, TypeError, ValueError) as ex:
+                Logger.error(f"Error during home spending analysis: {ex}")
+                self.spending_report_dialog.show_error(
+                    self.lang["spending.ai_service_error"]
+                )
+            finally:
+                self._load_spending_usage()
+
+        self._page.run_thread(worker)
+
+    def _confirm_delete_spending_report(self, report_id: int) -> None:
+        self.delete_spending_report_dialog.trigger(report_id)
+
+    def _delete_spending_report(self, report_id: int) -> None:
+        if not self.spending_controller.delete_spending_report(report_id):
+            Logger.warning(f"Failed to delete spending report {report_id}")
+            return
+        self.spending_report_dialog.dismiss()
         self._page.update()
 
     def _refresh_view(self) -> int:
@@ -253,6 +349,10 @@ class HomeView(ft.View):
             chart_radius = int(page_height * 0.06)
             center_radius = int(page_height * 0.045)
             legend_height = int(page_height * 0.15)
+            report_dialog_width = scale_width(page_width, 408)
+            report_card_width = scale_width(page_width, 368)
+            secondary_dialog_width = page_width * 6 // 7
+            secondary_dialog_content = scale_width(page_width, 330)
 
             # Resizing main container
             self.main_container.width = page_width
@@ -291,6 +391,19 @@ class HomeView(ft.View):
                 chart_radius=chart_radius,
                 center_radius=center_radius,
                 legend_height=legend_height
+            )
+
+            self.spending_report_dialog.resize(
+                dialog_width=report_dialog_width,
+                report_card_width=report_card_width,
+            )
+            self.spending_month_dialog.resize(
+                width=secondary_dialog_width,
+                content_width=secondary_dialog_content,
+            )
+            self.delete_spending_report_dialog.resize(
+                width=secondary_dialog_width,
+                content_width=secondary_dialog_content,
             )
 
         except AttributeError as ex:
