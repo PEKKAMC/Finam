@@ -1,3 +1,27 @@
+# Finam v1.0.0-rc2
+
+**Release Date:** November 11, 2026
+
+> **⚠️ RELEASE CANDIDATE**
+>
+> Finam is currently undergoing final testing. It may still contain bugs or incomplete features, and behavior may change before the stable release.
+>
+> *Report issues: If you find a bug or unexpected behavior, please report it on our GitHub page.*
+
+## Changes in this version
+
+*   Removed default "Admin" user.
+*   Opening app now open as the last selected user.
+*   Redesigned settings and user management pages.
+*   Removed unused assets
+*   Minor visual changes.
+
+## Bug fixes in this version
+
+*   Fixed purchase scanner crashing on pc, adding a big flex box in purchase scanner if google account isn't logged in.
+*   Fixed google login warning in spending page being incorrectly resized.
+*   Fixed settings page components being hidden by system elements.
+
 # Finam v1.0.0-rc1
 
 **Release Date:** November 10, 2026
