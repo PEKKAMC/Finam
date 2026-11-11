@@ -257,6 +257,68 @@ class GoogleAccountCard(ft.Container):
         self.main_container.width = content_width
 
 
+class ConfirmationDialog(Dialog):
+    def __init__(
+        self,
+        page: Page,
+        lang: dict[str, str],
+        title: str,
+        content: str,
+        confirm_label: str,
+        on_confirm: Callable[..., Any],
+    ) -> None:
+        self._page = page
+        self.on_confirm = on_confirm
+
+        self.title_text = Text.H3(
+            title, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD
+        )
+        self.content_text = Text.P(content, color=Color.SECONDARY_TEXT)
+        self.cancel_text = Text.BUTTON(
+            lang["generic.cancel"], color=Color.SECONDARY_TEXT
+        )
+        self.confirm_text = Text.BUTTON(
+            confirm_label, color=Color.NEGATIVE_ACTION, weight=ft.FontWeight.BOLD
+        )
+
+        self.main_container = ft.Container(
+            padding=12,
+            content=ft.Column(
+                tight=True,
+                spacing=16,
+                controls=[
+                    self.title_text,
+                    self.content_text,
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.END,
+                        spacing=12,
+                        controls=[
+                            ft.TextButton(
+                                content=self.cancel_text,
+                                on_click=lambda _event: self.dismiss(),
+                            ),
+                            ft.TextButton(
+                                content=self.confirm_text,
+                                on_click=self._handle_confirm,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        )
+
+        super().__init__(
+            color=Color.DIALOG_BACKGROUND,
+            dialog_content=self.main_container,
+        )
+
+    async def _handle_confirm(self, event: ft.ControlEvent | None = None) -> None:
+        self.dismiss()
+        result = self.on_confirm(event)
+        if isawaitable(result):
+            await result
+
+
 class MenuItem(ft.Container):
     def __init__(self, icon: ft.IconData, icon_color: str, icon_bg_color: str, title: str, subtitle: str, badge_text: str | None = None, badge_bg: str | None = None, badge_color: Color | None = None, trailing: ft.Control | None = None, on_click: Callable[..., Any] | None = None) -> None:
         # TEXT AND ICON COMPONENTS

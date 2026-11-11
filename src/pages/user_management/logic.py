@@ -8,13 +8,10 @@ import os
 import requests
 from typing import Any
 
-from src.pages.purchase_scanner.logic import (
-    LogicController as PurchaseScannerController,
-)
-
 from src.database import db
 from src.logger import Logger
 from src.pages.common.logic import add_user, change_user, delete_user, get_all_users
+from src.pages.purchase_scanner.logic import LogicController as PurchaseScannerController
 from src.utils import Data, get_asset_path
 
 class LogicController:

@@ -33,6 +33,7 @@ from src.pages.common.logic import (
 )
 from src.pages.purchase_scanner.logic import ScannerApiError
 from src.pages.user_management.components import (
+    ConfirmationDialog,
     GoogleAccountCard,
     ProfileCard,
     UserManagementDialogs,
@@ -416,7 +417,23 @@ class UserManagementView(ft.View):
         self.google_account_card = GoogleAccountCard(
             lang=self.lang,
             on_connect=(None if self._page.web else self._connect_google_account),
-            on_disconnect=self._disconnect_google_account,
+            on_disconnect=self._show_google_logout_confirmation,
+        )
+        self.google_logout_dialog = ConfirmationDialog(
+            page=self._page,
+            lang=self.lang,
+            title=self.lang["user_management.confirm_google_logout_title"],
+            content=self.lang["user_management.confirm_google_logout_content"],
+            confirm_label=self.lang["user_management.confirm_logout_button"],
+            on_confirm=self._disconnect_google_account,
+        )
+        self.logout_dialog = ConfirmationDialog(
+            page=self._page,
+            lang=self.lang,
+            title=self.lang["user_management.confirm_logout_title"],
+            content=self.lang["user_management.confirm_logout_content"],
+            confirm_label=self.lang["user_management.confirm_logout_button"],
+            on_confirm=self.logout,
         )
         self._tier_request_uid: str | None = None
         self._tier_loaded_uid: str | None = None
@@ -438,7 +455,7 @@ class UserManagementView(ft.View):
             on_disable_ads_change=self._on_disable_ads_change,
             on_open_settings=self._page.navigate_to("/settings"),
             on_open_help=self._page.navigate_to("/help"),
-            on_logout=self.logout,
+            on_logout=self._show_logout_confirmation,
             on_delete_all_data=lambda _event: (
                 self.dialogs.show_delete_all_data_prompt()
             ),
@@ -496,6 +513,16 @@ class UserManagementView(ft.View):
             self._page.navigate_to("/starter")()
         except (KeyError, RuntimeError, sqlite3.Error) as ex:
             Logger.warn(f"Failed to logout: {ex}")
+
+    def _show_google_logout_confirmation(
+        self, _event: ft.ControlEvent | None = None
+    ) -> int:
+        return self.google_logout_dialog.show()
+
+    def _show_logout_confirmation(
+        self, _event: ft.ControlEvent | None = None
+    ) -> int:
+        return self.logout_dialog.show()
 
     def _refresh_google_account(self) -> None:
         account, signed_in, cached_tier = self.controller.get_google_account_state()
