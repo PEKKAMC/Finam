@@ -51,10 +51,9 @@ class HelpForm(ft.Container):
 
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.name_input_label_text = Text.LABEL(self.lang["help.form_name"], color=Color.SECONDARY_TEXT)
-        self.email_input_label_text = Text.LABEL(self.lang["help.form_email"], color=Color.SECONDARY_TEXT)
-        self.subject_input_label_text = Text.LABEL(self.lang["help.form_subject"], color=Color.SECONDARY_TEXT)
-        self.message_input_label_text = Text.LABEL(self.lang["help.form_message"], color=Color.SECONDARY_TEXT)
+        self.email_input_label_text = Text.P(self.lang["help.form_email"], color=Color.SECONDARY_TEXT)
+        self.subject_input_label_text = Text.P(self.lang["help.form_subject"], color=Color.SECONDARY_TEXT)
+        self.message_input_label_text = Text.P(self.lang["help.form_message"], color=Color.SECONDARY_TEXT)
         self.form_title_text = Text.H3(self.lang["help.form_title"], color=Color.PRIMARY_TEXT)
         self.form_description_text = Text.P(self.lang["help.form_description"], color=Color.SECONDARY_TEXT)
         self.status_text = Text.SMALL(self.lang["help.form_sent"], color=Color.SECONDARY_TEXT, visible=False)
@@ -64,13 +63,6 @@ class HelpForm(ft.Container):
         self.submit_button_icon = ft.Icon(ft.Icons.SEND_OUTLINED, color=Color.WHITE)
 
         # CONTAINER COMPONENTS
-        self.name_input = ft.TextField(
-            label=self.name_input_label_text,
-            border_color=Color.INPUT_BORDER,
-            focused_border_color=Color.PRIMARY_ACTION,
-            border_radius=12
-        )
-
         self.email_input = ft.TextField(
             label=self.email_input_label_text,
             keyboard_type=ft.KeyboardType.EMAIL,
@@ -96,7 +88,6 @@ class HelpForm(ft.Container):
             border_radius=12,
         )
 
-        self.name_error_row, self.name_error_text = self._build_error_row()
         self.email_error_row, self.email_error_text = self._build_error_row()
         self.subject_error_row, self.subject_error_text = self._build_error_row()
         self.message_error_row, self.message_error_text = self._build_error_row()
@@ -115,14 +106,12 @@ class HelpForm(ft.Container):
         )
 
         self.input_fields: dict[str, ft.TextField] = {
-            "name": self.name_input,
             "email": self.email_input,
             "subject": self.subject_input,
             "message": self.message_input,
         }
 
         self.error_rows: dict[str, ft.Row] = {
-            "name": self.name_error_row,
             "email": self.email_error_row,
             "subject": self.subject_error_row,
             "message": self.message_error_row,
@@ -138,8 +127,6 @@ class HelpForm(ft.Container):
             controls=[
                 self.form_title_text,
                 self.form_description_text,
-                self.name_input,
-                self.name_error_row,
                 self.email_input,
                 self.email_error_row,
                 self.subject_input,
@@ -183,7 +170,6 @@ class HelpForm(ft.Container):
 
     def _validate_fields(self) -> HelpFormValidation:
         return self.logic.validate_submission(
-            name=self.name_input.value or "",
             email=self.email_input.value or "",
             subject=self.subject_input.value or "",
             message=self.message_input.value or "",

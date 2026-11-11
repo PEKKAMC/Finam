@@ -20,10 +20,9 @@ class HelpFormValidation(TypedDict):
 
 class HelpFormLogic:
     @staticmethod
-    def validate_submission(name: str, email: str, subject: str, message: str) -> HelpFormValidation:
+    def validate_submission(email: str, subject: str, message: str) -> HelpFormValidation:
         normalized_email = email.strip()
         field_errors = {
-            "name": not name.strip(),
             "email": not normalized_email,
             "subject": not subject.strip(),
             "message": not message.strip(),
