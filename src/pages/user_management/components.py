@@ -9,12 +9,7 @@ from typing import Any
 
 import flet as ft
 
-from src.pages.common import (
-    AddUserField,
-    DeleteUserDialog,
-    UserList,
-    UserManagementDialog,
-)
+from src.pages.common import AddUserField, DeleteUserDialog, UserList, UserManagementDialog
 from src.utils import Color, Dialog, Page, Text, UISettings
 
 
@@ -114,9 +109,9 @@ class ProfileCard(ft.Container):
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
                 blur_radius=UISettings.SHADOW_BLUR,
-                color=Color.SHADOW,
+                color=Color.SHADOW
             ),
-            content=self.main_container,
+            content=self.main_container
         )
 
     def update_data(self, username: str) -> None:
@@ -172,13 +167,13 @@ class GoogleAccountCard(ft.Container):
         # CONTAINER COMPONENTS
         self.connect_button = ft.TextButton(
             content=self.connect_button_label,
-            on_click=on_connect,
+            on_click=on_connect
         )
 
         self.disconnect_button = ft.TextButton(
             content=self.disconnect_button_label,
             on_click=on_disconnect,
-            visible=False,
+            visible=False
         )
 
         self.main_container = ft.Column(
@@ -192,22 +187,22 @@ class GoogleAccountCard(ft.Container):
                             content=self.google_account_icon,
                             bgcolor=Color.AGGREGATE_BACKGROUND,
                             padding=10,
-                            border_radius=14,
+                            border_radius=14
                         ),
                         ft.Column(
                             expand=True,
                             spacing=2,
-                            controls=[self.google_account_title, self.account_status],
-                        ),
-                    ],
+                            controls=[self.google_account_title, self.account_status]
+                        )
+                    ]
                 ),
                 ft.Row(
                     alignment=ft.MainAxisAlignment.END,
                     spacing=0,
-                    controls=[self.connect_button, self.disconnect_button],
+                    controls=[self.connect_button, self.disconnect_button]
                 ),
-                self.error_text,
-            ],
+                self.error_text
+            ]
         )
 
         super().__init__(
@@ -217,9 +212,9 @@ class GoogleAccountCard(ft.Container):
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
                 blur_radius=UISettings.SHADOW_BLUR,
-                color=Color.SHADOW,
+                color=Color.SHADOW
             ),
-            content=self.main_container,
+            content=self.main_container
         )
 
     def set_account(self, email: str | None) -> None:
@@ -258,15 +253,7 @@ class GoogleAccountCard(ft.Container):
 
 
 class ConfirmationDialog(Dialog):
-    def __init__(
-        self,
-        page: Page,
-        lang: dict[str, str],
-        title: str,
-        content: str,
-        confirm_label: str,
-        on_confirm: Callable[..., Any],
-    ) -> None:
+    def __init__(self, page: Page, lang: dict[str, str], title: str, content: str, confirm_label: str, on_confirm: Callable[..., Any]) -> None:
         self._page = page
         self.on_confirm = on_confirm
 
@@ -295,21 +282,21 @@ class ConfirmationDialog(Dialog):
                         controls=[
                             ft.TextButton(
                                 content=self.cancel_text,
-                                on_click=lambda _event: self.dismiss(),
+                                on_click=lambda _event: self.dismiss()
                             ),
                             ft.TextButton(
                                 content=self.confirm_text,
-                                on_click=self._handle_confirm,
-                            ),
-                        ],
-                    ),
-                ],
-            ),
+                                on_click=self._handle_confirm
+                            )
+                        ]
+                    )
+                ]
+            )
         )
 
         super().__init__(
             color=Color.DIALOG_BACKGROUND,
-            dialog_content=self.main_container,
+            dialog_content=self.main_container
         )
 
     async def _handle_confirm(self, event: ft.ControlEvent | None = None) -> None:
@@ -320,23 +307,22 @@ class ConfirmationDialog(Dialog):
 
 
 class MenuItem(ft.Container):
-    def __init__(self, icon: ft.IconData, icon_color: str, icon_bg_color: str, title: str, subtitle: str, badge_text: str | None = None, badge_bg: str | None = None, badge_color: Color | None = None, trailing: ft.Control | None = None, on_click: Callable[..., Any] | None = None) -> None:
+    def __init__(self, icon: ft.IconData, icon_color: str, icon_bg_color: str, title: str, badge_text: str | None = None, badge_bg: str | None = None, badge_color: Color | None = None, trailing: ft.Control | None = None, on_click: Callable[..., Any] | None = None) -> None:
         # TEXT AND ICON COMPONENTS
         # Static texts
         self.title_text = Text.MEDIUM(title, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD)
-        self.subtitle_text = Text.SMALL(subtitle, color=Color.SECONDARY_TEXT)
         self.badge_text_control = (
             Text.SMALL(
                 badge_text,
                 color=badge_color or Color.PRIMARY,
-                weight=ft.FontWeight.BOLD,
+                weight=ft.FontWeight.BOLD
             )
             if badge_text
             else None
         )
 
         # Dynamic icons
-        self.main_icon = ft.Icon(icon, color=icon_color, size=20)
+        self.main_icon = ft.Icon(icon, color=icon_color, size=18)
         self.trailing_control = trailing or ft.Icon(ft.Icons.CHEVRON_RIGHT, color=Color.SUBTITLE_TEXT, size=20)
 
         # CONTAINER COMPONENTS
@@ -356,20 +342,18 @@ class MenuItem(ft.Container):
         self.icon_container = ft.Container(
             content=self.main_icon,
             bgcolor=icon_bg_color,
-            padding=10,
+            padding=8,
             border_radius=14
         )
 
         self.text_column = ft.Column(
-            spacing=2,
             expand=True,
             controls=[
                 ft.Row(
                     spacing=8,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     controls=self.title_row_controls
-                ),
-                self.subtitle_text
+                )
             ]
         )
 
@@ -381,14 +365,14 @@ class MenuItem(ft.Container):
                     spacing=12,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     expand=True,
-                    controls=[self.icon_container, self.text_column],
+                    controls=[self.icon_container, self.text_column]
                 ),
-                self.trailing_control,
+                self.trailing_control
             ]
         )
 
         super().__init__(
-            padding=ft.Padding.symmetric(vertical=14, horizontal=16),
+            padding=ft.Padding.symmetric(vertical=8, horizontal=16),
             on_click=on_click,
             ink=bool(on_click),
             content=self.main_row
@@ -422,13 +406,13 @@ class MenuSectionCard(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=16,
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
                 blur_radius=UISettings.SHADOW_BLUR,
-                color=Color.SHADOW,
+                color=Color.SHADOW
             ),
-            content=self.main_container,
+            content=self.main_container
         )
 
     def resize(self, width: int) -> None:
@@ -471,7 +455,7 @@ class DeleteAllDataDialog(Dialog):
                         controls=[
                             ft.TextButton(
                                 content=self.cancel_text,
-                                on_click=lambda e: self.dismiss(),
+                                on_click=lambda e: self.dismiss()
                             ),
                             ft.TextButton(
                                 content=self.delete_text,
@@ -549,20 +533,19 @@ class UserManagementPageContent(ft.Container):
         self.services_section_title = Text.SMALL(lang["user_management.services_and_features"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
         self.support_section_title = Text.SMALL(lang["user_management.support_and_info"].upper(), color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
         self.version_text = Text.SMALL(f"{lang['user_management.version']} {app_version}", color=Color.AGGREGATE_TEXT, weight=ft.FontWeight.BOLD)
-        self.privacy_text = Text.SMALL(lang["user_management.privacy_encryption"], color=Color.SUBTITLE_TEXT, text_align=ft.TextAlign.CENTER)
 
         # CONTAINER COMPONENTS
         self.version_status_icon = ft.Container(
             width=8,
             height=8,
             border_radius=4,
-            bgcolor=Color.PRIMARY_ACTION,
+            bgcolor=Color.PRIMARY_ACTION
         )
 
         self.disable_ads_switch = ft.Switch(
             value=False,
             active_color=Color.PRIMARY_ACTION,
-            on_change=on_disable_ads_change,
+            on_change=on_disable_ads_change
         )
 
         self.services_card = MenuSectionCard(
@@ -572,7 +555,6 @@ class UserManagementPageContent(ft.Container):
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
                     title=self.lang["user_management.disable_ads"],
-                    subtitle=self.lang["user_management.smooth_experience"],
                     trailing=self.disable_ads_switch
                 ),
                 MenuItem(
@@ -580,7 +562,6 @@ class UserManagementPageContent(ft.Container):
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
                     title=self.lang["settings.settings"],
-                    subtitle=self.lang["user_management.language_security_currency"],
                     on_click=on_open_settings
                 )
             ]
@@ -593,7 +574,6 @@ class UserManagementPageContent(ft.Container):
                     icon_color=Color.PRIMARY_ACTION,
                     icon_bg_color=Color.AGGREGATE_BACKGROUND,
                     title=self.lang["user_management.help_faq"],
-                    subtitle=self.lang["user_management.guide_expense_mgmt"],
                     on_click=on_open_help
                 ),
                 MenuItem(
@@ -601,7 +581,6 @@ class UserManagementPageContent(ft.Container):
                     icon_color=Color.NEGATIVE_ACTION,
                     icon_bg_color=Color.ACTIVITY_BACKGROUND,
                     title=self.lang["user_management.logout"],
-                    subtitle="",
                     on_click=on_logout
                 ),
                 MenuItem(
@@ -609,7 +588,6 @@ class UserManagementPageContent(ft.Container):
                     icon_color=Color.NEGATIVE_ACTION,
                     icon_bg_color=Color.ACTIVITY_BACKGROUND,
                     title=self.lang["user_management.delete_all_data"],
-                    subtitle="",
                     on_click=on_delete_all_data
                 )
             ]
@@ -618,7 +596,7 @@ class UserManagementPageContent(ft.Container):
         self.top_header = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            controls=[self.top_header_text],
+            controls=[self.top_header_text]
         )
 
         self.footer = ft.Column(
@@ -629,10 +607,9 @@ class UserManagementPageContent(ft.Container):
                     alignment=ft.MainAxisAlignment.CENTER,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     spacing=6,
-                    controls=[self.version_status_icon, self.version_text],
-                ),
-                self.privacy_text,
-            ],
+                    controls=[self.version_status_icon, self.version_text]
+                )
+            ]
         )
 
         self.content_container = ft.Container(
@@ -650,9 +627,9 @@ class UserManagementPageContent(ft.Container):
                     self.support_section_title,
                     self.support_card,
                     ft.Container(height=8),
-                    self.footer,
-                ],
-            ),
+                    self.footer
+                ]
+            )
         )
 
         self.main_container = ft.Container(
@@ -662,7 +639,7 @@ class UserManagementPageContent(ft.Container):
             ),
             expand=True,
             padding=0,
-            margin=ft.Margin(bottom=0),
+            margin=ft.Margin(bottom=0)
         )
 
         super().__init__(

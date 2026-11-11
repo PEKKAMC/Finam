@@ -26,30 +26,11 @@ from flet.auth import AuthorizationService, GoogleOAuthProvider
 from src.database import db
 from src.logger import Logger
 from src.pages.common import Menu
-from src.pages.common.logic import (
-    close_user_management_dialog,
-    save_last_user,
-    show_user_management_dialog,
-)
+from src.pages.common.logic import close_user_management_dialog, save_last_user, show_user_management_dialog
 from src.pages.purchase_scanner.logic import ScannerApiError
-from src.pages.user_management.components import (
-    ConfirmationDialog,
-    GoogleAccountCard,
-    ProfileCard,
-    UserManagementDialogs,
-    UserManagementPageContent,
-)
+from src.pages.user_management.components import ConfirmationDialog, GoogleAccountCard, ProfileCard, UserManagementDialogs, UserManagementPageContent
 from src.pages.user_management.logic import LogicController
-from src.utils import (
-    Color,
-    DefaultSettings,
-    MenuResizeValues,
-    Page,
-    get_menu_resize_values,
-    get_safe_page_size,
-    scale_height,
-    scale_width,
-)
+from src.utils import Color, DefaultSettings, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size, scale_height, scale_width
 from src.version_manager import get_version
 
 Logger.info("Initializing User Management page...")
@@ -153,7 +134,7 @@ async def complete_google_web_callback(route: str) -> bool:
         signed_in = await LogicController.save_google_account(
             token.access_token,
             backend_url,
-            token.refresh_token or "",
+            token.refresh_token or ""
         )
         result = "signed_in" if signed_in else "failed"
     except (httpx.HTTPError, KeyError, OSError, requests.RequestException, RuntimeError, sqlite3.Error, TypeError, ValueError) as ex:
@@ -189,7 +170,7 @@ async def complete_google_mobile_callback(route: str) -> bool:
             provider = GoogleOAuthProvider(
                 client_id=persisted["client_id"],
                 client_secret="",
-                redirect_url=persisted["redirect_url"],
+                redirect_url=persisted["redirect_url"]
             )
             provider.token_endpoint = (
                 f"{persisted['backend_url']}/api/v1/auth/google/token"
@@ -198,18 +179,18 @@ async def complete_google_mobile_callback(route: str) -> bool:
             authorization = AuthorizationService(
                 provider,
                 fetch_user=False,
-                fetch_groups=False,
+                fetch_groups=False
             )
             pending = (
                 float(persisted["expires_at"]),
                 authorization,
-                persisted["backend_url"],
+                persisted["backend_url"]
             )
             Logger.info("Restored pending mobile Google authorization from SQLite")
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(
                 f"Could not restore pending mobile Google authorization: {ex}",
-                exc_info=True,
+                exc_info=True
             )
             _web_google_auth_result = "failed"
             return True
@@ -244,7 +225,7 @@ async def complete_google_mobile_callback(route: str) -> bool:
         signed_in = await LogicController.save_google_account(
             token.access_token,
             backend_url,
-            token.refresh_token or "",
+            token.refresh_token or ""
         )
         result = "signed_in" if signed_in else "failed"
         Logger.info(f"Mobile Google OAuth account save result: {result}")
@@ -282,7 +263,7 @@ class DialogManager:
             on_delete_user=self._handle_delete_confirm,
             on_add_user=self._handle_add_user,
             on_close_user_dialog=self._close_user_management_dialog,
-            on_delete_all_data=self._handle_delete_all_data_confirm,
+            on_delete_all_data=self._handle_delete_all_data_confirm
         )
         self.user_list = self.dialog_components.user_list
         self.add_form = self.dialog_components.add_form
@@ -297,7 +278,7 @@ class DialogManager:
             self.user_list,
             self.user_dialog,
             self.controller.get_all_users(),
-            self.user_info["username"],
+            self.user_info["username"]
         )
 
     def _close_user_management_dialog(self, _e: ft.ControlEvent | None = None) -> None:
@@ -332,7 +313,7 @@ class DialogManager:
         self._page.run_task(
             save_last_user,
             self._page.last_user_preferences,
-            username,
+            username
         )
         self._refresh_view()
 
@@ -400,7 +381,7 @@ class UserManagementView(ft.View):
             lang=self.lang,
             user_info=self.user_info,
             controller=self.controller,
-            refresh_callback=self._refresh_view,
+            refresh_callback=self._refresh_view
         )
 
         # FETCH DASHBOARD DATA
@@ -412,12 +393,12 @@ class UserManagementView(ft.View):
         self.profile_card = ProfileCard(
             username=self.user_info["username"],
             lang=self.lang,
-            on_change_user=self.dialogs.show_user_management_dialog,
+            on_change_user=self.dialogs.show_user_management_dialog
         )
         self.google_account_card = GoogleAccountCard(
             lang=self.lang,
             on_connect=(None if self._page.web else self._connect_google_account),
-            on_disconnect=self._show_google_logout_confirmation,
+            on_disconnect=self._show_google_logout_confirmation
         )
         self.google_logout_dialog = ConfirmationDialog(
             page=self._page,
@@ -425,7 +406,7 @@ class UserManagementView(ft.View):
             title=self.lang["user_management.confirm_google_logout_title"],
             content=self.lang["user_management.confirm_google_logout_content"],
             confirm_label=self.lang["user_management.confirm_logout_button"],
-            on_confirm=self._disconnect_google_account,
+            on_confirm=self._disconnect_google_account
         )
         self.logout_dialog = ConfirmationDialog(
             page=self._page,
@@ -433,7 +414,7 @@ class UserManagementView(ft.View):
             title=self.lang["user_management.confirm_logout_title"],
             content=self.lang["user_management.confirm_logout_content"],
             confirm_label=self.lang["user_management.confirm_logout_button"],
-            on_confirm=self.logout,
+            on_confirm=self.logout
         )
         self._tier_request_uid: str | None = None
         self._tier_loaded_uid: str | None = None
@@ -458,7 +439,7 @@ class UserManagementView(ft.View):
             on_logout=self._show_logout_confirmation,
             on_delete_all_data=lambda _event: (
                 self.dialogs.show_delete_all_data_prompt()
-            ),
+            )
         )
         self.disable_ads_switch = self.page_content.disable_ads_switch
 
@@ -472,9 +453,9 @@ class UserManagementView(ft.View):
                     expand=True,
                     content=ft.Stack(
                         expand=True, controls=[self.page_content, self.menu]
-                    ),
+                    )
                 )
-            ],
+            ]
         )
 
         self._page.on_resize = self._resize_page
@@ -514,14 +495,10 @@ class UserManagementView(ft.View):
         except (KeyError, RuntimeError, sqlite3.Error) as ex:
             Logger.warn(f"Failed to logout: {ex}")
 
-    def _show_google_logout_confirmation(
-        self, _event: ft.ControlEvent | None = None
-    ) -> int:
+    def _show_google_logout_confirmation(self, _event: ft.ControlEvent | None = None) -> int:
         return self.google_logout_dialog.show()
 
-    def _show_logout_confirmation(
-        self, _event: ft.ControlEvent | None = None
-    ) -> int:
+    def _show_logout_confirmation(self, _event: ft.ControlEvent | None = None) -> int:
         return self.logout_dialog.show()
 
     def _refresh_google_account(self) -> None:
@@ -538,7 +515,7 @@ class UserManagementView(ft.View):
             self.profile_card.set_account_tier(cached_tier)
         if account and account["uid"] in (
             self._tier_request_uid,
-            self._tier_loaded_uid,
+            self._tier_loaded_uid
         ):
             return
         if not cached_tier:
@@ -608,7 +585,7 @@ class UserManagementView(ft.View):
             provider = GoogleOAuthProvider(
                 client_id=client_id,
                 client_secret="",
-                redirect_url=redirect_url,
+                redirect_url=redirect_url
             )
             provider.token_endpoint = f"{backend_url}/api/v1/auth/google/token"
             provider.scopes = ["openid", "email"]
@@ -619,7 +596,7 @@ class UserManagementView(ft.View):
             authorization = AuthorizationService(
                 provider,
                 fetch_user=False,
-                fetch_groups=False,
+                fetch_groups=False
             )
             authorization_url, state = authorization.get_authorization_data()
 
@@ -630,11 +607,11 @@ class UserManagementView(ft.View):
             _pending_web_google_auth[state] = (
                 now + 300,
                 authorization,
-                backend_url,
+                backend_url
             )
             self.google_account_card.connect_button.action = ft.OpenUrl(
                 authorization_url,
-                target=ft.UrlTarget.BLANK,
+                target=ft.UrlTarget.BLANK
             )
         except (FileNotFoundError, json.JSONDecodeError, RuntimeError, ValueError) as ex:
             Logger.warning(f"Could not prepare Google web authorization: {ex}")
@@ -670,7 +647,7 @@ class UserManagementView(ft.View):
                 or str(
                     config.get(
                         "mobile_redirect_url",
-                        f"{backend_url}/api/v1/auth/google/mobile-callback",
+                        f"{backend_url}/api/v1/auth/google/mobile-callback"
                     )
                 ).strip()
             )
@@ -684,7 +661,7 @@ class UserManagementView(ft.View):
             for setting, value in (
                 ("google_client_id", client_id),
                 ("redirect_url", redirect_url),
-                ("backend_url", backend_url),
+                ("backend_url", backend_url)
             )
             if not value
         ]
@@ -705,7 +682,7 @@ class UserManagementView(ft.View):
         provider = GoogleOAuthProvider(
             client_id=client_id,
             client_secret="",
-            redirect_url=redirect_url,
+            redirect_url=redirect_url
         )
         provider.token_endpoint = f"{backend_url}/api/v1/auth/google/token"
         provider.scopes = ["openid", "email"]
@@ -720,7 +697,7 @@ class UserManagementView(ft.View):
             authorization = AuthorizationService(
                 provider,
                 fetch_user=False,
-                fetch_groups=False,
+                fetch_groups=False
             )
             authorization_url, state = authorization.get_authorization_data()
             redirect = urlparse(redirect_url)
@@ -742,14 +719,14 @@ class UserManagementView(ft.View):
                 _pending_web_google_auth[state] = (
                     now + 300,
                     authorization,
-                    backend_url,
+                    backend_url
                 )
                 self.google_account_card.set_busy(False)
                 self._page.update()
                 try:
                     await ft.UrlLauncher().launch_url(
                         authorization_url,
-                        web_only_window_name="_blank",
+                        web_only_window_name="_blank"
                     )
                 except (OSError, RuntimeError):
                     _pending_web_google_auth.pop(state, None)
@@ -783,21 +760,21 @@ class UserManagementView(ft.View):
                     expires_at,
                     backend_url,
                     client_id,
-                    redirect_url,
+                    redirect_url
                 ):
                     raise RuntimeError("Could not persist pending mobile Google authorization")
                 Logger.info("Persisted pending mobile Google OAuth state")
                 _pending_mobile_google_auth[state] = (
                     expires_at,
                     authorization,
-                    backend_url,
+                    backend_url
                 )
                 self.google_account_card.set_busy(False)
                 self._page.update()
                 try:
                     await ft.UrlLauncher().launch_url(
                         authorization_url,
-                        mode=ft.LaunchMode.EXTERNAL_APPLICATION,
+                        mode=ft.LaunchMode.EXTERNAL_APPLICATION
                     )
                     Logger.info("Returned from external Google sign-in browser")
                 except Exception:
@@ -822,7 +799,7 @@ class UserManagementView(ft.View):
             callback_handler_class = _create_oauth_callback_handler(
                 state,
                 loop,
-                callback_result,
+                callback_result
             )
 
             def callback_handler_factory(request: socket.socket, client_address: tuple[str, int], server: ThreadingHTTPServer) -> BaseHTTPRequestHandler:
@@ -830,12 +807,12 @@ class UserManagementView(ft.View):
 
             callback_server = ThreadingHTTPServer(
                 (redirect_host, redirect.port or 80),
-                callback_handler_factory,
+                callback_handler_factory
             )
             callback_thread = threading.Thread(
                 target=callback_server.serve_forever,
                 daemon=True,
-                name="finam-google-oauth-callback",
+                name="finam-google-oauth-callback"
             )
             callback_thread.start()
             try:
@@ -855,7 +832,7 @@ class UserManagementView(ft.View):
             await self._save_google_account(
                 token.access_token,
                 backend_url,
-                token.refresh_token or "",
+                token.refresh_token or ""
             )
         except httpx.HTTPStatusError as ex:
             try:
@@ -877,7 +854,7 @@ class UserManagementView(ft.View):
             saved = await self.controller.save_google_account(
                 firebase_id_token,
                 backend_url,
-                refresh_token,
+                refresh_token
             )
             if not saved:
                 raise RuntimeError("Could not save app-wide Google account")
@@ -933,12 +910,12 @@ class UserManagementView(ft.View):
                 page_width=page_width,
                 page_height=page_height,
                 content_width=content_width,
-                card_content_width=card_content_width,
+                card_content_width=card_content_width
             )
 
             self.menu.resize(
                 width=page_width,
-                **menu_resize_values,
+                **menu_resize_values
             )
 
             self.page_content.set_bottom_margin(
@@ -947,7 +924,7 @@ class UserManagementView(ft.View):
 
             self.dialogs.user_dialog.resize(
                 width=dialog_width,
-                list_height=user_list_height,
+                list_height=user_list_height
             )
 
         except AttributeError as ex:

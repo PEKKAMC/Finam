@@ -82,121 +82,95 @@ class SettingsView(ft.View):
         )
 
         # INITIALIZE PAGE COMPONENTS
-        self.settings_header = SettingsHeader(lang=self.lang)
-        self.header_divider = ft.Divider(
-            height=10, thickness=1, color=Color.INPUT_BORDER
+        self.settings_header = SettingsHeader(
+            lang=self.lang
         )
 
         self.language_dropdown = SettingDropdown(
-            language_options, active_index=language_index
-        )
-        self.language_card = SettingCard(
-            controls=[
-                SettingRow(
-                    icon=ft.Icons.LANGUAGE,
-                    title=self.lang["settings.language"],
-                    subtitle=self.lang["settings.language_options"],
-                    control=self.language_dropdown,
-                )
-            ]
+            options=language_options,
+            active_index=language_index
         )
 
-        self.theme_dropdown = SettingDropdown(theme_options, active_index=theme_index)
-        self.theme_card = SettingCard(
-            controls=[
-                SettingRow(
-                    icon=ft.Icons.PALETTE_OUTLINED,
-                    title=self.lang["settings.theme"],
-                    subtitle=self.lang["settings.theme_options"],
-                    control=self.theme_dropdown,
-                )
-            ]
+        self.language_row = SettingRow(
+            icon=ft.Icons.LANGUAGE,
+            title=self.lang["settings.language"],
+            control=self.language_dropdown
+        )
+
+        self.theme_dropdown = SettingDropdown(
+            options=theme_options,
+            active_index=theme_index
+        )
+
+        self.theme_row = SettingRow(
+            icon=ft.Icons.PALETTE_OUTLINED,
+            title=self.lang["settings.theme"],
+            control=self.theme_dropdown
         )
 
         self.currency_dropdown = SettingDropdown(
             self.currencies,
             active_index=currency_index,
             menu_height=240,
-            searchable=True,
+            searchable=True
         )
 
-        self.currency_card = SettingCard(
-            controls=[
-                SettingRow(
-                    icon=ft.Icons.PAID_OUTLINED,
-                    title=self.lang["settings.currency"],
-                    subtitle=self.lang["settings.currency_format"],
-                    control=self.currency_dropdown,
-                )
-            ]
+        self.currency_row = SettingRow(
+            icon=ft.Icons.PAID_OUTLINED,
+            title=self.lang["settings.currency"],
+            control=self.currency_dropdown
         )
 
         self.digit_separator_dropdown = SettingDropdown(
             digit_separator_options,
-            active_index=digit_separator_index,
+            active_index=digit_separator_index
         )
-
-        self.digit_separator_card = SettingCard(
-            controls=[
-                SettingRow(
-                    icon=ft.Icons.FORMAT_LIST_NUMBERED,
-                    title=self.lang["settings.digit_separator"],
-                    subtitle=self.lang["settings.digit_separator_options"],
-                    control=self.digit_separator_dropdown,
-                )
-            ]
+        self.digit_separator_row = SettingRow(
+            icon=ft.Icons.FORMAT_LIST_NUMBERED,
+            title=self.lang["settings.digit_separator"],
+            control=self.digit_separator_dropdown,
+            compact_action_width=True,
         )
 
         self.decimal_separator_dropdown = SettingDropdown(
             decimal_separator_options,
-            active_index=decimal_separator_index,
+            active_index=decimal_separator_index
         )
 
-        self.decimal_separator_card = SettingCard(
-            controls=[
-                SettingRow(
-                    icon=ft.Icons.NUMBERS,
-                    title=self.lang["settings.decimal_separator"],
-                    subtitle=self.lang["settings.decimal_separator_options"],
-                    control=self.decimal_separator_dropdown,
-                )
-            ]
+        self.decimal_separator_row = SettingRow(
+            icon=ft.Icons.NUMBERS,
+            title=self.lang["settings.decimal_separator"],
+            control=self.decimal_separator_dropdown,
+            compact_action_width=True,
         )
 
         self.app_lock_switch = ft.Switch(
             value=initial_settings["app_lock"],
             active_color=Color.PRIMARY_ACTION,
-            on_change=self._on_app_lock_changed,
+            on_change=self._on_app_lock_changed
         )
 
-        self.system_prefs_card = SettingCard(
-            controls=[
-                SettingRow(
-                    icon=ft.Icons.FINGERPRINT,
-                    title=self.lang["settings.app_lock"],
-                    subtitle=self.lang["settings.lock_requirement"],
-                    control=self.app_lock_switch,
-                ),
-                ft.Container(height=4),
-            ]
+        self.app_lock_row = SettingRow(
+            icon=ft.Icons.FINGERPRINT,
+            title=self.lang["settings.app_lock"],
+            control=self.app_lock_switch,
+            compact_action_width=True,
         )
 
-        self.cache_card = SettingCard(
+        self.settings_card = SettingCard(
             controls=[
-                SettingRow(
-                    icon=ft.Icons.DELETE_OUTLINE,
-                    title=self.lang["settings.clear_cache_title"],
-                    subtitle=self.lang["settings.clear_cache_desc"],
-                    control=ft.Icon(ft.Icons.CHEVRON_RIGHT, color=Color.SECONDARY_TEXT),
-                    on_click=self._show_clear_cache_dialog,
-                )
+                self.language_row,
+                self.theme_row,
+                self.currency_row,
+                self.digit_separator_row,
+                self.decimal_separator_row,
+                self.app_lock_row,
             ]
         )
 
         self.dialogs = SettingsDialogs(
             page=self._page,
             lang=self.lang,
-            on_clear_cache=self._clear_cached_views,
         )
 
         self.done_button = ft.Container(
@@ -206,16 +180,16 @@ class SettingsView(ft.View):
             padding=16,
             border_radius=25,
             margin=ft.Margin.only(top=10),
-            on_click=self._on_done_click,
+            on_click=self._on_done_click
         )
 
         self.done_button_wrapper = ft.Container(
             width=UISettings.MAX_APP_WIDTH,
             padding=ft.Padding.symmetric(
                 horizontal=20,
-                vertical=12,
+                vertical=12
             ),
-            content=self.done_button,
+            content=self.done_button
         )
 
         # Store helpers for saving settings
@@ -225,17 +199,8 @@ class SettingsView(ft.View):
         # INITIALIZE MAIN CONTAINER
         self.page_content = SettingsPageContent(
             header=self.settings_header,
-            header_divider=self.header_divider,
-            cards=[
-                self.language_card,
-                self.theme_card,
-                self.currency_card,
-                self.digit_separator_card,
-                self.decimal_separator_card,
-                self.system_prefs_card,
-                self.cache_card,
-            ],
-            done_button=self.done_button,
+            cards=[self.settings_card],
+            done_button=self.done_button
         )
 
         super().__init__(
@@ -244,7 +209,10 @@ class SettingsView(ft.View):
             bgcolor=Color.PAGE_BACKGROUND,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                self.page_content
+                ft.SafeArea(
+                    expand=True,
+                    content=self.page_content
+                )
             ]
         )
 
@@ -259,26 +227,6 @@ class SettingsView(ft.View):
         self.controller.disable_app_lock()
         self._page.update()
 
-    def _show_clear_cache_dialog(self, _e: ft.ControlEvent | None = None) -> None:
-        self.dialogs.clear_cache_dialog.show()
-
-    def _clear_cached_views(self, e: ft.ControlEvent | None = None) -> None:
-        try:
-            self._page.delete_all_cached_views()
-        except RuntimeError as ex:
-            Logger.error(f"Failed to clear cached views: {ex}. Event: {e}")
-            self.dialogs.clear_cache_dialog.dismiss()
-            self.dialogs.result_text.value = self.lang[
-                "settings.clear_cache_failed"
-            ]
-        else:
-            self.dialogs.clear_cache_dialog.dismiss()
-            self.dialogs.result_text.value = self.lang[
-                "settings.clear_cache_success"
-            ]
-
-        self.dialogs.clear_cache_result_dialog.show()
-
     def _show_pin_setup_dialog(self) -> None:
         def cancel_pin_setup() -> None:
             self.app_lock_switch.value = self.controller.is_app_lock_enabled()
@@ -292,7 +240,7 @@ class SettingsView(ft.View):
             integer_regex=INTEGER_REGEX,
             on_save_pin=self.controller.save_app_lock_pin,
             on_cancel=cancel_pin_setup,
-            on_saved=pin_setup_saved,
+            on_saved=pin_setup_saved
         )
         return
 
@@ -306,7 +254,7 @@ class SettingsView(ft.View):
         )
         selected_language_code = self.language_name_to_code.get(
             selected_language_name,
-            DefaultSettings.LANGUAGE,
+            DefaultSettings.LANGUAGE
         )
         selected_theme_label = self.theme_dropdown.dropdown_control.value or ""
         selected_theme = self.theme_label_to_name.get(
@@ -331,7 +279,7 @@ class SettingsView(ft.View):
             currency=selected_currency,
             theme=selected_theme,
             digit_separator=selected_separator,
-            decimal_separator=selected_decimal_separator,
+            decimal_separator=selected_decimal_separator
         )
         if status == 1:
             self.dialogs.separator_warning_dialog.show()
@@ -341,7 +289,7 @@ class SettingsView(ft.View):
 
         ThemeManager.set_theme(
             selected_theme,
-            system_dark=self._page.platform_brightness == ft.Brightness.DARK,
+            system_dark=self._page.platform_brightness == ft.Brightness.DARK
         )
         self._page.theme_mode = (
             ft.ThemeMode.SYSTEM
@@ -376,8 +324,8 @@ class SettingsView(ft.View):
 
             content_width = scale_width(page_width, 392)
             card_content_width = scale_width(page_width, 360)
-            action_width = scale_width(page_width, 130)
-            text_width = scale_width(page_width, 230)
+            action_width = scale_width(page_width, 160)
+            compact_action_width = scale_width(page_width, 130)
 
             # Resizing main container
             self.page_content.resize(
@@ -385,8 +333,8 @@ class SettingsView(ft.View):
                 page_height=page_height,
                 content_width=content_width,
                 card_content_width=card_content_width,
-                text_width=text_width,
                 action_width=action_width,
+                compact_action_width=compact_action_width,
             )
 
         except AttributeError as ex:

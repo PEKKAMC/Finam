@@ -16,40 +16,20 @@ class SettingsHeader(ft.Container):
 
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.title_text = Text.H2(self.lang["settings.title"], color=Color.LIGHT_ACCENT)
-        self.desc_text = Text.P(self.lang["settings.desc"], color=Color.LIGHT_ACCENT)
+        self.title_text = Text.H2(self.lang["settings.settings"], color=Color.LIGHT_ACCENT)
 
         # CONTAINER COMPONENTS
         self.text_column = ft.Column(
-            spacing=2,
-            controls=[
-                ft.Row(
-                    spacing=8,
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[self.title_text],
-                ),
-                self.desc_text,
-            ],
+            controls=[self.title_text]
         )
 
-        self.main_row = ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            vertical_alignment=ft.CrossAxisAlignment.START,
-            controls=[self.text_column],
+        self.main_container = ft.Container(
+            alignment=ft.Alignment.CENTER,
+            content=self.text_column
         )
-
-        self.main_container = ft.Container(content=self.main_row)
 
         super().__init__(
-            bgcolor=Color.PRIMARY,
-            border_radius=24,
-            padding=16,
-            shadow=ft.BoxShadow(
-                spread_radius=UISettings.SHADOW_SPREAD,
-                blur_radius=UISettings.SHADOW_BLUR,
-                color=Color.SHADOW,
-            ),
-            content=self.main_container,
+            content=self.main_container
         )
 
     def resize(self, width: int, content_width: int) -> None:
@@ -73,7 +53,7 @@ class SettingDropdown(ft.Container):
             text_style=ft.TextStyle(
                 size=12, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.W_600
             ),
-            content_padding=ft.Padding.symmetric(horizontal=8, vertical=8),
+            content_padding=ft.Padding.symmetric(horizontal=8, vertical=8)
         )
 
         self.main_container = ft.Container(content=self.dropdown_control)
@@ -82,7 +62,7 @@ class SettingDropdown(ft.Container):
             bgcolor=Color.USER_TILE_BACKGROUND,
             border_radius=10,
             padding=ft.Padding.symmetric(horizontal=8, vertical=0),
-            content=self.main_container,
+            content=self.main_container
         )
 
     def resize(self, width: int) -> None:
@@ -92,73 +72,75 @@ class SettingDropdown(ft.Container):
 
 
 class SettingRow(ft.Container):
-    def __init__(self, icon: ft.IconData, title: str, subtitle: str, control: ft.Control, on_click: Callable[..., None] | None = None) -> None:
+    def __init__(self, icon: ft.IconData, title: str, control: ft.Control, on_click: Callable[..., None] | None = None, compact_action_width: bool = False) -> None:
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.title_text = Text.H5(title, color=Color.PRIMARY_TEXT)
-        self.subtitle_text = Text.SMALL(subtitle, color=Color.SECONDARY_TEXT)
+        self.title_text = Text.MEDIUM(
+            title, color=Color.PRIMARY_TEXT, weight=ft.FontWeight.BOLD
+        )
 
         # Static icons
-        self.row_icon = ft.Icon(icon, color=Color.PRIMARY_ACTION, size=24)
-
+        self.row_icon = ft.Icon(icon, color=Color.PRIMARY_ACTION, size=18)
 
         # CONTAINER COMPONENTS
         self.action_control = control
+        self.compact_action_width = compact_action_width
+        self.icon_container = ft.Container(
+            content=self.row_icon,
+            bgcolor=Color.AGGREGATE_BACKGROUND,
+            padding=8,
+            border_radius=14
+        )
 
         self.text_column = ft.Column(
-            spacing=2,
             expand=True,
             controls=[
-                self.title_text,
-                self.subtitle_text
+                self.title_text
             ]
         )
 
         self.left_group = ft.Row(
-            spacing=15,
+            spacing=12,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            expand=True,
             controls=[
-                self.row_icon,
+                self.icon_container,
                 self.text_column
             ]
         )
 
-        self.left_container = ft.Container(
-            content=self.left_group,
-            expand=1
-        )
-
         self.right_container = ft.Container(
             content=self.action_control,
-            alignment=ft.Alignment.CENTER_RIGHT,
-            expand=1
+            alignment=ft.Alignment.CENTER_RIGHT
         )
 
         self.main_row = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                self.left_container,
+                self.left_group,
                 self.right_container
             ]
         )
 
-        self.main_container = ft.Container(content=self.main_row)
-
         super().__init__(
-            padding=ft.Padding.symmetric(vertical=6),
-            content=self.main_container,
+            padding=ft.Padding.symmetric(vertical=8, horizontal=16),
             on_click=on_click,
-            ink=on_click is not None
+            ink=on_click is not None,
+            content=self.main_row
         )
 
-    def resize(self, width: int, text_width: int, action_width: int) -> None:
+    def resize(self, width: int, action_width: int, compact_action_width: int) -> None:
         self.width = width
-        self.main_container.width = width
-        self.main_row.width = width
-        self.left_container.width = text_width
-        self.right_container.width = action_width
+        main_row_width = max(0, width - 32)
+        self.main_row.width = main_row_width
+        column_width = (
+            compact_action_width if self.compact_action_width else action_width
+        )
+        right_column_width = min(column_width, main_row_width)
+        self.right_container.width = right_column_width
         if isinstance(self.action_control, SettingDropdown):
-            self.action_control.resize(action_width)
+            self.action_control.resize(right_column_width)
 
 
 class SettingCard(ft.Container):
@@ -167,35 +149,43 @@ class SettingCard(ft.Container):
         self.card_controls = controls
 
         # CONTAINER COMPONENTS
+        self.controls: list[ft.Control] = []
+        for index, control in enumerate(self.card_controls):
+            self.controls.append(control)
+            if index < len(self.card_controls) - 1:
+                self.controls.append(
+                    ft.Divider(height=1, color=Color.CARD_DIVIDER, thickness=1)
+                )
+
         self.main_container = ft.Container(
-            content=ft.Column(spacing=6, controls=self.card_controls)
+            content=ft.Column(
+                spacing=0,
+                controls=self.controls
+            )
         )
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
-            border=ft.Border.all(1, Color.INPUT_BORDER),
-            padding=16,
+            border_radius=16,
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
                 blur_radius=UISettings.SHADOW_BLUR,
-                color=Color.SHADOW,
+                color=Color.SHADOW
             ),
-            content=self.main_container,
+            content=self.main_container
         )
 
-    def resize(self, width: int, content_width: int, text_width: int, action_width: int) -> None:
+    def resize(self, width: int, content_width: int, action_width: int, compact_action_width: int) -> None:
         self.width = width
         self.main_container.width = content_width
         for control in self.card_controls:
             if isinstance(control, SettingRow):
-                control.resize(content_width, text_width, action_width)
+                control.resize(content_width, action_width, compact_action_width)
 
 
 class SettingsPageContent(ft.Container):
-    def __init__(self, header: SettingsHeader, header_divider: ft.Divider, cards: list[ft.Control], done_button: ft.Container) -> None:
+    def __init__(self, header: SettingsHeader, cards: list[ft.Control], done_button: ft.Container) -> None:
         self.header = header
-        self.header_divider = header_divider
         self.cards = cards
         self.done_button = done_button
 
@@ -208,7 +198,6 @@ class SettingsPageContent(ft.Container):
                 expand=True,
                 controls=[
                     self.header,
-                    self.header_divider,
                     *self.cards,
                     ft.Container(height=20 * 2 + 56)
                 ]
@@ -223,7 +212,8 @@ class SettingsPageContent(ft.Container):
 
         self.main_container = ft.Container(
             content=ft.Column(
-                scroll=ft.ScrollMode.AUTO, controls=[self.content_container]
+                scroll=ft.ScrollMode.AUTO,
+                controls=[self.content_container]
             ),
             expand=True,
             padding=0,
@@ -236,23 +226,17 @@ class SettingsPageContent(ft.Container):
             bottom=0,
             alignment=ft.Alignment.CENTER,
             bgcolor=Color.PAGE_BACKGROUND,
-            content=self.done_button_wrapper,
+            content=self.done_button_wrapper
         )
 
         super().__init__(
-            content=ft.SafeArea(
+            content=ft.Stack(
                 expand=True,
-                content=ft.Stack(
-                    expand=True,
-                    controls=[
-                        self.main_container,
-                        self.bottom_button_container
-                    ]
-                )
+                controls=[self.main_container, self.bottom_button_container]
             )
         )
 
-    def resize(self,page_width: int, page_height: int, content_width: int, card_content_width: int, text_width: int, action_width: int) -> None:
+    def resize(self,page_width: int, page_height: int, content_width: int, card_content_width: int, action_width: int, compact_action_width: int) -> None:
         self.main_container.width = page_width
         self.main_container.height = page_height
         self.content_container.width = page_width
@@ -260,89 +244,51 @@ class SettingsPageContent(ft.Container):
         self.done_button.width = content_width
         self.header.resize(
             width=content_width,
-            content_width=card_content_width,
+            content_width=card_content_width
         )
         for card in self.cards:
             if isinstance(card, SettingCard):
                 card.resize(
                     width=content_width,
-                    content_width=card_content_width,
-                    text_width=text_width,
+                    content_width=content_width,
                     action_width=action_width,
+                    compact_action_width=compact_action_width,
                 )
 
 
 class SettingsDialogs:
-    def __init__(self, page: Page, lang: dict[str, str], on_clear_cache: Callable[..., Any]) -> None:
+    def __init__(self, page: Page, lang: dict[str, str]) -> None:
         self._page = page
         self.lang = lang
 
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.clear_cache_title = Text.H4(self.lang["settings.clear_cache_confirm_title"], color=Color.PRIMARY_TEXT)
-        self.clear_cache_description = Text.P(self.lang["settings.clear_cache_confirm_desc"], color=Color.SECONDARY_TEXT)
         self.separator_title = Text.H4(self.lang["settings.separator_conflict_title"], color=Color.PRIMARY_TEXT)
         self.separator_description = Text.P(self.lang["settings.separator_conflict_desc"], color=Color.SECONDARY_TEXT)
         self.cancel_button_text = Text.BUTTON(self.lang["generic.cancel"])
-        self.clear_cache_button_text = Text.BUTTON(self.lang["settings.clear_cache"])
         self.close_button_text = Text.BUTTON(self.lang["generic.close"])
         self.pin_cancel_text = Text.BUTTON(self.lang["generic.cancel"])
         self.pin_save_text = Text.BUTTON(self.lang["generic.save"])
         self.pin_title_text = Text.H4(self.lang["settings.pin_title"], color=Color.PRIMARY_TEXT)
 
         # Dynamic texts
-        self.result_text = Text.H4("", color=Color.PRIMARY_TEXT)
         self.pin_error_text = Text.SMALL("", color=Color.NEGATIVE_ACTION)
 
         # CONTAINER COMPONENTS
-        self.clear_cache_dialog = Dialog(
-            dialog_content=ft.Column(
-                tight=True,
-                controls=[
-                    self.clear_cache_title,
-                    self.clear_cache_description
-                ]
-            ),
-            color=Color.DIALOG_BACKGROUND,
-            options=[
-                ft.TextButton(
-                    content=self.cancel_button_text,
-                    on_click=lambda _event: self.clear_cache_dialog.dismiss()
-                ),
-                ft.TextButton(
-                    content=self.clear_cache_button_text,
-                    on_click=on_clear_cache
-                )
-            ]
-        )
-
-        self.clear_cache_result_dialog = Dialog(
-            dialog_content=ft.Column(tight=True, controls=[self.result_text]),
-            color=Color.DIALOG_BACKGROUND,
-            options=[
-                ft.TextButton(
-                    content=self.close_button_text,
-                    on_click=lambda _event: self.clear_cache_result_dialog.dismiss()
-                )
-            ]
-        )
-
         self.separator_warning_dialog = Dialog(
             dialog_content=ft.Column(
                 tight=True,
-                controls=[self.separator_title, self.separator_description],
+                controls=[self.separator_title, self.separator_description]
             ),
             color=Color.DIALOG_BACKGROUND,
             options=[
                 ft.TextButton(
                     content=self.close_button_text,
-                    on_click=lambda _event: self.separator_warning_dialog.dismiss(),
+                    on_click=lambda _event: self.separator_warning_dialog.dismiss()
                 )
             ]
         )
 
-        self.clear_cache_dialog._dialog_page = self._page
-        self.clear_cache_result_dialog._dialog_page = self._page
         self.separator_warning_dialog._dialog_page = self._page
 
     def show_pin_setup(self, integer_regex: str, on_save_pin: Callable[[str, str], int], on_cancel: Callable[..., Any], on_saved: Callable[..., Any]) -> None:
@@ -356,7 +302,7 @@ class SettingsDialogs:
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
             color=Color.PRIMARY_TEXT,
-            label_style=ft.TextStyle(color=Color.SECONDARY_TEXT),
+            label_style=ft.TextStyle(color=Color.SECONDARY_TEXT)
         )
 
         confirm_pin_field = ft.TextField(
@@ -369,7 +315,7 @@ class SettingsDialogs:
             border_color=Color.INPUT_BORDER,
             focused_border_color=Color.PRIMARY_ACTION,
             color=Color.PRIMARY_TEXT,
-            label_style=ft.TextStyle(color=Color.SECONDARY_TEXT),
+            label_style=ft.TextStyle(color=Color.SECONDARY_TEXT)
         )
 
         self.pin_error_text.value = ""
@@ -381,7 +327,7 @@ class SettingsDialogs:
         def save_pin(_event: ft.ControlEvent | None = None) -> None:
             status = on_save_pin(
                 pin_field.value or "",
-                confirm_pin_field.value or "",
+                confirm_pin_field.value or ""
             )
             error_messages = {
                 1: self.lang["settings.pin_invalid"],
@@ -404,14 +350,14 @@ class SettingsDialogs:
                     self.pin_title_text,
                     pin_field,
                     confirm_pin_field,
-                    self.pin_error_text,
-                ],
+                    self.pin_error_text
+                ]
             ),
             color=Color.DIALOG_BACKGROUND,
             options=[
                 ft.TextButton(content=self.pin_cancel_text, on_click=close_dialog),
-                ft.TextButton(content=self.pin_save_text, on_click=save_pin),
-            ],
+                ft.TextButton(content=self.pin_save_text, on_click=save_pin)
+            ]
         )
         pin_dialog._dialog_page = self._page
         pin_dialog.show()
