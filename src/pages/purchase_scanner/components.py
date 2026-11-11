@@ -20,20 +20,9 @@ class ScannerHeaderBanner(ft.Container):
     def __init__(self, lang: dict[str, str]) -> None:
         # TEXT AND ICON COMPONENTS
         # Static texts
-        self.ai_title_text = Text.SMALL(
-            lang["purchase_scanner.ai_title"],
-            color=Color.LIGHT_ACCENT,
-            weight=ft.FontWeight.BOLD
-        )
-        self.title_text = Text.H2(
-            lang["purchase_scanner.title"],
-            color=Color.WHITE,
-            weight=ft.FontWeight.BOLD
-        )
-        self.description_text = Text.SMALL(
-            lang["purchase_scanner.description"],
-            color=Color.LIGHT_ACCENT
-        )
+        self.ai_title_text = Text.SMALL(lang["purchase_scanner.ai_title"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
+        self.title_text = Text.H2(lang["purchase_scanner.title"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.description_text = Text.MEDIUM(lang["purchase_scanner.description"], color=Color.LIGHT_ACCENT)
 
         # Static icons
         self.ai_title_icon = ft.Icon(
@@ -54,6 +43,7 @@ class ScannerHeaderBanner(ft.Container):
             border_radius=20,
             border=ft.Border.all(1, Color.METRIC_PILL_BORDER)
         )
+
         super().__init__(
             bgcolor=Color.PRIMARY,
             border_radius=24,
