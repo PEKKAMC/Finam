@@ -35,8 +35,8 @@ class ScannerUsage(TypedDict):
 
 
 class LogicController:
-    def __init__(self, username: str = 'Admin') -> None:
-        self.current_user = username or "Admin"
+    def __init__(self, username: str) -> None:
+        self.current_user = username
 
     def get_currency(self) -> str:
         return get_user_currency(self.current_user)

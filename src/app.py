@@ -102,54 +102,51 @@ async def main(page: Page) -> None:
     def build_view_for_route(route: str, lang: dict, user_info: dict) -> ft.View | None:
         troute = ft.TemplateRoute(route)
 
-        if troute.match("/user_management"):
+        if troute.match("/fallback"):
+            return get_fallback_view(page, lang, getattr(page, "fallback_reason", "page_not_found"))
+
+        elif not user_info["username"] or troute.match("/fallback"):
+            return get_starter_view(page, lang, user_info)
+
+        elif troute.match("/user_management"):
             return get_user_management_view(page, lang, user_info)
 
-        if troute.match("/home"):
+        elif troute.match("/home"):
             return get_home_view(page, lang, user_info)
 
-        if troute.match("/help"):
+        elif troute.match("/help"):
             return get_help_view(page, lang, user_info)
 
-        if troute.match("/lessons"):
+        elif troute.match("/lessons"):
             return get_lessons_view(page, lang, user_info)
 
-        if troute.match("/savings"):
+        elif troute.match("/savings"):
             return get_savings_view(page, lang, user_info)
 
-        #if troute.match("/lesson-player/:lesson_id"):
+        #elif troute.match("/lesson-player/:lesson_id"):
         #    lesson_id = getattr(troute, "lesson_id", None)
         #    return get_lesson_player_view(page, lang, user_info, lesson_id)
 
         #if troute.match("/lesson-player"):
         #    return get_lesson_player_view(page, lang, user_info)
 
-        if troute.match("/spending"):
+        elif troute.match("/spending"):
             return get_spending_view(page, lang, user_info)
 
-        if troute.match("/purchase_scanner"):
+        elif troute.match("/purchase_scanner"):
             return get_scanner_view(page, lang, user_info)
 
-        if troute.match("/settings"):
+        elif troute.match("/settings"):
             return get_settings_view(page, lang, user_info)
 
-        if troute.match("/category_selection"):
+        elif troute.match("/category_selection"):
             return get_category_selection_view(page, lang, user_info)
 
-        if ENABLE_EDITOR and troute.match("/lesson-editor"):
+        elif ENABLE_EDITOR and troute.match("/lesson-editor"):
             return get_lesson_editor_view(page, lang, user_info)
 
-        if troute.match("/starter"):
-            return get_starter_view(page, lang, user_info)
-
-        if troute.match("/fallback"):
-            return get_fallback_view(
-                page,
-                lang,
-                getattr(page, "fallback_reason", "page_not_found"),
-            )
-
-        return None
+        else:
+            return None
 
     def delete_cached_view(route: str) -> None:
         if route in views_cache:

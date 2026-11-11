@@ -443,7 +443,7 @@
     "user_management.language_security_currency": "Ngôn ngữ, bảo mật, tiền tệ",
     "user_management.logout": "Đăng xuất tài khoản",
     "user_management.msg_error": "Đã xảy ra lỗi khi đăng nhập",
-    "user_management.no_user": "Không tìm thấy người dùng",
+    "user_management.no_user": "Chưa có người dùng",
     "user_management.no_user_selected": "Chưa chọn người dùng",
     "user_management.personal_account": "Tài khoản Cá nhân",
     "user_management.privacy_encryption": "Bảo vệ quyền riêng tư & Mã hóa dữ liệu an toàn",

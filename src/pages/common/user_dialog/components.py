@@ -232,7 +232,7 @@ class UserList(ft.Container):
 
         if not users:
             self.list_column.controls.append(
-                Text.P(self.lang["user_management.no_user"], color=Color.SECONDARY_TEXT, text_align=ft.TextAlign.CENTER)
+                Text.H6(self.lang["user_management.no_user"], color=Color.EXPENSE_COLOR, text_align=ft.TextAlign.CENTER)
             )
         else:
             for username in users:

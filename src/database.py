@@ -434,11 +434,6 @@ class DatabaseConnection:
                 "SELECT COUNT(*) FROM users",
                 fetch_one=True
             )[0]
-            if count == 0:
-                self.execute(
-                    "INSERT INTO users (name, created_at) VALUES (?, ?)",
-                    (DefaultSettings.USERNAME, datetime.now().strftime("%Y-%m-%d %H:%M"))
-                )
 
             Logger.info("Database initialized successfully.")
         except Exception as error:

@@ -69,7 +69,6 @@ def currency_for_region(region_code: str | None, supported_currencies: list[str]
 
 
 class DefaultSettings:
-    USERNAME: str = "Admin"
     THEME: str = "system"
     CURRENCY: str = currency_for_region(_detect_default_region())
     LANGUAGE: str = _detect_default_language()
