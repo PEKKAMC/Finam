@@ -322,6 +322,11 @@ class ScannerForm(ft.Container):
             content_padding=ft.Padding(16, 12, 16, 12)
         )
 
+        self.item_name_error = Text.SMALL("", color=Color.NEGATIVE_ACTION)
+        self.item_name_error.visible = False
+        self.item_price_error = Text.SMALL("", color=Color.NEGATIVE_ACTION)
+        self.item_price_error.visible = False
+
         self.item_reason = ft.TextField(
             hint_text=self.lang["purchase_scanner.reason_hint"],
             border_color=Color.INPUT_BORDER,
@@ -384,7 +389,8 @@ class ScannerForm(ft.Container):
                 ft.Column(
                     [
                         self.product_name_label,
-                        self.item_name
+                        self.item_name,
+                        self.item_name_error,
                     ],
                     spacing=6
                 ),
@@ -392,7 +398,8 @@ class ScannerForm(ft.Container):
                 ft.Column(
                     [
                         self.price_label,
-                        self.item_price
+                        self.item_price,
+                        self.item_price_error,
                     ],
                     spacing=6
                 ),
@@ -439,12 +446,10 @@ class ScannerForm(ft.Container):
         item_name = (self.item_name.value or "").strip()
         item_price = (self.item_price.value or "").strip()
         field_required_error = self.lang["purchase_scanner.field_required"]
-        self.item_name.error_text = (
-            field_required_error if not item_name else None
-        )
-        self.item_price.error_text = (
-            field_required_error if not item_price else None
-        )
+        self.item_name_error.value = field_required_error
+        self.item_name_error.visible = not item_name
+        self.item_price_error.value = field_required_error
+        self.item_price_error.visible = not item_price
         if not item_name or not item_price:
             self._page.update()
             return
@@ -461,6 +466,10 @@ class ScannerForm(ft.Container):
     def reset(self) -> None:
         self.item_name.value = ""
         self.item_price.value = ""
+        self.item_name_error.value = ""
+        self.item_name_error.visible = False
+        self.item_price_error.value = ""
+        self.item_price_error.visible = False
         self.item_reason.value = ""
         self.trigger.value = ""
         self.trigger.update_styles()
