@@ -279,6 +279,7 @@ async def main(page: Page) -> None:
                 current_username
             )
 
+            view_was_cached = False
             if route_name in ("/starter", "/fallback"):
                 view = build_view_for_route(route_name, lang, info)
             else:
@@ -286,6 +287,7 @@ async def main(page: Page) -> None:
 
                 if cached_entry and cached_entry[1] == cache_key:
                     view = cached_entry[0]
+                    view_was_cached = True
                 else:
                     view = build_view_for_route(route_name, lang, info)
                     if view is not None:
@@ -320,7 +322,7 @@ async def main(page: Page) -> None:
                 page.on_resize = on_page_resize
             page.update()
             refresh_handler = getattr(view, "_refresh_view", None)
-            if callable(refresh_handler):
+            if view_was_cached and callable(refresh_handler):
                 # noinspection PyCallingNonCallable
                 refresh_handler()
             if (
