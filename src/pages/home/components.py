@@ -394,7 +394,6 @@ class SavingsProgressCard(ft.Container):
         # TEXT AND ICON COMPONENTS
         # Static texts
         self.goal_title = Text.H4(self.lang["home.savings_goal"], color=Color.DEFAULT_TEXT)
-        self.goal_subtitle = Text.SMALL(self.lang["home.savings_goal_subtitle"], color=Color.BLAND_TEXT)
         self.empty_state_text = Text.SMALL(self.lang["home.no_savings_goal"], color=Color.BLAND_TEXT)
 
         # Static icons
@@ -421,8 +420,7 @@ class SavingsProgressCard(ft.Container):
         self.goal_title_column = ft.Column(
             spacing=0,
             controls=[
-                self.goal_title,
-                self.goal_subtitle
+                self.goal_title
             ]
         )
 
@@ -784,7 +782,6 @@ class FeaturedLessonCard(ft.Container):
         # TEXT AND ICON COMPONENTS
         # Static texts
         self.card_title = Text.H4(self.lang["home.financial_learning"], color=Color.DEFAULT_TEXT)
-        self.card_subtitle = Text.SMALL(self.lang["home.financial_learning_subtitle"], color=Color.BLAND_TEXT)
         self.featured_badge_title = Text.SMALL(self.lang["home.featured_content"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.featured_lesson_title = Text.P(self.lang["home.featured_lesson_title"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.featured_lesson_desc = Text.SMALL(self.lang["home.featured_lesson_desc"], color=Color.BLAND_TEXT)
@@ -808,8 +805,7 @@ class FeaturedLessonCard(ft.Container):
         self.lesson_title_column = ft.Column(
             spacing=0,
             controls=[
-                self.card_title,
-                self.card_subtitle
+                self.card_title
             ]
         )
 

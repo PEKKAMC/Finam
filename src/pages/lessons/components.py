@@ -176,7 +176,6 @@ class LessonSummaryBanner(ft.Container):
         # Static texts
         self.academy_title_text = Text.SMALL(self.lang["lessons.academy_title"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.banner_title_text = Text.H2(self.lang["lessons.banner_title"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
-        self.banner_description_text = Text.SMALL(self.lang["lessons.banner_description"], color=Color.LIGHT_ACCENT)
         self.completed_lessons_label = Text.SMALL(self.lang["lessons.completed_count"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.accumulated_time_label = Text.SMALL(self.lang["lessons.accumulated_time"], color=Color.SAVINGS_LABEL_TEXT, weight=ft.FontWeight.BOLD)
 
@@ -202,8 +201,7 @@ class LessonSummaryBanner(ft.Container):
                                 1, ft.Colors.with_opacity(0.3, Color.PRIMARY)
                             )
                         ),
-                        self.banner_title_text,
-                        self.banner_description_text
+                        self.banner_title_text
                     ]
                 ),
                 ft.Row(
