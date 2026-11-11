@@ -8,20 +8,38 @@ from urllib.parse import urlencode, urlparse
 import flet as ft
 
 from src.database import db
-from src.utils import DefaultSettings, Page, ThemeManager, UISettings, currency_for_region, get_language, is_supported_page_size, language_for_device_locale, set_decimal_separator, set_digit_separator
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
+from src.pages.common.logic import get_last_user
 from src.pages.fallback import get_fallback_view
 from src.pages.help import get_help_view
 from src.pages.home import get_home_view
 from src.pages.lessons import get_lessons_view
+from src.pages.purchase_scanner import get_scanner_view
+
 #from src.pages.lesson_player import get_lesson_player_view
 from src.pages.savings import get_savings_view
 from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
-from src.pages.purchase_scanner import get_scanner_view
 from src.pages.starter.view import StarterView, get_starter_view
-from src.pages.user_management import complete_google_mobile_callback, complete_google_web_callback, get_user_management_view, is_google_oauth_callback_route
+from src.pages.user_management import (
+    complete_google_mobile_callback,
+    complete_google_web_callback,
+    get_user_management_view,
+    is_google_oauth_callback_route,
+)
+from src.utils import (
+    DefaultSettings,
+    Page,
+    ThemeManager,
+    UISettings,
+    currency_for_region,
+    get_language,
+    is_supported_page_size,
+    language_for_device_locale,
+    set_decimal_separator,
+    set_digit_separator,
+)
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
@@ -71,6 +89,9 @@ async def main(page: Page) -> None:
         Logger.warning(f"Could not read device locale preferences; using host defaults: {ex}")
     db.initialize_database()
 
+    page.last_user_preferences = ft.SharedPreferences()
+    page.services.append(page.last_user_preferences)
+
     info: dict[str, str] = {
         "username": ""
     }
@@ -93,6 +114,7 @@ async def main(page: Page) -> None:
     page.window.height = UISettings.MAX_APP_HEIGHT
 
     page.update()
+    info["username"] = await get_last_user(page.last_user_preferences)
 
     views_cache: dict[str, tuple[ft.View, str]] = {}
 
@@ -317,7 +339,11 @@ async def main(page: Page) -> None:
             if callable(refresh_handler):
                 # noinspection PyCallingNonCallable
                 refresh_handler()
-            if isinstance(view, StarterView) and view.is_unlocked:
+            if (
+                isinstance(view, StarterView)
+                and view.is_unlocked
+                and not info.get("username")
+            ):
                 view.show_user_management_dialog()
 
         except Exception as exc:
@@ -343,4 +369,9 @@ async def main(page: Page) -> None:
             f"(path={urlparse(page.route or '').path!r})"
         )
     if not await handle_google_mobile_callback() and not await handle_google_web_callback():
-        await page.push_route("/starter")
+        initial_route = (
+            "/home"
+            if info["username"] and not db.app_security.is_app_lock_enabled()
+            else "/starter"
+        )
+        await page.push_route(initial_route)

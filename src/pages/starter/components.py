@@ -6,11 +6,20 @@ from collections.abc import Callable
 
 import flet as ft
 
-from src.pages.common import AddUserField, DeleteUserDialog, UserList, UserManagementDialog
-from src.pages.common.logic import change_user, close_user_management_dialog, show_user_management_dialog
+from src.pages.common import (
+    AddUserField,
+    DeleteUserDialog,
+    UserList,
+    UserManagementDialog,
+)
+from src.pages.common.logic import (
+    change_user,
+    close_user_management_dialog,
+    save_last_user,
+    show_user_management_dialog,
+)
 from src.pages.starter.logic import LogicController
 from src.utils import Color, Data, DefaultSettings, Page, Text
-
 
 SINGLE_INTEGER_REGEX = Data().get_regex_string("single_integer")
 FLOAT_REGEX = Data().get_regex_string("float")
@@ -85,6 +94,11 @@ class DialogManager:
     def handle_change_user(self, username: str, e: ft.ControlEvent | None = None) -> None:
         self.user_dialog.dismiss()
         change_user(self.user_info, username)
+        self._page.run_task(
+            save_last_user,
+            self._page.last_user_preferences,
+            username,
+        )
         self._page.navigate_to("/home")(e)
 
 

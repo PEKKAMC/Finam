@@ -2,7 +2,30 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import flet as ft
+
 from src.database import db
+from src.logger import Logger
+
+LAST_USER_KEY = "last_user"
+
+
+async def get_last_user(preferences: ft.SharedPreferences) -> str:
+    username = await preferences.get(LAST_USER_KEY)
+    if isinstance(username, str) and username and db.users.get_user_id(username):
+        return username
+    if username and not await preferences.remove(LAST_USER_KEY):
+        Logger.error("Failed to clear invalid saved user")
+    return ""
+
+
+async def save_last_user(
+    preferences: ft.SharedPreferences, username: str
+) -> bool:
+    if await preferences.set(LAST_USER_KEY, username):
+        return True
+    Logger.error("Failed to save last selected user")
+    return False
 
 
 def get_user_currency(username: str) -> str:

@@ -90,7 +90,10 @@ class StarterView(ft.View):
         self.lock_screen.clear()
         self.main_container.content.controls = []
         self._page.update()
-        self.show_user_management_dialog()
+        if self.user_info["username"]:
+            self._page.run_task(self._page.push_route, "/home")
+        else:
+            self.show_user_management_dialog()
 
     def _refresh_view(self) -> int:
         self._resize_page()
