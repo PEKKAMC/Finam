@@ -41,7 +41,7 @@ class BalanceCard(ft.Container):
         self.balance_label_text = Text.LABEL(self.lang["home.available_balance"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.currency_label = Text.P(self.currency, color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.add_transaction_button_label = Text.BUTTON(self.lang["home.add_transaction"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
-        self.purchase_scanner_button_label = Text.BUTTON(self.lang["home.ai_scan"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
+        self.purchase_scanner_button_label = Text.BUTTON(self.lang["home.ai_scan"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
         self.income_title = Text.H6(self.lang["home.total_income"], color=Color.LIGHT_ACCENT)
         self.expense_title = Text.H6(self.lang["home.total_expense"], color=Color.EXPENSE_LABEL_TEXT)
         self.saving_title = Text.H6(self.lang["home.total_savings"], color=Color.SAVINGS_LABEL_TEXT)
@@ -49,7 +49,7 @@ class BalanceCard(ft.Container):
 
         # Static icons
         self.add_transaction_button_icon = ft.Icon(ft.Icons.ADD_ROUNDED, color=Color.PRIMARY, size=18)
-        self.purchase_scanner_icon = ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.LIGHT_ACCENT, size=18)
+        self.purchase_scanner_icon = ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.SECONDARY_TEXT, size=18)
         self.ai_icon = ft.Icon(ft.Icons.AUTO_AWESOME, color=Color.PRIMARY, size=16)
 
         # Dynamic texts
@@ -119,6 +119,7 @@ class BalanceCard(ft.Container):
                 shape=ft.RoundedRectangleBorder(radius=16),
                 padding=0,
                 alignment=ft.Alignment.CENTER,
+                bgcolor=Color.DARK_BUTTON,
                 side=ft.BorderSide(1, Color.SCAN_BUTTON_BORDER)
             )
         )
@@ -248,6 +249,18 @@ class BalanceCard(ft.Container):
             padding=20,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
             content=self.main_container
+        )
+
+    def set_scan_enabled(self, enabled: bool) -> None:
+        self.purchase_scanner_button.disabled = not enabled
+        self.purchase_scanner_button.style.bgcolor = (
+            ft.Colors.TRANSPARENT if enabled else Color.DARK_BUTTON
+        )
+        self.purchase_scanner_icon.color = (
+            Color.LIGHT_ACCENT if enabled else Color.SECONDARY_TEXT
+        )
+        self.purchase_scanner_button_label.color = (
+            Color.WHITE if enabled else Color.SECONDARY_TEXT
         )
 
     def update_data(self, net_balance: Decimal, income: Decimal, expense: Decimal, savings: Decimal, ai_advice: str, currency: str) -> None:

@@ -2,16 +2,19 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import sqlite3
-
 import flet as ft
 
 from src.logger import Logger
 from src.database import db
-from src.pages.common import DeleteSpendingReportDialog, FinancialChart, Menu, SpendingMonthDialog, SpendingReportDialog
+from src.pages.common import FinancialChart, Menu
+from src.pages.common.spending_analysis import SpendingAnalysisDialogManager
 from src.pages.home.components import BalanceCard, ExpensePieChart, FeaturedLessonCard, SavingsProgressCard
 from src.pages.home.logic import DashboardData, LogicController
-from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController as SpendingLogicController, SpendingAnalysisApiError
+from src.pages.spending.logic import (
+    MIN_SPENDING_ANALYSIS_TRANSACTIONS,
+    LogicController as SpendingLogicController,
+    SpendingAnalysisApiError,
+)
 from src.utils import Color, MenuResizeValues, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Home page...")
@@ -30,22 +33,6 @@ class HomeView(ft.View):
         # INITIALIZE PAGE CONTROLLER
         self.controller = LogicController(self.user_info["username"])
         self.spending_controller = SpendingLogicController(user_info["username"])
-
-        self.spending_report_dialog = SpendingReportDialog(
-            page=self._page,
-            lang=self.lang,
-            on_delete=self._confirm_delete_spending_report
-        )
-        self.delete_spending_report_dialog = DeleteSpendingReportDialog(
-            page=self._page,
-            lang=self.lang,
-            on_confirm=self._delete_spending_report
-        )
-        self.spending_month_dialog = SpendingMonthDialog(
-            page=self._page,
-            lang=self.lang,
-            on_confirm=self._run_spending_scan
-        )
 
         # FETCH DASHBOARD DATA
         self._load_dashboard_data()
@@ -68,6 +55,23 @@ class HomeView(ft.View):
             on_add_click=self._page.navigate_to("/category_selection"),
             on_scan_click=self._open_spending_report
         )
+
+        self.spending_analysis = SpendingAnalysisDialogManager(
+            page=self._page,
+            lang=self.lang,
+            controller=self.spending_controller,
+            min_transactions=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
+            api_error_type=SpendingAnalysisApiError,
+            can_scan=lambda: not self.balance_card.purchase_scanner_button.disabled,
+            set_scan_enabled=self._set_spending_scan_enabled,
+            refresh_usage=self._load_spending_usage,
+            on_report_deleted=self._on_spending_report_deleted,
+        )
+        self.spending_report_dialog = self.spending_analysis.report_dialog
+        self.delete_spending_report_dialog = (
+            self.spending_analysis.delete_report_dialog
+        )
+        self.spending_month_dialog = self.spending_analysis.month_dialog
 
         self.financial_chart = FinancialChart(
             lang=self.lang,
@@ -149,21 +153,19 @@ class HomeView(ft.View):
             self._page.run_thread(self._load_spending_usage)
 
     def _open_spending_report(self, e: ft.ControlEvent | None = None) -> None:
-        if (
-            self.balance_card.purchase_scanner_button.disabled
-            or not db.app_settings.has_google_account_session()
-        ):
-            return
-        self.spending_month_dialog.trigger(e)
+        self.spending_analysis.open_scan(e)
+
+    def _set_spending_scan_enabled(self, enabled: bool) -> None:
+        self.balance_card.set_scan_enabled(enabled)
 
     def _update_spending_scan_access(self) -> None:
         if (
             db.app_settings.is_cached_developer()
             and db.app_settings.has_google_account_session()
         ):
-            self.balance_card.purchase_scanner_button.disabled = False
+            self.balance_card.set_scan_enabled(True)
         else:
-            self.balance_card.purchase_scanner_button.disabled = True
+            self.balance_card.set_scan_enabled(False)
 
     def _load_dashboard_data(self) -> None:
         self.currency = self.controller.get_currency()
@@ -203,11 +205,11 @@ class HomeView(ft.View):
 
     def _load_spending_usage(self) -> None:
         if not db.app_settings.has_google_account_session():
-            self.balance_card.purchase_scanner_button.disabled = True
+            self.balance_card.set_scan_enabled(False)
             return
 
         if db.app_settings.is_cached_developer():
-            self.balance_card.purchase_scanner_button.disabled = False
+            self.balance_card.set_scan_enabled(True)
             self._page.update()
             return
 
@@ -220,93 +222,21 @@ class HomeView(ft.View):
             remaining, limit = self.spending_controller.get_monthly_usage_counts(
                 usage
             )
-            self.balance_card.purchase_scanner_button.disabled = (
-                limit is not None and (remaining is None or remaining <= 0)
+            self.balance_card.set_scan_enabled(
+                limit is None or (remaining is not None and remaining > 0)
             )
 
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load home spending AI usage: {ex}")
-            self.balance_card.purchase_scanner_button.disabled = True
+            self.balance_card.set_scan_enabled(False)
 
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid home spending AI usage response: {ex}")
-            self.balance_card.purchase_scanner_button.disabled = True
+            self.balance_card.set_scan_enabled(False)
 
         self._page.update()
 
-    def _run_spending_scan(self, month: str) -> None:
-        if (
-            self.balance_card.purchase_scanner_button.disabled
-            or not self.spending_controller.has_google_account_session()
-        ):
-            return
-
-        transaction_count = self.spending_controller.get_month_transaction_count(
-            month
-        )
-        if transaction_count < MIN_SPENDING_ANALYSIS_TRANSACTIONS:
-            self.spending_report_dialog.show_error(
-                self.lang["spending.ai_min_transactions"].format(
-                    required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
-                    count=transaction_count
-                )
-            )
-            return
-
-        self.balance_card.purchase_scanner_button.disabled = True
-        self._page.update()
-        self.spending_report_dialog.show_loading()
-
-        def worker() -> None:
-            try:
-                report, history = self.spending_controller.analyze_and_save_spending(
-                    self.spending_controller.get_google_refresh_token() or "",
-                    month
-                )
-                saved_report = history[0]
-                self.spending_report_dialog.show_report(
-                    report,
-                    saved_report["created_at"],
-                    saved_report["id"]
-                )
-            except SpendingAnalysisApiError as ex:
-                Logger.warning(f"Home spending analysis request rejected: {ex}")
-                if ex.status_code == 429:
-                    message = self.lang["spending.ai_monthly_limit"]
-                    self.balance_card.purchase_scanner_button.disabled = True
-                elif ex.status_code == 422:
-                    message = self.lang["spending.ai_min_transactions"].format(
-                        required=MIN_SPENDING_ANALYSIS_TRANSACTIONS,
-                        count=self.spending_controller.get_month_transaction_count(
-                            month
-                        )
-                    )
-                elif ex.status_code in (401, 403):
-                    message = self.lang["purchase_scanner.sign_in_required"]
-                    self.balance_card.purchase_scanner_button.disabled = True
-                elif ex.status_code == 0:
-                    message = self.lang["purchase_scanner.connection_error"]
-                else:
-                    message = self.lang["spending.ai_service_error"]
-                self.spending_report_dialog.show_error(message)
-            except (KeyError, RuntimeError, sqlite3.Error, TypeError, ValueError) as ex:
-                Logger.error(f"Error during home spending analysis: {ex}")
-                self.spending_report_dialog.show_error(
-                    self.lang["spending.ai_service_error"]
-                )
-            finally:
-                self._load_spending_usage()
-
-        self._page.run_thread(worker)
-
-    def _confirm_delete_spending_report(self, report_id: int) -> None:
-        self.delete_spending_report_dialog.trigger(report_id)
-
-    def _delete_spending_report(self, report_id: int) -> None:
-        if not self.spending_controller.delete_spending_report(report_id):
-            Logger.warning(f"Failed to delete spending report {report_id}")
-            return
-        self.spending_report_dialog.dismiss()
+    def _on_spending_report_deleted(self) -> None:
         self._page.update()
 
     def _refresh_view(self) -> int:
