@@ -119,18 +119,17 @@ class ScannerUsageCard(ft.Container):
 
         # TEXT AND ICON COMPONENTS
         # Dynamic texts
-        self.usage_label = Text.MEDIUM(
-            lang["purchase_scanner.usage_loading"],
-            color=Color.PRIMARY_TEXT,
-        )
+        self.usage_label = Text.MEDIUM(self.lang["purchase_scanner.usage_loading"], color=Color.PRIMARY_TEXT)
 
         # CONTAINER COMPONENTS
         self.usage_progress = ft.ProgressBar(
             value=1,
             color=Color.PROGRESS_ACTIVE,
             bgcolor=Color.DARK_BUTTON,
-            height=8,
+            border_radius=5,
+            height=8
         )
+
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
             border_radius=18,
@@ -138,8 +137,11 @@ class ScannerUsageCard(ft.Container):
             border=ft.Border.all(1, Color.INPUT_BORDER),
             content=ft.Column(
                 spacing=10,
-                controls=[self.usage_label, self.usage_progress],
-            ),
+                controls=[
+                    self.usage_label,
+                    self.usage_progress
+                ]
+            )
         )
 
 
@@ -434,9 +436,22 @@ class ScannerForm(ft.Container):
     def _handle_scan_click(self) -> None:
         if not self._scan_enabled:
             return
+        item_name = (self.item_name.value or "").strip()
+        item_price = (self.item_price.value or "").strip()
+        field_required_error = self.lang["purchase_scanner.field_required"]
+        self.item_name.error_text = (
+            field_required_error if not item_name else None
+        )
+        self.item_price.error_text = (
+            field_required_error if not item_price else None
+        )
+        if not item_name or not item_price:
+            self._page.update()
+            return
+
         self.on_scan_click(
-            self.item_name.value,
-            self.item_price.value,
+            item_name,
+            item_price,
             self.item_reason.value,
             self.trigger.value,
             self.thinking_time.value,
@@ -1034,6 +1049,7 @@ class ScannerResult(ft.Container):
         self.loading_container.visible = False
         self.the_rock_animation.visible = False
         self.result_container.visible = True
+        self.gauge_card.visible = risk is not None
         self.advice_box.visible = bool(ai_advice)
 
         if risk is None:

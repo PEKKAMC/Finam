@@ -106,9 +106,18 @@ class LogicController:
             )
             data = self._parse_response(response)
             raw_risk = data.get("risk")
+            is_troll = data.get("is_troll", raw_risk is None)
+            if not isinstance(is_troll, bool):
+                raise ScannerApiError(
+                    502, "Scanner service returned an invalid response."
+                )
             # noinspection PyTypeChecker
-            risk = int(raw_risk) if raw_risk is not None else None
-            ai_advice = data.get("advice", "")
+            risk = None if is_troll else int(raw_risk)
+            ai_advice = (
+                lang["purchase_scanner.troll_input_message"]
+                if is_troll
+                else data.get("advice", "")
+            )
         except requests.RequestException as ex:
             Logger.warn(f"Purchase scanner request failed: {ex}")
             raise ScannerApiError(
