@@ -420,15 +420,8 @@ class TransactionHistoryCard(ft.Container):
             color=Color.PRIMARY_TEXT,
             weight=ft.FontWeight.BOLD
         )
-        empty_history_title = Text.MEDIUM(
-            self.lang["spending.no_transactions"],
-            color=Color.SECONDARY_TEXT,
-            weight=ft.FontWeight.BOLD
-        )
-        empty_history_hint = Text.SMALL(
-            self.lang["spending.try_filter"],
-            color=Color.SECONDARY_TEXT
-        )
+        empty_history_title = Text.MEDIUM( self.lang["spending.no_transactions"], color=Color.SECONDARY_TEXT, weight=ft.FontWeight.BOLD)
+        empty_history_hint = Text.SMALL(self.lang["spending.try_filter"], color=Color.SECONDARY_TEXT, text_align=ft.TextAlign.CENTER)
 
         # Dynamic icons
         self.toggle_button = ft.IconButton(
