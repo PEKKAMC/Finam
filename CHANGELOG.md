@@ -1,3 +1,17 @@
+# Finam v1.0.0-rc4
+
+**Release Date:** November 12, 2026
+
+> **⚠️ RELEASE CANDIDATE**
+>
+> Finam is currently undergoing final testing. It may still contain bugs or incomplete features, and behavior may change before the stable release.
+>
+> *Report issues: If you find a bug or unexpected behavior, please report it on our GitHub page.*
+
+## Bug fixes in this version
+
+*   Fixed crash due to missing package.
+
 # Finam v1.0.0-rc3
 
 **Release Date:** November 12, 2026
