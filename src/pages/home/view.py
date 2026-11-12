@@ -10,11 +10,7 @@ from src.pages.common import FinancialChart, Menu
 from src.pages.common.spending_analysis import SpendingAnalysisDialogManager
 from src.pages.home.components import BalanceCard, ExpensePieChart, FeaturedLessonCard, SavingsProgressCard
 from src.pages.home.logic import DashboardData, LogicController
-from src.pages.spending.logic import (
-    MIN_SPENDING_ANALYSIS_TRANSACTIONS,
-    LogicController as SpendingLogicController,
-    SpendingAnalysisApiError,
-)
+from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController as SpendingLogicController, SpendingAnalysisApiError
 from src.utils import Color, MenuResizeValues, Page, UISettings, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Home page...")

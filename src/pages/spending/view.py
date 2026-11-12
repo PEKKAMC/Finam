@@ -9,35 +9,11 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.common import FinancialChart, Menu
-from src.pages.common.logic import (
-    get_usage_cache_key,
-    load_usage_cache,
-    save_usage_cache,
-)
+from src.pages.common.logic import get_usage_cache_key, load_usage_cache, save_usage_cache
 from src.pages.common.spending_analysis import SpendingAnalysisDialogManager
-from src.pages.spending.components import (
-    DeleteTransactionDialog,
-    MetricCards,
-    SpendingGoogleRequiredCard,
-    SpendingPageContent,
-    SpendingReportHistoryCard,
-    SpendingUsageCard,
-    TransactionHistoryCard,
-    TransactionToolbar,
-)
-from src.pages.spending.logic import (
-    MIN_SPENDING_ANALYSIS_TRANSACTIONS,
-    LogicController,
-    SpendingAnalysisApiError,
-)
-from src.utils import (
-    Color,
-    MenuResizeValues,
-    Page,
-    get_menu_resize_values,
-    get_safe_page_size,
-    scale_width,
-)
+from src.pages.spending.components import DeleteTransactionDialog, MetricCards, SpendingGoogleRequiredCard, SpendingPageContent, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
+from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController, SpendingAnalysisApiError
+from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size, scale_width
 
 Logger.info("Initializing Spending page...")
 

@@ -9,11 +9,7 @@ from typing import Any, Protocol
 import flet as ft
 
 from src.logger import Logger
-from src.pages.common.spending_analysis_dialogs import (
-    DeleteSpendingReportDialog,
-    SpendingMonthDialog,
-    SpendingReportDialog,
-)
+from src.pages.common.spending_analysis_dialogs import DeleteSpendingReportDialog, SpendingMonthDialog, SpendingReportDialog
 from src.utils import Page
 
 

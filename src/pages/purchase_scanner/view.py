@@ -9,25 +9,10 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.common import Menu
-from src.pages.common.logic import (
-    get_usage_cache_key,
-    load_usage_cache,
-    save_usage_cache,
-)
-from src.pages.purchase_scanner.components import (
-    ScannerForm,
-    ScannerHistoryCard,
-    ScannerPageContent,
-    ScannerResult,
-)
-from src.pages.purchase_scanner.logic import LogicController, ScannerApiError
-from src.utils import (
-    Color,
-    MenuResizeValues,
-    Page,
-    get_menu_resize_values,
-    get_safe_page_size,
-)
+from src.pages.common.logic import get_usage_cache_key, load_usage_cache, save_usage_cache
+from src.pages.purchase_scanner.components import ScannerForm, ScannerHistoryCard, ScannerPageContent, ScannerResult
+from src.pages.purchase_scanner.logic import LogicController, ScannerApiError, ScannerUsage
+from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size
 
 Logger.info("Initializing Purchase Scanner page...")
 
@@ -158,7 +143,7 @@ class PurchaseScannerView(ft.View):
         if self.controller.has_google_account_session():
             self._page.run_thread(self._load_monthly_usage)
 
-    def _apply_monthly_usage(self, usage: dict[str, object]) -> None:
+    def _apply_monthly_usage(self, usage: dict[str, object] | ScannerUsage) -> None:
         remaining = usage["remaining"]
         limit = usage["limit"]
         if limit is None:
