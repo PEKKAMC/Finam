@@ -32,6 +32,7 @@ class Menu(ft.Container):
         self.ad_banner = None
         self.ad_container = None
         self.ad_banner_height = 0
+        self.ad_load_failed = False
         self.reserved_height = 0
 
         # TEXT AND ICON COMPONENTS
@@ -43,9 +44,7 @@ class Menu(ft.Container):
                 height=self.BANNER_HEIGHT,
                 request=fta.AdRequest(non_personalized_ads=True),
                 on_load=lambda e: Logger.info("AdMob banner loaded"),
-                on_error=lambda e: Logger.warning(
-                    f"AdMob banner failed to load: {e.data}"
-                )
+                on_error=self._on_ad_error
             )
             self.ad_banner_height = self.BANNER_HEIGHT
             self.ad_container = ft.Container(
@@ -108,6 +107,24 @@ class Menu(ft.Container):
 
     def get_active_icon(self) -> str:
         return get_active_menu_item(self._page.route)
+
+    def _on_ad_error(self, e: ft.ControlEvent) -> None:
+        Logger.warning(f"AdMob banner failed to load: {e.data}")
+        if self.ad_banner is None or self.ad_container is None:
+            return
+
+        self.ad_load_failed = True
+        failed_height = self.ad_banner_height
+        self.ad_banner.visible = False
+        self.ad_banner_height = 0
+        self.ad_container.height = 0
+        if self.height is not None:
+            self.height = max(0, self.height - failed_height)
+        self.reserved_height = max(0, self.reserved_height - failed_height)
+
+        if self._page.on_resize is not None:
+            self._page.on_resize()
+        self._page.update()
 
     def resize(self, width: int, item_size: int, item_height: int, inside_size: int, inside_height: int, banner_height: int, total_height: int, label_size: int, icon_size: int, label_spacing: int, label_visible: bool) -> None:
         self.width = width

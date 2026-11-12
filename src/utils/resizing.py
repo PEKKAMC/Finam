@@ -53,7 +53,11 @@ def get_menu_resize_values(page_width: int, menu: Any) -> MenuResizeValues:
     item_height = 48 if item_size < 48 else item_size
     banner_height = (
         menu.BANNER_HEIGHT
-        if menu.ad_banner is not None and page_width >= menu.BANNER_WIDTH
+        if (
+            menu.ad_banner is not None
+            and not menu.ad_load_failed
+            and page_width >= menu.BANNER_WIDTH
+        )
         else 0
     )
     return {
