@@ -398,12 +398,12 @@ class SavingsProgressCard(ft.Container):
 
         # Static icons
         self.goal_header_icon = ft.Icon(ft.Icons.TRACK_CHANGES, color=Color.GOAL_HEADER_ICON_COLOR, size=18)
-        self.view_all_arrow_icon = ft.Icon(ft.Icons.ARROW_FORWARD, color=Color.PRIMARY, size=14)
+        self.view_all_arrow_icon = ft.Icon(ft.Icons.ARROW_FORWARD, color=Color.LIGHT_ACCENT, size=14)
 
         # Dynamic texts
         self.view_all_count = Text.SMALL(
             f"{self.lang['generic.all']} ({self.objective_count})",
-            color=Color.PRIMARY,
+            color=Color.LIGHT_ACCENT,
             weight=ft.FontWeight.BOLD
         )
 
@@ -492,9 +492,7 @@ class SavingsProgressCard(ft.Container):
             if objective_count is None
             else objective_count
         )
-        self.view_all_count.value = (
-            f"{self.lang['generic.all']} ({total_objective_count})"
-        )
+        self.view_all_count.value = f"{self.lang['generic.all']} ({total_objective_count})"
 
         if not self.objective_items:
             self.goal_items.clear()
@@ -593,12 +591,12 @@ class ExpensePieChart(ft.Container):
         # TEXT AND ICON COMPONENTS
         # Static texts
         self.chart_title = Text.H4(self.lang["home.expense_breakdown"], color=Color.DEFAULT_TEXT)
-        self.view_details_title = Text.SMALL(self.lang["home.view_details"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
+        self.view_details_title = Text.SMALL(self.lang["home.view_details"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
         self.no_data_title = Text.SMALL(self.lang["home.no_expense_data"], color=Color.BLAND_TEXT)
 
         # Static icons
         self.chart_icon = ft.Icon(ft.Icons.PIE_CHART, color=Color.EXPENSE_ACTION_BACKGROUND, size=18)
-        self.view_details_icon = ft.Icon(ft.Icons.ARROW_FORWARD, color=Color.PRIMARY, size=14)
+        self.view_details_icon = ft.Icon(ft.Icons.ARROW_FORWARD, color=Color.LIGHT_ACCENT, size=14)
         self.no_data_icon = ft.Icon(ft.Icons.ERROR_OUTLINE, color=Color.DEFAULT_BORDER, size=32)
 
         # CONTAINER COMPONENTS
@@ -786,8 +784,8 @@ class FeaturedLessonCard(ft.Container):
         self.featured_lesson_title = Text.P(self.lang["home.featured_lesson_title"], color=Color.WHITE, weight=ft.FontWeight.BOLD)
         self.featured_lesson_desc = Text.SMALL(self.lang["home.featured_lesson_desc"], color=Color.BLAND_TEXT)
         self.learn_now_title = Text.SMALL(self.lang["home.learn_now"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
-        self.completion_status_title = Text.SMALL(self.lang["home.completion_status"], color=Color.BLAND_TEXT)
-        self.motto_title = Text.SMALL(self.lang["home.financial_motto"], color=Color.PRIMARY, weight=ft.FontWeight.BOLD)
+        #self.completion_status_title = Text.SMALL(self.lang["home.completion_status"], color=Color.BLAND_TEXT)
+        self.motto_title = Text.SMALL(self.lang["home.financial_motto"], color=Color.LIGHT_ACCENT, weight=ft.FontWeight.BOLD)
 
         # Static icons
         self.lesson_header_icon = ft.Icon(ft.Icons.BOOK_ROUNDED, color=Color.LESSON_ICON_COLOR, size=18)
@@ -860,15 +858,10 @@ class FeaturedLessonCard(ft.Container):
             )
         )
 
-        self.footer_divider = ft.Divider(
-            height=1,
-            color=Color.CARD_DIVIDER
-        )
-
         self.footer_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                self.completion_status_title,
+                #self.completion_status_title,
                 self.motto_title
             ]
         )
@@ -880,7 +873,6 @@ class FeaturedLessonCard(ft.Container):
                 controls=[
                     self.lesson_header_row,
                     self.lesson_banner_container,
-                    self.footer_divider,
                     self.footer_row
                 ]
             )
