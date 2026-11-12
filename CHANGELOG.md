@@ -1,3 +1,22 @@
+# Finam v1.0.0-rc3
+
+**Release Date:** November 12, 2026
+
+> **⚠️ RELEASE CANDIDATE**
+>
+> Finam is currently undergoing final testing. It may still contain bugs or incomplete features, and behavior may change before the stable release.
+>
+> *Report issues: If you find a bug or unexpected behavior, please report it on our GitHub page.*
+
+## Changes in this version
+
+*   Added usage limit text cache.
+*   Improved some UI elements.
+
+## Bug fixes in this version
+
+*   Fixed blank space above menu if ads isn't loaded.
+
 # Finam v1.0.0-rc2
 
 **Release Date:** November 11, 2026
@@ -13,7 +32,7 @@
 *   Removed default "Admin" user.
 *   Opening app now open as the last selected user.
 *   Redesigned settings and user management pages.
-*   Removed unused assets
+*   Removed unused assets.
 *   Minor visual changes.
 
 ## Bug fixes in this version
