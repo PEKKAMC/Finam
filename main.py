@@ -14,7 +14,7 @@ PACKAGE_NAME = "Finam"
 
 def main() -> int:
     try:
-        app_version = get_version(PACKAGE_NAME)
+        app_version = get_version(PACKAGE_NAME, 5)
         assets_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets")
 
         if os.getenv("ENABLE_EDITOR") == "1":
