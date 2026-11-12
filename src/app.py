@@ -300,7 +300,7 @@ async def main(page: Page) -> None:
             page.views.append(view)
             resize_handler = getattr(view, "_resize_page", None)
             if callable(resize_handler):
-                async def on_page_resize(ev: ft.PageResizeEvent) -> None:
+                async def on_page_resize(ev: ft.PageResizeEvent | None = None) -> None:
                     if page.route == "/fallback":
                         if (
                             getattr(page, "fallback_reason", "") == "unsupported_screen"
