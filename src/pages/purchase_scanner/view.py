@@ -9,9 +9,25 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.common import Menu
-from src.pages.purchase_scanner.components import ScannerForm, ScannerHistoryCard, ScannerPageContent, ScannerResult
+from src.pages.common.logic import (
+    get_usage_cache_key,
+    load_usage_cache,
+    save_usage_cache,
+)
+from src.pages.purchase_scanner.components import (
+    ScannerForm,
+    ScannerHistoryCard,
+    ScannerPageContent,
+    ScannerResult,
+)
 from src.pages.purchase_scanner.logic import LogicController, ScannerApiError
-from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size
+from src.utils import (
+    Color,
+    MenuResizeValues,
+    Page,
+    get_menu_resize_values,
+    get_safe_page_size,
+)
 
 Logger.info("Initializing Purchase Scanner page...")
 
@@ -61,6 +77,10 @@ class PurchaseScannerView(ft.View):
             history_card=self.history_card,
             signed_in=self.controller.has_google_account_session()
         )
+        self._usage_cache_loaded = False
+        self._usage_cache_loading = False
+        self._usage_cache_key: str | None = None
+        self._has_cached_usage = False
 
         super().__init__(
             route="/purchase_scanner",
@@ -98,6 +118,91 @@ class PurchaseScannerView(ft.View):
         usage_card.usage_progress.value = 1
         usage_card.usage_progress.color = Color.PROGRESS_ACTIVE
 
+    def _start_usage_refresh(self) -> None:
+        cache_key = get_usage_cache_key("purchase_scanner")
+        if cache_key != self._usage_cache_key:
+            self._usage_cache_key = cache_key
+            self._usage_cache_loaded = False
+            self._usage_cache_loading = False
+            self._has_cached_usage = False
+        if cache_key is None:
+            self._usage_cache_loaded = True
+            self._page.run_thread(self._load_monthly_usage)
+            return
+        if self._usage_cache_loaded:
+            self._page.run_thread(self._load_monthly_usage)
+        elif not self._usage_cache_loading:
+            self._usage_cache_loading = True
+            self._page.run_task(
+                self._load_cached_usage_then_refresh,
+                cache_key,
+            )
+
+    async def _load_cached_usage_then_refresh(self, cache_key: str) -> None:
+        cached_usage = await load_usage_cache(
+            self._page.last_user_preferences,
+            cache_key,
+        )
+        if cache_key != self._usage_cache_key:
+            return
+        if cached_usage:
+            try:
+                self._apply_monthly_usage(cached_usage)
+                self._has_cached_usage = True
+                self._page.update()
+            except (KeyError, TypeError, ValueError) as ex:
+                Logger.warning(f"Invalid cached purchase scanner usage: {ex}")
+
+        self._usage_cache_loaded = True
+        self._usage_cache_loading = False
+        if self.controller.has_google_account_session():
+            self._page.run_thread(self._load_monthly_usage)
+
+    def _apply_monthly_usage(self, usage: dict[str, object]) -> None:
+        remaining = usage["remaining"]
+        limit = usage["limit"]
+        if limit is None:
+            if remaining is not None:
+                raise ValueError("Unlimited usage cannot include a remaining count")
+            self.scanner_content.usage_card.usage_label.value = (
+                self.lang["purchase_scanner.usage_unlimited"]
+            )
+            progress = 1.0
+        else:
+            if (
+                not isinstance(limit, int)
+                or isinstance(limit, bool)
+                or not isinstance(remaining, int)
+                or isinstance(remaining, bool)
+                or limit < 0
+                or not 0 <= remaining <= limit
+            ):
+                raise ValueError("Cached usage has invalid counts")
+            reset_at_value = usage["reset_at"]
+            if not isinstance(reset_at_value, str):
+                raise ValueError("Monthly usage is missing reset data")
+            reset_at = datetime.fromisoformat(reset_at_value)
+            if reset_at.tzinfo is None:
+                reset_at = reset_at.replace(tzinfo=UTC)
+            reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
+            self.scanner_content.usage_card.usage_label.value = (
+                self.lang["purchase_scanner.usage_remaining"].format(
+                    remaining=remaining, limit=limit, reset=reset_label
+                )
+            )
+            progress = remaining / limit if limit > 0 else 0.0
+
+        self.scanner_content.usage_card.usage_progress.value = progress
+        self.form_card.set_enabled(
+            (limit is None or (isinstance(remaining, int) and remaining > 0))
+            and self.controller.has_google_account_session()
+        )
+        self.scanner_content.usage_card.usage_progress.color = (
+            Color.PROGRESS_ACTIVE
+            if limit is None or remaining
+            else Color.WARNING_COLOR
+        )
+
     def _load_monthly_usage(self) -> None:
         if self.controller.is_cached_developer():
             self._show_unlimited_usage()
@@ -108,37 +213,20 @@ class PurchaseScannerView(ft.View):
             return
         try:
             usage = self.controller.get_monthly_usage_for_current_session()
-            remaining = usage["remaining"]
-            limit = usage["limit"]
-            if limit is None:
-                self.scanner_content.usage_card.usage_label.value = self.lang["purchase_scanner.usage_unlimited"]
-                progress = 1.0
-            else:
-                reset_at_value = usage["reset_at"]
-                if remaining is None or reset_at_value is None:
-                    raise ValueError("Monthly usage is missing reset or remaining data")
-                reset_at = datetime.fromisoformat(reset_at_value)
-                if reset_at.tzinfo is None:
-                    reset_at = reset_at.replace(tzinfo=UTC)
-                reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
-                remaining_label = self.lang["purchase_scanner.usage_remaining"].format(
-                    remaining=remaining, limit=limit, reset=reset_label
+            self._apply_monthly_usage(usage)
+            cache_key = get_usage_cache_key("purchase_scanner")
+            if cache_key:
+                self._page.run_task(
+                    save_usage_cache,
+                    self._page.last_user_preferences,
+                    cache_key,
+                    usage,
                 )
-                progress = remaining / limit if limit > 0 else 0.0
-                self.scanner_content.usage_card.usage_label.value = remaining_label
-            self.scanner_content.usage_card.usage_progress.value = progress
-            self.form_card.set_enabled(
-                (limit is None or (remaining is not None and remaining > 0))
-                and self.controller.has_google_account_session()
-            )
-            self.scanner_content.usage_card.usage_progress.color = (
-                Color.PROGRESS_ACTIVE
-                if limit is None or remaining
-                else Color.WARNING_COLOR
-            )
+            self._has_cached_usage = False
         except ScannerApiError as ex:
             Logger.warning(f"Could not load purchase scanner monthly usage: {ex}")
-            self.scanner_content.usage_card.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
+            if not self._has_cached_usage:
+                self.scanner_content.usage_card.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
             self.form_card.set_enabled(False)
             if ex.status_code in (401, 403):
                 self.scanner_content.google_required_card.message_text.value = self.lang["purchase_scanner.google_session_expired"]
@@ -146,8 +234,9 @@ class PurchaseScannerView(ft.View):
                 self.form_card.set_enabled(False)
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid purchase scanner usage response: {ex}")
-            self.scanner_content.usage_card.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
-            self.form_card.set_enabled(False)
+            if not self._has_cached_usage:
+                self.scanner_content.usage_card.usage_label.value = self.lang["purchase_scanner.usage_unavailable"]
+                self.form_card.set_enabled(False)
         try:
             self.scanner_content.usage_card.update()
             self.scanner_content.google_required_card.update()
@@ -216,7 +305,7 @@ class PurchaseScannerView(ft.View):
         self.scan_history = self.controller.get_scan_history()
         self.history_card.set_history(self.scan_history)
         if self.controller.has_google_account_session():
-            self._page.run_thread(self._load_monthly_usage)
+            self._start_usage_refresh()
         return 0
 
     def _resize_page(self, e: ft.PageResizeEvent | None = None) -> None:

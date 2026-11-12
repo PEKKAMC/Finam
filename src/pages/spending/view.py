@@ -9,10 +9,35 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.common import FinancialChart, Menu
+from src.pages.common.logic import (
+    get_usage_cache_key,
+    load_usage_cache,
+    save_usage_cache,
+)
 from src.pages.common.spending_analysis import SpendingAnalysisDialogManager
-from src.pages.spending.components import DeleteTransactionDialog, MetricCards, SpendingGoogleRequiredCard, SpendingPageContent, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
-from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController, SpendingAnalysisApiError
-from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size, scale_width
+from src.pages.spending.components import (
+    DeleteTransactionDialog,
+    MetricCards,
+    SpendingGoogleRequiredCard,
+    SpendingPageContent,
+    SpendingReportHistoryCard,
+    SpendingUsageCard,
+    TransactionHistoryCard,
+    TransactionToolbar,
+)
+from src.pages.spending.logic import (
+    MIN_SPENDING_ANALYSIS_TRANSACTIONS,
+    LogicController,
+    SpendingAnalysisApiError,
+)
+from src.utils import (
+    Color,
+    MenuResizeValues,
+    Page,
+    get_menu_resize_values,
+    get_safe_page_size,
+    scale_width,
+)
 
 Logger.info("Initializing Spending page...")
 
@@ -88,6 +113,10 @@ class SpendingView(ft.View):
         self.usage_card = SpendingUsageCard(
             lang=self.lang
         )
+        self._usage_cache_loaded = False
+        self._usage_cache_loading = False
+        self._usage_cache_key: str | None = None
+        self._has_cached_usage = False
 
         self.google_required_card = SpendingGoogleRequiredCard(
             lang=self.lang,
@@ -157,14 +186,12 @@ class SpendingView(ft.View):
         self._page.on_resize = self._resize_page
         self._resize_page()
         self._update_google_access()
-        if self.controller.has_google_account_session():
-            self._page.run_thread(self._load_monthly_usage)
 
     def _refresh_view(self) -> int:
         self._resize_page()
         self._update_google_access()
         if self.controller.has_google_account_session():
-            self._page.run_thread(self._load_monthly_usage)
+            self._start_usage_refresh()
         balance_data, self.raw_transactions = self.controller.get_transaction_data()
         self.category_icons = self.controller.get_category_icon_map()
 
@@ -191,6 +218,60 @@ class SpendingView(ft.View):
         self.financial_chart.update_data()
         self._page.update()
         return 0
+
+    def _start_usage_refresh(self) -> None:
+        cache_key = get_usage_cache_key("spending")
+        if cache_key != self._usage_cache_key:
+            self._usage_cache_key = cache_key
+            self._usage_cache_loaded = False
+            self._usage_cache_loading = False
+            self._has_cached_usage = False
+        if cache_key is None:
+            self._usage_cache_loaded = True
+            self._page.run_thread(self._load_monthly_usage)
+            return
+        if self._usage_cache_loaded:
+            self._page.run_thread(self._load_monthly_usage)
+        elif not self._usage_cache_loading:
+            self._usage_cache_loading = True
+            self._page.run_task(
+                self._load_cached_usage_then_refresh,
+                cache_key,
+            )
+
+    async def _load_cached_usage_then_refresh(self, cache_key: str) -> None:
+        cached_usage = await load_usage_cache(
+            self._page.last_user_preferences,
+            cache_key,
+        )
+        if cache_key != self._usage_cache_key:
+            return
+        if cached_usage:
+            try:
+                self._apply_monthly_usage(cached_usage)
+                self._has_cached_usage = True
+                self._page.update()
+            except (KeyError, TypeError, ValueError) as ex:
+                Logger.warning(f"Invalid cached spending usage: {ex}")
+
+        self._usage_cache_loaded = True
+        self._usage_cache_loading = False
+        if self.controller.has_google_account_session():
+            self._page.run_thread(self._load_monthly_usage)
+
+    def _apply_monthly_usage(self, usage: dict[str, Any]) -> None:
+        remaining, limit = self.controller.get_monthly_usage_counts(usage)
+        if limit is not None:
+            reset_at = datetime.fromisoformat(usage["reset_at"])
+            if reset_at.tzinfo is None:
+                reset_at = reset_at.replace(tzinfo=UTC)
+            reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
+        else:
+            reset_label = None
+        self.usage_card.set_usage(remaining, limit, reset_label)
+        self.toolbar.set_scan_enabled(
+            limit is None or (remaining is not None and remaining > 0)
+        )
 
     def _delete_transaction(self, transaction_id: int) -> None:
         if self.controller.delete_transaction(transaction_id):
@@ -221,21 +302,20 @@ class SpendingView(ft.View):
         refresh_token = self.controller.get_google_refresh_token()
         try:
             usage = self.controller.get_monthly_analysis_usage(refresh_token or "")
-            remaining, limit = self.controller.get_monthly_usage_counts(usage)
-            if limit is not None:
-                reset_at = datetime.fromisoformat(usage["reset_at"])
-                if reset_at.tzinfo is None:
-                    reset_at = reset_at.replace(tzinfo=UTC)
-                reset_label = reset_at.astimezone().strftime("%Y-%m-%d %H:%M")
-            else:
-                reset_label = None
-            self.usage_card.set_usage(remaining, limit, reset_label)
-            self.toolbar.set_scan_enabled(
-                limit is None or (remaining is not None and remaining > 0)
-            )
+            self._apply_monthly_usage(usage)
+            cache_key = get_usage_cache_key("spending")
+            if cache_key:
+                self._page.run_task(
+                    save_usage_cache,
+                    self._page.last_user_preferences,
+                    cache_key,
+                    usage,
+                )
+            self._has_cached_usage = False
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load spending analysis usage: {ex}")
-            self.usage_card.set_unavailable()
+            if not self._has_cached_usage:
+                self.usage_card.set_unavailable()
             if ex.status_code in (401, 403):
                 self.google_required_card.set_access(
                     False,
@@ -245,8 +325,9 @@ class SpendingView(ft.View):
             self.toolbar.set_scan_enabled(False)
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid spending analysis usage response: {ex}")
-            self.usage_card.set_unavailable()
-            self.toolbar.set_scan_enabled(False)
+            if not self._has_cached_usage:
+                self.usage_card.set_unavailable()
+                self.toolbar.set_scan_enabled(False)
         self._page.update()
 
     def handle_spending_scan(self, e: ft.ControlEvent | None = None) -> None:
