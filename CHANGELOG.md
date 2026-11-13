@@ -14,6 +14,10 @@ App release. No changes since v1.0.0-rc4.
 >
 > *Report issues: If you find a bug or unexpected behavior, please report it on our GitHub page.*
 
+## Changes in this version
+
+*   Improved savings dialog.
+
 ## Bug fixes in this version
 
 *   Fixed crash due to AdMob fails to load.
