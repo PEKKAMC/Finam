@@ -18,6 +18,7 @@ from src.pages.common.logic.dialogs import (
     show_user_management_dialog,
 )
 from src.pages.common.logic.usage_cache import (
+    UsageCache,
     get_usage_cache_key,
     load_usage_cache,
     save_usage_cache,
@@ -35,5 +36,6 @@ __all__ = [
     "load_usage_cache",
     "save_last_user",
     "save_usage_cache",
+    "UsageCache",
     "show_user_management_dialog"
 ]

@@ -12,8 +12,6 @@ from src.logger import Logger
 from src.pages.common import FinancialChart, Menu
 from src.pages.common.logic import (
     get_usage_cache_key,
-    load_usage_cache,
-    save_usage_cache,
 )
 from src.pages.common.spending_analysis import SpendingAnalysisDialogManager
 from src.pages.spending.components import (
@@ -114,8 +112,6 @@ class SpendingView(ft.View):
         self.usage_card = SpendingUsageCard(
             lang=self.lang
         )
-        self._usage_cache_loaded = False
-        self._usage_cache_loading = False
         self._usage_cache_key: str | None = None
         self._has_cached_usage = False
 
@@ -187,6 +183,8 @@ class SpendingView(ft.View):
         self._page.on_resize = self._resize_page
         self._resize_page()
         self._update_google_access()
+        if self.controller.has_google_account_session():
+            self._start_usage_refresh()
 
     def _refresh_view(self) -> int:
         self._resize_page()
@@ -224,49 +222,9 @@ class SpendingView(ft.View):
         cache_key = get_usage_cache_key("spending")
         if cache_key != self._usage_cache_key:
             self._usage_cache_key = cache_key
-            self._usage_cache_loaded = False
-            self._usage_cache_loading = False
             self._has_cached_usage = False
-        if cache_key is None:
-            self._usage_cache_loaded = True
-            self._page.run_task(self._load_monthly_usage)
-            return
-        if self._usage_cache_loaded:
-            self._page.run_task(self._load_monthly_usage)
-        elif not self._usage_cache_loading:
-            self._usage_cache_loading = True
-            self._page.run_task(
-                self._load_cached_usage_then_refresh,
-                cache_key,
-            )
-
-    async def _load_cached_usage_then_refresh(self, cache_key: str) -> None:
-        try:
-            cached_usage = await asyncio.wait_for(
-                load_usage_cache(
-                    self._page.last_user_preferences,
-                    cache_key,
-                ),
-                timeout=3,
-            )
-            if cache_key != self._usage_cache_key:
-                return
-            if cached_usage:
-                self._apply_monthly_usage(cached_usage)
-                self._has_cached_usage = True
-                self._page.update()
-        except TimeoutError:
-            Logger.warning("Timed out reading cached spending usage")
-        except (KeyError, TypeError, ValueError) as ex:
-            Logger.warning(f"Invalid cached spending usage: {ex}")
-        except Exception as ex:
-            Logger.error(f"Could not load cached spending usage: {ex}")
-        finally:
-            if cache_key == self._usage_cache_key:
-                self._usage_cache_loaded = True
-                self._usage_cache_loading = False
-                if self.controller.has_google_account_session():
-                    self._page.run_task(self._load_monthly_usage)
+        if cache_key is not None:
+            self._page.run_task(self._load_monthly_usage, cache_key)
 
     def _apply_monthly_usage(self, usage: dict[str, Any]) -> None:
         remaining, limit = self.controller.get_monthly_usage_counts(usage)
@@ -300,7 +258,9 @@ class SpendingView(ft.View):
             self.toolbar.set_scan_enabled(False)
         self._page.update()
 
-    async def _load_monthly_usage(self) -> None:
+    async def _load_monthly_usage(
+        self, cache_key: str, force_refresh: bool = False
+    ) -> None:
         if self.controller.is_cached_developer():
             self.usage_card.set_unlimited()
             self.toolbar.set_scan_enabled(
@@ -308,20 +268,31 @@ class SpendingView(ft.View):
             )
             self._page.update()
             return
-        refresh_token = self.controller.get_google_refresh_token()
+
         try:
-            usage = await asyncio.to_thread(
-                self.controller.get_monthly_analysis_usage,
-                refresh_token or "",
-            )
-            self._apply_monthly_usage(usage)
-            cache_key = get_usage_cache_key("spending")
-            if cache_key:
-                await save_usage_cache(
-                    self._page.last_user_preferences,
-                    cache_key,
-                    usage,
+            cached_usage = await self._page.usage_cache.get(cache_key)
+            if cached_usage is not None and cache_key == self._usage_cache_key:
+                try:
+                    self._apply_monthly_usage(cached_usage)
+                    self._has_cached_usage = True
+                    self._page.update()
+                except (KeyError, TypeError, ValueError) as ex:
+                    Logger.warning(f"Invalid cached spending analysis usage: {ex}")
+
+            async def fetch_usage() -> dict[str, Any]:
+                return await asyncio.to_thread(
+                    self.controller.get_monthly_analysis_usage,
+                    self.controller.get_google_refresh_token() or "",
                 )
+
+            usage = await self._page.usage_cache.refresh(
+                cache_key,
+                fetch_usage,
+                force=force_refresh,
+            )
+            if cache_key != self._usage_cache_key:
+                return
+            self._apply_monthly_usage(usage)
             self._has_cached_usage = False
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load spending analysis usage: {ex}")
@@ -359,8 +330,9 @@ class SpendingView(ft.View):
         self._page.update()
 
     def _refresh_spending_usage_after_scan(self) -> None:
-        if self.controller.get_google_refresh_token():
-            self._page.run_task(self._load_monthly_usage)
+        cache_key = get_usage_cache_key("spending")
+        if cache_key:
+            self._page.run_task(self._load_monthly_usage, cache_key, True)
 
     def _handle_spending_auth_expired(self) -> None:
         self.google_required_card.set_access(

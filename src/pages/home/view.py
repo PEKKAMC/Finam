@@ -2,11 +2,14 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import asyncio
+
 import flet as ft
 
 from src.logger import Logger
 from src.database import db
 from src.pages.common import FinancialChart, Menu
+from src.pages.common.logic import get_usage_cache_key
 from src.pages.common.spending_analysis import SpendingAnalysisDialogManager
 from src.pages.home.components import BalanceCard, ExpensePieChart, FeaturedLessonCard, SavingsProgressCard
 from src.pages.home.logic import DashboardData, LogicController
@@ -60,7 +63,7 @@ class HomeView(ft.View):
             api_error_type=SpendingAnalysisApiError,
             can_scan=lambda: not self.balance_card.purchase_scanner_button.disabled,
             set_scan_enabled=self._set_spending_scan_enabled,
-            refresh_usage=self._load_spending_usage,
+            refresh_usage=self._refresh_spending_usage_after_scan,
             on_report_deleted=self._on_spending_report_deleted,
         )
         self.spending_report_dialog = self.spending_analysis.report_dialog
@@ -146,7 +149,7 @@ class HomeView(ft.View):
         self._resize_page()
         self._update_spending_scan_access()
         if db.app_settings.has_google_account_session():
-            self._page.run_thread(self._load_spending_usage)
+            self._page.run_task(self._load_spending_usage)
 
     def _open_spending_report(self, e: ft.ControlEvent | None = None) -> None:
         self.spending_analysis.open_scan(e)
@@ -199,7 +202,7 @@ class HomeView(ft.View):
             currency=self.currency
         )
 
-    def _load_spending_usage(self) -> None:
+    async def _load_spending_usage(self, force_refresh: bool = False) -> None:
         if not db.app_settings.has_google_account_session():
             self.balance_card.set_scan_enabled(False)
             return
@@ -209,28 +212,52 @@ class HomeView(ft.View):
             self._page.update()
             return
 
-        refresh_token = db.app_settings.get_google_refresh_token()
+        cache_key = get_usage_cache_key("spending")
+        if cache_key is None:
+            self.balance_card.set_scan_enabled(False)
+            self._page.update()
+            return
 
         try:
-            usage = self.spending_controller.get_monthly_analysis_usage(
-                refresh_token or ""
-            )
-            remaining, limit = self.spending_controller.get_monthly_usage_counts(
-                usage
-            )
-            self.balance_card.set_scan_enabled(
-                limit is None or (remaining is not None and remaining > 0)
-            )
+            cached_usage = await self._page.usage_cache.get(cache_key)
+            if cached_usage is not None:
+                try:
+                    self._apply_spending_usage(cached_usage)
+                    self._page.update()
+                except (KeyError, TypeError, ValueError) as ex:
+                    Logger.warning(f"Invalid cached home spending AI usage: {ex}")
 
+            async def fetch_usage() -> dict:
+                return await asyncio.to_thread(
+                    self.spending_controller.get_monthly_analysis_usage,
+                    db.app_settings.get_google_refresh_token() or "",
+                )
+
+            usage = await self._page.usage_cache.refresh(
+                cache_key,
+                fetch_usage,
+                force=force_refresh,
+            )
+            self._apply_spending_usage(usage)
         except SpendingAnalysisApiError as ex:
             Logger.warning(f"Could not load home spending AI usage: {ex}")
             self.balance_card.set_scan_enabled(False)
-
         except (KeyError, TypeError, ValueError) as ex:
             Logger.warning(f"Invalid home spending AI usage response: {ex}")
             self.balance_card.set_scan_enabled(False)
 
         self._page.update()
+
+    def _refresh_spending_usage_after_scan(self) -> None:
+        self._page.run_task(self._load_spending_usage, True)
+
+    def _apply_spending_usage(self, usage: dict) -> None:
+        remaining, limit = self.spending_controller.get_monthly_usage_counts(
+            usage
+        )
+        self.balance_card.set_scan_enabled(
+            limit is None or (remaining is not None and remaining > 0)
+        )
 
     def _on_spending_report_deleted(self) -> None:
         self._page.update()
@@ -240,7 +267,7 @@ class HomeView(ft.View):
             self._resize_page()
             self._update_spending_scan_access()
             if db.app_settings.has_google_account_session():
-                self._page.run_thread(self._load_spending_usage)
+                self._page.run_task(self._load_spending_usage)
             self._load_dashboard_data()
             self._update_dashboard_components()
 

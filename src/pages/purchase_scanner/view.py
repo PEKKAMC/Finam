@@ -10,11 +10,7 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.common import Menu
-from src.pages.common.logic import (
-    get_usage_cache_key,
-    load_usage_cache,
-    save_usage_cache,
-)
+from src.pages.common.logic import get_usage_cache_key
 from src.pages.purchase_scanner.components import (
     ScannerForm,
     ScannerHistoryCard,
@@ -82,8 +78,6 @@ class PurchaseScannerView(ft.View):
             history_card=self.history_card,
             signed_in=self.controller.has_google_account_session()
         )
-        self._usage_cache_loaded = False
-        self._usage_cache_loading = False
         self._usage_cache_key: str | None = None
         self._has_cached_usage = False
 
@@ -107,6 +101,8 @@ class PurchaseScannerView(ft.View):
         self._page.on_resize = self._resize_page
         self._resize_page()
         self._update_google_access()
+        if self.controller.has_google_account_session():
+            self._start_usage_refresh()
 
     def _update_google_access(self) -> None:
         signed_in = self.controller.has_google_account_session()
@@ -127,49 +123,9 @@ class PurchaseScannerView(ft.View):
         cache_key = get_usage_cache_key("purchase_scanner")
         if cache_key != self._usage_cache_key:
             self._usage_cache_key = cache_key
-            self._usage_cache_loaded = False
-            self._usage_cache_loading = False
             self._has_cached_usage = False
-        if cache_key is None:
-            self._usage_cache_loaded = True
-            self._page.run_task(self._load_monthly_usage)
-            return
-        if self._usage_cache_loaded:
-            self._page.run_task(self._load_monthly_usage)
-        elif not self._usage_cache_loading:
-            self._usage_cache_loading = True
-            self._page.run_task(
-                self._load_cached_usage_then_refresh,
-                cache_key,
-            )
-
-    async def _load_cached_usage_then_refresh(self, cache_key: str) -> None:
-        try:
-            cached_usage = await asyncio.wait_for(
-                load_usage_cache(
-                    self._page.last_user_preferences,
-                    cache_key,
-                ),
-                timeout=3,
-            )
-            if cache_key != self._usage_cache_key:
-                return
-            if cached_usage:
-                self._apply_monthly_usage(cached_usage)
-                self._has_cached_usage = True
-                self._page.update()
-        except TimeoutError:
-            Logger.warning("Timed out reading cached purchase scanner usage")
-        except (KeyError, TypeError, ValueError) as ex:
-            Logger.warning(f"Invalid cached purchase scanner usage: {ex}")
-        except Exception as ex:
-            Logger.error(f"Could not load cached purchase scanner usage: {ex}")
-        finally:
-            if cache_key == self._usage_cache_key:
-                self._usage_cache_loaded = True
-                self._usage_cache_loading = False
-                if self.controller.has_google_account_session():
-                    self._page.run_task(self._load_monthly_usage)
+        if cache_key is not None:
+            self._page.run_task(self._load_monthly_usage, cache_key)
 
     def _apply_monthly_usage(self, usage: dict[str, object] | ScannerUsage) -> None:
         remaining = usage["remaining"]
@@ -216,7 +172,9 @@ class PurchaseScannerView(ft.View):
             else Color.WARNING_COLOR
         )
 
-    async def _load_monthly_usage(self) -> None:
+    async def _load_monthly_usage(
+        self, cache_key: str, force_refresh: bool = False
+    ) -> None:
         if self.controller.is_cached_developer():
             self._show_unlimited_usage()
             self.form_card.set_enabled(
@@ -225,17 +183,30 @@ class PurchaseScannerView(ft.View):
             self._page.update()
             return
         try:
-            usage = await asyncio.to_thread(
-                self.controller.get_monthly_usage_for_current_session
-            )
-            self._apply_monthly_usage(usage)
-            cache_key = get_usage_cache_key("purchase_scanner")
-            if cache_key:
-                await save_usage_cache(
-                    self._page.last_user_preferences,
-                    cache_key,
-                    usage,
+            cached_usage = await self._page.usage_cache.get(cache_key)
+            if cached_usage is not None and cache_key == self._usage_cache_key:
+                try:
+                    self._apply_monthly_usage(cached_usage)
+                    self._has_cached_usage = True
+                    self._page.update()
+                except (KeyError, TypeError, ValueError) as ex:
+                    Logger.warning(f"Invalid cached purchase scanner usage: {ex}")
+
+            async def fetch_usage() -> dict:
+                return dict(
+                    await asyncio.to_thread(
+                        self.controller.get_monthly_usage_for_current_session
+                    )
                 )
+
+            usage = await self._page.usage_cache.refresh(
+                cache_key,
+                fetch_usage,
+                force=force_refresh,
+            )
+            if cache_key != self._usage_cache_key:
+                return
+            self._apply_monthly_usage(usage)
             self._has_cached_usage = False
         except ScannerApiError as ex:
             Logger.warning(f"Could not load purchase scanner monthly usage: {ex}")
@@ -299,7 +270,13 @@ class PurchaseScannerView(ft.View):
                 self.result_card.show_error(self.lang["purchase_scanner.service_error"])
             finally:
                 if self.controller.has_google_refresh_token():
-                    self._page.run_task(self._load_monthly_usage)
+                    cache_key = get_usage_cache_key("purchase_scanner")
+                    if cache_key:
+                        self._page.run_task(
+                            self._load_monthly_usage,
+                            cache_key,
+                            True,
+                        )
                 self.form_card.set_scanning(False)
                 self._page.update()
 

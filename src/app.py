@@ -11,6 +11,7 @@ from src.database import db
 from src.logger import Logger
 from src.pages.category_selection import get_category_selection_view
 from src.pages.common.logic import get_last_user
+from src.pages.common.logic.usage_cache import UsageCache
 from src.pages.fallback import get_fallback_view
 from src.pages.help import get_help_view
 from src.pages.home import get_home_view
@@ -92,6 +93,7 @@ async def main(page: Page) -> None:
     page.last_user_preferences = ft.SharedPreferences()
     if page.last_user_preferences not in page.services:
         page.services.append(page.last_user_preferences)
+    page.usage_cache = UsageCache(page.last_user_preferences)
 
     info: dict[str, str] = {
         "username": ""

@@ -2,11 +2,17 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+from __future__ import annotations
+
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import flet as ft
 
 from src.logger import Logger
+
+if TYPE_CHECKING:
+    from src.pages.common.logic.usage_cache import UsageCache
 
 
 class Page(ft.Page):
@@ -14,6 +20,7 @@ class Page(ft.Page):
         self.delete_cached_view: Callable
         self.delete_all_cached_views: Callable
         self.last_user_preferences: ft.SharedPreferences
+        self.usage_cache: UsageCache
         self.previous_route: str
         self.fallback_reason: str
         self.skip_app_lock_once: bool
