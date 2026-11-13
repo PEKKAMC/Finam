@@ -13,11 +13,12 @@ from src.utils import Color, Page, Text, format_expression, get_decimal_separato
 
 
 class KeyboardContainer(ft.Container):
-    def __init__(self, page: Page, lang: dict, on_save: Callable[[dict], None], on_date_changed_callback: Optional[Callable[[str], None]] = None):
+    def __init__(self, page: Page, lang: dict, on_save: Callable[[dict], None], on_date_changed_callback: Optional[Callable[[str], None]] = None, show_note: bool = True):
         self._page = page
         self.lang = lang
         self.on_save = on_save
         self.on_date_changed_callback = on_date_changed_callback
+        self.show_note = show_note
 
         self.amount_value = "0"
         self.selected_date = datetime.now().strftime("%Y-%m-%d")
@@ -122,7 +123,8 @@ class KeyboardContainer(ft.Container):
                         bgcolor=Color.PAGE_BACKGROUND,
                         border_radius=8,
                         padding=ft.Padding.symmetric(horizontal=8, vertical=2),
-                        content=self.note_input
+                        content=self.note_input,
+                        visible=self.show_note
                     ),
                     self._build_keypad()
                 ]

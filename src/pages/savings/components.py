@@ -14,10 +14,9 @@ import flet.canvas as flet_canvas
 
 from src.logger import Logger
 from src.pages.common.keyboard_container.components import KeyboardContainer
+from src.pages.common.keyboard_container.logic import evaluate_expression
 from src.pages.savings.logic import LogicController
-from src.utils import Color, Data, Dialog, Page, Text, format_compact_number, format_display_number, format_number, to_decimal
-
-FLOAT_REGEX = Data().get_regex_string("float")
+from src.utils import Color, Dialog, Page, Text, format_compact_number, format_display_number, format_number, to_decimal
 
 class GoalCard(ft.Container):
     def __init__(self, page: Page, lang: dict[str, str], goal: dict[str, Any], on_deposit: Callable[[dict[str, Any], str], None], on_achievement: Callable[[dict[str, Any]], None], on_withdraw: Callable[[dict[str, Any], str], None], on_delete: Callable[[int], None]) -> None:
@@ -553,7 +552,7 @@ class ActivityHistory(ft.Container):
         self.main_container.width = content_width
 
 
-class CreateGoalDialog(Dialog):
+class CreateGoalDialog(ft.Container):
     def __init__(self, page: Page, lang: dict[str, str], controller: LogicController, currency: str, on_success: Callable[..., None]) -> None:
         self._page = page
         self.lang = lang
@@ -565,16 +564,17 @@ class CreateGoalDialog(Dialog):
         # TEXT AND ICON COMPONENTS
         # Static texts
         self.title_text = Text.H3(self.lang["savings.create_goal_title"], color=Color.PRIMARY_TEXT, expand=True)
-        self.submit_button_label = Text.BUTTON(self.lang["savings.save_objective"], color=Color.WHITE)
-
-        # Static icons
-        self.submit_button_icon = ft.Icon(ft.Icons.ADD_CIRCLE, color=Color.WHITE)
 
         # Dynamic texts
         self.error_text = Text.SMALL("", color=Color.NEGATIVE_ACTION)
 
         # CONTAINER COMPONENTS
-        self.close_button = ft.IconButton(ft.Icons.CLOSE, on_click=lambda e: self.dismiss(), icon_color=Color.PRIMARY_TEXT)
+        self.close_button = ft.IconButton(
+            icon=ft.Icons.CLOSE,
+            on_click=self._close,
+            icon_color=Color.PRIMARY_TEXT,
+            tooltip=self.lang["generic.close"]
+        )
 
         self.surplus_banner = ft.Container(visible=False)
 
@@ -586,18 +586,13 @@ class CreateGoalDialog(Dialog):
             focused_border_color=Color.PRIMARY_ACTION
         )
 
-        self.goal_amount_input = ft.TextField(
-            label=self.lang["savings.target_amount"],
-            color=Color.DEFAULT_TEXT,
-            input_filter=ft.InputFilter(
-                allow=True,
-                regex_string=FLOAT_REGEX
-            ),
-            keyboard_type=ft.KeyboardType.NUMBER,
-            border_radius=16,
-            border_color=Color.INPUT_BORDER,
-            focused_border_color=Color.PRIMARY_ACTION
+        self.keyboard_container = KeyboardContainer(
+            page=self._page,
+            lang=self.lang,
+            on_save=self._process_keyboard_save,
+            show_note=False
         )
+        self.keyboard_container.bottom = 0
 
         self.reason_input = ft.TextField(
             label=self.lang["savings.reason"],
@@ -615,17 +610,6 @@ class CreateGoalDialog(Dialog):
             border_radius=12
         )
 
-        self.submit_button = ft.Button(
-            content=ft.Row(
-                controls=[self.submit_button_icon, self.submit_button_label],
-                spacing=6
-            ),
-            on_click=self._process_submit,
-            bgcolor=Color.PRIMARY_ACTION,
-            height=52,
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=16))
-        )
-
         header_row = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
@@ -638,15 +622,14 @@ class CreateGoalDialog(Dialog):
             tight=True,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=16,
+            scroll=ft.ScrollMode.AUTO,
             controls=[
                 header_row,
                 self.surplus_banner,
                 self.error_container,
                 self.goal_title_input,
-                self.goal_amount_input,
                 self.reason_input,
-                ft.Container(height=10),
-                self.submit_button
+                ft.Container(height=10)
             ]
         )
 
@@ -657,18 +640,51 @@ class CreateGoalDialog(Dialog):
             content=self.content_column
         )
 
-        super().__init__(
-            dialog_content=self.main_container, color=Color.TRANSPARENT, padding=0
+        self.backdrop = ft.Container(
+            expand=True,
+            bgcolor="#80000000",
+            on_click=self._ignore_backdrop_click
         )
 
-        self.inset_padding = ft.Padding.symmetric(horizontal=16, vertical=24)
+        self.dialog_panel = ft.Container(
+            left=0,
+            right=0,
+            top=16,
+            alignment=ft.Alignment.CENTER,
+            content=self.main_container
+        )
+
+        self.overlay_stack = ft.SafeArea(
+            expand=True,
+            content=ft.Stack(
+                expand=True,
+                controls=[
+                    self.backdrop,
+                    self.dialog_panel,
+                    self.keyboard_container
+                ]
+            )
+        )
+
+        super().__init__(
+            expand=True,
+            visible=False,
+            content=self.overlay_stack
+        )
+
+        if self._page.overlay is not None and self not in self._page.overlay:
+            self._page.overlay.append(self)
 
     def trigger(self, initial_surplus: Decimal = Decimal(0)) -> None:
         self.initial_surplus = initial_surplus
+        self.keyboard_container.reset_inputs()
         if initial_surplus > 0:
             self.title_text.value = self.lang["savings.create_goal_from_surplus_title"]
             self.goal_title_input.value = self.lang["savings.next_objective"]
-            self.goal_amount_input.value = format(initial_surplus * 5, "f")
+            self.keyboard_container.amount_value = format(initial_surplus * 5, "f")
+            self.keyboard_container.amount_display.value = format_number(
+                initial_surplus * 5
+            )
             self.reason_input.value = self.lang["savings.surplus_reason"].format(
                 amount=format_number(initial_surplus, decimals=0),
                 currency=self.currency
@@ -693,14 +709,24 @@ class CreateGoalDialog(Dialog):
         else:
             self.title_text.value = self.lang["savings.create_goal_title"]
             self.goal_title_input.value = ""
-            self.goal_amount_input.value = ""
             self.reason_input.value = ""
             self.surplus_banner.visible = False
 
         self.error_container.visible = False
-        self.show()
+        self.keyboard_container.visible = True
+        self.visible = True
+        self._page.update()
 
     def _process_submit(self, _event: ft.Event[ft.Button]) -> None:
+        amount = self.keyboard_container.amount_value
+        if any(operator in amount for operator in "+-*/"):
+            amount = evaluate_expression(amount) or ""
+        self._submit_goal(amount)
+
+    def _process_keyboard_save(self, values: dict[str, Any]) -> None:
+        self._submit_goal(str(values.get("amount") or ""))
+
+    def _submit_goal(self, amount: str) -> None:
         title = (
             self.goal_title_input.value.strip() if self.goal_title_input.value else ""
         )
@@ -711,7 +737,7 @@ class CreateGoalDialog(Dialog):
             return
 
         try:
-            target = to_decimal(self.goal_amount_input.value or 0)
+            target = to_decimal(amount or 0)
         except ValueError:
             target = Decimal(0)
 
@@ -741,17 +767,28 @@ class CreateGoalDialog(Dialog):
             success = self.controller.add_new_objective(title, reason, target)
 
         if success:
-            self.dismiss()
+            self._close()
             self.on_success()
 
-    def resize(self, outer_width: int, content_width: int) -> None:
+    def _close(self) -> None:
+        self.keyboard_container.reset_inputs()
+        self.keyboard_container.visible = False
+        self.visible = False
+        self._page.update()
+
+    @staticmethod
+    def _ignore_backdrop_click(_event: ft.Event[ft.Container]) -> None:
+        pass
+
+    def resize(self, page_width: int, outer_width: int, content_width: int) -> None:
         self.main_container.width = outer_width
+        self.dialog_panel.width = page_width
         self.content_column.width = content_width
         self.goal_title_input.width = content_width
-        self.goal_amount_input.width = content_width
         self.reason_input.width = content_width
         self.surplus_banner.width = content_width
-        self.submit_button.width = content_width
+        self.keyboard_container.width = page_width
+        self.keyboard_container.resize(page_width)
 
 
 class DepositWithdrawDialog(ft.Container):

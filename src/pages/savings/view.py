@@ -345,6 +345,7 @@ class SavingsView(ft.View):
             )
 
             self.dialogs.create_goal_dialog.resize(
+                page_width=page_width,
                 outer_width=dialog_width,
                 content_width=create_content_width
             )
