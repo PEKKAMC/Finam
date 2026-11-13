@@ -22,8 +22,24 @@ from src.pages.savings import get_savings_view
 from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.starter.view import StarterView, get_starter_view
-from src.pages.user_management import complete_google_mobile_callback, complete_google_web_callback, get_user_management_view, is_google_oauth_callback_route
-from src.utils import DefaultSettings, Page, ThemeManager, UISettings, currency_for_region, get_language, is_supported_page_size, language_for_device_locale, set_decimal_separator, set_digit_separator
+from src.pages.user_management import (
+    complete_google_mobile_callback,
+    complete_google_web_callback,
+    get_user_management_view,
+    is_google_oauth_callback_route,
+)
+from src.utils import (
+    DefaultSettings,
+    Page,
+    ThemeManager,
+    UISettings,
+    currency_for_region,
+    get_language,
+    is_supported_page_size,
+    language_for_device_locale,
+    set_decimal_separator,
+    set_digit_separator,
+)
 
 ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
@@ -74,7 +90,8 @@ async def main(page: Page) -> None:
     db.initialize_database()
 
     page.last_user_preferences = ft.SharedPreferences()
-    page.services.append(page.last_user_preferences)
+    if page.last_user_preferences not in page.services:
+        page.services.append(page.last_user_preferences)
 
     info: dict[str, str] = {
         "username": ""
