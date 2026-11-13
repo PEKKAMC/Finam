@@ -2,6 +2,7 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import asyncio
 from datetime import UTC, datetime
 from typing import Any
 
@@ -9,11 +10,35 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.common import FinancialChart, Menu
-from src.pages.common.logic import get_usage_cache_key, load_usage_cache, save_usage_cache
+from src.pages.common.logic import (
+    get_usage_cache_key,
+    load_usage_cache,
+    save_usage_cache,
+)
 from src.pages.common.spending_analysis import SpendingAnalysisDialogManager
-from src.pages.spending.components import DeleteTransactionDialog, MetricCards, SpendingGoogleRequiredCard, SpendingPageContent, SpendingReportHistoryCard, SpendingUsageCard, TransactionHistoryCard, TransactionToolbar
-from src.pages.spending.logic import MIN_SPENDING_ANALYSIS_TRANSACTIONS, LogicController, SpendingAnalysisApiError
-from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size, scale_width
+from src.pages.spending.components import (
+    DeleteTransactionDialog,
+    MetricCards,
+    SpendingGoogleRequiredCard,
+    SpendingPageContent,
+    SpendingReportHistoryCard,
+    SpendingUsageCard,
+    TransactionHistoryCard,
+    TransactionToolbar,
+)
+from src.pages.spending.logic import (
+    MIN_SPENDING_ANALYSIS_TRANSACTIONS,
+    LogicController,
+    SpendingAnalysisApiError,
+)
+from src.utils import (
+    Color,
+    MenuResizeValues,
+    Page,
+    get_menu_resize_values,
+    get_safe_page_size,
+    scale_width,
+)
 
 Logger.info("Initializing Spending page...")
 
@@ -204,10 +229,10 @@ class SpendingView(ft.View):
             self._has_cached_usage = False
         if cache_key is None:
             self._usage_cache_loaded = True
-            self._page.run_thread(self._load_monthly_usage)
+            self._page.run_task(self._load_monthly_usage)
             return
         if self._usage_cache_loaded:
-            self._page.run_thread(self._load_monthly_usage)
+            self._page.run_task(self._load_monthly_usage)
         elif not self._usage_cache_loading:
             self._usage_cache_loading = True
             self._page.run_task(
@@ -216,24 +241,32 @@ class SpendingView(ft.View):
             )
 
     async def _load_cached_usage_then_refresh(self, cache_key: str) -> None:
-        cached_usage = await load_usage_cache(
-            self._page.last_user_preferences,
-            cache_key,
-        )
-        if cache_key != self._usage_cache_key:
-            return
-        if cached_usage:
-            try:
+        try:
+            cached_usage = await asyncio.wait_for(
+                load_usage_cache(
+                    self._page.last_user_preferences,
+                    cache_key,
+                ),
+                timeout=3,
+            )
+            if cache_key != self._usage_cache_key:
+                return
+            if cached_usage:
                 self._apply_monthly_usage(cached_usage)
                 self._has_cached_usage = True
                 self._page.update()
-            except (KeyError, TypeError, ValueError) as ex:
-                Logger.warning(f"Invalid cached spending usage: {ex}")
-
-        self._usage_cache_loaded = True
-        self._usage_cache_loading = False
-        if self.controller.has_google_account_session():
-            self._page.run_thread(self._load_monthly_usage)
+        except TimeoutError:
+            Logger.warning("Timed out reading cached spending usage")
+        except (KeyError, TypeError, ValueError) as ex:
+            Logger.warning(f"Invalid cached spending usage: {ex}")
+        except Exception as ex:
+            Logger.error(f"Could not load cached spending usage: {ex}")
+        finally:
+            if cache_key == self._usage_cache_key:
+                self._usage_cache_loaded = True
+                self._usage_cache_loading = False
+                if self.controller.has_google_account_session():
+                    self._page.run_task(self._load_monthly_usage)
 
     def _apply_monthly_usage(self, usage: dict[str, Any]) -> None:
         remaining, limit = self.controller.get_monthly_usage_counts(usage)
@@ -267,7 +300,7 @@ class SpendingView(ft.View):
             self.toolbar.set_scan_enabled(False)
         self._page.update()
 
-    def _load_monthly_usage(self) -> None:
+    async def _load_monthly_usage(self) -> None:
         if self.controller.is_cached_developer():
             self.usage_card.set_unlimited()
             self.toolbar.set_scan_enabled(
@@ -277,12 +310,14 @@ class SpendingView(ft.View):
             return
         refresh_token = self.controller.get_google_refresh_token()
         try:
-            usage = self.controller.get_monthly_analysis_usage(refresh_token or "")
+            usage = await asyncio.to_thread(
+                self.controller.get_monthly_analysis_usage,
+                refresh_token or "",
+            )
             self._apply_monthly_usage(usage)
             cache_key = get_usage_cache_key("spending")
             if cache_key:
-                self._page.run_task(
-                    save_usage_cache,
+                await save_usage_cache(
                     self._page.last_user_preferences,
                     cache_key,
                     usage,
@@ -325,7 +360,7 @@ class SpendingView(ft.View):
 
     def _refresh_spending_usage_after_scan(self) -> None:
         if self.controller.get_google_refresh_token():
-            self._load_monthly_usage()
+            self._page.run_task(self._load_monthly_usage)
 
     def _handle_spending_auth_expired(self) -> None:
         self.google_required_card.set_access(

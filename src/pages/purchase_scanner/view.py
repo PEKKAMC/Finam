@@ -2,6 +2,7 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+import asyncio
 import sqlite3
 from datetime import UTC, datetime
 
@@ -9,10 +10,29 @@ import flet as ft
 
 from src.logger import Logger
 from src.pages.common import Menu
-from src.pages.common.logic import get_usage_cache_key, load_usage_cache, save_usage_cache
-from src.pages.purchase_scanner.components import ScannerForm, ScannerHistoryCard, ScannerPageContent, ScannerResult
-from src.pages.purchase_scanner.logic import LogicController, ScannerApiError, ScannerUsage
-from src.utils import Color, MenuResizeValues, Page, get_menu_resize_values, get_safe_page_size
+from src.pages.common.logic import (
+    get_usage_cache_key,
+    load_usage_cache,
+    save_usage_cache,
+)
+from src.pages.purchase_scanner.components import (
+    ScannerForm,
+    ScannerHistoryCard,
+    ScannerPageContent,
+    ScannerResult,
+)
+from src.pages.purchase_scanner.logic import (
+    LogicController,
+    ScannerApiError,
+    ScannerUsage,
+)
+from src.utils import (
+    Color,
+    MenuResizeValues,
+    Page,
+    get_menu_resize_values,
+    get_safe_page_size,
+)
 
 Logger.info("Initializing Purchase Scanner page...")
 
@@ -112,10 +132,10 @@ class PurchaseScannerView(ft.View):
             self._has_cached_usage = False
         if cache_key is None:
             self._usage_cache_loaded = True
-            self._page.run_thread(self._load_monthly_usage)
+            self._page.run_task(self._load_monthly_usage)
             return
         if self._usage_cache_loaded:
-            self._page.run_thread(self._load_monthly_usage)
+            self._page.run_task(self._load_monthly_usage)
         elif not self._usage_cache_loading:
             self._usage_cache_loading = True
             self._page.run_task(
@@ -124,24 +144,32 @@ class PurchaseScannerView(ft.View):
             )
 
     async def _load_cached_usage_then_refresh(self, cache_key: str) -> None:
-        cached_usage = await load_usage_cache(
-            self._page.last_user_preferences,
-            cache_key,
-        )
-        if cache_key != self._usage_cache_key:
-            return
-        if cached_usage:
-            try:
+        try:
+            cached_usage = await asyncio.wait_for(
+                load_usage_cache(
+                    self._page.last_user_preferences,
+                    cache_key,
+                ),
+                timeout=3,
+            )
+            if cache_key != self._usage_cache_key:
+                return
+            if cached_usage:
                 self._apply_monthly_usage(cached_usage)
                 self._has_cached_usage = True
                 self._page.update()
-            except (KeyError, TypeError, ValueError) as ex:
-                Logger.warning(f"Invalid cached purchase scanner usage: {ex}")
-
-        self._usage_cache_loaded = True
-        self._usage_cache_loading = False
-        if self.controller.has_google_account_session():
-            self._page.run_thread(self._load_monthly_usage)
+        except TimeoutError:
+            Logger.warning("Timed out reading cached purchase scanner usage")
+        except (KeyError, TypeError, ValueError) as ex:
+            Logger.warning(f"Invalid cached purchase scanner usage: {ex}")
+        except Exception as ex:
+            Logger.error(f"Could not load cached purchase scanner usage: {ex}")
+        finally:
+            if cache_key == self._usage_cache_key:
+                self._usage_cache_loaded = True
+                self._usage_cache_loading = False
+                if self.controller.has_google_account_session():
+                    self._page.run_task(self._load_monthly_usage)
 
     def _apply_monthly_usage(self, usage: dict[str, object] | ScannerUsage) -> None:
         remaining = usage["remaining"]
@@ -188,7 +216,7 @@ class PurchaseScannerView(ft.View):
             else Color.WARNING_COLOR
         )
 
-    def _load_monthly_usage(self) -> None:
+    async def _load_monthly_usage(self) -> None:
         if self.controller.is_cached_developer():
             self._show_unlimited_usage()
             self.form_card.set_enabled(
@@ -197,12 +225,13 @@ class PurchaseScannerView(ft.View):
             self._page.update()
             return
         try:
-            usage = self.controller.get_monthly_usage_for_current_session()
+            usage = await asyncio.to_thread(
+                self.controller.get_monthly_usage_for_current_session
+            )
             self._apply_monthly_usage(usage)
             cache_key = get_usage_cache_key("purchase_scanner")
             if cache_key:
-                self._page.run_task(
-                    save_usage_cache,
+                await save_usage_cache(
                     self._page.last_user_preferences,
                     cache_key,
                     usage,
@@ -270,7 +299,7 @@ class PurchaseScannerView(ft.View):
                 self.result_card.show_error(self.lang["purchase_scanner.service_error"])
             finally:
                 if self.controller.has_google_refresh_token():
-                    self._load_monthly_usage()
+                    self._page.run_task(self._load_monthly_usage)
                 self.form_card.set_scanning(False)
                 self._page.update()
 
