@@ -1,6 +1,6 @@
 # Finam v1.0.0
 
-**Release Date:** November 15, 2026
+**Release Date:** November 13, 2026
 
 App release. No changes since v1.0.0-rc5.
 
