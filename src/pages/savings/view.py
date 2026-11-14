@@ -149,7 +149,7 @@ class SavingsView(ft.View):
         )
         self.search_bar = ft.Container(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),

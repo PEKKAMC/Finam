@@ -116,7 +116,7 @@ class ScannerUsageCard(ft.Container):
             value=1,
             color=Color.PROGRESS_ACTIVE,
             bgcolor=Color.DARK_BUTTON,
-            border_radius=5,
+            border_radius=8,
             height=8
         )
 

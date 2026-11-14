@@ -245,7 +245,7 @@ class BalanceCard(ft.Container):
 
         super().__init__(
             bgcolor=Color.PRIMARY,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
             content=self.main_container
@@ -478,7 +478,7 @@ class SavingsProgressCard(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
             expand=True,
@@ -545,7 +545,7 @@ class ExpenseCategoryItem(ft.Row):
         self.color_box = ft.Container(
             width=10,
             height=10,
-            border_radius=5,
+            border_radius=8,
             bgcolor=self.color
         )
 
@@ -698,7 +698,7 @@ class ExpensePieChart(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
             expand=True,
@@ -880,7 +880,7 @@ class FeaturedLessonCard(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             shadow=ft.BoxShadow(spread_radius=UISettings.SHADOW_SPREAD, blur_radius=UISettings.SHADOW_BLUR, color=Color.SHADOW),
             expand=True,

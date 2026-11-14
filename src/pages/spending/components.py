@@ -40,7 +40,7 @@ class MetricCards(ft.ResponsiveRow):
         self.income_card = ft.Container(
             col={"xs": 12, "sm": 4},
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             border=ft.Border.only(left=ft.BorderSide(4, Color.INCOME_BACKGROUND)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
@@ -67,7 +67,7 @@ class MetricCards(ft.ResponsiveRow):
         self.expense_card = ft.Container(
             col={"xs": 12, "sm": 4},
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             border=ft.Border.only(left=ft.BorderSide(4, Color.EXPENSE_BACKGROUND)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
@@ -94,7 +94,7 @@ class MetricCards(ft.ResponsiveRow):
         self.balance_card = ft.Container(
             col={"xs": 12, "sm": 4},
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             border=ft.Border.only(left=ft.BorderSide(4, Color.PRIMARY_ACTION)),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=Color.SHADOW),
@@ -320,7 +320,7 @@ class TransactionToolbar(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
@@ -405,7 +405,7 @@ class TransactionHistoryCard(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),
@@ -718,7 +718,7 @@ class SpendingUsageCard(ft.Container):
             value=1,
             color=Color.PROGRESS_ACTIVE,
             bgcolor=Color.DARK_BUTTON,
-            border_radius=5,
+            border_radius=8,
             height=8
         )
 
@@ -914,7 +914,7 @@ class SpendingReportHistoryCard(ft.Container):
 
         super().__init__(
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=28,
+            border_radius=8,
             padding=20,
             border=ft.Border.all(1, Color.INPUT_BORDER),
             shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=Color.SHADOW),

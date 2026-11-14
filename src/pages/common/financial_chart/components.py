@@ -69,7 +69,7 @@ class FinancialChart(ft.Container):
             expand=True,
             height=container_height,
             bgcolor=Color.CARD_BACKGROUND,
-            border_radius=24,
+            border_radius=8,
             padding=20,
             shadow=ft.BoxShadow(
                 spread_radius=UISettings.SHADOW_SPREAD,
@@ -482,9 +482,7 @@ class FinancialChart(ft.Container):
                             width=bar_size,
                             color=Color.INCOME_COLOR,
                             border_radius=6,
-                            tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang['generic.income']}: {format_number(income_value)} {self.currency}"
-                            )
+                            tooltip=fc.BarChartRodTooltip(text=f"{self.lang['generic.income']}: {format_number(income_value)} {self.currency}")
                         ),
                         fc.BarChartRod(
                             from_y=0,
@@ -492,9 +490,7 @@ class FinancialChart(ft.Container):
                             width=bar_size,
                             color=Color.EXPENSE_COLOR,
                             border_radius=6,
-                            tooltip=fc.BarChartRodTooltip(
-                                text=f"{self.lang['generic.expense']}: {format_number(expense_value)} {self.currency}"
-                            )
+                            tooltip=fc.BarChartRodTooltip(text=f"{self.lang['generic.expense']}: {format_number(expense_value)} {self.currency}")
                         )
                     ]
                 )

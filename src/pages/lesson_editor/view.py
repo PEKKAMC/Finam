@@ -380,7 +380,7 @@ class LessonEditorView(ft.View):
                             size=24 * image_scale
                         ),
                         bgcolor=Color.DEFAULT_CONTAINER_BACKGROUND,
-                        border_radius=5,
+                        border_radius=8,
                         width=100 * image_scale,
                         height=100 * image_scale,
                         alignment=ft.Alignment.CENTER

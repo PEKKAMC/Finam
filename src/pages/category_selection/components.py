@@ -35,7 +35,7 @@ class CategoryItem(ft.Container):
 
         # CONTAINER COMPONENTS
         self.icon_circle = ft.Container(
-            border_radius=28,
+            border_radius=8,
             bgcolor=(self.selected_background_color if self.is_selected else None),
             alignment=ft.Alignment.CENTER,
             content=self.icon_control
@@ -51,7 +51,7 @@ class CategoryItem(ft.Container):
                     self.icon_label
                 ]
             ),
-            border_radius=28,
+            border_radius=8,
             bgcolor=(
                 self.selected_background_color
                 if self.is_selected
