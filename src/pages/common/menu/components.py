@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import Callable
 from typing import Any, ClassVar
 
@@ -56,17 +55,17 @@ class Menu(ft.Container):
 
         self.navigation_items: list[NavigationItem] = [
             self.build_nav_item(ft.Icons.HOME_ROUNDED, self.lang["generic.home"], self._page.navigate_to("/home"), is_active=self.active_icon == "home"),
-            self.build_nav_item(ft.Icons.MENU_BOOK_ROUNDED, self.lang["generic.lesson"], self._page.navigate_to("/lessons"), is_active=self.active_icon == "lesson"),
+            #self.build_nav_item(ft.Icons.MENU_BOOK_ROUNDED, self.lang["generic.lesson"], self._page.navigate_to("/lessons"), is_active=self.active_icon == "lesson"),
             self.build_nav_item(ft.Icons.SAVINGS_ROUNDED, self.lang["generic.saving"], self._page.navigate_to("/savings"), is_active=self.active_icon == "saving"),
             self.build_nav_item(ft.Icons.ACCOUNT_BALANCE_WALLET_ROUNDED, self.lang["generic.spending"], self._page.navigate_to("/spending"), is_active=self.active_icon == "spending"),
             self.build_nav_item(ft.Icons.AUTO_AWESOME_ROUNDED, self.lang["generic.purchase_scanner"], self._page.navigate_to("/purchase_scanner"), is_active=self.active_icon == "scanner"),
             self.build_nav_item(ft.Icons.PERSON_ROUNDED, self.lang["generic.change_user"], self._page.navigate_to("/user_management"), is_active=self.active_icon == "user_management")
         ]
 
-        if os.getenv("ENABLE_EDITOR") == "1":
-            self.navigation_items.append(
-                self.build_nav_item(ft.Icons.EDIT_NOTE_ROUNDED, "editor", self._page.navigate_to("/lesson-editor"), is_active=self.active_icon == "editor")
-            )
+        #if os.getenv("ENABLE_EDITOR") == "1":
+        #    self.navigation_items.append(
+        #        self.build_nav_item(ft.Icons.EDIT_NOTE_ROUNDED, "editor", self._page.navigate_to("/lesson-editor"), is_active=self.active_icon == "editor")
+        #    )
 
         self.items_count = len(self.navigation_items)
 
@@ -108,7 +107,7 @@ class Menu(ft.Container):
     def get_active_icon(self) -> str:
         return get_active_menu_item(self._page.route)
 
-    def _on_ad_error(self, e: ft.ControlEvent) -> None:
+    def _on_ad_error(self, e: ft.ControlEvent) -> Any | None:
         Logger.warning(f"AdMob banner failed to load: {e.data}")
         if self.ad_banner is None or self.ad_container is None:
             return

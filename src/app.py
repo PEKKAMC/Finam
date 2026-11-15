@@ -2,7 +2,6 @@
 # All rights reserved.
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import os
 from urllib.parse import urlencode, urlparse
 
 import flet as ft
@@ -15,38 +14,21 @@ from src.pages.common.logic.usage_cache import UsageCache
 from src.pages.fallback import get_fallback_view
 from src.pages.help import get_help_view
 from src.pages.home import get_home_view
-from src.pages.lessons import get_lessons_view
+#from src.pages.lessons import get_lessons_view
 from src.pages.purchase_scanner import get_scanner_view
-
 #from src.pages.lesson_player import get_lesson_player_view
 from src.pages.savings import get_savings_view
 from src.pages.settings import get_settings_view
 from src.pages.spending import get_spending_view
 from src.pages.starter.view import StarterView, get_starter_view
-from src.pages.user_management import (
-    complete_google_mobile_callback,
-    complete_google_web_callback,
-    get_user_management_view,
-    is_google_oauth_callback_route,
-)
-from src.utils import (
-    DefaultSettings,
-    Page,
-    ThemeManager,
-    UISettings,
-    currency_for_region,
-    get_language,
-    is_supported_page_size,
-    language_for_device_locale,
-    set_decimal_separator,
-    set_digit_separator,
-)
+from src.pages.user_management import complete_google_mobile_callback, complete_google_web_callback, get_user_management_view, is_google_oauth_callback_route
+from src.utils import DefaultSettings, Page, ThemeManager, UISettings, currency_for_region, get_language, is_supported_page_size, language_for_device_locale, set_decimal_separator, set_digit_separator
 
-ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
+#ENABLE_EDITOR: bool = os.getenv("ENABLE_EDITOR") == "1"
 
 # DEVELOPER EDITOR PAGE, ONLY INITIALIZE WHEN ENABLE_EDITOR IS SET TO TRUE
-if ENABLE_EDITOR:
-    from src.pages.lesson_editor import get_lesson_editor_view
+#if ENABLE_EDITOR:
+#    from src.pages.lesson_editor import get_lesson_editor_view
 
 
 def initial_setup() -> None:
@@ -142,8 +124,8 @@ async def main(page: Page) -> None:
         elif troute.match("/help"):
             return get_help_view(page, lang, user_info)
 
-        elif troute.match("/lessons"):
-            return get_lessons_view(page, lang, user_info)
+        #elif troute.match("/lessons"):
+        #    return get_lessons_view(page, lang, user_info)
 
         elif troute.match("/savings"):
             return get_savings_view(page, lang, user_info)
@@ -167,8 +149,8 @@ async def main(page: Page) -> None:
         elif troute.match("/category_selection"):
             return get_category_selection_view(page, lang, user_info)
 
-        elif ENABLE_EDITOR and troute.match("/lesson-editor"):
-            return get_lesson_editor_view(page, lang, user_info)
+        #elif ENABLE_EDITOR and troute.match("/lesson-editor"):
+        #    return get_lesson_editor_view(page, lang, user_info)
 
         else:
             return None
