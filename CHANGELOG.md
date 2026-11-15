@@ -1,3 +1,12 @@
+# Finam v1.1.0
+
+**Release Date:** November 15, 2026
+
+## Changes in this version
+
+*   Redesigned UI cards.
+*   Temporary removed lesson page.
+
 # Finam v1.0.0
 
 **Release Date:** November 13, 2026
