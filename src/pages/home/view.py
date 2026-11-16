@@ -112,8 +112,8 @@ class HomeView(ft.View):
                     self.balance_card,
                     self.financial_chart,
                     self.expense_pie_chart,
-                    self.savings_progress_card,
-                    self.featured_lesson_card
+                    self.savings_progress_card
+                    #self.featured_lesson_card
                 ]
             )
         )
