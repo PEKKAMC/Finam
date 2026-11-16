@@ -1,3 +1,11 @@
+# Finam v1.1.1
+
+**Release Date:** November 16, 2026
+
+## Changes in this version
+
+*   Temporary removed unused card that causes the app to crash.
+
 # Finam v1.1.0
 
 **Release Date:** November 15, 2026
